@@ -88,7 +88,12 @@ export default function Header() {
                     <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-20 py-1">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-sm font-medium text-gray-800 truncate">{profile.company_name}</p>
+                        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded mb-1 ${
+                          profile.account_type === 'business' ? 'bg-primary-50 text-primary' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {profile.account_type === 'business' ? '업체' : '개인'}
+                        </span>
+                        <p className="text-sm font-medium text-gray-800 truncate">{profile.company_name || profile.contact_name}</p>
                         <p className="text-xs text-gray-500 truncate">{profile.contact_name}</p>
                       </div>
                       <button

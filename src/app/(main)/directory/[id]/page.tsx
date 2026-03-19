@@ -112,7 +112,7 @@ export default function CompanyDetailPage() {
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="badge-primary">
-                {getBusinessTypeLabel(profile.business_type)}
+                {profile.business_type ? getBusinessTypeLabel(profile.business_type) : '개인'}
               </span>
               <span className="badge-accent">
                 {getRegionLabel(profile.region)}

@@ -1,10 +1,11 @@
-import type { BusinessType, EmploymentType, Region, PostCategory, PostingType } from '@/shared/constants';
+import type { AccountType, BusinessType, EmploymentType, Region, PostCategory, PostingType } from '@/shared/constants';
 
 export interface Profile {
   id: string;
   user_id: string;
-  business_type: BusinessType;
-  company_name: string;
+  account_type: AccountType;
+  business_type: BusinessType | null;
+  company_name: string | null;
   contact_name: string;
   region: Region;
   bio: string | null;

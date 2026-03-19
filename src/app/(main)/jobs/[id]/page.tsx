@@ -195,7 +195,7 @@ export default function JobDetailPage() {
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary font-serif font-bold text-lg">
-                    {job.author.company_name.charAt(0)}
+                    {(job.author.company_name || job.author.contact_name).charAt(0)}
                   </span>
                 </div>
                 <div className="space-y-1">

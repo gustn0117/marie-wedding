@@ -19,7 +19,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           {profile.company_name}
         </h3>
         <span className="badge-primary shrink-0">
-          {getBusinessTypeLabel(profile.business_type)}
+          {profile.business_type ? getBusinessTypeLabel(profile.business_type) : '개인'}
         </span>
       </div>
 

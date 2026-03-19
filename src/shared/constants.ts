@@ -1,3 +1,10 @@
+export const ACCOUNT_TYPES = [
+  { value: 'individual', label: '개인 회원' },
+  { value: 'business', label: '업체 회원' },
+] as const;
+
+export type AccountType = typeof ACCOUNT_TYPES[number]['value'];
+
 export const BUSINESS_TYPES = [
   { value: 'venue', label: '예식장' },
   { value: 'dress', label: '드레스샵' },

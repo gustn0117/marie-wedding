@@ -2,10 +2,11 @@ import { createClient } from '@/lib/supabase/client';
 
 export const authService = {
   async signUp(email: string, password: string, metadata: {
-    businessType: string;
-    companyName: string;
+    accountType: 'individual' | 'business';
     contactName: string;
     region: string;
+    businessType?: string;
+    companyName?: string;
   }) {
     const supabase = createClient();
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -15,13 +16,19 @@ export const authService = {
     if (authError) throw authError;
     if (!authData.user) throw new Error('회원가입에 실패했습니다.');
 
-    const { error: profileError } = await supabase.from('profiles').insert({
+    const profileData: Record<string, unknown> = {
       user_id: authData.user.id,
-      business_type: metadata.businessType,
-      company_name: metadata.companyName,
+      account_type: metadata.accountType,
       contact_name: metadata.contactName,
       region: metadata.region,
-    });
+    };
+
+    if (metadata.accountType === 'business') {
+      profileData.business_type = metadata.businessType;
+      profileData.company_name = metadata.companyName;
+    }
+
+    const { error: profileError } = await supabase.from('profiles').insert(profileData);
     if (profileError) throw profileError;
 
     return authData;
