@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
-
-const ADMIN_PASSWORD = '1234';
-const STORAGE_KEY = 'marie_admin_auth';
+import { useAuth } from '@/shared/hooks/useAuth';
 
 const NAV_ITEMS = [
   { href: ROUTES.ADMIN, label: '대시보드', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -18,36 +16,40 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [authed, setAuthed] = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const { profile, isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Legacy password fallback (for backward compat, will be removed)
+  const [legacyAuthed, setLegacyAuthed] = useState(false);
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   useEffect(() => {
-    const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved === 'true') setAuthed(true);
-    setChecking(false);
+    const saved = sessionStorage.getItem('marie_admin_auth');
+    if (saved === 'true') setLegacyAuthed(true);
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const isAdmin = profile?.role === 'admin';
+  const authed = isAdmin || legacyAuthed;
+
+  const handleLegacyLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, 'true');
-      setAuthed(true);
-      setError('');
+    if (password === '1234') {
+      sessionStorage.setItem('marie_admin_auth', 'true');
+      setLegacyAuthed(true);
+      setLoginError('');
     } else {
-      setError('비밀번호가 틀렸습니다.');
+      setLoginError('비밀번호가 틀렸습니다.');
     }
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setAuthed(false);
+    sessionStorage.removeItem('marie_admin_auth');
+    setLegacyAuthed(false);
     setPassword('');
   };
 
-  if (checking) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -55,11 +57,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Password gate
   if (!authed) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <form onSubmit={handleLogin} className="w-full max-w-sm">
+        <form onSubmit={handleLegacyLogin} className="w-full max-w-sm">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
             <div className="text-center mb-8">
               <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">Marié</h1>
@@ -71,22 +72,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <input
                   type="password"
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
                   placeholder="비밀번호를 입력하세요"
                   className="input-field"
                   autoFocus
                 />
-                {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+                {loginError && <p className="text-sm text-red-500 mt-1">{loginError}</p>}
               </div>
-              <button type="submit" className="btn-primary w-full">
-                로그인
-              </button>
+              <button type="submit" className="btn-primary w-full">로그인</button>
             </div>
           </div>
           <p className="text-center mt-4">
-            <Link href={ROUTES.HOME} className="text-sm text-gray-400 hover:text-gray-600">
-              사이트로 돌아가기
-            </Link>
+            <Link href={ROUTES.HOME} className="text-sm text-gray-400 hover:text-gray-600">사이트로 돌아가기</Link>
           </p>
         </form>
       </div>

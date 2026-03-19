@@ -30,7 +30,7 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`${ROUTES.JOBS}?q=${encodeURIComponent(searchQuery.trim())}`);
+      router.push(`${ROUTES.JOBS}?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -104,9 +104,25 @@ export default function Header() {
                         <p className="text-sm font-medium text-gray-800 truncate">{profile.company_name || profile.contact_name}</p>
                         <p className="text-xs text-gray-500 truncate">{profile.contact_name}</p>
                       </div>
+                      <Link
+                        href={ROUTES.MYPAGE}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        마이페이지
+                      </Link>
+                      {profile.role === 'admin' && (
+                        <Link
+                          href={ROUTES.ADMIN}
+                          onClick={() => setProfileMenuOpen(false)}
+                          className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                          관리자
+                        </Link>
+                      )}
                       <button
                         onClick={() => { setProfileMenuOpen(false); signOut(); }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors border-t border-gray-100"
                       >
                         로그아웃
                       </button>
@@ -202,8 +218,12 @@ export default function Header() {
           </nav>
           <div className="px-4 py-3 border-t border-gray-100">
             {isAuthenticated ? (
-              <Link href={ROUTES.JOBS_NEW} onClick={() => setMobileMenuOpen(false)}
-                className="block text-center btn-primary text-sm">공고 등록하기</Link>
+              <div className="space-y-2">
+                <Link href={ROUTES.MYPAGE} onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center px-4 py-2.5 text-sm font-medium border border-gray-300 rounded hover:bg-gray-50 transition-colors">마이페이지</Link>
+                <Link href={ROUTES.JOBS_NEW} onClick={() => setMobileMenuOpen(false)}
+                  className="block text-center btn-primary text-sm">공고 등록하기</Link>
+              </div>
             ) : (
               <div className="flex gap-3">
                 <Link href={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)}

@@ -47,6 +47,10 @@ export const jobService = {
       query = query.ilike('title', `%${filters.search}%`);
     }
 
+    if (filters?.authorId) {
+      query = query.eq('author_id', filters.authorId);
+    }
+
     const { data, count, error } = await query;
 
     if (error) {

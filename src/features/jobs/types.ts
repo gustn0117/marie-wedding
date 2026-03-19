@@ -16,4 +16,5 @@ export interface JobFilters {
   employmentType?: string;
   region?: string;
   search?: string;
+  authorId?: string;
 }

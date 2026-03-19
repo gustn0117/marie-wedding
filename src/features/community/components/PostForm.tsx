@@ -7,14 +7,21 @@ import { useAuth } from '@/features/auth/hooks/useAuth';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
 
-export default function PostForm() {
+interface PostFormProps {
+  initialData?: PostFormData;
+  postId?: string;
+  onSubmitSuccess?: (postId: string) => void;
+}
+
+export default function PostForm({ initialData, postId, onSubmitSuccess }: PostFormProps) {
   const router = useRouter();
   const { profile } = useAuth();
+  const isEdit = !!postId;
 
   const [formData, setFormData] = useState<PostFormData>({
-    title: '',
-    content: '',
-    category: '',
+    title: initialData?.title ?? '',
+    content: initialData?.content ?? '',
+    category: initialData?.category ?? '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +47,23 @@ export default function PostForm() {
     setError(null);
 
     try {
-      const post = await communityService.createPost(formData, profile.id);
-      router.push(ROUTES.COMMUNITY_DETAIL(post.id));
-    } catch (err) {
-      console.error('Failed to create post:', err);
-      setError('게시글 작성에 실패했습니다. 다시 시도해주세요.');
+      if (isEdit && postId) {
+        await communityService.updatePost(postId, formData);
+        if (onSubmitSuccess) {
+          onSubmitSuccess(postId);
+        } else {
+          router.push(ROUTES.COMMUNITY_DETAIL(postId));
+        }
+      } else {
+        const post = await communityService.createPost(formData, profile.id);
+        if (onSubmitSuccess) {
+          onSubmitSuccess(post.id);
+        } else {
+          router.push(ROUTES.COMMUNITY_DETAIL(post.id));
+        }
+      }
+    } catch {
+      setError(isEdit ? '수정에 실패했습니다. 다시 시도해주세요.' : '게시글 작성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -137,10 +156,10 @@ export default function PostForm() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              등록 중...
+              {isEdit ? '수정 중...' : '등록 중...'}
             </span>
           ) : (
-            '게시글 등록'
+            isEdit ? '수정하기' : '게시글 등록'
           )}
         </button>
       </div>

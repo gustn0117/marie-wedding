@@ -2,31 +2,24 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
-
-/* ───────────────── Mock Data ───────────────── */
-
-const mockJobs = [
-  { id: '1', title: '웨딩홀 매니저 모집 (경력 3년 이상)', company: '그랜드 웨딩홀', region: '서울', type: '정규직', deadline: '~03.31(월)', logo: '🏛️' },
-  { id: '2', title: '드레스 피팅 전문가 채용', company: '로즈드레스', region: '경기', type: '정규직', deadline: '~04.05(토)', logo: '👗' },
-  { id: '3', title: '웨딩 포토그래퍼 모집', company: '루미에르 스튜디오', region: '서울', type: '계약직', deadline: 'D-5', logo: '📸' },
-  { id: '4', title: '메이크업 아티스트 각 부문 채용', company: '뷰티앤브라이드', region: '부산', type: '업체 섭외', deadline: '~03.31', logo: '💄' },
-];
-
-const mockPlatinumJobs = [
-  { id: '10', title: '2026 상반기 각 부문 신입/경력 채용', company: '더클래식 웨딩', logo: '🏛️', deadline: '~04.05(토)' },
-  { id: '11', title: '드레스 디자이너 경력직 수시채용', company: '아뜰리에 로사', logo: '👗', deadline: '~04.15(화)' },
-  { id: '12', title: '스튜디오 운영팀 정규직 채용 (전국)', company: '빛나는스튜디오', logo: '📸', deadline: '~04.10(목)' },
-  { id: '13', title: '2026 부문별 채용 [신입/경력]', company: '웨딩파크', logo: '🏛️', deadline: '~04.20(일)' },
-];
+import { jobService } from '@/features/jobs/services/job-service';
+import { communityService } from '@/features/community/services/community-service';
+import {
+  getEmploymentTypeLabel,
+  getRegionLabel,
+  formatRelativeTime,
+  getCategoryLabel,
+} from '@/shared/utils/format';
+import type { Job, Post } from '@/types/database';
 
 const toolButtons = [
-  { icon: '📝', label: '이력서 작성' },
-  { icon: '🔍', label: '맞춤 채용' },
-  { icon: '💰', label: '연봉 정보' },
+  { icon: '📝', label: '공고 등록', href: ROUTES.JOBS_NEW },
+  { icon: '🔍', label: '맞춤 채용', href: ROUTES.JOBS },
+  { icon: '🏢', label: '업체 찾기', href: ROUTES.DIRECTORY },
 ];
 
 const sideNavItems = [
@@ -36,9 +29,8 @@ const sideNavItems = [
   { label: '커뮤니티', href: ROUTES.COMMUNITY },
 ];
 
-/* ───────────────── Tabs for Center ───────────────── */
 const centerTabs = [
-  { key: 'recommend', label: '회원님을 위한 추천공고', icon: '✨' },
+  { key: 'recommend', label: '최신 채용 공고', icon: '✨' },
   { key: 'hot', label: '지금 핫한 채용 공고', icon: '🔥' },
   { key: 'urgent', label: '업체 섭외 공고', icon: '⚡' },
 ];
@@ -46,23 +38,60 @@ const centerTabs = [
 export default function HomePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('recommend');
+  const [latestJobs, setLatestJobs] = useState<Job[]>([]);
+  const [urgentJobs, setUrgentJobs] = useState<Job[]>([]);
+  const [matchingJobs, setMatchingJobs] = useState<Job[]>([]);
+  const [recommendedJobs, setRecommendedJobs] = useState<Job[]>([]);
+  const [recentPosts, setRecentPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [latestRes, urgentRes, matchingRes, postsRes] = await Promise.all([
+          jobService.getJobs({}, 1, 4),
+          jobService.getJobs({}, 1, 4),
+          jobService.getJobs({ postingType: 'matching' }, 1, 4),
+          communityService.getPosts({}, 1, 3),
+        ]);
+        setLatestJobs(latestRes.data);
+        setUrgentJobs(urgentRes.data.filter((j) => j.is_urgent).slice(0, 4));
+        setMatchingJobs(matchingRes.data);
+        setRecommendedJobs(latestRes.data);
+        setRecentPosts(postsRes.data);
+      } catch (err) {
+        console.error('Failed to fetch homepage data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const getBusinessIcon = (type: string) => {
+    const icons: Record<string, string> = {
+      venue: '🏛️', dress: '👗', studio: '📸', makeup: '💄',
+      planner: '📋', assistant: '🤝', other: '📦',
+    };
+    return icons[type] || '📦';
+  };
+
+  const displayJobs = activeTab === 'urgent' ? matchingJobs : activeTab === 'hot' ? urgentJobs : latestJobs;
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
 
-      {/* ═══════════════ MAIN 3-COLUMN SECTION ═══════════════ */}
+      {/* MAIN 3-COLUMN SECTION */}
       <section className="bg-white">
         <div className="max-w-[1200px] mx-auto px-4 py-6">
-          {/* Section Title */}
           <div className="flex items-center gap-2 mb-5">
             <h2 className="text-[18px] font-bold text-gray-900">오늘의 웨딩업계 소식</h2>
           </div>
 
           <div className="flex gap-5">
-            {/* ─── Left Column (240px) ─── */}
+            {/* Left Column */}
             <div className="hidden lg:block w-[240px] shrink-0 space-y-3">
-              {/* Tip Card */}
               <div className="bg-gray-100 rounded-xl p-5">
                 <div className="flex items-start gap-3 mb-3">
                   <span className="text-3xl">💡</span>
@@ -78,7 +107,6 @@ export default function HomePage() {
                 </button>
               </div>
 
-              {/* Quick Info Links */}
               <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <Link href={ROUTES.DIRECTORY} className="flex items-center gap-2.5 text-[13px] text-gray-600 hover:text-primary transition-colors group">
                   <span className="text-lg">🏢</span>
@@ -104,9 +132,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* ─── Center Column (flex-1) ─── */}
+            {/* Center Column */}
             <div className="flex-1 min-w-0">
-              {/* Tabs */}
               <div className="flex items-center border-b border-gray-200 mb-0">
                 {centerTabs.map((tab) => (
                   <button
@@ -124,64 +151,73 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Job Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-gray-200 rounded-b-lg overflow-hidden">
-                {mockJobs.map((job, idx) => (
-                  <Link
-                    key={job.id}
-                    href={ROUTES.JOBS_DETAIL(job.id)}
-                    className={`flex flex-col p-5 hover:bg-blue-50/40 transition-colors group ${
-                      idx < mockJobs.length - 1 ? 'border-r border-b border-gray-100' : ''
-                    }`}
-                  >
-                    {/* Company Logo */}
-                    <div className="text-3xl mb-3">{job.logo}</div>
-                    {/* Job Title */}
-                    <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-2 line-clamp-2">
-                      {job.title}
-                    </h3>
-                    {/* Company */}
-                    <p className="text-[13px] text-gray-500 mb-auto">{job.company}</p>
-                    {/* Deadline */}
-                    <p className="text-[12px] text-gray-400 mt-3">{job.deadline}</p>
-                  </Link>
-                ))}
-              </div>
+              {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-gray-200 rounded-b-lg overflow-hidden">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="p-5 animate-pulse border-r border-b border-gray-100">
+                      <div className="h-8 w-8 bg-gray-200 rounded mb-3" />
+                      <div className="h-4 w-3/4 bg-gray-200 rounded mb-2" />
+                      <div className="h-3 w-1/2 bg-gray-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              ) : displayJobs.length === 0 ? (
+                <div className="border border-gray-200 rounded-b-lg p-8 text-center">
+                  <p className="text-sm text-gray-500">등록된 공고가 없습니다.</p>
+                  <Link href={ROUTES.JOBS_NEW} className="text-sm text-primary hover:underline mt-2 inline-block">첫 공고를 등록해보세요</Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-gray-200 rounded-b-lg overflow-hidden">
+                  {displayJobs.map((job, idx) => (
+                    <Link
+                      key={job.id}
+                      href={ROUTES.JOBS_DETAIL(job.id)}
+                      className={`flex flex-col p-5 hover:bg-blue-50/40 transition-colors group ${
+                        idx < displayJobs.length - 1 ? 'border-r border-b border-gray-100' : ''
+                      }`}
+                    >
+                      <div className="text-3xl mb-3">{getBusinessIcon(job.business_type)}</div>
+                      <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-2 line-clamp-2">
+                        {job.title}
+                      </h3>
+                      <p className="text-[13px] text-gray-500 mb-auto">{job.author?.company_name || '알 수 없음'}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className="text-[12px] text-gray-400">{getRegionLabel(job.region)}</span>
+                        <span className="text-[12px] text-gray-300">·</span>
+                        <span className="text-[12px] text-gray-400">{getEmploymentTypeLabel(job.employment_type)}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* ─── Right Column (280px) ─── */}
+            {/* Right Column */}
             <div className="hidden xl:block w-[280px] shrink-0 space-y-4">
-              {/* Event Banner */}
               <div className="bg-gradient-to-br from-primary to-primary-dark rounded-xl p-5 text-white relative overflow-hidden">
-                <span className="absolute top-3 left-3 text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">
-                  이벤트
-                </span>
+                <span className="absolute top-3 left-3 text-[10px] font-bold bg-white/20 px-2 py-0.5 rounded-full">이벤트</span>
                 <div className="pt-5">
-                  <h3 className="text-[18px] font-bold leading-tight mb-1">
-                    무료 공고 등록
-                  </h3>
-                  <p className="text-[13px] text-primary-200 mb-3">
-                    지금 공고 등록하면<br />첫 달 무료!
-                  </p>
+                  <h3 className="text-[18px] font-bold leading-tight mb-1">무료 공고 등록</h3>
+                  <p className="text-[13px] text-primary-200 mb-3">지금 공고 등록하면<br />첫 달 무료!</p>
                 </div>
               </div>
 
-              {/* Tool Buttons */}
               <div className="flex gap-2">
                 {toolButtons.map((tool) => (
-                  <button
+                  <Link
                     key={tool.label}
+                    href={tool.href}
                     className="flex-1 flex flex-col items-center gap-1.5 py-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border border-gray-100"
                   >
                     <span className="text-xl">{tool.icon}</span>
                     <span className="text-[11px] font-medium text-gray-600">{tool.label}</span>
-                  </button>
+                  </Link>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* ─── Floating Side Nav (far right) ─── */}
+          {/* Floating Side Nav */}
           <div className="hidden 2xl:fixed 2xl:block right-[calc((100vw-1200px)/2-80px)] top-[200px] w-[68px]">
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {sideNavItems.map((item, idx) => (
@@ -206,7 +242,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ FULL-WIDTH BANNER ═══════════════ */}
+      {/* FULL-WIDTH BANNER */}
       <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
         <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -224,7 +260,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ PLATINUM JOBS ═══════════════ */}
+      {/* RECOMMENDED JOBS */}
       <section className="bg-white border-t border-gray-100">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-5">
@@ -237,36 +273,53 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {mockPlatinumJobs.map((job) => (
-              <Link
-                key={job.id}
-                href={ROUTES.JOBS_DETAIL(job.id)}
-                className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow group"
-              >
-                {/* Top area with logo */}
-                <div className="bg-gray-50 flex items-center justify-center py-8 border-b border-gray-100">
-                  <span className="text-5xl">{job.logo}</span>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="border border-gray-200 rounded-lg overflow-hidden animate-pulse">
+                  <div className="bg-gray-50 h-24" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 w-3/4 bg-gray-200 rounded" />
+                    <div className="h-3 w-1/2 bg-gray-200 rounded" />
+                  </div>
                 </div>
-                {/* Info */}
-                <div className="p-4">
-                  <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
-                    {job.title}
-                  </h3>
-                  <p className="text-[13px] text-gray-500">{job.company}</p>
-                  <p className="text-[12px] text-gray-400 mt-2">{job.deadline}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : recommendedJobs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-500">아직 등록된 공고가 없습니다.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {recommendedJobs.map((job) => (
+                <Link
+                  key={job.id}
+                  href={ROUTES.JOBS_DETAIL(job.id)}
+                  className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow group"
+                >
+                  <div className="bg-gray-50 flex items-center justify-center py-8 border-b border-gray-100">
+                    <span className="text-5xl">{getBusinessIcon(job.business_type)}</span>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
+                      {job.title}
+                    </h3>
+                    <p className="text-[13px] text-gray-500">{job.author?.company_name || '알 수 없음'}</p>
+                    <p className="text-[12px] text-gray-400 mt-2">
+                      {getRegionLabel(job.region)} · {getEmploymentTypeLabel(job.employment_type)}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ═══════════════ CATEGORY BROWSE ═══════════════ */}
+      {/* CATEGORY BROWSE */}
       <section className="bg-gray-50 border-t border-gray-200">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 업종별 채용 */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <h2 className="text-[16px] font-bold text-gray-900">업종별 채용</h2>
@@ -281,12 +334,7 @@ export default function HomePage() {
                       className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
                     >
                       <span className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center text-primary text-lg group-hover:bg-primary group-hover:text-white transition-colors">
-                        {type.value === 'venue' ? '🏛️' :
-                         type.value === 'dress' ? '👗' :
-                         type.value === 'studio' ? '📸' :
-                         type.value === 'makeup' ? '💄' :
-                         type.value === 'planner' ? '📋' :
-                         type.value === 'assistant' ? '🤝' : '📦'}
+                        {getBusinessIcon(type.value)}
                       </span>
                       <span className="text-[12px] font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
                     </Link>
@@ -295,7 +343,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* 지역별 채용 */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                 <h2 className="text-[16px] font-bold text-gray-900">지역별 채용</h2>
@@ -319,7 +366,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════ COMMUNITY SECTION ═══════════════ */}
+      {/* COMMUNITY SECTION */}
       <section className="bg-white border-t border-gray-200">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-5">
@@ -328,34 +375,51 @@ export default function HomePage() {
               더보기 &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { id: '1', title: '2026 상반기 웨딩 트렌드 정리', category: '업계뉴스', comments: 12, date: '03.19', preview: '올해 상반기 웨딩 시장의 주요 트렌드를 정리해봤습니다. 소규모 웨딩과 아웃도어 웨딩이...' },
-              { id: '2', title: '신규 웨딩홀 입점 시 체크리스트', category: '노하우공유', comments: 8, date: '03.18', preview: '새 웨딩홀 입점 시 반드시 확인해야 할 사항들을 정리했습니다...' },
-              { id: '3', title: '메이크업 아티스트 워크샵 후기', category: '자유게시판', comments: 15, date: '03.18', preview: '지난주 진행된 메이크업 워크샵 후기입니다. 트렌드 메이크업 기법을...' },
-            ].map((post) => (
-              <Link
-                key={post.id}
-                href={ROUTES.COMMUNITY_DETAIL(post.id)}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all group"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[11px] font-semibold text-primary bg-primary-50 px-2 py-0.5 rounded">{post.category}</span>
-                  <span className="text-[11px] text-gray-400">{post.date}</span>
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="border border-gray-200 rounded-lg p-4 animate-pulse">
+                  <div className="h-3 w-16 bg-gray-200 rounded mb-2" />
+                  <div className="h-4 w-3/4 bg-gray-200 rounded mb-2" />
+                  <div className="h-3 w-full bg-gray-200 rounded" />
                 </div>
-                <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors mb-1.5 line-clamp-1">
-                  {post.title}
-                </h3>
-                <p className="text-[13px] text-gray-500 line-clamp-2 leading-relaxed">
-                  {post.preview}
-                </p>
-                <div className="flex items-center gap-1 mt-3 text-[12px] text-gray-400">
-                  <span>💬</span>
-                  <span>{post.comments}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : recentPosts.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-gray-500">아직 작성된 게시글이 없습니다.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {recentPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={ROUTES.COMMUNITY_DETAIL(post.id)}
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all group"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-semibold text-primary bg-primary-50 px-2 py-0.5 rounded">{getCategoryLabel(post.category)}</span>
+                    <span className="text-[11px] text-gray-400">{formatRelativeTime(post.created_at)}</span>
+                  </div>
+                  <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors mb-1.5 line-clamp-1">
+                    {post.title}
+                  </h3>
+                  <p className="text-[13px] text-gray-500 line-clamp-2 leading-relaxed">
+                    {post.content}
+                  </p>
+                  <div className="flex items-center gap-2 mt-3 text-[12px] text-gray-400">
+                    <span>조회 {post.view_count}</span>
+                    {post.comment_count !== undefined && post.comment_count > 0 && (
+                      <>
+                        <span>·</span>
+                        <span>댓글 {post.comment_count}</span>
+                      </>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

@@ -155,7 +155,7 @@ export default function PostDetailPage() {
             {isAuthor && (
               <div className="flex items-center gap-2">
                 <Link
-                  href={`${ROUTES.COMMUNITY_DETAIL(post.id)}/edit`}
+                  href={ROUTES.COMMUNITY_EDIT(post.id)}
                   className="text-xs text-text-muted hover:text-text-primary transition-colors px-3 py-1.5 rounded-lg hover:bg-secondary"
                 >
                   수정

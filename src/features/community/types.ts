@@ -11,4 +11,5 @@ export interface CommentFormData {
 export interface PostFilters {
   category?: string;
   search?: string;
+  authorId?: string;
 }

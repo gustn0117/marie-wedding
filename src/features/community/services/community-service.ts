@@ -42,6 +42,10 @@ export const communityService = {
       );
     }
 
+    if (filters?.authorId) {
+      query = query.eq('author_id', filters.authorId);
+    }
+
     const { data, error, count } = await query;
 
     if (error) throw error;

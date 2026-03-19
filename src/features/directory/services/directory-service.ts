@@ -80,4 +80,26 @@ export const directoryService = {
 
     return data as Profile;
   },
+
+  async updateProfile(id: string, updates: {
+    contact_name?: string;
+    company_name?: string | null;
+    business_type?: string | null;
+    region?: string;
+    bio?: string | null;
+    phone?: string | null;
+    website?: string | null;
+  }): Promise<Profile> {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Profile;
+  },
 };

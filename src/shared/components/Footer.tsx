@@ -21,24 +21,24 @@ export default function Footer() {
               <li><Link href={ROUTES.JOBS} className="text-sm text-gray-400 hover:text-white transition-colors">채용정보</Link></li>
               <li><Link href={ROUTES.DIRECTORY} className="text-sm text-gray-400 hover:text-white transition-colors">업체정보</Link></li>
               <li><Link href={ROUTES.COMMUNITY} className="text-sm text-gray-400 hover:text-white transition-colors">커뮤니티</Link></li>
-              <li><Link href={`${ROUTES.JOBS}?type=urgent`} className="text-sm text-gray-400 hover:text-white transition-colors">긴급매칭</Link></li>
+              <li><Link href={ROUTES.EVENTS} className="text-sm text-gray-400 hover:text-white transition-colors">이벤트</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white mb-3">고객지원</h3>
             <ul className="space-y-2">
-              <li><span className="text-sm text-gray-400">이용약관</span></li>
-              <li><span className="text-sm text-gray-400">개인정보처리방침</span></li>
-              <li><span className="text-sm text-gray-400">고객센터</span></li>
-              <li><span className="text-sm text-gray-400">광고/제휴 문의</span></li>
+              <li><Link href="/terms" className="text-sm text-gray-400 hover:text-white transition-colors">이용약관</Link></li>
+              <li><Link href="/privacy" className="text-sm text-gray-400 hover:text-white transition-colors">개인정보처리방침</Link></li>
+              <li><Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">고객센터</Link></li>
+              <li><Link href="/contact" className="text-sm text-gray-400 hover:text-white transition-colors">광고/제휴 문의</Link></li>
             </ul>
           </div>
           <div>
             <h3 className="text-sm font-semibold text-white mb-3">기업서비스</h3>
             <ul className="space-y-2">
               <li><Link href={ROUTES.JOBS_NEW} className="text-sm text-gray-400 hover:text-white transition-colors">공고 등록</Link></li>
-              <li><span className="text-sm text-gray-400">인재 검색</span></li>
-              <li><span className="text-sm text-gray-400">기업 프로필 관리</span></li>
+              <li><Link href={ROUTES.DIRECTORY} className="text-sm text-gray-400 hover:text-white transition-colors">인재 검색</Link></li>
+              <li><Link href={ROUTES.MYPAGE_EDIT} className="text-sm text-gray-400 hover:text-white transition-colors">기업 프로필 관리</Link></li>
             </ul>
           </div>
         </div>
@@ -47,8 +47,8 @@ export default function Footer() {
         <div className="max-w-[1200px] mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-gray-500">&copy; {new Date().getFullYear()} Marié. All rights reserved.</p>
           <div className="flex items-center gap-4 text-xs text-gray-500">
-            <span>이용약관</span>
-            <span className="font-semibold text-gray-400">개인정보처리방침</span>
+            <Link href="/terms" className="hover:text-gray-300 transition-colors">이용약관</Link>
+            <Link href="/privacy" className="font-semibold text-gray-400 hover:text-gray-300 transition-colors">개인정보처리방침</Link>
           </div>
         </div>
       </div>

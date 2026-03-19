@@ -216,7 +216,7 @@ export default function JobDetailPage() {
             <div className="border-t border-border" />
             <div className="p-6 md:p-8 flex items-center gap-3">
               <Link
-                href={`${ROUTES.JOBS_DETAIL(job.id)}/edit`}
+                href={ROUTES.JOBS_EDIT(job.id)}
                 className="btn-outline text-sm px-5 py-2.5"
               >
                 수정하기
