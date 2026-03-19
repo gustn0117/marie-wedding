@@ -50,6 +50,18 @@ export const authService = {
     if (error) throw error;
   },
 
+  async signInWithKakao() {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+
   async getSession() {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();

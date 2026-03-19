@@ -134,10 +134,32 @@ export default function LoginForm() {
           </div>
           <div className="relative flex justify-center text-xs">
             <span className="bg-surface px-3 text-text-muted">
-              또는
+              소셜 계정으로 간편 로그인
             </span>
           </div>
         </div>
+
+        {/* Social Login */}
+        <div className="flex justify-center gap-4">
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                await authService.signInWithKakao();
+              } catch {
+                setError('카카오 로그인에 실패했습니다.');
+              }
+            }}
+            className="w-12 h-12 rounded-full bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
+            title="카카오 로그인"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.8 5.16 4.5 6.54-.18.66-.66 2.4-.75 2.76-.12.48.18.48.36.36.15-.09 2.34-1.59 3.3-2.25.84.12 1.71.18 2.59.18 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" fill="#3C1E1E"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="mt-6" />
 
         {/* Signup Link */}
         <p className="text-center text-sm text-text-secondary">
