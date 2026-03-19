@@ -209,54 +209,81 @@ export default function SignupForm() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">활동 지역 <span className="text-text-muted font-normal">(복수 선택 가능)</span></label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
+                <label className="block text-sm font-medium text-text-primary mb-2">활동 지역</label>
+
+                {/* 선택된 지역 태그 */}
+                {formData.regions.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {formData.regions.map((r) => (
+                      <span key={r} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary text-white text-xs rounded-full">
+                        {r === 'all' ? '전국' : REGIONS.find(reg => reg.value === r)?.label}
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, regions: prev.regions.filter(v => v !== r) }))}
+                          className="hover:text-white/70"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* 전국 토글 */}
+                <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 mb-2 cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.regions.includes('all')}
+                    onChange={() => {
                       if (formData.regions.includes('all')) {
                         setFormData(prev => ({ ...prev, regions: [] }));
                       } else {
                         setFormData(prev => ({ ...prev, regions: ['all'] }));
                       }
                     }}
-                    className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                      formData.regions.includes('all')
-                        ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    전국
-                  </button>
-                  {REGIONS.map((region) => (
-                    <button
-                      key={region.value}
-                      type="button"
-                      onClick={() => {
-                        setFormData(prev => {
-                          const filtered = prev.regions.filter(r => r !== 'all');
-                          const has = filtered.includes(region.value);
-                          return {
-                            ...prev,
-                            regions: has
-                              ? filtered.filter(r => r !== region.value)
-                              : [...filtered, region.value],
-                          };
-                        });
-                      }}
-                      disabled={formData.regions.includes('all')}
-                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                        formData.regions.includes('all')
-                          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                          : formData.regions.includes(region.value)
-                            ? 'bg-primary text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {region.label}
-                    </button>
-                  ))}
-                </div>
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-900">전국</span>
+                    <span className="text-xs text-gray-400 ml-1.5">모든 지역에서 활동</span>
+                  </div>
+                </label>
+
+                {/* 지역 그리드 */}
+                {!formData.regions.includes('all') && (
+                  <div className="grid grid-cols-4 gap-1.5 p-3 rounded-lg border border-gray-200 bg-gray-50/50 max-h-[200px] overflow-y-auto">
+                    {REGIONS.map((region) => {
+                      const selected = formData.regions.includes(region.value);
+                      return (
+                        <button
+                          key={region.value}
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              regions: selected
+                                ? prev.regions.filter(r => r !== region.value)
+                                : [...prev.regions, region.value],
+                            }));
+                          }}
+                          className={`px-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                            selected
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'bg-white text-gray-600 hover:bg-primary-50 hover:text-primary border border-gray-200'
+                          }`}
+                        >
+                          {region.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {formData.regions.length === 0 && (
+                  <p className="text-xs text-gray-400 mt-1.5">지역을 1개 이상 선택해주세요</p>
+                )}
               </div>
 
               <div className="flex gap-3">
