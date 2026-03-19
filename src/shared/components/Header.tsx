@@ -184,9 +184,6 @@ export default function Header() {
                 }`}
               >
                 {link.label}
-                {link.badge && (
-                  <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded-full">{link.badge}</span>
-                )}
               </Link>
             ))}
           </nav>
