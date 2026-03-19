@@ -209,18 +209,18 @@ export default function SignupForm() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">활동 지역</label>
+                <label className="block text-sm font-medium text-text-primary mb-3">활동 지역</label>
 
-                {/* 선택된 지역 태그 */}
+                {/* 선택된 지역 태그 표시 */}
                 {formData.regions.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-3">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     {formData.regions.map((r) => (
-                      <span key={r} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary text-white text-xs rounded-full">
+                      <span key={r} className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-primary text-white text-xs font-medium rounded-lg">
                         {r === 'all' ? '전국' : REGIONS.find(reg => reg.value === r)?.label}
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, regions: prev.regions.filter(v => v !== r) }))}
-                          className="hover:text-white/70"
+                          className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
                         >
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -228,32 +228,41 @@ export default function SignupForm() {
                         </button>
                       </span>
                     ))}
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, regions: [] }))}
+                      className="text-xs text-gray-400 hover:text-gray-600 self-center ml-1"
+                    >
+                      전체 해제
+                    </button>
                   </div>
                 )}
 
-                {/* 전국 토글 */}
-                <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 mb-2 cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.regions.includes('all')}
-                    onChange={() => {
-                      if (formData.regions.includes('all')) {
-                        setFormData(prev => ({ ...prev, regions: [] }));
-                      } else {
-                        setFormData(prev => ({ ...prev, regions: ['all'] }));
-                      }
-                    }}
-                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary/30"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-900">전국</span>
-                    <span className="text-xs text-gray-400 ml-1.5">모든 지역에서 활동</span>
-                  </div>
-                </label>
+                {/* 전국 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (formData.regions.includes('all')) {
+                      setFormData(prev => ({ ...prev, regions: [] }));
+                    } else {
+                      setFormData(prev => ({ ...prev, regions: ['all'] }));
+                    }
+                  }}
+                  className={`w-full py-3 rounded-xl text-sm font-semibold transition-all mb-3 flex items-center justify-center gap-2 ${
+                    formData.regions.includes('all')
+                      ? 'bg-primary text-white shadow-md'
+                      : 'bg-gray-50 text-gray-700 border border-gray-200 hover:border-primary hover:text-primary'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                  </svg>
+                  전국
+                </button>
 
                 {/* 지역 그리드 */}
                 {!formData.regions.includes('all') && (
-                  <div className="grid grid-cols-4 gap-1.5 p-3 rounded-lg border border-gray-200 bg-gray-50/50 max-h-[200px] overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-2">
                     {REGIONS.map((region) => {
                       const selected = formData.regions.includes(region.value);
                       return (
@@ -268,12 +277,17 @@ export default function SignupForm() {
                                 : [...prev.regions, region.value],
                             }));
                           }}
-                          className={`px-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                          className={`py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
                             selected
-                              ? 'bg-primary text-white shadow-sm'
-                              : 'bg-white text-gray-600 hover:bg-primary-50 hover:text-primary border border-gray-200'
+                              ? 'bg-primary text-white shadow-md'
+                              : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary hover:shadow-sm'
                           }`}
                         >
+                          {selected && (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          )}
                           {region.label}
                         </button>
                       );
@@ -282,7 +296,7 @@ export default function SignupForm() {
                 )}
 
                 {formData.regions.length === 0 && (
-                  <p className="text-xs text-gray-400 mt-1.5">지역을 1개 이상 선택해주세요</p>
+                  <p className="text-xs text-gray-400 mt-2 text-center">지역을 1개 이상 선택해주세요</p>
                 )}
               </div>
 
