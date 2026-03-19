@@ -38,14 +38,14 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white">
       {/* Top Header: Logo + Search + Auth */}
       <div className="border-b border-gray-100">
-        <div className="max-w-[1200px] mx-auto px-4 flex items-center h-[64px] gap-6">
+        <div className="max-w-[1200px] mx-auto px-4 relative flex items-center h-[64px]">
           {/* Logo */}
           <Link href={ROUTES.HOME} className="shrink-0">
             <span className="font-serif text-[28px] font-bold text-primary tracking-wide">Marié</span>
           </Link>
 
-          {/* Search Bar - Center */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[580px] mx-auto">
+          {/* Search Bar - Absolute Center */}
+          <form onSubmit={handleSearch} className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-full max-w-[520px]">
             <div className="flex w-full bg-gray-50 border border-gray-200 rounded-full overflow-hidden focus-within:border-primary focus-within:bg-white transition-all">
               <div className="flex items-center pl-5 text-gray-400">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -69,7 +69,7 @@ export default function Header() {
           </form>
 
           {/* Auth Links - Right */}
-          <div className="hidden md:flex items-center gap-1 ml-auto shrink-0 text-sm">
+          <div className="hidden md:flex items-center gap-1 absolute right-4 shrink-0 text-sm">
             {isLoading ? (
               <>
                 <Link href={ROUTES.LOGIN} className="px-3 py-1.5 text-gray-500 hover:text-gray-900 transition-colors">
