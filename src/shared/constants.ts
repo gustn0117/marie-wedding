@@ -72,4 +72,9 @@ export const ROUTES = {
   COMMUNITY: '/community',
   COMMUNITY_NEW: '/community/new',
   COMMUNITY_DETAIL: (id: string) => `/community/${id}`,
+  ADMIN: '/admin',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_JOBS: '/admin/jobs',
+  ADMIN_POSTS: '/admin/posts',
+  ADMIN_COMMENTS: '/admin/comments',
 } as const;
