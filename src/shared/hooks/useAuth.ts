@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
@@ -18,22 +18,29 @@ export function useAuth() {
     isLoading: true,
   });
 
-  const supabase = createClient();
+  const supabaseRef = useRef(createClient());
+
+  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
+    const { data } = await supabaseRef.current
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .single();
+    return data as Profile | null;
+  }, []);
 
   useEffect(() => {
-    const getSession = async () => {
+    const supabase = supabaseRef.current;
+
+    // Use getSession() for fast local check (no network request)
+    const initSession = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { session } } = await supabase.auth.getSession();
 
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', user.id)
-            .is('deleted_at', null)
-            .single();
-
-          setState({ user, profile, isLoading: false });
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          setState({ user: session.user, profile, isLoading: false });
         } else {
           setState({ user: null, profile: null, isLoading: false });
         }
@@ -42,20 +49,16 @@ export function useAuth() {
       }
     };
 
-    getSession();
+    initSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .is('deleted_at', null)
-            .single();
-
-          setState({ user: session.user, profile, isLoading: false });
-        } else {
+        if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+          if (session?.user) {
+            const profile = await fetchProfile(session.user.id);
+            setState({ user: session.user, profile, isLoading: false });
+          }
+        } else if (event === 'SIGNED_OUT') {
           setState({ user: null, profile: null, isLoading: false });
         }
       }
@@ -64,12 +67,12 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    await supabaseRef.current.auth.signOut();
     setState({ user: null, profile: null, isLoading: false });
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   return {
     user: state.user,
