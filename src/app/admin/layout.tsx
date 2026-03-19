@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/shared/hooks/useAuth';
+import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
+
+const ADMIN_PASSWORD = '1234';
+const STORAGE_KEY = 'marie_admin_auth';
 
 const NAV_ITEMS = [
   { href: ROUTES.ADMIN, label: '대시보드', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -16,17 +18,36 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { profile, isLoading } = useAuth();
+  const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && (!profile || profile.role !== 'admin')) {
-      router.replace(ROUTES.HOME);
-    }
-  }, [isLoading, profile, router]);
+    const saved = sessionStorage.getItem(STORAGE_KEY);
+    if (saved === 'true') setAuthed(true);
+    setChecking(false);
+  }, []);
 
-  if (isLoading) {
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem(STORAGE_KEY, 'true');
+      setAuthed(true);
+      setError('');
+    } else {
+      setError('비밀번호가 틀렸습니다.');
+    }
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setAuthed(false);
+    setPassword('');
+  };
+
+  if (checking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -34,7 +55,43 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!profile || profile.role !== 'admin') return null;
+  // Password gate
+  if (!authed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <form onSubmit={handleLogin} className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+            <div className="text-center mb-8">
+              <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">Marié</h1>
+              <p className="text-sm text-gray-500 mt-1">관리자 페이지</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  placeholder="비밀번호를 입력하세요"
+                  className="input-field"
+                  autoFocus
+                />
+                {error && <p className="text-sm text-red-500 mt-1">{error}</p>}
+              </div>
+              <button type="submit" className="btn-primary w-full">
+                로그인
+              </button>
+            </div>
+          </div>
+          <p className="text-center mt-4">
+            <Link href={ROUTES.HOME} className="text-sm text-gray-400 hover:text-gray-600">
+              사이트로 돌아가기
+            </Link>
+          </p>
+        </form>
+      </div>
+    );
+  }
 
   const isActive = (href: string) => pathname === href;
 
@@ -84,24 +141,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           ))}
         </nav>
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 text-xs font-bold">
-              {profile.contact_name.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-800 truncate">{profile.contact_name}</p>
-              <p className="text-xs text-gray-500">관리자</p>
-            </div>
-          </div>
           <Link
             href={ROUTES.HOME}
-            className="mt-3 flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
             </svg>
             사이트로 돌아가기
           </Link>
+          <button
+            onClick={handleLogout}
+            className="mt-2 flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+          >
+            로그아웃
+          </button>
         </div>
       </aside>
 

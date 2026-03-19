@@ -35,8 +35,7 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
-    const isPublicPage = request.nextUrl.pathname === '/';
-    const isAdminPage = request.nextUrl.pathname.startsWith('/admin');
+    const isPublicPage = request.nextUrl.pathname === '/' || request.nextUrl.pathname.startsWith('/admin');
 
     if (!user && !isAuthPage && !isPublicPage) {
       const url = request.nextUrl.clone();
@@ -48,39 +47,6 @@ export async function updateSession(request: NextRequest) {
       const url = request.nextUrl.clone();
       url.pathname = '/jobs';
       return NextResponse.redirect(url);
-    }
-
-    // Admin route protection: check role in profiles table
-    if (user && isAdminPage) {
-      const dbClient = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          db: { schema: 'marie_wedding' },
-          cookies: {
-            getAll() { return request.cookies.getAll(); },
-            setAll(cookiesToSet) {
-              cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-              supabaseResponse = NextResponse.next({ request });
-              cookiesToSet.forEach(({ name, value, options }) =>
-                supabaseResponse.cookies.set(name, value, options)
-              );
-            },
-          },
-        }
-      );
-      const { data: profile } = await dbClient
-        .from('profiles')
-        .select('role')
-        .eq('user_id', user.id)
-        .is('deleted_at', null)
-        .single();
-
-      if (!profile || profile.role !== 'admin') {
-        const url = request.nextUrl.clone();
-        url.pathname = '/';
-        return NextResponse.redirect(url);
-      }
     }
   } catch {
     // Supabase connection failed, allow request through
