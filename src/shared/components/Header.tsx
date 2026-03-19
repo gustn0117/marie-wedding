@@ -71,7 +71,15 @@ export default function Header() {
           {/* Auth Links - Right */}
           <div className="hidden md:flex items-center gap-1 ml-auto shrink-0 text-sm">
             {isLoading ? (
-              <div className="w-20 h-8 bg-gray-100 rounded animate-pulse" />
+              <>
+                <Link href={ROUTES.LOGIN} className="px-3 py-1.5 text-gray-500 hover:text-gray-900 transition-colors">
+                  로그인
+                </Link>
+                <span className="text-gray-200">|</span>
+                <Link href={ROUTES.SIGNUP} className="px-3 py-1.5 text-gray-500 hover:text-gray-900 transition-colors">
+                  회원가입
+                </Link>
+              </>
             ) : isAuthenticated && profile ? (
               <div className="relative">
                 <button
