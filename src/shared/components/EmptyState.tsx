@@ -27,7 +27,7 @@ export default function EmptyState({ title, description, actionLabel, actionHref
         </svg>
       </div>
 
-      <h3 className="font-serif text-lg font-semibold text-text-primary mb-2">
+      <h3 className="text-lg font-semibold text-text-primary mb-2">
         {title}
       </h3>
       <p className="text-sm text-text-secondary max-w-sm mb-6">

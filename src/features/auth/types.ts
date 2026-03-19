@@ -5,7 +5,7 @@ export interface SignupFormData {
   confirmPassword: string;
   // 공통
   contactName: string;
-  region: string;
+  regions: string[];
   // 업체 전용
   businessType?: string;
   companyName?: string;

@@ -80,7 +80,7 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <h2 className="font-serif text-xl font-semibold text-text-primary mb-3">
+        <h2 className="text-xl font-semibold text-text-primary mb-3">
           {error ?? '게시글을 찾을 수 없습니다'}
         </h2>
         <p className="text-sm text-text-secondary mb-6">
@@ -115,7 +115,7 @@ export default function PostDetailPage() {
           </span>
 
           {/* Title */}
-          <h1 className="font-serif text-2xl md:text-3xl font-bold text-text-primary leading-snug mb-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-text-primary leading-snug mb-4">
             {post.title}
           </h1>
 

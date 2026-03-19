@@ -19,7 +19,7 @@ export default function PostCard({ post }: PostCardProps) {
             </span>
 
             {/* Title */}
-            <h3 className="font-serif text-lg font-semibold text-text-primary group-hover:text-primary transition-colors duration-200 mb-1.5 line-clamp-1">
+            <h3 className="text-lg font-semibold text-text-primary group-hover:text-primary transition-colors duration-200 mb-1.5 line-clamp-1">
               {post.title}
             </h3>
 

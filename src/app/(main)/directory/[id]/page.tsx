@@ -107,7 +107,7 @@ export default function CompanyDetailPage() {
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-text-primary">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">
               {profile.company_name}
             </h1>
             <div className="flex flex-wrap items-center gap-2 mt-3">
@@ -226,7 +226,7 @@ export default function CompanyDetailPage() {
 
       {/* Jobs Section */}
       <div>
-        <h2 className="font-serif text-xl font-semibold text-text-primary mb-4">
+        <h2 className="text-xl font-semibold text-text-primary mb-4">
           채용 공고
         </h2>
 

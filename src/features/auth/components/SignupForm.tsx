@@ -21,7 +21,7 @@ export default function SignupForm() {
     password: '',
     confirmPassword: '',
     contactName: '',
-    region: '',
+    regions: [],
     businessType: '',
     companyName: '',
   });
@@ -48,7 +48,7 @@ export default function SignupForm() {
 
   const validateProfile = (): boolean => {
     if (!formData.contactName.trim()) { setError('이름을 입력해주세요.'); return false; }
-    if (!formData.region) { setError('지역을 선택해주세요.'); return false; }
+    if (formData.regions.length === 0) { setError('지역을 선택해주세요.'); return false; }
     if (formData.accountType === 'business') {
       if (!formData.businessType) { setError('업종을 선택해주세요.'); return false; }
       if (!formData.companyName?.trim()) { setError('업체명을 입력해주세요.'); return false; }
@@ -66,7 +66,7 @@ export default function SignupForm() {
       await authService.signUp(formData.email, formData.password, {
         accountType: formData.accountType,
         contactName: formData.contactName.trim(),
-        region: formData.region,
+        regions: formData.regions,
         businessType: formData.businessType || undefined,
         companyName: formData.companyName?.trim() || undefined,
       });
@@ -209,13 +209,54 @@ export default function SignupForm() {
               )}
 
               <div>
-                <label htmlFor="region" className="block text-sm font-medium text-text-primary mb-1.5">지역</label>
-                <select id="region" name="region" required value={formData.region} onChange={handleChange} className="input-field">
-                  <option value="">지역을 선택하세요</option>
+                <label className="block text-sm font-medium text-text-primary mb-2">활동 지역 <span className="text-text-muted font-normal">(복수 선택 가능)</span></label>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.regions.includes('all')) {
+                        setFormData(prev => ({ ...prev, regions: [] }));
+                      } else {
+                        setFormData(prev => ({ ...prev, regions: ['all'] }));
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                      formData.regions.includes('all')
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    전국
+                  </button>
                   {REGIONS.map((region) => (
-                    <option key={region.value} value={region.value}>{region.label}</option>
+                    <button
+                      key={region.value}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => {
+                          const filtered = prev.regions.filter(r => r !== 'all');
+                          const has = filtered.includes(region.value);
+                          return {
+                            ...prev,
+                            regions: has
+                              ? filtered.filter(r => r !== region.value)
+                              : [...filtered, region.value],
+                          };
+                        });
+                      }}
+                      disabled={formData.regions.includes('all')}
+                      className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                        formData.regions.includes('all')
+                          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : formData.regions.includes(region.value)
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {region.label}
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
               <div className="flex gap-3">

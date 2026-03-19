@@ -90,7 +90,7 @@ export default function JobDetailPage() {
     return (
       <div className="max-w-3xl mx-auto">
         <div className="card p-8 text-center space-y-4">
-          <h2 className="font-serif text-lg font-semibold text-text-primary">
+          <h2 className="text-lg font-semibold text-text-primary">
             {error ?? '공고를 찾을 수 없습니다'}
           </h2>
           <Link href={ROUTES.JOBS} className="btn-outline text-sm inline-block">
@@ -141,7 +141,7 @@ export default function JobDetailPage() {
           </div>
 
           {/* Title */}
-          <h1 className="font-serif text-2xl md:text-3xl font-bold text-text-primary leading-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-text-primary leading-tight">
             {job.title}
           </h1>
 
@@ -179,7 +179,7 @@ export default function JobDetailPage() {
 
           {/* Description */}
           <div className="space-y-3">
-            <h2 className="font-serif text-lg font-semibold text-text-primary">상세 내용</h2>
+            <h2 className="text-lg font-semibold text-text-primary">상세 내용</h2>
             <div className="prose prose-sm max-w-none text-text-secondary whitespace-pre-wrap leading-relaxed">
               {job.description}
             </div>
@@ -191,10 +191,10 @@ export default function JobDetailPage() {
           <>
             <div className="border-t border-border" />
             <div className="p-6 md:p-8">
-              <h2 className="font-serif text-lg font-semibold text-text-primary mb-4">업체 정보</h2>
+              <h2 className="text-lg font-semibold text-text-primary mb-4">업체 정보</h2>
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary font-serif font-bold text-lg">
+                  <span className="text-primary font-bold text-lg">
                     {(job.author.company_name || job.author.contact_name).charAt(0)}
                   </span>
                 </div>

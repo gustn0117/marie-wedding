@@ -15,7 +15,7 @@ export default function CommunityPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-serif text-2xl font-bold text-text-primary">
+          <h1 className="text-2xl font-bold text-text-primary">
             커뮤니티
           </h1>
           <p className="text-sm text-text-secondary mt-1">

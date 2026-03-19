@@ -26,7 +26,7 @@ export default function NewPostPage() {
   if (!user || !profile) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <h2 className="font-serif text-xl font-semibold text-text-primary mb-3">
+        <h2 className="text-xl font-semibold text-text-primary mb-3">
           로그인이 필요합니다
         </h2>
         <p className="text-sm text-text-secondary mb-6">
@@ -52,7 +52,7 @@ export default function NewPostPage() {
           </svg>
           돌아가기
         </button>
-        <h1 className="font-serif text-2xl font-bold text-text-primary">
+        <h1 className="text-2xl font-bold text-text-primary">
           새 글 작성
         </h1>
       </div>

@@ -42,7 +42,7 @@ export default function NewJobPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
-          <h2 className="font-serif text-lg font-semibold text-text-primary">로그인이 필요합니다</h2>
+          <h2 className="text-lg font-semibold text-text-primary">로그인이 필요합니다</h2>
           <p className="text-sm text-text-secondary">채용 공고를 등록하려면 로그인해주세요.</p>
           <Link href={ROUTES.LOGIN} className="btn-primary text-sm px-6 py-2.5 inline-block">로그인하기</Link>
         </div>
@@ -55,7 +55,7 @@ export default function NewJobPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
-          <h2 className="font-serif text-lg font-semibold text-text-primary">업체 회원 전용 기능입니다</h2>
+          <h2 className="text-lg font-semibold text-text-primary">업체 회원 전용 기능입니다</h2>
           <p className="text-sm text-text-secondary">공고 등록은 업체 회원만 가능합니다. 업체 회원으로 전환하려면 고객센터에 문의해주세요.</p>
           <Link href={ROUTES.JOBS} className="btn-primary text-sm px-6 py-2.5 inline-block">목록으로 돌아가기</Link>
         </div>
@@ -76,7 +76,7 @@ export default function NewJobPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="font-serif text-2xl font-bold text-text-primary">공고 등록</h1>
+        <h1 className="text-2xl font-bold text-text-primary">공고 등록</h1>
       </div>
 
       {/* Form */}

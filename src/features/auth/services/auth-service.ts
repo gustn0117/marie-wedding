@@ -4,7 +4,7 @@ export const authService = {
   async signUp(email: string, password: string, metadata: {
     accountType: 'individual' | 'business';
     contactName: string;
-    region: string;
+    regions: string[];
     businessType?: string;
     companyName?: string;
   }) {
@@ -20,7 +20,7 @@ export const authService = {
       user_id: authData.user.id,
       account_type: metadata.accountType,
       contact_name: metadata.contactName,
-      region: metadata.region,
+      region: metadata.regions.join(','),
     };
 
     if (metadata.accountType === 'business') {

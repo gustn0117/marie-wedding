@@ -73,7 +73,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   return (
     <section className="mt-10">
       {/* Header */}
-      <h3 className="font-serif text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
+      <h3 className="text-lg font-semibold text-text-primary mb-6 flex items-center gap-2">
         댓글
         <span className="text-sm font-normal text-text-muted">
           {comments.length}

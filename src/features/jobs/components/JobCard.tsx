@@ -43,7 +43,7 @@ export default function JobCard({ job }: JobCardProps) {
         </div>
 
         {/* Title */}
-        <h3 className="font-serif text-lg font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
+        <h3 className="text-lg font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
           {job.title}
         </h3>
 

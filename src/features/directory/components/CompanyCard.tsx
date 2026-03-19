@@ -15,7 +15,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-3">
-        <h3 className="font-serif text-lg font-semibold text-text-primary group-hover:text-primary transition-colors duration-200 truncate">
+        <h3 className="text-lg font-semibold text-text-primary group-hover:text-primary transition-colors duration-200 truncate">
           {profile.company_name}
         </h3>
         <span className="badge-primary shrink-0">
