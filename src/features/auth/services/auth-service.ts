@@ -8,30 +8,33 @@ export const authService = {
     businessType?: string;
     companyName?: string;
   }) {
+    // Use API route for signup (service_role key, bypasses RLS)
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        accountType: metadata.accountType,
+        contactName: metadata.contactName,
+        regions: metadata.regions,
+        businessType: metadata.businessType,
+        companyName: metadata.companyName,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    // Sign in after successful signup
     const supabase = createClient();
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('회원가입에 실패했습니다.');
+    if (signInError) throw signInError;
 
-    const profileData: Record<string, unknown> = {
-      user_id: authData.user.id,
-      account_type: metadata.accountType,
-      contact_name: metadata.contactName,
-      region: metadata.regions.join(','),
-    };
-
-    if (metadata.accountType === 'business') {
-      profileData.business_type = metadata.businessType;
-      profileData.company_name = metadata.companyName;
-    }
-
-    const { error: profileError } = await supabase.from('profiles').insert(profileData);
-    if (profileError) throw profileError;
-
-    return authData;
+    return data;
   },
 
   async signIn(email: string, password: string) {
@@ -55,13 +58,13 @@ export const authService = {
 
   async getCurrentProfile() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
 
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', session.user.id)
       .single();
     if (error) throw error;
     return data;
