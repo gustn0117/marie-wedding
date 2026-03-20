@@ -69,12 +69,22 @@ export async function updateSession(request: NextRequest) {
 
         if (profile) {
           const cookieValue = JSON.stringify(profile);
+          // Set on request so downstream server components can read it
+          request.cookies.set('marie_profile', cookieValue);
+          // Rebuild response with updated request cookies
+          supabaseResponse = NextResponse.next({ request });
+          // Set on response so browser stores it
           supabaseResponse.cookies.set('marie_profile', cookieValue, {
             path: '/',
             httpOnly: false,
             secure: true,
             sameSite: 'lax',
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            maxAge: 60 * 60 * 24 * 7,
+          });
+          // Re-apply Supabase auth cookies that were set earlier
+          const supabaseCookies = request.cookies.getAll().filter(c => c.name.startsWith('sb-'));
+          supabaseCookies.forEach(({ name, value }) => {
+            supabaseResponse.cookies.set(name, value);
           });
         }
       }
