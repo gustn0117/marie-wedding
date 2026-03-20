@@ -53,9 +53,8 @@ export async function updateSession(request: NextRequest) {
 
     // Sync profile cookie
     if (user) {
-      const existing = request.cookies.get('marie_profile')?.value;
-      if (!existing) {
-        // Fetch profile and set cookie (only on first request after login)
+      const hasProfileCookie = request.cookies.has('marie_profile');
+      if (!hasProfileCookie) {
         const serviceClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -69,11 +68,14 @@ export async function updateSession(request: NextRequest) {
 
         if (profile) {
           const cookieValue = JSON.stringify(profile);
-          // Set on request so downstream server components can read it
+          // Set on request for downstream server components
           request.cookies.set('marie_profile', cookieValue);
-          // Rebuild response with updated request cookies
+          // Rebuild response with updated request (preserves forwarded cookies)
+          const oldCookies = supabaseResponse.cookies.getAll();
           supabaseResponse = NextResponse.next({ request });
-          // Set on response so browser stores it
+          // Re-apply all previously set response cookies (Supabase auth cookies)
+          oldCookies.forEach(c => supabaseResponse.cookies.set(c));
+          // Set profile cookie on response for browser
           supabaseResponse.cookies.set('marie_profile', cookieValue, {
             path: '/',
             httpOnly: false,
@@ -81,16 +83,11 @@ export async function updateSession(request: NextRequest) {
             sameSite: 'lax',
             maxAge: 60 * 60 * 24 * 7,
           });
-          // Re-apply Supabase auth cookies that were set earlier
-          const supabaseCookies = request.cookies.getAll().filter(c => c.name.startsWith('sb-'));
-          supabaseCookies.forEach(({ name, value }) => {
-            supabaseResponse.cookies.set(name, value);
-          });
         }
       }
     } else {
-      // Clear profile cookie when not authenticated
       if (request.cookies.has('marie_profile')) {
+        request.cookies.delete('marie_profile');
         supabaseResponse.cookies.delete('marie_profile');
       }
     }
