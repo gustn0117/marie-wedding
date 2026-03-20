@@ -11,13 +11,18 @@ import EmptyState from '@/shared/components/EmptyState';
 
 const PAGE_SIZE = 12;
 
-export default function CompanyList() {
+interface CompanyListProps {
+  initialProfiles?: Profile[];
+  initialCount?: number;
+}
+
+export default function CompanyList({ initialProfiles, initialCount }: CompanyListProps = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [profiles, setProfiles] = useState<Profile[]>(initialProfiles ?? []);
+  const [totalCount, setTotalCount] = useState(initialCount ?? 0);
+  const [isLoading, setIsLoading] = useState(!initialProfiles);
 
   const currentPage = Number(searchParams.get('page') ?? '1');
   const filters: DirectoryFilters = {

@@ -11,16 +11,21 @@ import type { Post } from '@/types/database';
 
 const PAGE_SIZE = 10;
 
-export default function PostList() {
+interface PostListProps {
+  initialPosts?: Post[];
+  initialCount?: number;
+}
+
+export default function PostList({ initialPosts, initialCount }: PostListProps = {}) {
   const searchParams = useSearchParams();
 
   const category = searchParams.get('category') ?? undefined;
   const search = searchParams.get('search') ?? undefined;
   const page = parseInt(searchParams.get('page') ?? '1', 10);
 
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>(initialPosts ?? []);
+  const [totalCount, setTotalCount] = useState(initialCount ?? 0);
+  const [loading, setLoading] = useState(!initialPosts);
   const [error, setError] = useState<string | null>(null);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);

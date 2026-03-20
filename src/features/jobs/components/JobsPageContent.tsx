@@ -17,7 +17,12 @@ import {
 
 const PAGE_SIZE = 20;
 
-export default function JobsPageContent() {
+interface JobsPageContentProps {
+  initialJobs?: Job[];
+  initialCount?: number;
+}
+
+export default function JobsPageContent({ initialJobs, initialCount }: JobsPageContentProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -36,9 +41,9 @@ export default function JobsPageContent() {
     }
   );
 
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>(initialJobs ?? []);
+  const [totalCount, setTotalCount] = useState(initialCount ?? 0);
+  const [loading, setLoading] = useState(!initialJobs);
 
   const currentPage = Number(searchParams.get('page')) || 1;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
