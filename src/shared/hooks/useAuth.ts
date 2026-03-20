@@ -53,10 +53,12 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
             setState({ user: session.user, profile, isLoading: false });
+          } else if (event === 'INITIAL_SESSION') {
+            setState({ user: null, profile: null, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
           setState({ user: null, profile: null, isLoading: false });

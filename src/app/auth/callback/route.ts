@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
@@ -28,6 +29,37 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
+      // Check if profile exists, if not create one for social login users
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const serviceClient = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { db: { schema: 'marie_wedding' } }
+        );
+
+        const { data: existingProfile } = await serviceClient
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (!existingProfile) {
+          const name = user.user_metadata?.full_name
+            || user.user_metadata?.name
+            || user.user_metadata?.preferred_username
+            || user.email?.split('@')[0]
+            || '사용자';
+
+          await serviceClient.from('profiles').insert({
+            user_id: user.id,
+            contact_name: name,
+            region: 'seoul',
+            account_type: 'individual',
+          });
+        }
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

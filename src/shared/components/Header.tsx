@@ -71,38 +71,36 @@ export default function Header() {
           {/* Auth Links - Right */}
           <div className="hidden md:flex items-center gap-1 absolute right-4 shrink-0 text-sm">
             {isLoading ? (
-              <>
-                <Link href={ROUTES.LOGIN} className="px-3 py-1.5 text-gray-500 hover:text-gray-900 transition-colors">
-                  로그인
-                </Link>
-                <span className="text-gray-200">|</span>
-                <Link href={ROUTES.SIGNUP} className="px-3 py-1.5 text-gray-500 hover:text-gray-900 transition-colors">
-                  회원가입
-                </Link>
-              </>
-            ) : isAuthenticated && profile ? (
+              <div className="w-20 h-8" />
+            ) : isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded text-gray-600 hover:text-gray-900 transition-colors"
                 >
                   <span className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold text-xs">
-                    {profile.contact_name.charAt(0)}
+                    {profile?.contact_name?.charAt(0) || '?'}
                   </span>
-                  <span className="font-medium">{profile.contact_name}</span>
+                  <span className="font-medium">{profile?.contact_name || '마이페이지'}</span>
                 </button>
                 {profileMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg border border-gray-200 shadow-lg z-20 py-1">
                       <div className="px-4 py-3 border-b border-gray-100">
-                        <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded mb-1 ${
-                          profile.account_type === 'business' ? 'bg-primary-50 text-primary' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {profile.account_type === 'business' ? '업체' : '개인'}
-                        </span>
-                        <p className="text-sm font-medium text-gray-800 truncate">{profile.company_name || profile.contact_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{profile.contact_name}</p>
+                        {profile ? (
+                          <>
+                            <span className={`inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded mb-1 ${
+                              profile.account_type === 'business' ? 'bg-primary-50 text-primary' : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {profile.account_type === 'business' ? '업체' : '개인'}
+                            </span>
+                            <p className="text-sm font-medium text-gray-800 truncate">{profile.company_name || profile.contact_name}</p>
+                            <p className="text-xs text-gray-500 truncate">{profile.contact_name}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-500">프로필 미설정</p>
+                        )}
                       </div>
                       <Link
                         href={ROUTES.MYPAGE}
@@ -111,7 +109,7 @@ export default function Header() {
                       >
                         마이페이지
                       </Link>
-                      {profile.role === 'admin' && (
+                      {profile?.role === 'admin' && (
                         <Link
                           href={ROUTES.ADMIN}
                           onClick={() => setProfileMenuOpen(false)}
