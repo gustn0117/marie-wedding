@@ -46,26 +46,36 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchData() {
       try {
-        const [latestRes, urgentRes, matchingRes, postsRes] = await Promise.all([
-          jobService.getJobs({}, 1, 4),
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 8000)
+        );
+        const dataPromise = Promise.all([
           jobService.getJobs({}, 1, 4),
           jobService.getJobs({ postingType: 'matching' }, 1, 4),
           communityService.getPosts({}, 1, 3),
         ]);
+        const [latestRes, matchingRes, postsRes] = await Promise.race([
+          dataPromise,
+          timeout,
+        ]) as [Awaited<ReturnType<typeof jobService.getJobs>>, Awaited<ReturnType<typeof jobService.getJobs>>, Awaited<ReturnType<typeof communityService.getPosts>>];
+        if (cancelled) return;
         setLatestJobs(latestRes.data);
-        setUrgentJobs(urgentRes.data.filter((j) => j.is_urgent).slice(0, 4));
+        setUrgentJobs(latestRes.data.filter((j) => j.is_urgent).slice(0, 4));
         setMatchingJobs(matchingRes.data);
         setRecommendedJobs(latestRes.data);
         setRecentPosts(postsRes.data);
       } catch (err) {
         console.error('Failed to fetch homepage data:', err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
     fetchData();
+    return () => { cancelled = true; };
   }, []);
 
   const getBusinessIcon = (type: string) => {
