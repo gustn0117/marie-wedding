@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
+    console.log('[middleware]', request.nextUrl.pathname, 'user:', user?.id ?? 'none', 'has_profile_cookie:', request.cookies.has('marie_profile'));
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
     const isPublicPage = request.nextUrl.pathname === '/' || request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/auth/callback');
@@ -66,6 +67,7 @@ export async function updateSession(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
+        console.log('[middleware] profile fetch result:', profile?.contact_name ?? 'null');
         if (profile) {
           const cookieValue = JSON.stringify(profile);
           // Set on request for downstream server components
