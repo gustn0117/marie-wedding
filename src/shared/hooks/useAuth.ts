@@ -5,21 +5,45 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
 
+const PROFILE_CACHE_KEY = 'marie_cached_profile';
+
 interface AuthState {
   user: User | null;
   profile: Profile | null;
   isLoading: boolean;
 }
 
+function getCachedProfile(): Profile | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedProfile(profile: Profile | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (profile) {
+      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
+    } else {
+      localStorage.removeItem(PROFILE_CACHE_KEY);
+    }
+  } catch {}
+}
+
 export function useAuth() {
+  const cachedProfile = getCachedProfile();
+
   const [state, setState] = useState<AuthState>({
     user: null,
-    profile: null,
-    isLoading: true,
+    profile: cachedProfile,
+    isLoading: !cachedProfile,
   });
 
   const supabaseRef = useRef(createClient());
-  const initializedRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     const { data } = await supabaseRef.current
@@ -34,34 +58,35 @@ export function useAuth() {
   useEffect(() => {
     const supabase = supabaseRef.current;
 
-    // Fast local session check (no network request)
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
+          setCachedProfile(profile);
           setState({ user: session.user, profile, isLoading: false });
         } else {
+          setCachedProfile(null);
           setState({ user: null, profile: null, isLoading: false });
         }
       } catch {
-        setState({ user: null, profile: null, isLoading: false });
+        setState(prev => ({ ...prev, isLoading: false }));
       }
-      initializedRef.current = true;
     };
 
     initSession();
 
-    // Listen for subsequent auth changes only (skip INITIAL_SESSION to avoid duplicate)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'INITIAL_SESSION') return;
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
+            setCachedProfile(profile);
             setState({ user: session.user, profile, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
+          setCachedProfile(null);
           setState({ user: null, profile: null, isLoading: false });
         }
       }
@@ -73,15 +98,16 @@ export function useAuth() {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    await supabaseRef.current.auth.signOut();
+    setCachedProfile(null);
     setState({ user: null, profile: null, isLoading: false });
+    await supabaseRef.current.auth.signOut();
   }, []);
 
   return {
     user: state.user,
     profile: state.profile,
     isLoading: state.isLoading,
-    isAuthenticated: !!state.user,
+    isAuthenticated: !!state.user || !!state.profile,
     signOut,
   };
 }
