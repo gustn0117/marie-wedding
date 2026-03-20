@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
-import Header from '@/shared/components/Header';
-import Footer from '@/shared/components/Footer';
 import {
   getEmploymentTypeLabel,
   getRegionLabel,
@@ -53,9 +51,7 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
   const displayJobs = activeTab === 'urgent' ? matchingJobs : activeTab === 'hot' ? urgentJobs : jobs;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header />
-
+    <>
       {/* MAIN 3-COLUMN SECTION */}
       <section className="bg-white">
         <div className="max-w-[1200px] mx-auto px-4 py-6">
@@ -365,7 +361,6 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
         </div>
       </section>
 
-      <Footer />
-    </div>
+    </>
   );
 }

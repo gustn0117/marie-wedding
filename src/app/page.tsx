@@ -1,5 +1,7 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import type { Job, Post } from '@/types/database';
+import Header from '@/shared/components/Header';
+import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
 
 export const dynamic = 'force-dynamic';
@@ -49,5 +51,11 @@ async function getHomeData() {
 export default async function HomePage() {
   const { jobs, matchingJobs, posts } = await getHomeData();
 
-  return <HomeContent jobs={jobs} matchingJobs={matchingJobs} posts={posts} />;
+  return (
+    <div className="min-h-screen flex flex-col bg-white">
+      <Header />
+      <HomeContent jobs={jobs} matchingJobs={matchingJobs} posts={posts} />
+      <Footer />
+    </div>
+  );
 }

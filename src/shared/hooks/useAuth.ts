@@ -5,42 +5,15 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
 
-const PROFILE_CACHE_KEY = 'marie_cached_profile';
-
 interface AuthState {
   user: User | null;
   profile: Profile | null;
-  isLoading: boolean;
-}
-
-function getCachedProfile(): Profile | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const cached = localStorage.getItem(PROFILE_CACHE_KEY);
-    return cached ? JSON.parse(cached) : null;
-  } catch {
-    return null;
-  }
-}
-
-function setCachedProfile(profile: Profile | null) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (profile) {
-      localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile));
-    } else {
-      localStorage.removeItem(PROFILE_CACHE_KEY);
-    }
-  } catch {}
 }
 
 export function useAuth() {
-  const cachedProfile = getCachedProfile();
-
   const [state, setState] = useState<AuthState>({
     user: null,
-    profile: cachedProfile,
-    isLoading: false,
+    profile: null,
   });
 
   const supabaseRef = useRef(createClient());
@@ -63,15 +36,9 @@ export function useAuth() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
-          setCachedProfile(profile);
-          setState({ user: session.user, profile, isLoading: false });
-        } else {
-          setCachedProfile(null);
-          setState({ user: null, profile: null, isLoading: false });
+          setState({ user: session.user, profile });
         }
-      } catch {
-        setState(prev => ({ ...prev, isLoading: false }));
-      }
+      } catch {}
     };
 
     initSession();
@@ -82,32 +49,28 @@ export function useAuth() {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
-            setCachedProfile(profile);
-            setState({ user: session.user, profile, isLoading: false });
+            setState({ user: session.user, profile });
           }
         } else if (event === 'SIGNED_OUT') {
-          setCachedProfile(null);
-          setState({ user: null, profile: null, isLoading: false });
+          setState({ user: null, profile: null });
         }
       }
     );
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => { subscription.unsubscribe(); };
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    setCachedProfile(null);
-    setState({ user: null, profile: null, isLoading: false });
+    document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     await supabaseRef.current.auth.signOut();
+    setState({ user: null, profile: null });
   }, []);
 
   return {
     user: state.user,
     profile: state.profile,
-    isLoading: state.isLoading,
-    isAuthenticated: !!state.user || !!state.profile,
+    isLoading: false,
+    isAuthenticated: !!state.user,
     signOut,
   };
 }
