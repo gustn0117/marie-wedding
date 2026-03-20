@@ -33,31 +33,13 @@ export function useAuth() {
   useEffect(() => {
     const supabase = supabaseRef.current;
 
-    // Use getSession() for fast local check (no network request)
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
-          setState({ user: session.user, profile, isLoading: false });
-        } else {
-          setState({ user: null, profile: null, isLoading: false });
-        }
-      } catch {
-        setState({ user: null, profile: null, isLoading: false });
-      }
-    };
-
-    initSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
             setState({ user: session.user, profile, isLoading: false });
-          } else if (event === 'INITIAL_SESSION') {
+          } else {
             setState({ user: null, profile: null, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
