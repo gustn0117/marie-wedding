@@ -19,6 +19,7 @@ export function useAuth() {
   });
 
   const supabaseRef = useRef(createClient());
+  const initializedRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     const { data } = await supabaseRef.current
@@ -33,14 +34,32 @@ export function useAuth() {
   useEffect(() => {
     const supabase = supabaseRef.current;
 
+    // Fast local session check (no network request)
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const profile = await fetchProfile(session.user.id);
+          setState({ user: session.user, profile, isLoading: false });
+        } else {
+          setState({ user: null, profile: null, isLoading: false });
+        }
+      } catch {
+        setState({ user: null, profile: null, isLoading: false });
+      }
+      initializedRef.current = true;
+    };
+
+    initSession();
+
+    // Listen for subsequent auth changes only (skip INITIAL_SESSION to avoid duplicate)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'INITIAL_SESSION') return;
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
             setState({ user: session.user, profile, isLoading: false });
-          } else {
-            setState({ user: null, profile: null, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
           setState({ user: null, profile: null, isLoading: false });
