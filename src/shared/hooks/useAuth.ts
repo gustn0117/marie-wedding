@@ -40,7 +40,7 @@ export function useAuth() {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: cachedProfile,
-    isLoading: !cachedProfile,
+    isLoading: false,
   });
 
   const supabaseRef = useRef(createClient());
