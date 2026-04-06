@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { ROUTES } from '@/shared/constants';
 import type { LoginFormData } from '@/features/auth/types';
 
 export default function LoginForm() {
-  const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -34,7 +32,7 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await authService.signIn(formData.email, formData.password);
-      router.push(ROUTES.JOBS);
+      window.location.href = ROUTES.HOME;
     } catch (err) {
       if (err instanceof Error) {
         if (err.message.includes('Invalid login credentials')) {

@@ -5,7 +5,7 @@ export const authService = {
     accountType: 'individual' | 'business';
     contactName: string;
     regions: string[];
-    businessType?: string;
+    businessTypes?: string[];
     companyName?: string;
   }) {
     // Use API route for signup (service_role key, bypasses RLS)
@@ -18,7 +18,7 @@ export const authService = {
         accountType: metadata.accountType,
         contactName: metadata.contactName,
         regions: metadata.regions,
-        businessType: metadata.businessType,
+        businessTypes: metadata.businessTypes,
         companyName: metadata.companyName,
       }),
     });

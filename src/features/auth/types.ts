@@ -7,7 +7,7 @@ export interface SignupFormData {
   contactName: string;
   regions: string[];
   // 업체 전용
-  businessType?: string;
+  businessTypes: string[];
   companyName?: string;
 }
 

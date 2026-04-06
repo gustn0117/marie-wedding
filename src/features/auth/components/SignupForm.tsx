@@ -22,7 +22,7 @@ export default function SignupForm() {
     confirmPassword: '',
     contactName: '',
     regions: [],
-    businessType: '',
+    businessTypes: [],
     companyName: '',
   });
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function SignupForm() {
     if (!formData.contactName.trim()) { setError('이름을 입력해주세요.'); return false; }
     if (formData.regions.length === 0) { setError('지역을 선택해주세요.'); return false; }
     if (formData.accountType === 'business') {
-      if (!formData.businessType) { setError('업종을 선택해주세요.'); return false; }
+      if (formData.businessTypes.length === 0) { setError('업종을 1개 이상 선택해주세요.'); return false; }
       if (!formData.companyName?.trim()) { setError('업체명을 입력해주세요.'); return false; }
     }
     return true;
@@ -67,7 +67,7 @@ export default function SignupForm() {
         accountType: formData.accountType,
         contactName: formData.contactName.trim(),
         regions: formData.regions,
-        businessType: formData.businessType || undefined,
+        businessTypes: formData.businessTypes.length > 0 ? formData.businessTypes : undefined,
         companyName: formData.companyName?.trim() || undefined,
       });
       router.push(ROUTES.HOME);
@@ -195,13 +195,56 @@ export default function SignupForm() {
               {formData.accountType === 'business' && (
                 <>
                   <div>
-                    <label htmlFor="businessType" className="block text-sm font-medium text-text-primary mb-1.5">업종</label>
-                    <select id="businessType" name="businessType" required value={formData.businessType} onChange={handleChange} className="input-field">
-                      <option value="">업종을 선택하세요</option>
-                      {BUSINESS_TYPES.map((type) => (
-                        <option key={type.value} value={type.value}>{type.label}</option>
-                      ))}
-                    </select>
+                    <label className="block text-sm font-medium text-text-primary mb-3">업종 (복수 선택 가능)</label>
+                    {formData.businessTypes.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {formData.businessTypes.map((bt) => (
+                          <span key={bt} className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-primary text-white text-xs font-medium rounded-lg">
+                            {BUSINESS_TYPES.find(t => t.value === bt)?.label}
+                            <button
+                              type="button"
+                              onClick={() => setFormData(prev => ({ ...prev, businessTypes: prev.businessTypes.filter(v => v !== bt) }))}
+                              className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-2">
+                      {BUSINESS_TYPES.map((type) => {
+                        const selected = formData.businessTypes.includes(type.value);
+                        return (
+                          <button
+                            key={type.value}
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({
+                                ...prev,
+                                businessTypes: selected
+                                  ? prev.businessTypes.filter(v => v !== type.value)
+                                  : [...prev.businessTypes, type.value],
+                              }));
+                            }}
+                            className={`py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                              selected
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary hover:shadow-sm'
+                            }`}
+                          >
+                            {selected && (
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                            )}
+                            {type.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div>
                     <label htmlFor="companyName" className="block text-sm font-medium text-text-primary mb-1.5">업체명</label>

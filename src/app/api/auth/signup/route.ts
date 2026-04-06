@@ -6,7 +6,7 @@ const SCHEMA = 'marie_wedding';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, accountType, contactName, regions, businessType, companyName } = body;
+    const { email, password, accountType, contactName, regions, businessTypes, companyName } = body;
 
     if (!email || !password || !contactName || !regions?.length) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (accountType === 'business') {
-      profileData.business_type = businessType;
+      profileData.business_type = Array.isArray(businessTypes) ? businessTypes[0] : businessTypes;
       profileData.company_name = companyName;
     }
 
