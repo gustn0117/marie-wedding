@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import {
@@ -55,74 +56,104 @@ interface HomeContentProps {
 }
 
 export default function HomeContent({ posts }: HomeContentProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const banners = [
+    {
+      bg: 'bg-gradient-to-r from-[#1B2A4A] to-[#2E4470]',
+      badge: 'Grand Open',
+      title: 'Marié 서비스 오픈',
+      desc: '웨딩 업계를 하나로 잇는 B2B 플랫폼이 문을 열었습니다.',
+      cta: '자세히 보기',
+      href: ROUTES.JOBS,
+    },
+    {
+      bg: 'bg-gradient-to-r from-[#6B2D5B] to-[#A24D8B]',
+      badge: '채용',
+      title: '웨딩 업계 채용 공고',
+      desc: '예식장, 드레스샵, 스튜디오 등 다양한 웨딩 분야 채용 정보를 확인하세요.',
+      cta: '공고 보기',
+      href: ROUTES.JOBS,
+    },
+    {
+      bg: 'bg-gradient-to-r from-[#1a3a2a] to-[#2d6b4a]',
+      badge: '업체 등록',
+      title: '무료 업체 등록',
+      desc: '지금 업체를 등록하고 웨딩 업계 네트워크에 참여하세요.',
+      cta: '등록하기',
+      href: ROUTES.SIGNUP,
+    },
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [banners.length]);
+
   return (
     <>
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f1829] via-[#1a2a4a] to-[#0d1f3c]">
-        {/* Background decorations */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-primary/5 to-transparent rounded-full blur-3xl" />
+      {/* BANNER SLIDER */}
+      <section className="relative w-full overflow-hidden">
+        <div
+          className="flex transition-transform duration-500 ease-in-out"
+          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+        >
+          {banners.map((banner, i) => (
+            <div key={i} className={`w-full shrink-0 ${banner.bg}`}>
+              <div className="max-w-[1200px] mx-auto px-4 py-12 sm:py-16 flex items-center justify-between">
+                <div>
+                  <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-3 py-1 rounded-full mb-4">
+                    {banner.badge}
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{banner.title}</h2>
+                  <p className="text-sm sm:text-base text-white/60 mb-6 max-w-md">{banner.desc}</p>
+                  <Link
+                    href={banner.href}
+                    className="inline-block px-6 py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {banner.cta}
+                  </Link>
+                </div>
+                <div className="hidden sm:block">
+                  <span className="font-serif text-7xl font-bold text-white/10">Marié</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="relative max-w-[1200px] mx-auto px-4 py-16 sm:py-20">
-          <div className="flex flex-col items-center text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm mb-6">
-              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-              <span className="text-[13px] text-white/80 font-medium">2024 Grand Open</span>
-            </div>
-
-            {/* Logo */}
-            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white tracking-wider mb-4">
-              Marié
-            </h1>
-
-            {/* Tagline */}
-            <p className="text-lg sm:text-xl text-white/70 font-light leading-relaxed mb-2">
-              웨딩 업계를 하나로 잇는 B2B 플랫폼
-            </p>
-            <p className="text-sm sm:text-base text-white/40 max-w-md leading-relaxed mb-10">
-              예식장, 드레스, 스튜디오, 메이크업, 플래너 --<br className="sm:hidden" />
-              웨딩의 모든 파트너를 한 곳에서 만나보세요.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href={ROUTES.JOBS}
-                className="px-8 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-colors text-sm"
-              >
-                채용 공고 보기
-              </Link>
-              <Link
-                href={ROUTES.DIRECTORY}
-                className="px-8 py-3 bg-white/10 text-white font-semibold rounded-lg border border-white/20 hover:bg-white/20 transition-colors text-sm backdrop-blur-sm"
-              >
-                업체 디렉토리
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="flex items-center gap-8 sm:gap-12 mt-12 pt-8 border-t border-white/10">
-              <div className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-white">500+</p>
-                <p className="text-[12px] text-white/40 mt-1">등록 업체</p>
-              </div>
-              <div className="w-px h-10 bg-white/10" />
-              <div className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-white">1,200+</p>
-                <p className="text-[12px] text-white/40 mt-1">채용 공고</p>
-              </div>
-              <div className="w-px h-10 bg-white/10" />
-              <div className="text-center">
-                <p className="text-2xl sm:text-3xl font-bold text-white">7</p>
-                <p className="text-[12px] text-white/40 mt-1">업종 카테고리</p>
-              </div>
-            </div>
-          </div>
+        {/* Dots */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          {banners.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentSlide(i)}
+              className={`w-2 h-2 rounded-full transition-all ${
+                currentSlide === i ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'
+              }`}
+            />
+          ))}
         </div>
+
+        {/* Arrows */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </button>
       </section>
 
       {/* FULL-WIDTH BANNER */}
@@ -140,6 +171,50 @@ export default function HomeContent({ posts }: HomeContentProps) {
           >
             공고 등록 &rarr;
           </Link>
+        </div>
+      </section>
+
+      {/* PREMIUM / HOT JOBS */}
+      <section className="bg-white">
+        <div className="max-w-[1200px] mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[18px] font-bold text-gray-900">지금 핫한 채용</h2>
+              <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded">AD</span>
+            </div>
+            <Link href={ROUTES.JOBS} className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors">
+              더보기 &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { company: '그랜드 웨딩홀', title: '예식장 매니저 정규직 채용', type: 'venue', region: '서울 강남', employment: '정규직' },
+              { company: '로즈드레스', title: '피팅 전문가 경력직 모집', type: 'dress', region: '경기 성남', employment: '정규직' },
+              { company: '루미에르 스튜디오', title: '웨딩 포토그래퍼 모집', type: 'studio', region: '서울 마포', employment: '계약직' },
+              { company: '블룸 메이크업', title: '시니어 메이크업 아티스트', type: 'makeup', region: '서울 청담', employment: '정규직' },
+            ].map((job, i) => (
+              <Link
+                key={i}
+                href={ROUTES.JOBS}
+                className="border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-primary/30 transition-all group"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                    <BusinessIcon type={job.type} className="w-4.5 h-4.5" />
+                  </span>
+                  <span className="text-[12px] font-semibold text-gray-500">{job.company}</span>
+                </div>
+                <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-3 line-clamp-2">
+                  {job.title}
+                </h3>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-gray-400">{job.region}</span>
+                  <span className="text-[11px] text-gray-300">|</span>
+                  <span className="text-[11px] text-gray-400">{job.employment}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
