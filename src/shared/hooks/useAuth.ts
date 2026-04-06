@@ -11,11 +11,23 @@ interface AuthState {
   isLoading: boolean;
 }
 
+// Read marie_profile cookie for instant display
+function getCookieProfile(): Profile | null {
+  if (typeof document === 'undefined') return null;
+  try {
+    const match = document.cookie.match(/marie_profile=([^;]+)/);
+    if (match) return JSON.parse(decodeURIComponent(match[1]));
+  } catch {}
+  return null;
+}
+
 export function useAuth() {
+  const cookieProfile = getCookieProfile();
+
   const [state, setState] = useState<AuthState>({
     user: null,
-    profile: null,
-    isLoading: true,
+    profile: cookieProfile,
+    isLoading: !cookieProfile,
   });
 
   const supabaseRef = useRef(createClient());
@@ -43,9 +55,17 @@ export function useAuth() {
           setState({ user: null, profile: null, isLoading: false });
         }
       } catch {
-        setState({ user: null, profile: null, isLoading: false });
+        setState(prev => ({ ...prev, isLoading: false }));
       }
     };
+
+    // Set a timeout so loading never hangs forever
+    const timeout = setTimeout(() => {
+      setState(prev => {
+        if (prev.isLoading) return { ...prev, isLoading: false };
+        return prev;
+      });
+    }, 5000);
 
     initSession();
 
@@ -63,7 +83,10 @@ export function useAuth() {
       }
     );
 
-    return () => { subscription.unsubscribe(); };
+    return () => {
+      clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
@@ -76,7 +99,7 @@ export function useAuth() {
     user: state.user,
     profile: state.profile,
     isLoading: state.isLoading,
-    isAuthenticated: !!state.user,
+    isAuthenticated: !!state.user || !!state.profile,
     signOut,
   };
 }
