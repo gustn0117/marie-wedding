@@ -254,12 +254,12 @@ export default function HomeContent({ posts }: HomeContentProps) {
                 <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
               </div>
               <div className="p-5">
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-9 gap-2">
                   {REGIONS.map((region) => (
                     <Link
                       key={region.value}
                       href={`${ROUTES.JOBS}?region=${region.value}`}
-                      className="px-3.5 py-2 text-[13px] text-gray-600 bg-gray-50 rounded hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
+                      className="py-2 text-center text-[13px] text-gray-600 bg-gray-50 rounded-lg hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
                     >
                       {region.label}
                     </Link>
