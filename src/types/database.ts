@@ -12,6 +12,7 @@ export interface Profile {
   phone: string | null;
   website: string | null;
   profile_image: string | null;
+  is_directory_listed: boolean;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;

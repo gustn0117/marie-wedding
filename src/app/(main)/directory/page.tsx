@@ -17,6 +17,7 @@ async function getInitialProfiles() {
     .from('profiles')
     .select('*', { count: 'exact' })
     .is('deleted_at', null)
+    .eq('is_directory_listed', true)
     .order('company_name', { ascending: true })
     .range(0, 11);
 

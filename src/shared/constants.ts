@@ -68,6 +68,7 @@ export const ROUTES = {
   JOBS_EDIT: (id: string) => `/jobs/${id}/edit`,
   DIRECTORY: '/directory',
   DIRECTORY_DETAIL: (id: string) => `/directory/${id}`,
+  DIRECTORY_REGISTER: '/mypage/directory',
   EVENTS: '/events',
   EVENTS_DETAIL: (id: string) => `/events/${id}`,
   COMMUNITY: '/community',

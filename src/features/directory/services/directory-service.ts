@@ -16,6 +16,7 @@ export const directoryService = {
       .from('profiles')
       .select('*', { count: 'exact' })
       .is('deleted_at', null)
+      .eq('is_directory_listed', true)
       .order('company_name', { ascending: true });
 
     if (filters?.businessType) {
@@ -100,6 +101,18 @@ export const directoryService = {
       .select()
       .single();
 
+    if (error) throw error;
+    return data as Profile;
+  },
+
+  async toggleDirectoryListing(id: string, listed: boolean): Promise<Profile> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ is_directory_listed: listed, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+      .single();
     if (error) throw error;
     return data as Profile;
   },

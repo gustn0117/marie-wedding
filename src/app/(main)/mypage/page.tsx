@@ -174,6 +174,15 @@ export default function MyPage() {
           <Link href={ROUTES.MYPAGE_EDIT} className="text-sm text-gray-500 hover:text-primary transition-colors">프로필 수정</Link>
           <span className="text-gray-200">|</span>
           <Link href={ROUTES.MYPAGE_PASSWORD} className="text-sm text-gray-500 hover:text-primary transition-colors">비밀번호 변경</Link>
+          {profile.account_type === 'business' && (
+            <>
+              <span className="text-gray-200">|</span>
+              <Link href={ROUTES.DIRECTORY_REGISTER} className="text-sm text-gray-500 hover:text-primary transition-colors flex items-center gap-1">
+                디렉토리 등록
+                {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
