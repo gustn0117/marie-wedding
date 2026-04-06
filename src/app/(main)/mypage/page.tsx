@@ -81,7 +81,7 @@ export default function MyPage() {
       {/* Profile Card */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {/* Cover */}
-        <div className="h-28 bg-gradient-to-r from-primary-dark via-primary to-primary-light" />
+        <div className="h-28 bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100" />
 
         <div className="px-6 pb-6">
           {/* Avatar + Name */}

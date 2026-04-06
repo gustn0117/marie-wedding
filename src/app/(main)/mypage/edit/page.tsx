@@ -242,11 +242,37 @@ export default function EditProfilePage() {
               <input id="company_name" name="company_name" type="text" value={formData.company_name} onChange={handleChange} className="input-field w-full" />
             </div>
             <div className="space-y-1.5">
-              <label htmlFor="business_type" className="block text-sm font-medium text-gray-800">업종</label>
-              <select id="business_type" name="business_type" value={formData.business_type} onChange={handleChange} className="input-field w-full">
-                <option value="">선택해주세요</option>
-                {BUSINESS_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
+              <label className="block text-sm font-medium text-gray-800">업종 (복수 선택 가능)</label>
+              <div className="grid grid-cols-3 gap-2">
+                {BUSINESS_TYPES.map((t) => {
+                  const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => {
+                        const current = formData.business_type.split(',').filter(Boolean);
+                        const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
+                        setFormData(prev => ({ ...prev, business_type: next.join(',') }));
+                        setError(null);
+                        setSuccess(false);
+                      }}
+                      className={`py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                        selected
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+                      }`}
+                    >
+                      {selected && (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </>
         )}

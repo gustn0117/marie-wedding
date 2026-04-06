@@ -27,7 +27,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const searchParams = useSearchParams();
 
   const [selectedRegion, setSelectedRegion] = useState(searchParams.get('region') ?? '');
-  const [selectedBusinessType, setSelectedBusinessType] = useState(searchParams.get('businessType') ?? '');
+  const [selectedBusinessTypes, setSelectedBusinessTypes] = useState<string[]>(
+    () => {
+      const bt = searchParams.get('businessType');
+      return bt ? bt.split(',') : [];
+    }
+  );
   const [selectedEmploymentType, setSelectedEmploymentType] = useState(searchParams.get('employmentType') ?? '');
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
@@ -92,20 +97,14 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   useEffect(() => {
     setSelectedRegion(searchParams.get('region') ?? '');
-    setSelectedBusinessType(searchParams.get('businessType') ?? '');
+    const bt = searchParams.get('businessType');
+    setSelectedBusinessTypes(bt ? bt.split(',') : []);
     setSelectedEmploymentType(searchParams.get('employmentType') ?? '');
     setSearch(searchParams.get('search') ?? '');
     const sub = searchParams.get('subRegion');
     setSelectedSubRegions(sub ? sub.split(',') : []);
   }, [searchParams]);
 
-  // Debounced search
-  useEffect(() => {
-    const currentSearch = searchParams.get('search') ?? '';
-    if (search === currentSearch) return;
-    const timer = setTimeout(() => updateParams({ search }), 400);
-    return () => clearTimeout(timer);
-  }, [search, searchParams, updateParams]);
 
   const handleRegionBrowse = (value: string) => {
     // 시/도 변경 시 세부 지역 초기화
@@ -141,10 +140,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     });
   };
 
-  const handleBusinessTypeSelect = (value: string) => {
-    setSelectedBusinessType(value);
-    updateParams({ businessType: value });
-    setBusinessTypeDropdownOpen(false);
+  const handleBusinessTypeToggle = (value: string) => {
+    setSelectedBusinessTypes(prev => {
+      const next = prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value];
+      updateParams({ businessType: next.join(',') });
+      return next;
+    });
   };
 
   const handleEmploymentTypeSelect = (value: string) => {
@@ -180,7 +181,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   const activeFilters = [
     selectedRegion && { key: 'region', label: getRegionFilterLabel()! },
-    selectedBusinessType && { key: 'businessType', label: getBusinessTypeLabel(selectedBusinessType) },
+    selectedBusinessTypes.length > 0 && { key: 'businessType', label: selectedBusinessTypes.map(v => getBusinessTypeLabel(v)).join(', ') },
     selectedEmploymentType && { key: 'employmentType', label: getEmploymentTypeLabel(selectedEmploymentType) },
   ].filter(Boolean) as { key: string; label: string }[];
 
@@ -188,6 +189,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     if (key === 'region') {
       setSelectedSubRegions([]);
       updateParams({ region: '', subRegion: '' });
+    } else if (key === 'businessType') {
+      setSelectedBusinessTypes([]);
+      updateParams({ businessType: '' });
     } else {
       updateParams({ [key]: '' });
     }
@@ -293,7 +297,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                   </svg>
-                  <span>{selectedBusinessType ? `업종 · ${getBusinessTypeLabel(selectedBusinessType)}` : '업종 선택'}</span>
+                  <span>{selectedBusinessTypes.length > 0 ? `업종 · ${selectedBusinessTypes.length}개` : '업종 선택'}</span>
                   <svg className={`w-4 h-4 text-gray-400 transition-transform ${businessTypeDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                   </svg>
@@ -325,17 +329,26 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               )}
 
               {/* Search */}
-              <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="검색어 입력"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-                />
+              <div className="relative flex-1 flex gap-2">
+                <div className="relative flex-1">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="검색어 입력"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') updateParams({ search }); }}
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  />
+                </div>
+                <button
+                  onClick={() => updateParams({ search })}
+                  className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-dark transition-colors shrink-0"
+                >
+                  검색
+                </button>
               </div>
             </div>
 
@@ -415,28 +428,36 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               <div className="border-b border-gray-200 bg-white px-4 py-4">
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => handleBusinessTypeSelect('')}
+                    onClick={() => { setSelectedBusinessTypes([]); updateParams({ businessType: '' }); }}
                     className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                      !selectedBusinessType
+                      selectedBusinessTypes.length === 0
                         ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     전체
                   </button>
-                  {BUSINESS_TYPES.map((bt) => (
-                    <button
-                      key={bt.value}
-                      onClick={() => handleBusinessTypeSelect(bt.value)}
-                      className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                        selectedBusinessType === bt.value
-                          ? 'bg-primary text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {bt.label}
-                    </button>
-                  ))}
+                  {BUSINESS_TYPES.map((bt) => {
+                    const selected = selectedBusinessTypes.includes(bt.value);
+                    return (
+                      <button
+                        key={bt.value}
+                        onClick={() => handleBusinessTypeToggle(bt.value)}
+                        className={`px-4 py-2 rounded-full text-sm transition-colors flex items-center gap-1.5 ${
+                          selected
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {selected && (
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                        )}
+                        {bt.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
