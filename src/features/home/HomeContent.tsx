@@ -94,66 +94,64 @@ export default function HomeContent({ posts }: HomeContentProps) {
 
   return (
     <>
-      {/* BANNER SLIDER */}
-      <section className="relative w-full overflow-hidden">
-        <div
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-        >
-          {banners.map((banner, i) => (
-            <div key={i} className={`w-full shrink-0 ${banner.bg}`}>
-              <div className="max-w-[1200px] mx-auto px-4 py-12 sm:py-16 flex items-center justify-between">
-                <div>
-                  <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-3 py-1 rounded-full mb-4">
-                    {banner.badge}
-                  </span>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">{banner.title}</h2>
-                  <p className="text-sm sm:text-base text-white/60 mb-6 max-w-md">{banner.desc}</p>
-                  <Link
-                    href={banner.href}
-                    className="inline-block px-6 py-2.5 bg-white text-gray-900 text-sm font-semibold rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    {banner.cta}
-                  </Link>
-                </div>
-                <div className="hidden sm:block">
-                  <span className="font-serif text-7xl font-bold text-white/10">Marié</span>
-                </div>
-              </div>
+      {/* BANNER SLIDER - Card Style */}
+      <section className="bg-gray-50 pt-6 pb-2">
+        <div className="max-w-[1200px] mx-auto px-4">
+          <div className="relative overflow-hidden rounded-2xl">
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {banners.map((banner, i) => (
+                <Link key={i} href={banner.href} className={`w-full shrink-0 ${banner.bg} block`}>
+                  <div className="px-8 sm:px-12 py-10 sm:py-14 flex items-center justify-between">
+                    <div>
+                      <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-3 py-1 rounded-full mb-4">
+                        {banner.badge}
+                      </span>
+                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{banner.title}</h2>
+                      <p className="text-sm text-white/60 max-w-sm">{banner.desc}</p>
+                    </div>
+                    <div className="hidden sm:block">
+                      <span className="font-serif text-6xl font-bold text-white/10">Marié</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Dots */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-          {banners.map((_, i) => (
+            {/* Dots */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+              {banners.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.preventDefault(); setCurrentSlide(i); }}
+                  className={`h-1.5 rounded-full transition-all ${
+                    currentSlide === i ? 'bg-white w-5' : 'bg-white/40 w-1.5 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Arrows */}
             <button
-              key={i}
-              onClick={() => setCurrentSlide(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                currentSlide === i ? 'bg-white w-6' : 'bg-white/40 hover:bg-white/60'
-              }`}
-            />
-          ))}
+              onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+              </svg>
+            </button>
+            <button
+              onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+              </svg>
+            </button>
+          </div>
         </div>
-
-        {/* Arrows */}
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
       </section>
 
       {/* FULL-WIDTH BANNER */}
