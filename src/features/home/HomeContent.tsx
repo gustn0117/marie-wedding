@@ -60,48 +60,6 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
           </div>
 
           <div className="flex gap-5">
-            {/* Left Column */}
-            <div className="hidden lg:block w-[240px] shrink-0 space-y-3">
-              <div className="bg-gray-100 rounded-xl p-5">
-                <div className="flex items-start gap-3 mb-3">
-                  <span className="text-3xl">💡</span>
-                  <p className="text-[13px] text-gray-700 leading-snug font-medium">
-                    놓치면 후회할 합격률 높은 공고를 준비했어요.
-                  </p>
-                </div>
-                <Link
-                  href={ROUTES.JOBS}
-                  className="block w-full py-2 bg-white rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 border border-gray-200 transition-colors text-center"
-                >
-                  확인하기
-                </Link>
-              </div>
-
-              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                <Link href={ROUTES.DIRECTORY} className="flex items-center gap-2.5 text-[13px] text-gray-600 hover:text-primary transition-colors group">
-                  <span className="text-lg">🏢</span>
-                  <span className="group-hover:underline">업체 디렉토리 바로가기</span>
-                  <svg className="w-3 h-3 ml-auto text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-                <Link href={ROUTES.COMMUNITY} className="flex items-center gap-2.5 text-[13px] text-gray-600 hover:text-primary transition-colors group">
-                  <span className="text-lg">💬</span>
-                  <span className="group-hover:underline">커뮤니티 인기글 보기</span>
-                  <svg className="w-3 h-3 ml-auto text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-                <Link href={`${ROUTES.JOBS}?type=matching`} className="flex items-center gap-2.5 text-[13px] text-gray-600 hover:text-primary transition-colors group">
-                  <span className="text-lg">🔥</span>
-                  <span className="group-hover:underline">업체 섭외 공고 모아보기</span>
-                  <svg className="w-3 h-3 ml-auto text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-              </div>
-            </div>
-
             {/* Center Column */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center border-b border-gray-200 mb-0">
@@ -121,12 +79,7 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
                 ))}
               </div>
 
-              {displayJobs.length === 0 ? (
-                <div className="border border-gray-200 rounded-b-lg p-8 text-center">
-                  <p className="text-sm text-gray-500">등록된 공고가 없습니다.</p>
-                  <Link href={ROUTES.JOBS_NEW} className="text-sm text-primary hover:underline mt-2 inline-block">첫 공고를 등록해보세요</Link>
-                </div>
-              ) : (
+              {displayJobs.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-gray-200 rounded-b-lg overflow-hidden">
                   {displayJobs.map((job, idx) => (
                     <Link
@@ -233,11 +186,7 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
             </Link>
           </div>
 
-          {jobs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-500">아직 등록된 공고가 없습니다.</p>
-            </div>
-          ) : (
+          {jobs.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {jobs.slice(0, 4).map((job) => (
                 <Link
@@ -323,11 +272,7 @@ export default function HomeContent({ jobs, matchingJobs, posts }: HomeContentPr
               더보기 &rarr;
             </Link>
           </div>
-          {posts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-gray-500">아직 작성된 게시글이 없습니다.</p>
-            </div>
-          ) : (
+          {posts.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {posts.map((post) => (
                 <Link
