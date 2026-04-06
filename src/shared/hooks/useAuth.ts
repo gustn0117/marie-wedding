@@ -8,12 +8,14 @@ import type { Profile } from '@/types/database';
 interface AuthState {
   user: User | null;
   profile: Profile | null;
+  isLoading: boolean;
 }
 
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
     user: null,
     profile: null,
+    isLoading: true,
   });
 
   const supabaseRef = useRef(createClient());
@@ -36,9 +38,13 @@ export function useAuth() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
-          setState({ user: session.user, profile });
+          setState({ user: session.user, profile, isLoading: false });
+        } else {
+          setState({ user: null, profile: null, isLoading: false });
         }
-      } catch {}
+      } catch {
+        setState({ user: null, profile: null, isLoading: false });
+      }
     };
 
     initSession();
@@ -49,10 +55,10 @@ export function useAuth() {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
             const profile = await fetchProfile(session.user.id);
-            setState({ user: session.user, profile });
+            setState({ user: session.user, profile, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
-          setState({ user: null, profile: null });
+          setState({ user: null, profile: null, isLoading: false });
         }
       }
     );
@@ -63,13 +69,13 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     await supabaseRef.current.auth.signOut();
-    setState({ user: null, profile: null });
+    setState({ user: null, profile: null, isLoading: false });
   }, []);
 
   return {
     user: state.user,
     profile: state.profile,
-    isLoading: false,
+    isLoading: state.isLoading,
     isAuthenticated: !!state.user,
     signOut,
   };
