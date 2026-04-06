@@ -89,6 +89,7 @@ export const directoryService = {
     bio?: string | null;
     phone?: string | null;
     website?: string | null;
+    profile_image?: string | null;
   }): Promise<Profile> {
     const supabase = createClient();
 

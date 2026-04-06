@@ -11,6 +11,7 @@ export interface Profile {
   bio: string | null;
   phone: string | null;
   website: string | null;
+  profile_image: string | null;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;
