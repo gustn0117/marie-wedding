@@ -57,6 +57,74 @@ interface HomeContentProps {
 export default function HomeContent({ posts }: HomeContentProps) {
   return (
     <>
+      {/* HERO SECTION */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#0f1829] via-[#1a2a4a] to-[#0d1f3c]">
+        {/* Background decorations */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-gradient-to-r from-primary/5 to-transparent rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-[1200px] mx-auto px-4 py-16 sm:py-20">
+          <div className="flex flex-col items-center text-center">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 backdrop-blur-sm mb-6">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              <span className="text-[13px] text-white/80 font-medium">2024 Grand Open</span>
+            </div>
+
+            {/* Logo */}
+            <h1 className="font-serif text-5xl sm:text-6xl font-bold text-white tracking-wider mb-4">
+              Marié
+            </h1>
+
+            {/* Tagline */}
+            <p className="text-lg sm:text-xl text-white/70 font-light leading-relaxed mb-2">
+              웨딩 업계를 하나로 잇는 B2B 플랫폼
+            </p>
+            <p className="text-sm sm:text-base text-white/40 max-w-md leading-relaxed mb-10">
+              예식장, 드레스, 스튜디오, 메이크업, 플래너 --<br className="sm:hidden" />
+              웨딩의 모든 파트너를 한 곳에서 만나보세요.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href={ROUTES.JOBS}
+                className="px-8 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition-colors text-sm"
+              >
+                채용 공고 보기
+              </Link>
+              <Link
+                href={ROUTES.DIRECTORY}
+                className="px-8 py-3 bg-white/10 text-white font-semibold rounded-lg border border-white/20 hover:bg-white/20 transition-colors text-sm backdrop-blur-sm"
+              >
+                업체 디렉토리
+              </Link>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-8 sm:gap-12 mt-12 pt-8 border-t border-white/10">
+              <div className="text-center">
+                <p className="text-2xl sm:text-3xl font-bold text-white">500+</p>
+                <p className="text-[12px] text-white/40 mt-1">등록 업체</p>
+              </div>
+              <div className="w-px h-10 bg-white/10" />
+              <div className="text-center">
+                <p className="text-2xl sm:text-3xl font-bold text-white">1,200+</p>
+                <p className="text-[12px] text-white/40 mt-1">채용 공고</p>
+              </div>
+              <div className="w-px h-10 bg-white/10" />
+              <div className="text-center">
+                <p className="text-2xl sm:text-3xl font-bold text-white">7</p>
+                <p className="text-[12px] text-white/40 mt-1">업종 카테고리</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* FULL-WIDTH BANNER */}
       <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
         <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center justify-between">
