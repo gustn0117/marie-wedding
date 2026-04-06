@@ -133,23 +133,6 @@ export default function HomeContent({ posts }: HomeContentProps) {
               ))}
             </div>
 
-            {/* Arrows */}
-            <button
-              onClick={() => setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length)}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
-            </button>
-            <button
-              onClick={() => setCurrentSlide((prev) => (prev + 1) % banners.length)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            </button>
           </div>
         </div>
       </section>
