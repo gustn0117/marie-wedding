@@ -126,21 +126,6 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
                       <div className="h-px bg-gray-100" />
 
-                      {/* Quick Stats */}
-                      <div className="flex px-5 py-3">
-                        <Link href={`${ROUTES.MYPAGE}?tab=jobs`} onClick={() => setProfileMenuOpen(false)} className="flex-1 text-center hover:bg-gray-50 rounded-lg py-1.5 transition-colors">
-                          <p className="text-lg font-bold text-gray-900">0</p>
-                          <p className="text-[11px] text-gray-400">내 공고</p>
-                        </Link>
-                        <div className="w-px bg-gray-100 my-1" />
-                        <Link href={`${ROUTES.MYPAGE}?tab=posts`} onClick={() => setProfileMenuOpen(false)} className="flex-1 text-center hover:bg-gray-50 rounded-lg py-1.5 transition-colors">
-                          <p className="text-lg font-bold text-gray-900">0</p>
-                          <p className="text-[11px] text-gray-400">내 게시글</p>
-                        </Link>
-                      </div>
-
-                      <div className="h-px bg-gray-100" />
-
                       {/* Menu Items */}
                       <div className="py-1.5 px-2">
                         <Link
