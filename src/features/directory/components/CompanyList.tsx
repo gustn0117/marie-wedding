@@ -63,7 +63,7 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="card animate-pulse">
             <div className="flex items-start justify-between mb-3">
@@ -104,7 +104,7 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
       </p>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {profiles.map((profile) => (
           <CompanyCard key={profile.id} profile={profile} />
         ))}
