@@ -18,14 +18,15 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
       className="block rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg transition-all duration-300"
     >
       {/* Thumbnail */}
-      <div className="aspect-[16/9] bg-gray-100 overflow-hidden">
+      <div className="aspect-[2/1] bg-gray-100 overflow-hidden">
         {imageUrl ? (
           <img src={imageUrl} alt={profile.company_name || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/5 to-primary/15 flex items-center justify-center">
-            <span className="text-primary/40 font-serif text-5xl font-bold">
-              {(profile.company_name || profile.contact_name).charAt(0)}
-            </span>
+          <div className="w-full h-full bg-gray-50 flex items-center justify-center">
+            <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M18 18.75h.008v.008H18v-.008zm-3-3h.008v.008H15v-.008z" />
+              <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" strokeWidth={0.5} />
+            </svg>
           </div>
         )}
       </div>
