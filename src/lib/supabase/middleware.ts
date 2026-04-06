@@ -36,19 +36,11 @@ export async function updateSession(request: NextRequest) {
     console.log('[middleware]', request.nextUrl.pathname, 'user:', user?.id ?? 'none', 'has_profile_cookie:', request.cookies.has('marie_profile'));
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
-    const isPublicPage = request.nextUrl.pathname === '/' || request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/auth/callback');
 
-    if (!user && !isAuthPage && !isPublicPage) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/login';
-      const redirect = NextResponse.redirect(url);
-      redirect.cookies.delete('marie_profile');
-      return redirect;
-    }
-
+    // 로그인한 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트
     if (user && isAuthPage) {
       const url = request.nextUrl.clone();
-      url.pathname = '/jobs';
+      url.pathname = '/';
       return NextResponse.redirect(url);
     }
 
