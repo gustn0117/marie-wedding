@@ -95,7 +95,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
   return (
     <>
       {/* BANNER SLIDER - Card Style */}
-      <section className="bg-gray-50 pt-6 pb-2">
+      <section className="bg-white pt-6 pb-2">
         <div className="max-w-[1200px] mx-auto px-4">
           <div className="relative overflow-hidden rounded-2xl">
             <div
@@ -182,7 +182,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
       </section>
 
       {/* PREMIUM / HOT COMPANIES */}
-      <section className="bg-gray-50 border-t border-gray-100">
+      <section className="bg-white border-t border-gray-100">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
@@ -222,7 +222,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
       </section>
 
       {/* CATEGORY BROWSE */}
-      <section className="bg-gray-50 border-t border-gray-200">
+      <section className="bg-white border-t border-gray-200">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
