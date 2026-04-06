@@ -154,24 +154,6 @@ export default function HomeContent({ posts }: HomeContentProps) {
         </div>
       </section>
 
-      {/* FULL-WIDTH BANNER */}
-      <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
-        <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="bg-white text-primary text-xs font-bold px-2.5 py-1 rounded">Marié</span>
-            <p className="text-white font-bold text-[15px] sm:text-lg">
-              웨딩업계 인재를 찾고 계신가요? <span className="text-primary-200 hidden sm:inline">지금 무료로 공고를 등록하세요</span>
-            </p>
-          </div>
-          <Link
-            href={ROUTES.JOBS_NEW}
-            className="shrink-0 bg-white text-primary text-sm font-semibold px-4 py-2 rounded hover:bg-gray-100 transition-colors"
-          >
-            공고 등록 &rarr;
-          </Link>
-        </div>
-      </section>
-
       {/* PREMIUM / HOT JOBS */}
       <section className="bg-white">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
@@ -263,6 +245,24 @@ export default function HomeContent({ posts }: HomeContentProps) {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* FULL-WIDTH BANNER */}
+      <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
+        <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="bg-white text-primary text-xs font-bold px-2.5 py-1 rounded">Marié</span>
+            <p className="text-white font-bold text-[15px] sm:text-lg">
+              웨딩업계 인재를 찾고 계신가요? <span className="text-primary-200 hidden sm:inline">지금 무료로 공고를 등록하세요</span>
+            </p>
+          </div>
+          <Link
+            href={ROUTES.JOBS_NEW}
+            className="shrink-0 bg-white text-primary text-sm font-semibold px-4 py-2 rounded hover:bg-gray-100 transition-colors"
+          >
+            공고 등록 &rarr;
+          </Link>
         </div>
       </section>
 
