@@ -106,10 +106,22 @@ export default function CompanyDetailPage() {
       {/* Company Info Card */}
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">
-              {profile.company_name}
-            </h1>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
+              {profile.profile_image ? (
+                <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt={profile.company_name || ''} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-primary font-bold text-xl">
+                    {(profile.company_name || profile.contact_name).charAt(0)}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">
+                {profile.company_name}
+              </h1>
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="badge-primary">
                 {profile.business_type ? getBusinessTypeLabel(profile.business_type) : '개인'}
@@ -118,6 +130,7 @@ export default function CompanyDetailPage() {
                 {getRegionLabel(profile.region)}
               </span>
             </div>
+          </div>
           </div>
         </div>
 
