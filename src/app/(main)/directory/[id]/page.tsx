@@ -127,7 +127,7 @@ export default function CompanyDetailPage() {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-sm">
               <svg
-                className="w-4.5 h-4.5 text-primary"
+                className="w-[18px] h-[18px] text-primary"
                 fill="none"
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
@@ -153,7 +153,7 @@ export default function CompanyDetailPage() {
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-sm">
                 <svg
-                  className="w-4.5 h-4.5 text-primary"
+                  className="w-[18px] h-[18px] text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}
@@ -183,7 +183,7 @@ export default function CompanyDetailPage() {
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-white flex items-center justify-center shadow-sm">
                 <svg
-                  className="w-4.5 h-4.5 text-primary"
+                  className="w-[18px] h-[18px] text-primary"
                   fill="none"
                   viewBox="0 0 24 24"
                   strokeWidth={1.5}

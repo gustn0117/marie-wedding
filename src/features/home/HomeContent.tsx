@@ -180,7 +180,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <span className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                    <BusinessIcon type={job.type} className="w-4.5 h-4.5" />
+                    <BusinessIcon type={job.type} className="w-[18px] h-[18px]" />
                   </span>
                   <span className="text-[12px] font-semibold text-gray-500">{job.company}</span>
                 </div>
@@ -192,6 +192,46 @@ export default function HomeContent({ posts }: HomeContentProps) {
                   <span className="text-[11px] text-gray-300">|</span>
                   <span className="text-[11px] text-gray-400">{job.employment}</span>
                 </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PREMIUM / HOT COMPANIES */}
+      <section className="bg-gray-50 border-t border-gray-100">
+        <div className="max-w-[1200px] mx-auto px-4 py-8">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[18px] font-bold text-gray-900">지금 핫한 업체</h2>
+              <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded">AD</span>
+            </div>
+            <Link href={ROUTES.DIRECTORY} className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors">
+              더보기 &rarr;
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { name: '그랜드 웨딩홀', type: 'venue', region: '서울 강남', desc: '강남 최대 규모 프리미엄 웨딩홀' },
+              { name: '로즈드레스 청담', type: 'dress', region: '서울 청담', desc: '수입 드레스 전문 편집숍' },
+              { name: '루미에르 스튜디오', type: 'studio', region: '서울 마포', desc: '감성 웨딩 촬영 전문 스튜디오' },
+              { name: '블룸 메이크업', type: 'makeup', region: '서울 청담', desc: '브라이덜 메이크업 전문' },
+            ].map((company, i) => (
+              <Link
+                key={i}
+                href={ROUTES.DIRECTORY}
+                className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-primary/30 transition-all group"
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="w-11 h-11 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                    <BusinessIcon type={company.type} className="w-5 h-5" />
+                  </span>
+                  <div>
+                    <p className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors">{company.name}</p>
+                    <p className="text-[11px] text-gray-400">{company.region}</p>
+                  </div>
+                </div>
+                <p className="text-[13px] text-gray-500 line-clamp-2">{company.desc}</p>
               </Link>
             ))}
           </div>
