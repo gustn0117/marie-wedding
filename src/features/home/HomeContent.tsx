@@ -224,47 +224,47 @@ export default function HomeContent({ posts }: HomeContentProps) {
       {/* CATEGORY BROWSE */}
       <section className="bg-white">
         <div className="max-w-[1200px] mx-auto px-4 py-8">
-          {/* 업종별 */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-6">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-[16px] font-bold text-gray-900">업종별 채용</h2>
-              <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-4 sm:grid-cols-7 gap-3">
-                {BUSINESS_TYPES.map((type) => (
-                  <Link
-                    key={type.value}
-                    href={`${ROUTES.JOBS}?business=${type.value}`}
-                    className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
-                  >
-                    <span className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <BusinessIcon type={type.value} className="w-5 h-5" />
-                    </span>
-                    <span className="text-[12px] font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
-                  </Link>
-                ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h2 className="text-[16px] font-bold text-gray-900">업종별 채용</h2>
+                <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-4 gap-3">
+                  {BUSINESS_TYPES.map((type) => (
+                    <Link
+                      key={type.value}
+                      href={`${ROUTES.JOBS}?business=${type.value}`}
+                      className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <span className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <BusinessIcon type={type.value} className="w-5 h-5" />
+                      </span>
+                      <span className="text-[12px] font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* 지역별 */}
-          <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="text-[16px] font-bold text-gray-900">지역별 채용</h2>
-              <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
-            </div>
-            <div className="p-5">
-              <div className="grid grid-cols-5 sm:grid-cols-9 gap-2">
-                {REGIONS.map((region) => (
-                  <Link
-                    key={region.value}
-                    href={`${ROUTES.JOBS}?region=${region.value}`}
-                    className="py-2.5 text-center text-[13px] text-gray-600 bg-gray-50 rounded-lg hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
-                  >
-                    {region.label}
-                  </Link>
-                ))}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <h2 className="text-[16px] font-bold text-gray-900">지역별 채용</h2>
+                <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
+              </div>
+              <div className="p-5">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-9 gap-2">
+                  {REGIONS.map((region) => (
+                    <Link
+                      key={region.value}
+                      href={`${ROUTES.JOBS}?region=${region.value}`}
+                      className="py-2 text-center text-[13px] text-gray-600 bg-gray-50 rounded-lg hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
+                    >
+                      {region.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
