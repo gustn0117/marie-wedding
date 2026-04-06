@@ -55,9 +55,9 @@ export default function LoginForm() {
       <div className="bg-surface rounded-2xl border border-border p-8 shadow-lg">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
-          <h1 className="font-serif text-3xl font-bold text-primary tracking-wide">
-            Marie
-          </h1>
+          <Link href={ROUTES.HOME} className="inline-block">
+            <h1 className="font-serif text-3xl font-bold text-primary tracking-wide">Marié</h1>
+          </Link>
           <p className="mt-2 text-sm text-text-secondary">
             웨딩업계 B2B 플랫폼
           </p>
