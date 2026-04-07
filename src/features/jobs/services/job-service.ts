@@ -103,6 +103,7 @@ export const jobService = {
         salary_info: formData.salaryInfo || null,
         is_urgent: formData.isUrgent,
         deadline: formData.deadline || null,
+        image: formData.image || null,
       })
       .select()
       .single();

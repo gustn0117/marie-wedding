@@ -8,6 +8,7 @@ export interface JobFormData {
   salaryInfo: string;
   isUrgent: boolean;
   deadline: string;
+  image?: string | null;
 }
 
 export interface JobFilters {

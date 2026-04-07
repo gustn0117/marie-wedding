@@ -31,6 +31,7 @@ export interface Job {
   salary_info: string | null;
   is_urgent: boolean;
   deadline: string | null;
+  image: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
