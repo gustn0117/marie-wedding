@@ -22,7 +22,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [formData, setFormData] = useState({
     company_name: profile.company_name || '',
     business_type: profile.business_type || '',
-    region: profile.region || '',
+    region: (profile.region || '') as string,
     bio: profile.bio || '',
     phone: profile.phone || '',
     website: profile.website || '',
