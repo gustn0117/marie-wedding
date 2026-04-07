@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { Job } from '@/types/database';
 import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS, ROUTES } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import {
   formatRelativeTime,
   getBusinessTypeLabel,
@@ -523,12 +524,13 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                     idx < jobs.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  {/* Company Logo placeholder */}
-                  <div className="w-11 h-11 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-xs font-bold text-gray-400">
-                      {(job.author?.company_name ?? '업체')[0]}
-                    </span>
-                  </div>
+                  {/* Company Logo */}
+                  <ProfileAvatar
+                    profileImage={job.author?.profile_image}
+                    name={job.author?.company_name || job.author?.contact_name || '업체'}
+                    size="sm"
+                    className="!rounded-lg mt-0.5"
+                  />
 
                   {/* Job Info */}
                   <div className="flex-1 min-w-0">

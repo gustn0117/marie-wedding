@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { formatRelativeTime } from '@/shared/utils/format';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { communityService } from '../services/community-service';
@@ -100,12 +101,12 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             <div key={comment.id} className="py-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  {/* Avatar Placeholder */}
-                  <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center">
-                    <span className="text-xs font-medium text-primary">
-                      {comment.author?.company_name?.[0] ?? '?'}
-                    </span>
-                  </div>
+                  <ProfileAvatar
+                    profileImage={comment.author?.profile_image}
+                    name={comment.author?.company_name || comment.author?.contact_name || '?'}
+                    size="sm"
+                    className="!w-7 !h-7 !text-xs"
+                  />
                   <span className="text-sm font-medium text-text-primary">
                     {comment.author?.company_name ?? '알 수 없음'}
                   </span>
