@@ -14,22 +14,28 @@ interface DirectoryToggleProps {
 export default function DirectoryToggle({ profileId, initialListed, missingInfo }: DirectoryToggleProps) {
   const [listed, setListed] = useState(initialListed);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleToggle = async () => {
     setSubmitting(true);
+    setError(null);
     try {
       const next = !listed;
       await directoryService.toggleDirectoryListing(profileId, next);
       setListed(next);
+      // 쿠키 갱신을 위해 새로고침
+      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      window.location.reload();
     } catch (err) {
-      console.error(err);
-    } finally {
+      setError(err instanceof Error ? err.message : '처리에 실패했습니다. 다시 시도해주세요.');
       setSubmitting(false);
     }
   };
 
   if (listed) {
     return (
+      <>
+      {error && <div className="mb-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
       <div className="space-y-3">
         <Link href={ROUTES.DIRECTORY_DETAIL(profileId)} className="block text-center px-5 py-2.5 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           내 디렉토리 페이지 보기
@@ -42,6 +48,7 @@ export default function DirectoryToggle({ profileId, initialListed, missingInfo 
           {submitting ? '처리 중...' : '디렉토리에서 내리기'}
         </button>
       </div>
+      </>
     );
   }
 
