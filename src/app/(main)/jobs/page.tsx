@@ -10,21 +10,54 @@ export const metadata = {
   description: '웨딩 업계 채용 공고를 확인하고 지원하세요.',
 };
 
-async function getInitialJobs() {
+interface PageProps {
+  searchParams: Record<string, string | undefined>;
+}
+
+async function getJobs(searchParams: Record<string, string | undefined>) {
   const supabase = createServerQueryClient();
-  const { data, count } = await supabase
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 20;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
     .from('jobs')
     .select('*, author:profiles!author_id(*)', { count: 'exact' })
-    .is('deleted_at', null)
+    .is('deleted_at', null);
+
+  if (searchParams.type) {
+    query = query.eq('posting_type', searchParams.type);
+  }
+  if (searchParams.businessType) {
+    const types = searchParams.businessType.split(',');
+    if (types.length === 1) {
+      query = query.eq('business_type', types[0]);
+    } else {
+      query = query.in('business_type', types);
+    }
+  }
+  if (searchParams.employmentType) {
+    query = query.eq('employment_type', searchParams.employmentType);
+  }
+  if (searchParams.region) {
+    query = query.eq('region', searchParams.region);
+  }
+  if (searchParams.search) {
+    query = query.ilike('title', `%${searchParams.search}%`);
+  }
+
+  query = query
     .order('is_urgent', { ascending: false })
     .order('created_at', { ascending: false })
-    .range(0, 19);
+    .range(from, to);
 
+  const { data, count } = await query;
   return { jobs: (data ?? []) as Job[], count: count ?? 0 };
 }
 
-export default async function JobsPage() {
-  const { jobs, count } = await getInitialJobs();
+export default async function JobsPage({ searchParams }: PageProps) {
+  const { jobs, count } = await getJobs(searchParams);
 
   return (
     <Suspense

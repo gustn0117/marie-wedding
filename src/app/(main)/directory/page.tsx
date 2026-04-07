@@ -11,21 +11,41 @@ export const metadata = {
   description: '웨딩 업계 파트너를 찾아보세요. 업종, 지역별로 검색할 수 있습니다.',
 };
 
-async function getInitialProfiles() {
+interface PageProps {
+  searchParams: Record<string, string | undefined>;
+}
+
+async function getProfiles(searchParams: Record<string, string | undefined>) {
   const supabase = createServerQueryClient();
-  const { data, count } = await supabase
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 12;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
     .from('profiles')
     .select('*', { count: 'exact' })
     .is('deleted_at', null)
-    .eq('is_directory_listed', true)
-    .order('company_name', { ascending: true })
-    .range(0, 11);
+    .eq('is_directory_listed', true);
 
+  if (searchParams.businessType) {
+    query = query.eq('business_type', searchParams.businessType);
+  }
+  if (searchParams.region) {
+    query = query.eq('region', searchParams.region);
+  }
+  if (searchParams.search) {
+    query = query.or(`company_name.ilike.%${searchParams.search}%,contact_name.ilike.%${searchParams.search}%`);
+  }
+
+  query = query.order('company_name', { ascending: true }).range(from, to);
+
+  const { data, count } = await query;
   return { profiles: (data ?? []) as Profile[], count: count ?? 0 };
 }
 
-export default async function DirectoryPage() {
-  const { profiles, count } = await getInitialProfiles();
+export default async function DirectoryPage({ searchParams }: PageProps) {
+  const { profiles, count } = await getProfiles(searchParams);
 
   return (
     <div className="space-y-6">
@@ -41,7 +61,7 @@ export default async function DirectoryPage() {
       <Suspense
         fallback={
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="card animate-pulse h-48" />
             ))}
           </div>
