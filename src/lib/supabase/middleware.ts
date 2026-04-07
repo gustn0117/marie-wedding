@@ -33,7 +33,6 @@ export async function updateSession(request: NextRequest) {
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    console.log('[middleware]', request.nextUrl.pathname, 'user:', user?.id ?? 'none', 'has_profile_cookie:', request.cookies.has('marie_profile'));
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
 
@@ -44,10 +43,9 @@ export async function updateSession(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Sync profile cookie
+    // Sync profile cookie - always refresh
     if (user) {
-      const hasProfileCookie = request.cookies.has('marie_profile');
-      if (!hasProfileCookie) {
+      {
         const serviceClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -59,7 +57,6 @@ export async function updateSession(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
-        console.log('[middleware] profile fetch result:', profile?.contact_name ?? 'null');
         if (profile) {
           const cookieValue = JSON.stringify(profile);
           // Set on request for downstream server components
