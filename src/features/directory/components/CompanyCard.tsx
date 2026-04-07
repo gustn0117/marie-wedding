@@ -18,9 +18,9 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
       className="block rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg transition-all duration-300"
     >
       {/* Thumbnail */}
-      <div className="aspect-[2/1] bg-gray-100 overflow-hidden">
+      <div className="aspect-[2/1] bg-gray-50 overflow-hidden flex items-center justify-center">
         {imageUrl ? (
-          <img src={imageUrl} alt={profile.company_name || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <img src={imageUrl} alt={profile.company_name || ''} className="w-full h-full object-contain p-3" />
         ) : (
           <div className="w-full h-full bg-gray-50 flex items-center justify-center">
             <svg className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
