@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { ROUTES } from '@/shared/constants';
 import CompanyFilters from '@/features/directory/components/CompanyFilters';
 import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
@@ -49,9 +51,14 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">업체 디렉토리</h1>
-        <p className="mt-1.5 text-sm text-text-secondary">웨딩 업계 파트너를 찾아보세요</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">업체 디렉토리</h1>
+          <p className="mt-1.5 text-sm text-text-secondary">웨딩 업계 파트너를 찾아보세요</p>
+        </div>
+        <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm px-5 py-2.5 rounded-lg shrink-0">
+          업체 등록하기
+        </Link>
       </div>
 
       <Suspense fallback={<div className="card h-20 animate-pulse bg-secondary" />}>
