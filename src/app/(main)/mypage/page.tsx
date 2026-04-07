@@ -6,9 +6,6 @@ import { ROUTES } from '@/shared/constants';
 import {
   getBusinessTypeLabel,
   getRegionLabel,
-  getEmploymentTypeLabel,
-  formatRelativeTime,
-  getCategoryLabel,
   formatDate,
 } from '@/shared/utils/format';
 import type { Profile, Job, Post } from '@/types/database';

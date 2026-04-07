@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
@@ -9,7 +8,6 @@ import { directoryService } from '@/features/directory/services/directory-servic
 import { createClient } from '@/lib/supabase/client';
 
 export default function EditProfilePage() {
-  const router = useRouter();
   const { profile, isLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
