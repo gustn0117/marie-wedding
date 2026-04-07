@@ -51,18 +51,8 @@ export default function DirectoryRegisterPage() {
     );
   }
 
-  if (profile.account_type !== 'business') {
-    return (
-      <div className="max-w-2xl mx-auto text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900 mb-3">업체 회원 전용 기능입니다</h2>
-        <p className="text-sm text-gray-500 mb-4">디렉토리 등록은 업체 회원만 가능합니다.</p>
-        <Link href={ROUTES.MYPAGE} className="btn-primary text-sm">마이페이지로</Link>
-      </div>
-    );
-  }
-
   const isListed = listed ?? false;
-  const missingInfo = !profile.company_name || !profile.business_type || !profile.region;
+  const missingInfo = !profile.contact_name || !profile.region;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
