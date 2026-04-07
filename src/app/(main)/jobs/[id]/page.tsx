@@ -10,6 +10,7 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Job } from '@/types/database';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 
 export const dynamic = 'force-dynamic';
@@ -88,9 +89,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             <div className="p-6 md:p-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">업체 정보</h2>
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary font-bold text-lg">{(job.author.company_name || job.author.contact_name).charAt(0)}</span>
-                </div>
+                <ProfileAvatar profileImage={job.author.profile_image} name={job.author.company_name || job.author.contact_name} size="md" />
                 <div className="space-y-1">
                   <p className="font-medium text-gray-900">{job.author.company_name}</p>
                   <p className="text-sm text-gray-500">{getRegionLabel(job.author.region)}</p>

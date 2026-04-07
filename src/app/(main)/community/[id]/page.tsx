@@ -4,6 +4,7 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import { formatDate, getCategoryLabel } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import PostDetailActions from '@/features/community/components/PostDetailActions';
 import CommentSection from '@/features/community/components/CommentSection';
 
@@ -51,9 +52,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-4">{post.title}</h1>
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-primary">{post.author?.company_name?.[0] ?? post.author?.contact_name?.[0] ?? '?'}</span>
-              </div>
+              <ProfileAvatar profileImage={post.author?.profile_image} name={post.author?.company_name || post.author?.contact_name || '?'} size="sm" />
               <div>
                 <p className="text-sm font-medium text-gray-900">
                   {post.author?.company_name ?? post.author?.contact_name ?? '알 수 없음'}

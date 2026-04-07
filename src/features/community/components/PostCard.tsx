@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Post } from '@/types/database';
 
 interface PostCardProps {
@@ -31,14 +32,14 @@ export default function PostCard({ post }: PostCardProps) {
             {/* Meta Info */}
             <div className="flex items-center gap-3 text-xs text-text-muted">
               {/* Author */}
-              {post.author?.company_name && (
-                <span className="font-medium text-text-secondary">
-                  {post.author.company_name}
+              {post.author && (
+                <span className="flex items-center gap-1.5 font-medium text-text-secondary">
+                  <ProfileAvatar profileImage={post.author.profile_image} name={post.author.company_name || post.author.contact_name} size="sm" className="!w-5 !h-5 !text-[10px]" />
+                  {post.author.company_name || post.author.contact_name}
                 </span>
               )}
 
-              {/* Separator */}
-              {post.author?.company_name && (
+              {post.author && (
                 <span className="w-px h-3 bg-border" />
               )}
 

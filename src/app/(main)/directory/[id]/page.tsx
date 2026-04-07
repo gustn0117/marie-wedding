@@ -9,6 +9,7 @@ import {
   formatDate,
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
+import ProfileAvatar from '@/shared/components/ProfileAvatar';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,10 +44,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   if (!result) notFound();
 
   const { profile, jobs } = result;
-  const imageUrl = profile.profile_image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
-    : null;
-
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <nav className="flex items-center gap-2 text-sm text-gray-500">
@@ -59,15 +56,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
-          <div className="w-16 h-16 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0">
-            {imageUrl ? (
-              <img src={imageUrl} alt={profile.company_name || ''} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-bold text-xl">{(profile.company_name || profile.contact_name).charAt(0)}</span>
-              </div>
-            )}
-          </div>
+          <ProfileAvatar profileImage={profile.profile_image} name={profile.company_name || profile.contact_name} size="lg" className="!rounded-xl" />
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">{profile.company_name || profile.contact_name}</h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
