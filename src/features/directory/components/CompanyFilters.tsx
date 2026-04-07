@@ -28,7 +28,7 @@ export default function CompanyFilters() {
       // Reset to first page on filter change
       params.delete('page');
 
-      router.push(`?${params.toString()}`);
+      router.push(`?${params.toString()}`, { scroll: false });
     },
     [router, searchParams],
   );

@@ -1,11 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useCallback, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Job } from '@/types/database';
-import type { JobFilters } from '../types';
-import { jobService } from '../services/job-service';
 import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS, ROUTES } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import {
@@ -23,6 +21,7 @@ interface JobsPageContentProps {
 }
 
 export default function JobsPageContent({ initialJobs, initialCount }: JobsPageContentProps = {}) {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [selectedRegion, setSelectedRegion] = useState(searchParams.get('region') ?? '');
@@ -37,7 +36,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [businessTypeDropdownOpen, setBusinessTypeDropdownOpen] = useState(false);
   const [employmentTypeDropdownOpen, setEmploymentTypeDropdownOpen] = useState(false);
-  const [browsingRegion, setBrowsingRegion] = useState(''); // 드롭다운에서 탐색 중인 시/도 (선택 확정 전)
+  const [browsingRegion, setBrowsingRegion] = useState('');
   const [selectedSubRegions, setSelectedSubRegions] = useState<string[]>(
     () => {
       const sub = searchParams.get('subRegion');
@@ -45,10 +44,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     }
   );
 
-  const [jobs, setJobs] = useState<Job[]>(initialJobs ?? []);
-  const [totalCount, setTotalCount] = useState(initialCount ?? 0);
-  const [loading, setLoading] = useState(!initialJobs);
-  const [fetchTrigger, setFetchTrigger] = useState(0);
+  const jobs = initialJobs ?? [];
+  const totalCount = initialCount ?? 0;
+  const loading = false;
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   const currentPage = Number(searchParams.get('page')) || 1;
@@ -63,41 +61,10 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         if (value) params.set(key, value);
         else params.delete(key);
       });
-      const newUrl = `?${params.toString()}`;
-      window.history.replaceState(null, '', newUrl);
-      // Trigger re-fetch by updating a counter
-      setFetchTrigger(prev => prev + 1);
+      router.push(`?${params.toString()}`, { scroll: false });
     },
-    [searchParams]
+    [router, searchParams]
   );
-
-  const fetchJobs = useCallback(async () => {
-    const params = new URLSearchParams(window.location.search);
-    const currentFilters: JobFilters = {
-      postingType: params.get('type') ?? 'hiring',
-      businessType: params.get('businessType') ?? undefined,
-      employmentType: params.get('employmentType') ?? undefined,
-      region: params.get('region') ?? undefined,
-      search: params.get('search') ?? undefined,
-    };
-    const page = Number(params.get('page')) || 1;
-
-    setLoading(true);
-    try {
-      const result = await jobService.getJobs(currentFilters, page, PAGE_SIZE);
-      setJobs(result.data);
-      setTotalCount(result.count);
-    } catch {
-      setJobs([]);
-      setTotalCount(0);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs, fetchTrigger]);
 
 
 
@@ -156,11 +123,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(page));
-    window.history.replaceState(null, '', `?${params.toString()}`);
-    setFetchTrigger(prev => prev + 1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    router.push(`?${params.toString()}`);
   };
 
   // 지역 필터 라벨 생성
@@ -200,8 +165,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     setSelectedBusinessTypes([]);
     setSelectedEmploymentType('');
     setSelectedSubRegions([]);
-    window.history.replaceState(null, '', '/jobs');
-    setFetchTrigger(prev => prev + 1);
+    router.push('/jobs', { scroll: false });
   };
 
   // 드롭다운에서 탐색 중인 지역의 상세 목록
