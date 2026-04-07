@@ -8,6 +8,8 @@ export interface AuthProfile {
   account_type: string;
   role: string;
   region: string;
+  profile_image: string | null;
+  is_directory_listed: boolean;
 }
 
 export default async function Header() {
