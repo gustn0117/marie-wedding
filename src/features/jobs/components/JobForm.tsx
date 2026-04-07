@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { BUSINESS_TYPES, EMPLOYMENT_TYPES, POSTING_TYPES, REGIONS } from '@/shared/constants';
+import DatePicker from '@/shared/components/DatePicker';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -230,16 +231,13 @@ export default function JobForm({
 
       {/* Deadline */}
       <div className="space-y-1.5">
-        <label htmlFor="deadline" className="block text-sm font-medium text-text-primary">
+        <label className="block text-sm font-medium text-text-primary">
           마감일
         </label>
-        <input
-          id="deadline"
-          name="deadline"
-          type="date"
+        <DatePicker
           value={formData.deadline}
-          onChange={handleChange}
-          className="input-field w-full"
+          onChange={(val) => setFormData(prev => ({ ...prev, deadline: val }))}
+          placeholder="마감일을 선택하세요"
         />
       </div>
 
