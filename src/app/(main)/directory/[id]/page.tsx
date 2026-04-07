@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
@@ -44,6 +45,17 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   if (!result) notFound();
 
   const { profile, jobs } = result;
+
+  // 현재 로그인 사용자인지 확인
+  let isOwner = false;
+  try {
+    const cookieStore = await cookies();
+    const profileCookie = cookieStore.get('marie_profile');
+    if (profileCookie?.value) {
+      const me = JSON.parse(profileCookie.value);
+      isOwner = me.id === profile.id;
+    }
+  } catch {}
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <nav className="flex items-center gap-2 text-sm text-gray-500">
@@ -57,13 +69,21 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-6">
           <ProfileAvatar profileImage={profile.profile_image} name={profile.company_name || profile.contact_name} size="lg" className="!rounded-xl" />
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-semibold text-gray-900">{profile.company_name || profile.contact_name}</h1>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               <span className="badge-primary">{profile.business_type ? getBusinessTypeLabel(profile.business_type) : '개인'}</span>
               <span className="badge-accent">{getRegionLabel(profile.region)}</span>
             </div>
           </div>
+          {isOwner && (
+            <Link
+              href={ROUTES.DIRECTORY_REGISTER}
+              className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
+            >
+              수정하기
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl mb-6">
