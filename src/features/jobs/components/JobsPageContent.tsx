@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Job } from '@/types/database';
 import type { JobFilters } from '../types';
@@ -23,7 +23,6 @@ interface JobsPageContentProps {
 }
 
 export default function JobsPageContent({ initialJobs, initialCount }: JobsPageContentProps = {}) {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [selectedRegion, setSelectedRegion] = useState(searchParams.get('region') ?? '');
@@ -49,19 +48,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const [jobs, setJobs] = useState<Job[]>(initialJobs ?? []);
   const [totalCount, setTotalCount] = useState(initialCount ?? 0);
   const [loading, setLoading] = useState(!initialJobs);
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
-  const currentPage = Number(searchParams.get('page')) || 1;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+  const currentPage = Number(searchParams.get('page')) || 1;
 
   const postingType = searchParams.get('type') ?? 'hiring';
-
-  const filters: JobFilters = {
-    postingType,
-    businessType: searchParams.get('businessType') ?? undefined,
-    employmentType: searchParams.get('employmentType') ?? undefined,
-    region: searchParams.get('region') ?? undefined,
-    search: searchParams.get('search') ?? undefined,
-  };
 
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
@@ -71,15 +63,28 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         if (value) params.set(key, value);
         else params.delete(key);
       });
-      router.push(`?${params.toString()}`);
+      const newUrl = `?${params.toString()}`;
+      window.history.replaceState(null, '', newUrl);
+      // Trigger re-fetch by updating a counter
+      setFetchTrigger(prev => prev + 1);
     },
-    [router, searchParams]
+    [searchParams]
   );
 
   const fetchJobs = useCallback(async () => {
+    const params = new URLSearchParams(window.location.search);
+    const currentFilters: JobFilters = {
+      postingType: params.get('type') ?? 'hiring',
+      businessType: params.get('businessType') ?? undefined,
+      employmentType: params.get('employmentType') ?? undefined,
+      region: params.get('region') ?? undefined,
+      search: params.get('search') ?? undefined,
+    };
+    const page = Number(params.get('page')) || 1;
+
     setLoading(true);
     try {
-      const result = await jobService.getJobs(filters, currentPage, PAGE_SIZE);
+      const result = await jobService.getJobs(currentFilters, page, PAGE_SIZE);
       setJobs(result.data);
       setTotalCount(result.count);
     } catch {
@@ -88,22 +93,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()]);
+  }, []);
 
   useEffect(() => {
     fetchJobs();
-  }, [fetchJobs]);
+  }, [fetchJobs, fetchTrigger]);
 
-  useEffect(() => {
-    setSelectedRegion(searchParams.get('region') ?? '');
-    const bt = searchParams.get('businessType');
-    setSelectedBusinessTypes(bt ? bt.split(',') : []);
-    setSelectedEmploymentType(searchParams.get('employmentType') ?? '');
-    setSearch(searchParams.get('search') ?? '');
-    const sub = searchParams.get('subRegion');
-    setSelectedSubRegions(sub ? sub.split(',') : []);
-  }, [searchParams]);
 
 
   const handleRegionBrowse = (value: string) => {
@@ -161,9 +156,11 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   };
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(window.location.search);
     params.set('page', String(page));
-    router.push(`?${params.toString()}`);
+    window.history.replaceState(null, '', `?${params.toString()}`);
+    setFetchTrigger(prev => prev + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 지역 필터 라벨 생성
@@ -199,8 +196,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   const handleResetAll = () => {
     setSearch('');
+    setSelectedRegion('');
+    setSelectedBusinessTypes([]);
+    setSelectedEmploymentType('');
     setSelectedSubRegions([]);
-    router.push('/jobs');
+    window.history.replaceState(null, '', '/jobs');
+    setFetchTrigger(prev => prev + 1);
   };
 
   // 드롭다운에서 탐색 중인 지역의 상세 목록
