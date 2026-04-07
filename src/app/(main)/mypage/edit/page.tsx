@@ -98,8 +98,8 @@ export default function EditProfilePage() {
       setError('이름을 입력해주세요.');
       return;
     }
-    if (!formData.region) {
-      setError('지역을 선택해주세요.');
+    if (!formData.region || formData.region.split(',').filter(Boolean).length === 0) {
+      setError('지역을 1개 이상 선택해주세요.');
       return;
     }
 
@@ -275,15 +275,59 @@ export default function EditProfilePage() {
           </>
         )}
 
-        {/* Region */}
+        {/* Region - 복수 선택 */}
         <div className="space-y-1.5">
-          <label htmlFor="region" className="block text-sm font-medium text-gray-800">
-            지역 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-gray-800">
+            지역 <span className="text-red-500">*</span> <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span>
           </label>
-          <select id="region" name="region" value={formData.region} onChange={handleChange} className="input-field w-full">
-            <option value="">선택해주세요</option>
-            {REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-          </select>
+          {formData.region && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {formData.region.split(',').filter(Boolean).map((r) => (
+                <span key={r} className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-1 bg-primary text-white text-xs font-medium rounded-lg">
+                  {REGIONS.find(reg => reg.value === r)?.label || r}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = formData.region.split(',').filter(v => v !== r).join(',');
+                      setFormData(prev => ({ ...prev, region: next }));
+                    }}
+                    className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/20"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {REGIONS.map((r) => {
+              const regions = formData.region.split(',').filter(Boolean);
+              const selected = regions.includes(r.value);
+              return (
+                <button
+                  key={r.value}
+                  type="button"
+                  onClick={() => {
+                    const next = selected
+                      ? regions.filter(v => v !== r.value)
+                      : [...regions, r.value];
+                    setFormData(prev => ({ ...prev, region: next.join(',') }));
+                    setError(null);
+                    setSuccess(false);
+                  }}
+                  className={`py-2 rounded-lg text-sm font-medium transition-all ${
+                    selected
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+                  }`}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bio */}

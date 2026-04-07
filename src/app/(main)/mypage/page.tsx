@@ -76,13 +76,13 @@ export default async function MyPage() {
 
       {/* Profile Card */}
       <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
             {imageUrl ? (
               <img src={imageUrl} alt="프로필" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-bold text-xl">
+                <span className="text-primary font-bold text-lg">
                   {(profile.company_name || profile.contact_name).charAt(0)}
                 </span>
               </div>
@@ -108,11 +108,9 @@ export default async function MyPage() {
             )}
           </div>
 
-          <div className="flex gap-2 shrink-0">
-            <Link href={ROUTES.MYPAGE_EDIT} className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-              프로필 수정
-            </Link>
-          </div>
+          <Link href={ROUTES.MYPAGE_EDIT} className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 ml-auto">
+            프로필 수정
+          </Link>
         </div>
 
         {/* Info Grid */}
@@ -130,7 +128,7 @@ export default async function MyPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
-            <span className="text-gray-500">{getRegionLabel(profile.region)}</span>
+            <span className="text-gray-500">{profile.region.split(',').map(r => getRegionLabel(r.trim())).join(', ')}</span>
           </div>
           {profile.phone && (
             <div className="flex items-center gap-3 text-sm">
