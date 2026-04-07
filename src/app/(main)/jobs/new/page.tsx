@@ -1,62 +1,34 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
-import JobForm from '@/features/jobs/components/JobForm';
-import { jobService } from '@/features/jobs/services/job-service';
-import type { JobFormData } from '@/features/jobs/types';
+import JobNewSubmit from '@/features/jobs/components/JobNewSubmit';
 
-export default function NewJobPage() {
-  const router = useRouter();
-  const { profile, loading } = useAuth();
+export const dynamic = 'force-dynamic';
 
-  const handleSubmit = async (data: JobFormData) => {
-    if (!profile) {
-      throw new Error('로그인이 필요합니다.');
-    }
+export default async function NewJobPage() {
+  const cookieStore = await cookies();
+  const profileCookie = cookieStore.get('marie_profile');
 
-    await jobService.createJob(data, profile.id);
-    router.push(ROUTES.JOBS);
-  };
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-40 rounded bg-secondary" />
-          <div className="card p-8 space-y-4">
-            <div className="h-10 rounded bg-secondary" />
-            <div className="h-32 rounded bg-secondary" />
-            <div className="h-10 rounded bg-secondary" />
-          </div>
-        </div>
-      </div>
-    );
+  if (!profileCookie?.value) {
+    redirect(ROUTES.LOGIN);
   }
 
-  // Auth guard
-  if (!profile) {
-    return (
-      <div className="max-w-2xl mx-auto">
-        <div className="card p-8 text-center space-y-4">
-          <h2 className="text-lg font-semibold text-text-primary">로그인이 필요합니다</h2>
-          <p className="text-sm text-text-secondary">채용 공고를 등록하려면 로그인해주세요.</p>
-          <Link href={ROUTES.LOGIN} className="btn-primary text-sm px-6 py-2.5 inline-block">로그인하기</Link>
-        </div>
-      </div>
-    );
+  let profile: { id: string; account_type: string } | null = null;
+  try {
+    profile = JSON.parse(profileCookie.value);
+  } catch {
+    redirect(ROUTES.LOGIN);
   }
 
-  // 업체 회원만 공고 작성 가능
+  if (!profile?.id) redirect(ROUTES.LOGIN);
+
   if (profile.account_type === 'individual') {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
-          <h2 className="text-lg font-semibold text-text-primary">업체 회원 전용 기능입니다</h2>
-          <p className="text-sm text-text-secondary">공고 등록은 업체 회원만 가능합니다. 업체 회원으로 전환하려면 고객센터에 문의해주세요.</p>
+          <h2 className="text-lg font-semibold text-gray-900">업체 회원 전용 기능입니다</h2>
+          <p className="text-sm text-gray-500">공고 등록은 업체 회원만 가능합니다.</p>
           <Link href={ROUTES.JOBS} className="btn-primary text-sm px-6 py-2.5 inline-block">목록으로 돌아가기</Link>
         </div>
       </div>
@@ -65,22 +37,16 @@ export default function NewJobPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      {/* Page Header */}
       <div className="flex items-center gap-3">
-        <Link
-          href={ROUTES.JOBS}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors duration-200"
-          aria-label="목록으로 돌아가기"
-        >
-          <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <Link href={ROUTES.JOBS} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-text-primary">공고 등록</h1>
+        <h1 className="text-2xl font-bold text-gray-900">공고 등록</h1>
       </div>
 
-      {/* Form */}
-      <JobForm onSubmit={handleSubmit} submitLabel="등록하기" />
+      <JobNewSubmit profileId={profile.id} />
     </div>
   );
 }
