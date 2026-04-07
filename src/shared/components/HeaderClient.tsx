@@ -101,7 +101,12 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                       {profile.contact_name?.charAt(0) || '?'}
                     </span>
                   )}
-                  <span className="text-sm font-medium text-gray-700">{profile.contact_name || '마이페이지'}</span>
+                  <div className="text-left hidden sm:block">
+                    <p className="text-sm font-medium text-gray-700 leading-tight">{profile.contact_name || '마이페이지'}</p>
+                    {profile.company_name && (
+                      <p className="text-[11px] text-gray-400 leading-tight">{profile.company_name}</p>
+                    )}
+                  </div>
                   <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                   </svg>
