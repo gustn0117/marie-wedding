@@ -37,9 +37,15 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           <h3 className="text-[15px] font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">
             {profile.company_name || profile.contact_name}
           </h3>
-          <span className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded shrink-0">
-            {profile.business_type ? getBusinessTypeLabel(profile.business_type) : '개인'}
-          </span>
+          {profile.business_type ? (
+            profile.business_type.split(',').filter(Boolean).map(bt => (
+              <span key={bt} className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded shrink-0">
+                {getBusinessTypeLabel(bt.trim())}
+              </span>
+            ))
+          ) : (
+            <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded shrink-0">미등록</span>
+          )}
         </div>
 
         <div className="flex items-center gap-3 text-xs text-gray-500 mb-2">

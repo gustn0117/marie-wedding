@@ -232,43 +232,43 @@ export default function EditProfilePage() {
           <input id="contact_name" name="contact_name" type="text" value={formData.contact_name} onChange={handleChange} className="input-field w-full" />
         </div>
 
-        {/* Business fields */}
+        {/* Company Name - 업체 회원만 */}
         {profile.account_type === 'business' && (
-          <>
-            <div className="space-y-1.5">
-              <label htmlFor="company_name" className="block text-sm font-medium text-gray-800">업체명</label>
-              <input id="company_name" name="company_name" type="text" value={formData.company_name} onChange={handleChange} className="input-field w-full" />
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-800">업종 <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span></label>
-              <div className="flex flex-wrap gap-2">
-                {BUSINESS_TYPES.map((t) => {
-                  const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
-                  return (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => {
-                        const current = formData.business_type.split(',').filter(Boolean);
-                        const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
-                        setFormData(prev => ({ ...prev, business_type: next.join(',') }));
-                        setError(null);
-                        setSuccess(false);
-                      }}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                        selected
-                          ? 'bg-primary text-white shadow-sm'
-                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </>
+          <div className="space-y-1.5">
+            <label htmlFor="company_name" className="block text-sm font-medium text-gray-800">업체명</label>
+            <input id="company_name" name="company_name" type="text" value={formData.company_name} onChange={handleChange} className="input-field w-full" />
+          </div>
         )}
+
+        {/* 업종 - 모든 회원 */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-800">업종 <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span></label>
+          <div className="flex flex-wrap gap-2">
+            {BUSINESS_TYPES.map((t) => {
+              const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => {
+                    const current = formData.business_type.split(',').filter(Boolean);
+                    const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
+                    setFormData(prev => ({ ...prev, business_type: next.join(',') }));
+                    setError(null);
+                    setSuccess(false);
+                  }}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    selected
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Region - 복수 선택 */}
         <div className="space-y-2">
