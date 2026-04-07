@@ -55,7 +55,7 @@ export async function updateSession(request: NextRequest) {
         );
         const { data: profile } = await serviceClient
           .from('profiles')
-          .select('id,contact_name,company_name,account_type,role,region')
+          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed')
           .eq('user_id', user.id)
           .single();
 

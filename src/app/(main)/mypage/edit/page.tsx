@@ -129,7 +129,7 @@ export default function EditProfilePage() {
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setSuccess(true);
-      setTimeout(() => router.push(ROUTES.MYPAGE), 1000);
+      setTimeout(() => { window.location.href = ROUTES.MYPAGE; }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '프로필 수정에 실패했습니다.');
     } finally {

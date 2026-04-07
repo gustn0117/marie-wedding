@@ -94,9 +94,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                   className="flex items-center gap-2.5 px-2 py-1.5 rounded-full hover:bg-gray-100 transition-colors"
                 >
-                  <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-semibold text-xs">
-                    {profile.contact_name?.charAt(0) || '?'}
-                  </span>
+                  {profile.profile_image ? (
+                    <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt="" className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-semibold text-xs">
+                      {profile.contact_name?.charAt(0) || '?'}
+                    </span>
+                  )}
                   <span className="text-sm font-medium text-gray-700">{profile.contact_name || '마이페이지'}</span>
                   <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
@@ -112,9 +116,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                         onClick={() => setProfileMenuOpen(false)}
                         className="flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition-colors"
                       >
-                        <span className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold text-base shrink-0">
-                          {profile.contact_name?.charAt(0) || '?'}
-                        </span>
+                        {profile.profile_image ? (
+                          <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt="" className="w-11 h-11 rounded-full object-cover shrink-0" />
+                        ) : (
+                          <span className="w-11 h-11 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-white font-bold text-base shrink-0">
+                            {profile.contact_name?.charAt(0) || '?'}
+                          </span>
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="text-[15px] font-semibold text-gray-900 truncate">{profile.company_name || profile.contact_name}</p>
                           <p className="text-xs text-gray-400 mt-0.5">{profile.account_type === 'business' ? '업체 회원' : '개인 회원'} · 프로필 보기</p>
