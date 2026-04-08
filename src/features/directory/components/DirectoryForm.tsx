@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
+  { value: 'private', label: '비공개' },
   { value: '1-5', label: '1~5명' },
   { value: '6-10', label: '6~10명' },
   { value: '11-30', label: '11~30명' },
@@ -264,19 +265,31 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           </div>
         </div>
 
-        {/* Company Size & Established Year */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-800">업체 규모</label>
-            <select value={formData.company_size} onChange={(e) => setFormData(prev => ({ ...prev, company_size: e.target.value }))} className="input-field w-full">
-              <option value="">선택해주세요</option>
-              {COMPANY_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
+        {/* Company Size */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-800">업체 규모</label>
+          <div className="flex flex-wrap gap-2">
+            {COMPANY_SIZES.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, company_size: prev.company_size === s.value ? '' : s.value }))}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  formData.company_size === s.value
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
           </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-800">설립연도</label>
-            <input type="text" value={formData.established_year} onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))} placeholder="예: 2020" className="input-field w-full" maxLength={4} />
-          </div>
+        </div>
+
+        {/* Established Year */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-800">설립연도</label>
+          <input type="text" value={formData.established_year} onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))} placeholder="예: 2020" className="input-field w-full" maxLength={4} />
         </div>
 
         {/* Address */}

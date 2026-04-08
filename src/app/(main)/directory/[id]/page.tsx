@@ -126,7 +126,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             {profile.company_size && (
               <div>
                 <p className="text-xs text-gray-400">업체 규모</p>
-                <p className="text-sm font-medium text-gray-800">{profile.company_size}명</p>
+                <p className="text-sm font-medium text-gray-800">{profile.company_size === 'private' ? '비공개' : `${profile.company_size}명`}</p>
               </div>
             )}
             {profile.established_year && (
