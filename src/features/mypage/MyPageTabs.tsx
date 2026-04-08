@@ -58,7 +58,6 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
                 <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="flex items-center justify-between gap-3 py-3.5 px-2 rounded-lg hover:bg-gray-50 transition-colors group">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      {job.is_urgent && <span className="text-[10px] font-bold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">긴급</span>}
                       <h3 className="text-sm font-medium text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">

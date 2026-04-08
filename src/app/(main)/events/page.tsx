@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { createClient } from '@/lib/supabase/client';
 import { formatDate, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
-import type { Job } from '@/types/database';
 
 interface EventItem {
   id: string;
@@ -20,7 +19,6 @@ interface EventItem {
 
 export default function EventsPage() {
   const [events, setEvents] = useState<EventItem[]>([]);
-  const [urgentJobs, setUrgentJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,17 +26,6 @@ export default function EventsPage() {
       const supabase = createClient();
 
       try {
-        // Fetch urgent jobs as "events"
-        const { data: urgentData } = await supabase
-          .from('jobs')
-          .select('*, author:profiles!author_id(*)')
-          .is('deleted_at', null)
-          .eq('is_urgent', true)
-          .order('created_at', { ascending: false })
-          .limit(6);
-
-        setUrgentJobs((urgentData as Job[]) ?? []);
-
         // Fetch recent activity to create event-like items
         const [{ data: recentJobs }, { data: recentPosts }] = await Promise.all([
           supabase
@@ -114,36 +101,6 @@ export default function EventsPage() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-gray-900">이벤트 & 소식</h1>
-
-      {/* Urgent Jobs Banner */}
-      {urgentJobs.length > 0 && (
-        <div>
-          <h2 className="text-lg font-bold text-gray-900 mb-4">긴급 채용 공고</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {urgentJobs.map((job) => (
-              <Link
-                key={job.id}
-                href={ROUTES.JOBS_DETAIL(job.id)}
-                className="card group border-red-100 hover:border-red-200"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="badge-urgent text-xs">긴급</span>
-                  <span className="text-xs text-text-muted">{getRegionLabel(job.region)}</span>
-                </div>
-                <h3 className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors line-clamp-2 mb-1">
-                  {job.title}
-                </h3>
-                <p className="text-xs text-text-secondary">
-                  {job.author?.company_name || '알 수 없음'}
-                </p>
-                {job.deadline && (
-                  <p className="text-xs text-red-500 mt-2">마감: {formatDate(job.deadline)}</p>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Recent Activity Timeline */}
       <div>

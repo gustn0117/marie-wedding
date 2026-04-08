@@ -6,7 +6,6 @@ export interface JobFormData {
   employmentType: string;
   region: string;
   salaryInfo: string;
-  isUrgent: boolean;
   deadline: string;
   image?: string | null;
 }

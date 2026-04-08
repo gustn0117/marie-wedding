@@ -89,7 +89,6 @@ export default function EditJobPage() {
     employmentType: job.employment_type,
     region: job.region,
     salaryInfo: job.salary_info ?? '',
-    isUrgent: job.is_urgent,
     deadline: job.deadline ? job.deadline.split('T')[0] : '',
   };
 

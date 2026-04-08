@@ -144,7 +144,6 @@ export default function AdminJobsPage() {
                     </td>
                     <td className="px-5 py-3">
                       <Link href={ROUTES.JOBS_DETAIL(job.id)} className="font-medium text-gray-800 hover:text-primary truncate block max-w-[250px]">
-                        {job.is_urgent && <span className="text-red-500 mr-1">[긴급]</span>}
                         {job.title}
                       </Link>
                     </td>

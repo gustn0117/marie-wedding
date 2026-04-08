@@ -51,7 +51,6 @@ export default async function JobDetailPage({ params }: PageProps) {
       <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-6 md:p-8 space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            {job.is_urgent && <span className="badge-urgent text-xs font-semibold px-3 py-1 rounded-full">긴급</span>}
             <span className="badge-primary text-xs font-medium px-3 py-1 rounded-full">{getEmploymentTypeLabel(job.employment_type)}</span>
             <span className="badge-accent text-xs font-medium px-3 py-1 rounded-full">{getBusinessTypeLabel(job.business_type)}</span>
             {isExpired && <span className="text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500">마감됨</span>}

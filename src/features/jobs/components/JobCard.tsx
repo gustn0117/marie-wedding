@@ -12,8 +12,7 @@ interface JobCardProps {
   job: Job;
 }
 
-function getEmploymentBadgeClass(employmentType: string, isUrgent: boolean): string {
-  if (isUrgent) return 'badge-urgent';
+function getEmploymentBadgeClass(employmentType: string): string {
   if (employmentType === 'full_time') return 'badge-primary';
   return 'badge-accent';
 }
@@ -27,13 +26,8 @@ export default function JobCard({ job }: JobCardProps) {
       <article className="card p-5 h-full flex flex-col gap-3 transition-shadow duration-200 group-hover:shadow-md">
         {/* Header: Badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          {job.is_urgent && (
-            <span className="badge-urgent text-xs font-semibold px-2.5 py-1 rounded-full">
-              긴급
-            </span>
-          )}
           <span
-            className={`${getEmploymentBadgeClass(job.employment_type, false)} text-xs font-medium px-2.5 py-1 rounded-full`}
+            className={`${getEmploymentBadgeClass(job.employment_type)} text-xs font-medium px-2.5 py-1 rounded-full`}
           >
             {getEmploymentTypeLabel(job.employment_type)}
           </span>

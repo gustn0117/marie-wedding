@@ -20,7 +20,6 @@ const EMPTY_FORM: JobFormData = {
   employmentType: '',
   region: '',
   salaryInfo: '',
-  isUrgent: false,
   deadline: '',
   image: null,
 };
@@ -288,13 +287,6 @@ export default function JobForm({
           placeholder="마감일을 선택하세요"
         />
       </div>
-
-      {/* Is Urgent */}
-      <label className="flex items-center gap-3 cursor-pointer select-none">
-        <input name="isUrgent" type="checkbox" checked={formData.isUrgent} onChange={handleChange} className="w-4 h-4 rounded border-border text-primary focus:ring-primary-300 cursor-pointer" />
-        <span className="text-sm font-medium text-text-primary">긴급 공고로 등록</span>
-        <span className="text-xs text-text-muted">(목록 상단에 노출됩니다)</span>
-      </label>
 
       {/* Submit */}
       <div className="pt-2">

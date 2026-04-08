@@ -535,11 +535,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   {/* Job Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      {job.is_urgent && (
-                        <span className="inline-flex items-center px-2 py-0.5 bg-red-50 text-red-600 text-xs font-semibold rounded">
-                          긴급
-                        </span>
-                      )}
                       <h3 className="text-[15px] font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">
                         {job.title}
                       </h3>

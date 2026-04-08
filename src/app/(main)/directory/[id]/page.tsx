@@ -189,7 +189,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    {job.is_urgent && <span className="badge-accent text-xs font-semibold">긴급</span>}
                     <span className="text-xs text-gray-400">{formatDate(job.created_at)}</span>
                   </div>
                 </div>

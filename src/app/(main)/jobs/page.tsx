@@ -48,7 +48,6 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
 
   query = query
-    .order('is_urgent', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
 

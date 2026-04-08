@@ -8,7 +8,7 @@ export const jobService = {
   /**
    * Fetch jobs with optional filters and pagination.
    * Joins with profiles to get author info.
-   * Orders by is_urgent DESC, created_at DESC.
+   * Orders by created_at DESC.
    */
   async getJobs(
     filters?: JobFilters,
@@ -23,7 +23,6 @@ export const jobService = {
       .from('jobs')
       .select('*, author:profiles!author_id(*)', { count: 'exact' })
       .is('deleted_at', null)
-      .order('is_urgent', { ascending: false })
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -101,7 +100,6 @@ export const jobService = {
         employment_type: formData.employmentType,
         region: formData.region,
         salary_info: formData.salaryInfo || null,
-        is_urgent: formData.isUrgent,
         deadline: formData.deadline || null,
         image: formData.image || null,
       })
@@ -128,7 +126,6 @@ export const jobService = {
     if (formData.employmentType !== undefined) updateData.employment_type = formData.employmentType;
     if (formData.region !== undefined) updateData.region = formData.region;
     if (formData.salaryInfo !== undefined) updateData.salary_info = formData.salaryInfo || null;
-    if (formData.isUrgent !== undefined) updateData.is_urgent = formData.isUrgent;
     if (formData.deadline !== undefined) updateData.deadline = formData.deadline || null;
 
     const { data, error } = await supabase
