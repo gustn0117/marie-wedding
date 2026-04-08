@@ -275,7 +275,7 @@ export default function JobForm({
       {/* Salary Info */}
       <div className="space-y-1.5">
         <label htmlFor="salaryInfo" className="block text-sm font-medium text-text-primary">급여 정보</label>
-        <input id="salaryInfo" name="salaryInfo" type="text" value={formData.salaryInfo} onChange={handleChange} placeholder="예: 월 300만원 이상, 시급 15,000원" className="input-field w-full" />
+        <input id="salaryInfo" name="salaryInfo" type="text" value={formData.salaryInfo} onChange={handleChange} placeholder="예: 월 300만원 이상, 시급 15,000원, 면접 후 결정" className="input-field w-full" />
       </div>
 
       {/* Deadline */}
