@@ -184,36 +184,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         </Link>
       </div>
 
-      {/* Top Banner: 추천 업체 + 공고 등록 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { name: '그랜드 웨딩홀', type: '예식장', region: '서울' },
-          { name: '로즈드레스', type: '드레스샵', region: '경기' },
-          { name: '루미에르 스튜디오', type: '스튜디오', region: '서울' },
-        ].map((company) => (
-          <div key={company.name} className="bg-white border border-gray-200 rounded-lg px-4 py-3 hover:shadow-sm cursor-pointer transition-all">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <span className="text-sm font-bold text-primary">{company.name[0]}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{company.name}</p>
-                <p className="text-xs text-gray-500">{company.type} · {company.region}</p>
-              </div>
-            </div>
-          </div>
-        ))}
-        <div className="bg-gradient-to-r from-primary to-primary-light rounded-lg px-5 py-3 flex items-center justify-between text-white">
-          <div>
-            <p className="font-bold text-sm">무료 공고 등록</p>
-            <p className="text-xs text-white/80">첫 달 무료!</p>
-          </div>
-          <Link href={ROUTES.JOBS_NEW} className="bg-white text-primary font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-white/90 transition-colors">
-            등록 →
-          </Link>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div>
         {/* Filter Section */}
