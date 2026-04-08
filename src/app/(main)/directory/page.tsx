@@ -31,10 +31,10 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     .eq('is_directory_listed', true);
 
   if (searchParams.businessType) {
-    query = query.eq('business_type', searchParams.businessType);
+    query = query.ilike('business_type', `%${searchParams.businessType}%`);
   }
   if (searchParams.region) {
-    query = query.eq('region', searchParams.region);
+    query = query.ilike('region', `%${searchParams.region}%`);
   }
   if (searchParams.search) {
     query = query.or(`company_name.ilike.%${searchParams.search}%,contact_name.ilike.%${searchParams.search}%`);

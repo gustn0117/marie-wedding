@@ -31,17 +31,14 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
   if (searchParams.businessType) {
     const types = searchParams.businessType.split(',');
-    if (types.length === 1) {
-      query = query.eq('business_type', types[0]);
-    } else {
-      query = query.in('business_type', types);
-    }
+    const orFilter = types.map(t => `business_type.ilike.%${t}%`).join(',');
+    query = query.or(orFilter);
   }
   if (searchParams.employmentType) {
     query = query.eq('employment_type', searchParams.employmentType);
   }
   if (searchParams.region) {
-    query = query.eq('region', searchParams.region);
+    query = query.ilike('region', `%${searchParams.region}%`);
   }
   if (searchParams.search) {
     query = query.ilike('title', `%${searchParams.search}%`);
