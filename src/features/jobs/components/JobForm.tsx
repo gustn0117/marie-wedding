@@ -321,7 +321,7 @@ function DropdownSelect({ label, required, value, options, onChange }: {
         type="button"
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm transition-colors text-left ${
-          open ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200 hover:border-gray-300'
+          open ? 'border-primary ring-2 ring-primary/20 bg-white' : 'border-gray-200 hover:border-gray-300'
         }`}
       >
         <span className={selected ? 'text-gray-900' : 'text-gray-400'}>
@@ -332,19 +332,26 @@ function DropdownSelect({ label, required, value, options, onChange }: {
         </svg>
       </button>
       {open && (
-        <div className="flex flex-wrap gap-2 pt-1">
-          {options.map((opt) => (
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+          {options.map((opt, i) => (
             <button
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
+                i < options.length - 1 ? 'border-b border-gray-50' : ''
+              } ${
                 value === opt.value
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+                  ? 'bg-primary-50 text-primary font-medium'
+                  : 'text-gray-700 hover:bg-gray-50'
               }`}
             >
               {opt.label}
+              {value === opt.value && (
+                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              )}
             </button>
           ))}
         </div>
