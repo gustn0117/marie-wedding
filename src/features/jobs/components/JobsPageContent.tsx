@@ -494,13 +494,19 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                     idx < jobs.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
                 >
-                  {/* Company Logo */}
-                  <ProfileAvatar
-                    profileImage={job.author?.profile_image}
-                    name={job.author?.company_name || job.author?.contact_name || '업체'}
-                    size="sm"
-                    className="!rounded-lg mt-0.5"
-                  />
+                  {/* Thumbnail */}
+                  {job.image ? (
+                    <div className="w-9 h-9 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 mt-0.5">
+                      <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <ProfileAvatar
+                      profileImage={job.author?.profile_image}
+                      name={job.author?.company_name || job.author?.contact_name || '업체'}
+                      size="sm"
+                      className="!rounded-lg mt-0.5"
+                    />
+                  )}
 
                   {/* Job Info */}
                   <div className="flex-1 min-w-0">

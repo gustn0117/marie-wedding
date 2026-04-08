@@ -48,6 +48,17 @@ export default async function JobDetailPage({ params }: PageProps) {
         목록으로
       </Link>
 
+      {/* Job Image */}
+      {job.image && (
+        <div className="rounded-xl overflow-hidden border border-gray-200">
+          <img
+            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`}
+            alt={job.title}
+            className="w-full max-h-[400px] object-contain bg-gray-50"
+          />
+        </div>
+      )}
+
       <article className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="p-6 md:p-8 space-y-4">
           <div className="flex items-center gap-2 flex-wrap">

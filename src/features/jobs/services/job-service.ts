@@ -127,6 +127,7 @@ export const jobService = {
     if (formData.region !== undefined) updateData.region = formData.region;
     if (formData.salaryInfo !== undefined) updateData.salary_info = formData.salaryInfo || null;
     if (formData.deadline !== undefined) updateData.deadline = formData.deadline || null;
+    if (formData.image !== undefined) updateData.image = formData.image || null;
 
     const { data, error } = await supabase
       .from('jobs')
