@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { BUSINESS_TYPES, EMPLOYMENT_TYPES, POSTING_TYPES, REGIONS } from '@/shared/constants';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import { createClient } from '@/lib/supabase/client';
 import type { JobFormData } from '../types';
@@ -260,11 +261,8 @@ export default function JobForm({
       />
 
       {/* 지역 */}
-      <DropdownSelect
-        label="지역"
-        required
+      <RegionSelect
         value={formData.region}
-        options={REGIONS}
         onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
       />
 
@@ -354,6 +352,121 @@ function DropdownSelect({ label, required, value, options, onChange }: {
               )}
             </button>
           ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RegionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [browsing, setBrowsing] = useState('');
+
+  const selectedLabel = value
+    ? REGIONS.find(r => r.value === value)?.label || value
+    : '';
+
+  const details = browsing ? REGION_DETAILS[browsing] : null;
+
+  const handleSelectRegion = (regionValue: string) => {
+    if (REGION_DETAILS[regionValue]) {
+      setBrowsing(regionValue);
+    } else {
+      onChange(regionValue);
+      setOpen(false);
+      setBrowsing('');
+    }
+  };
+
+  const handleSelectDetail = (regionValue: string) => {
+    onChange(regionValue);
+    setOpen(false);
+    setBrowsing('');
+  };
+
+  const handleSelectWholeRegion = () => {
+    onChange(browsing);
+    setOpen(false);
+    setBrowsing('');
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-text-primary">
+        지역 <span className="text-red-500">*</span>
+      </label>
+      <button
+        type="button"
+        onClick={() => { setOpen(!open); if (open) setBrowsing(''); }}
+        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm transition-colors text-left ${
+          open ? 'border-primary ring-2 ring-primary/20 bg-white' : 'border-gray-200 hover:border-gray-300'
+        }`}
+      >
+        <span className={selectedLabel ? 'text-gray-900' : 'text-gray-400'}>
+          {selectedLabel || '선택해주세요'}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+          <div className="flex">
+            {/* 시/도 목록 */}
+            <div className={`${details ? 'w-1/3 border-r border-gray-100' : 'w-full'} max-h-[280px] overflow-y-auto`}>
+              {REGIONS.map((r) => {
+                const hasDetails = !!REGION_DETAILS[r.value];
+                return (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => handleSelectRegion(r.value)}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
+                      browsing === r.value
+                        ? 'bg-primary-50 text-primary font-medium'
+                        : value === r.value && !browsing
+                          ? 'bg-primary-50 text-primary font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {r.label}
+                    {hasDetails && (
+                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 구/군 상세 */}
+            {details && (
+              <div className="w-2/3 max-h-[280px] overflow-y-auto">
+                <button
+                  type="button"
+                  onClick={handleSelectWholeRegion}
+                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary-50 transition-colors border-b border-gray-100"
+                >
+                  {REGIONS.find(r => r.value === browsing)?.label} 전체
+                </button>
+                {details.map((d) => (
+                  <button
+                    key={d.value}
+                    type="button"
+                    onClick={() => handleSelectDetail(d.value)}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                      value === d.value
+                        ? 'bg-primary-50 text-primary font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
