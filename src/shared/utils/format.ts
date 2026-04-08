@@ -51,6 +51,12 @@ export function formatRelativeTime(dateString: string): string {
  * Convert a business type enum value to its Korean label.
  */
 export function getBusinessTypeLabel(type: string): string {
+  if (type.includes(',')) {
+    return type.split(',').map(t => {
+      const found = BUSINESS_TYPES.find((item) => item.value === t.trim());
+      return found?.label ?? t.trim();
+    }).join(', ');
+  }
   const found = BUSINESS_TYPES.find((item) => item.value === type);
   return found?.label ?? type;
 }
@@ -67,6 +73,12 @@ export function getEmploymentTypeLabel(type: string): string {
  * Convert a region enum value to its Korean label.
  */
 export function getRegionLabel(type: string): string {
+  if (type.includes(',')) {
+    return type.split(',').map(r => {
+      const found = REGIONS.find((item) => item.value === r.trim());
+      return found?.label ?? r.trim();
+    }).join(', ');
+  }
   const found = REGIONS.find((item) => item.value === type);
   return found?.label ?? type;
 }
