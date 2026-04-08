@@ -241,34 +241,66 @@ export default function JobForm({
         />
       </div>
 
-      {/* Select Fields */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="space-y-1.5">
-          <label htmlFor="businessType" className="block text-sm font-medium text-text-primary">
-            업종 <span className="text-red-500">*</span>
-          </label>
-          <select id="businessType" name="businessType" value={formData.businessType} onChange={handleChange} className="input-field w-full">
-            <option value="">선택해주세요</option>
-            {BUSINESS_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
+      {/* 업종 */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-text-primary">업종 <span className="text-red-500">*</span></label>
+        <div className="flex flex-wrap gap-2">
+          {BUSINESS_TYPES.map((type) => (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, businessType: prev.businessType === type.value ? '' : type.value }))}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                formData.businessType === type.value
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
         </div>
-        <div className="space-y-1.5">
-          <label htmlFor="employmentType" className="block text-sm font-medium text-text-primary">
-            고용형태 <span className="text-red-500">*</span>
-          </label>
-          <select id="employmentType" name="employmentType" value={formData.employmentType} onChange={handleChange} className="input-field w-full">
-            <option value="">선택해주세요</option>
-            {EMPLOYMENT_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-          </select>
+      </div>
+
+      {/* 고용형태 */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-text-primary">고용형태 <span className="text-red-500">*</span></label>
+        <div className="flex flex-wrap gap-2">
+          {EMPLOYMENT_TYPES.map((type) => (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, employmentType: prev.employmentType === type.value ? '' : type.value }))}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                formData.employmentType === type.value
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+              }`}
+            >
+              {type.label}
+            </button>
+          ))}
         </div>
-        <div className="space-y-1.5">
-          <label htmlFor="region" className="block text-sm font-medium text-text-primary">
-            지역 <span className="text-red-500">*</span>
-          </label>
-          <select id="region" name="region" value={formData.region} onChange={handleChange} className="input-field w-full">
-            <option value="">선택해주세요</option>
-            {REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-          </select>
+      </div>
+
+      {/* 지역 */}
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-text-primary">지역 <span className="text-red-500">*</span></label>
+        <div className="flex flex-wrap gap-2">
+          {REGIONS.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, region: prev.region === r.value ? '' : r.value }))}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                formData.region === r.value
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+              }`}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
       </div>
 
