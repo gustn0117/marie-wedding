@@ -242,67 +242,31 @@ export default function JobForm({
       </div>
 
       {/* 업종 */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-text-primary">업종 <span className="text-red-500">*</span></label>
-        <div className="flex flex-wrap gap-2">
-          {BUSINESS_TYPES.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, businessType: prev.businessType === type.value ? '' : type.value }))}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                formData.businessType === type.value
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <DropdownSelect
+        label="업종"
+        required
+        value={formData.businessType}
+        options={BUSINESS_TYPES}
+        onChange={(v) => setFormData(prev => ({ ...prev, businessType: v }))}
+      />
 
       {/* 고용형태 */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-text-primary">고용형태 <span className="text-red-500">*</span></label>
-        <div className="flex flex-wrap gap-2">
-          {EMPLOYMENT_TYPES.map((type) => (
-            <button
-              key={type.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, employmentType: prev.employmentType === type.value ? '' : type.value }))}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                formData.employmentType === type.value
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-              }`}
-            >
-              {type.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <DropdownSelect
+        label="고용형태"
+        required
+        value={formData.employmentType}
+        options={EMPLOYMENT_TYPES}
+        onChange={(v) => setFormData(prev => ({ ...prev, employmentType: v }))}
+      />
 
       {/* 지역 */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-text-primary">지역 <span className="text-red-500">*</span></label>
-        <div className="flex flex-wrap gap-2">
-          {REGIONS.map((r) => (
-            <button
-              key={r.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, region: prev.region === r.value ? '' : r.value }))}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                formData.region === r.value
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      <DropdownSelect
+        label="지역"
+        required
+        value={formData.region}
+        options={REGIONS}
+        onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
+      />
 
       {/* Salary Info */}
       <div className="space-y-1.5">
@@ -335,5 +299,56 @@ export default function JobForm({
         </button>
       </div>
     </form>
+  );
+}
+
+function DropdownSelect({ label, required, value, options, onChange }: {
+  label: string;
+  required?: boolean;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-medium text-text-primary">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm transition-colors text-left ${
+          open ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200 hover:border-gray-300'
+        }`}
+      >
+        <span className={selected ? 'text-gray-900' : 'text-gray-400'}>
+          {selected ? selected.label : '선택해주세요'}
+        </span>
+        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {open && (
+        <div className="flex flex-wrap gap-2 pt-1">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                value === opt.value
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
