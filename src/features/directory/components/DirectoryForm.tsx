@@ -157,7 +157,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setSuccess(true);
-      setTimeout(() => window.location.reload(), 800);
+      setTimeout(() => { window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id); }, 500);
     } catch (err) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
     } finally {
