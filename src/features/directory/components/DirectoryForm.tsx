@@ -7,6 +7,15 @@ import { directoryService } from '@/features/directory/services/directory-servic
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/database';
 
+const COMPANY_SIZES = [
+  { value: '1-5', label: '1~5명' },
+  { value: '6-10', label: '6~10명' },
+  { value: '11-30', label: '11~30명' },
+  { value: '31-50', label: '31~50명' },
+  { value: '51-100', label: '51~100명' },
+  { value: '100+', label: '100명 이상' },
+];
+
 interface DirectoryFormProps {
   profile: Profile;
 }
@@ -18,6 +27,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     company_name: profile.company_name || '',
@@ -26,6 +36,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     bio: profile.bio || '',
     phone: profile.phone || '',
     website: profile.website || '',
+    company_size: profile.company_size || '',
+    established_year: profile.established_year || '',
+    address: profile.address || '',
   });
 
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -34,6 +47,12 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
       : null
   );
+
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
+    (profile.gallery || []).map(g => `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${g}`)
+  );
+  const [existingGallery, setExistingGallery] = useState<string[]>(profile.gallery || []);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,22 +70,37 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleToggle = async () => {
-    if (!listed && (!formData.company_name.trim() && !profile.contact_name)) {
-      setError('이름 또는 업체명을 입력해주세요.');
-      return;
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const valid = files.filter(f => f.size <= 5 * 1024 * 1024 && f.type.startsWith('image/'));
+    if (valid.length < files.length) setError('5MB 이하의 이미지만 업로드 가능합니다.');
+    setGalleryFiles(prev => [...prev, ...valid]);
+    setGalleryPreviews(prev => [...prev, ...valid.map(f => URL.createObjectURL(f))]);
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+  };
+
+  const handleRemoveGalleryItem = (idx: number) => {
+    const isExisting = idx < existingGallery.length;
+    if (isExisting) {
+      setExistingGallery(prev => prev.filter((_, i) => i !== idx));
+      setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
+    } else {
+      const fileIdx = idx - existingGallery.length;
+      setGalleryFiles(prev => prev.filter((_, i) => i !== fileIdx));
+      setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
     }
+  };
+
+  const handleToggle = async () => {
     if (!listed && !formData.region) {
       setError('지역을 1개 이상 선택해주세요.');
       return;
     }
-
     setSubmitting(true);
     setError(null);
     try {
-      const next = !listed;
-      await directoryService.toggleDirectoryListing(profile.id, next);
-      setListed(next);
+      await directoryService.toggleDirectoryListing(profile.id, !listed);
+      setListed(!listed);
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       window.location.reload();
     } catch (err) {
@@ -76,25 +110,34 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   };
 
   const handleSave = async () => {
-    if (!formData.region) {
-      setError('지역을 1개 이상 선택해주세요.');
-      return;
-    }
+    if (!formData.region) { setError('지역을 1개 이상 선택해주세요.'); return; }
 
     setSaving(true);
     setError(null);
     setSuccess(false);
     try {
+      const supabase = createClient();
+
+      // 프로필 이미지 업로드
       let profileImage = profile.profile_image;
       if (imageFile) {
-        const supabase = createClient();
         const ext = imageFile.name.split('.').pop();
         const path = `${profile.user_id}/avatar.${ext}`;
-        const { error: uploadError } = await supabase.storage.from('avatars').upload(path, imageFile, { upsert: true });
-        if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
+        const { error: err } = await supabase.storage.from('avatars').upload(path, imageFile, { upsert: true });
+        if (err) throw new Error('프로필 이미지 업로드 실패');
         profileImage = path;
-      } else if (!imagePreview && profile.profile_image) {
+      } else if (!imagePreview) {
         profileImage = null;
+      }
+
+      // 갤러리 이미지 업로드
+      const uploadedGallery = [...existingGallery];
+      for (const file of galleryFiles) {
+        const ext = file.name.split('.').pop();
+        const path = `${profile.user_id}/gallery_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: err } = await supabase.storage.from('avatars').upload(path, file);
+        if (err) throw new Error('갤러리 이미지 업로드 실패');
+        uploadedGallery.push(path);
       }
 
       await directoryService.updateProfile(profile.id, {
@@ -105,6 +148,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         phone: formData.phone.trim() || null,
         website: formData.website.trim() || null,
         profile_image: profileImage,
+        company_size: formData.company_size || null,
+        established_year: formData.established_year || null,
+        address: formData.address.trim() || null,
+        gallery: uploadedGallery.length > 0 ? uploadedGallery : null,
       });
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -140,9 +187,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </div>
         {listed && (
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="text-sm text-primary hover:underline">
-              내 디렉토리 페이지 보기
-            </Link>
+            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="text-sm text-primary hover:underline">내 디렉토리 페이지 보기</Link>
           </div>
         )}
       </div>
@@ -156,24 +201,20 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
         {/* Profile Image */}
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
-              {imagePreview ? (
-                <img src={imagePreview} alt="프로필" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-bold text-xl">{(formData.company_name || profile.contact_name || '?').charAt(0)}</span>
-                </div>
-              )}
-            </div>
+          <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
+            {imagePreview ? (
+              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+                <span className="text-primary font-bold text-xl">{(formData.company_name || profile.contact_name || '?').charAt(0)}</span>
+              </div>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <button type="button" onClick={() => fileInputRef.current?.click()} className="text-sm text-primary hover:underline text-left">
-              사진 {imagePreview ? '변경' : '등록'}
+              로고 {imagePreview ? '변경' : '등록'}
             </button>
-            {imagePreview && (
-              <button type="button" onClick={handleRemoveImage} className="text-sm text-red-400 hover:underline text-left">삭제</button>
-            )}
+            {imagePreview && <button type="button" onClick={handleRemoveImage} className="text-sm text-red-400 hover:underline text-left">삭제</button>}
             <p className="text-[11px] text-gray-400">JPG, PNG 최대 2MB</p>
           </div>
           <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
@@ -182,13 +223,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         {/* Company Name */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-800">업체명 / 표시 이름</label>
-          <input
-            type="text"
-            value={formData.company_name}
-            onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
-            placeholder="디렉토리에 표시할 이름"
-            className="input-field w-full"
-          />
+          <input type="text" value={formData.company_name} onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))} placeholder="디렉토리에 표시할 이름" className="input-field w-full" />
         </div>
 
         {/* Business Type */}
@@ -198,18 +233,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             {BUSINESS_TYPES.map((t) => {
               const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
               return (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => {
-                    const current = formData.business_type.split(',').filter(Boolean);
-                    const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
-                    setFormData(prev => ({ ...prev, business_type: next.join(',') }));
-                  }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-                  }`}
-                >
+                <button key={t.value} type="button" onClick={() => {
+                  const current = formData.business_type.split(',').filter(Boolean);
+                  const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
+                  setFormData(prev => ({ ...prev, business_type: next.join(',') }));
+                }} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'}`}>
                   {t.label}
                 </button>
               );
@@ -225,17 +253,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               const regions = formData.region.split(',').filter(Boolean);
               const selected = regions.includes(r.value);
               return (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => {
-                    const next = selected ? regions.filter(v => v !== r.value) : [...regions, r.value];
-                    setFormData(prev => ({ ...prev, region: next.join(',') }));
-                  }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-                  }`}
-                >
+                <button key={r.value} type="button" onClick={() => {
+                  const next = selected ? regions.filter(v => v !== r.value) : [...regions, r.value];
+                  setFormData(prev => ({ ...prev, region: next.join(',') }));
+                }} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'}`}>
                   {r.label}
                 </button>
               );
@@ -243,49 +264,83 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           </div>
         </div>
 
+        {/* Company Size & Established Year */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-800">업체 규모</label>
+            <select value={formData.company_size} onChange={(e) => setFormData(prev => ({ ...prev, company_size: e.target.value }))} className="input-field w-full">
+              <option value="">선택해주세요</option>
+              {COMPANY_SIZES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-sm font-medium text-gray-800">설립연도</label>
+            <input type="text" value={formData.established_year} onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))} placeholder="예: 2020" className="input-field w-full" maxLength={4} />
+          </div>
+        </div>
+
+        {/* Address */}
+        <div className="space-y-1.5">
+          <label className="block text-sm font-medium text-gray-800">주소</label>
+          <input type="text" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} placeholder="상세 주소를 입력해주세요" className="input-field w-full" />
+        </div>
+
         {/* Bio */}
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-gray-800">소개</label>
-          <textarea
-            value={formData.bio}
-            onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-            rows={3}
-            className="input-field w-full resize-y"
-            placeholder="업체 소개를 입력해주세요"
-          />
+          <textarea value={formData.bio} onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} rows={3} className="input-field w-full resize-y" placeholder="업체 소개를 입력해주세요" />
         </div>
 
         {/* Phone & Website */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-800">연락처</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              className="input-field w-full"
-              placeholder="010-0000-0000"
-            />
+            <input type="tel" value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="input-field w-full" placeholder="010-0000-0000" />
           </div>
           <div className="space-y-1.5">
             <label className="block text-sm font-medium text-gray-800">웹사이트</label>
-            <input
-              type="text"
-              value={formData.website}
-              onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-              className="input-field w-full"
-              placeholder="https://"
-            />
+            <input type="text" value={formData.website} onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} className="input-field w-full" placeholder="https://" />
           </div>
+        </div>
+
+        {/* Gallery */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-800">갤러리 <span className="text-xs text-gray-400 font-normal">(업체 사진, 작업물 등)</span></label>
+          {galleryPreviews.length > 0 && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {galleryPreviews.map((src, i) => (
+                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveGalleryItem(i)}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => galleryInputRef.current?.click()}
+            className="w-full border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary/40 hover:bg-gray-50 transition-colors"
+          >
+            <svg className="w-6 h-6 text-gray-300 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <p className="text-sm text-gray-500">사진 추가하기</p>
+            <p className="text-xs text-gray-400 mt-0.5">JPG, PNG 최대 5MB</p>
+          </button>
+          <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
         </div>
 
         {/* Save */}
         <div className="pt-2">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="btn-primary text-sm px-6 py-2.5 disabled:opacity-50"
-          >
+          <button onClick={handleSave} disabled={saving} className="btn-primary text-sm px-6 py-2.5 disabled:opacity-50">
             {saving ? '저장 중...' : '저장하기'}
           </button>
         </div>
@@ -296,7 +351,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         <h3 className="text-sm font-semibold text-gray-700 mb-2">안내</h3>
         <ul className="space-y-1.5 text-[13px] text-gray-500">
           <li>- 등록하면 업체 디렉토리에 정보가 공개됩니다.</li>
-          <li>- 프로필 사진, 소개글을 작성하면 더 많은 관심을 받을 수 있습니다.</li>
+          <li>- 프로필 사진, 갤러리, 소개글을 작성하면 더 많은 관심을 받을 수 있습니다.</li>
           <li>- 언제든지 등록을 해제할 수 있습니다.</li>
         </ul>
       </div>

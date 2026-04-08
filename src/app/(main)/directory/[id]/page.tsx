@@ -120,10 +120,52 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           )}
         </div>
 
+        {/* Additional Info */}
+        {(profile.company_size || profile.established_year || profile.address) && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl mb-6">
+            {profile.company_size && (
+              <div>
+                <p className="text-xs text-gray-400">업체 규모</p>
+                <p className="text-sm font-medium text-gray-800">{profile.company_size}명</p>
+              </div>
+            )}
+            {profile.established_year && (
+              <div>
+                <p className="text-xs text-gray-400">설립연도</p>
+                <p className="text-sm font-medium text-gray-800">{profile.established_year}년</p>
+              </div>
+            )}
+            {profile.address && (
+              <div>
+                <p className="text-xs text-gray-400">주소</p>
+                <p className="text-sm font-medium text-gray-800">{profile.address}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {profile.bio && (
-          <div>
+          <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-900 mb-2">소개</h2>
             <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{profile.bio}</p>
+          </div>
+        )}
+
+        {/* Gallery */}
+        {profile.gallery && profile.gallery.length > 0 && (
+          <div>
+            <h2 className="text-sm font-semibold text-gray-900 mb-3">갤러리</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {profile.gallery.map((img, i) => (
+                <div key={i} className="aspect-square rounded-lg overflow-hidden border border-gray-200">
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${img}`}
+                    alt={`갤러리 ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

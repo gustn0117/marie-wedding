@@ -13,6 +13,10 @@ export interface Profile {
   website: string | null;
   profile_image: string | null;
   is_directory_listed: boolean;
+  company_size: string | null;
+  established_year: string | null;
+  address: string | null;
+  gallery: string[] | null;
   role: 'user' | 'admin';
   created_at: string;
   updated_at: string;

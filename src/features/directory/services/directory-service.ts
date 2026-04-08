@@ -91,6 +91,10 @@ export const directoryService = {
     phone?: string | null;
     website?: string | null;
     profile_image?: string | null;
+    company_size?: string | null;
+    established_year?: string | null;
+    address?: string | null;
+    gallery?: string[] | null;
   }): Promise<Profile> {
     const supabase = createClient();
 
