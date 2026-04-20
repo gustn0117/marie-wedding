@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
@@ -8,6 +9,7 @@ import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import RichTextView from '@/shared/components/RichTextView';
 import PostDetailActions from '@/features/community/components/PostDetailActions';
 import CommentSection from '@/features/community/components/CommentSection';
+import LikeButton from '@/features/community/components/LikeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,23 +17,50 @@ interface PageProps {
   params: { id: string };
 }
 
-async function getPost(id: string): Promise<Post | null> {
+async function getPostData(id: string, viewerProfileId: string | null) {
   const supabase = createServerQueryClient();
   await supabase.rpc('increment_view_count', { post_id: id });
 
-  const { data } = await supabase
+  const { data: post } = await supabase
     .from('posts')
-    .select('*, author:profiles!author_id(*)')
+    .select('*, author:profiles!author_id(*), comments:comments(count)')
     .eq('id', id)
     .is('deleted_at', null)
     .single();
 
-  return data as Post | null;
+  if (!post) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const commentCount = ((post as any).comments?.[0]?.count as number) ?? 0;
+
+  let isLiked = false;
+  if (viewerProfileId) {
+    const { data: like } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', id)
+      .eq('profile_id', viewerProfileId)
+      .maybeSingle();
+    isLiked = !!like;
+  }
+
+  return { post: { ...post, comment_count: commentCount, is_liked: isLiked } as Post, commentCount };
 }
 
 export default async function PostDetailPage({ params }: PageProps) {
-  const post = await getPost(params.id);
-  if (!post) notFound();
+  const cookieStore = await cookies();
+  const profileCookie = cookieStore.get('marie_profile');
+  let viewerProfileId: string | null = null;
+  try {
+    if (profileCookie?.value) {
+      viewerProfileId = JSON.parse(profileCookie.value)?.id ?? null;
+    }
+  } catch {}
+
+  const result = await getPostData(params.id, viewerProfileId);
+  if (!result) notFound();
+
+  const { post, commentCount } = result;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -76,6 +105,13 @@ export default async function PostDetailPage({ params }: PageProps) {
                     </svg>
                     {post.view_count.toLocaleString()}
                   </span>
+                  <span className="w-px h-3 bg-gray-200" />
+                  <span className="flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
+                    </svg>
+                    {commentCount}
+                  </span>
                 </div>
               </div>
             </div>
@@ -88,7 +124,18 @@ export default async function PostDetailPage({ params }: PageProps) {
           <RichTextView html={post.content} className="text-[15px] text-gray-700 leading-relaxed min-h-[200px]" />
         </div>
 
-        {/* Footer - Share & Back */}
+        {/* Like Button */}
+        <div className="flex justify-center pb-6 md:pb-8">
+          <LikeButton
+            postId={post.id}
+            initialLiked={post.is_liked ?? false}
+            initialCount={post.like_count}
+            canLike={!!viewerProfileId}
+            viewerProfileId={viewerProfileId}
+          />
+        </div>
+
+        {/* Footer */}
         <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
           <Link
             href={ROUTES.COMMUNITY}
@@ -99,11 +146,16 @@ export default async function PostDetailPage({ params }: PageProps) {
             </svg>
             목록으로
           </Link>
-          <p className="text-xs text-gray-400">조회 {post.view_count.toLocaleString()}회</p>
+          <div className="flex items-center gap-3 text-xs text-gray-400">
+            <span>조회 {post.view_count.toLocaleString()}</span>
+            <span>·</span>
+            <span>댓글 {commentCount}</span>
+            <span>·</span>
+            <span>좋아요 {post.like_count}</span>
+          </div>
         </div>
       </article>
 
-      {/* Comments */}
       <CommentSection postId={post.id} />
     </div>
   );

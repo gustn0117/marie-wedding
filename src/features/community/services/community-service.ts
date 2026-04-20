@@ -193,4 +193,38 @@ export const communityService = {
 
     if (error) throw error;
   },
+
+  /**
+   * Toggle like on a post. Returns new like state.
+   */
+  async toggleLike(postId: string, profileId: string): Promise<{ liked: boolean; likeCount: number }> {
+    const supabase = createClient();
+
+    // 기존 좋아요 확인
+    const { data: existing } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', postId)
+      .eq('profile_id', profileId)
+      .maybeSingle();
+
+    if (existing) {
+      // 좋아요 취소
+      await supabase.from('post_likes').delete().eq('id', existing.id);
+    } else {
+      // 좋아요 추가
+      await supabase.from('post_likes').insert({ post_id: postId, profile_id: profileId });
+    }
+
+    // 현재 like_count 재계산
+    const { count } = await supabase
+      .from('post_likes')
+      .select('id', { count: 'exact', head: true })
+      .eq('post_id', postId);
+
+    const likeCount = count ?? 0;
+    await supabase.from('posts').update({ like_count: likeCount }).eq('id', postId);
+
+    return { liked: !existing, likeCount };
+  },
 };

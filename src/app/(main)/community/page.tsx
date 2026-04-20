@@ -23,6 +23,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
   const pageSize = 10;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const sort = searchParams.sort || 'latest';
 
   let query = supabase
     .from('posts')
@@ -33,10 +34,20 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
     query = query.eq('category', searchParams.category);
   }
   if (searchParams.search) {
-    query = query.or(`title.ilike.%${searchParams.search}%,content.ilike.%${searchParams.search}%`);
+    const escaped = searchParams.search.replace(/[%_]/g, '\\$&');
+    query = query.or(`title.ilike.%${escaped}%,content.ilike.%${escaped}%`);
   }
 
-  query = query.order('created_at', { ascending: false }).range(from, to);
+  // 정렬 옵션
+  if (sort === 'popular') {
+    query = query.order('like_count', { ascending: false }).order('created_at', { ascending: false });
+  } else if (sort === 'views') {
+    query = query.order('view_count', { ascending: false }).order('created_at', { ascending: false });
+  } else {
+    query = query.order('created_at', { ascending: false });
+  }
+
+  query = query.range(from, to);
 
   const { data, count } = await query;
 
@@ -53,22 +64,28 @@ export default async function CommunityPage({ searchParams }: PageProps) {
   const { posts, count } = await getPosts(searchParams);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="max-w-3xl mx-auto space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">커뮤니티</h1>
-          <p className="text-sm text-text-secondary mt-1">웨딩업계 종사자들과 소통해보세요</p>
+          <h1 className="text-2xl font-bold text-gray-900">커뮤니티</h1>
+          <p className="text-sm text-gray-500 mt-1">웨딩업계 종사자들과 소통해보세요</p>
         </div>
-        <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary text-sm">글 작성</Link>
+        <Link href={ROUTES.COMMUNITY_NEW} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          글쓰기
+        </Link>
       </div>
 
+      {/* Filters */}
       <Suspense fallback={null}>
         <PostFilters />
       </Suspense>
 
-      <div className="mt-6">
-        <PostList initialPosts={posts} initialCount={count} />
-      </div>
+      {/* List */}
+      <PostList initialPosts={posts} initialCount={count} />
     </div>
   );
 }

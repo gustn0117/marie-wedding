@@ -50,12 +50,14 @@ export interface Post {
   content: string;
   category: PostCategory;
   view_count: number;
+  like_count: number;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   // joined
   author?: Profile;
   comment_count?: number;
+  is_liked?: boolean;
 }
 
 export interface Comment {

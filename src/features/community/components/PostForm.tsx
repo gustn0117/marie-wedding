@@ -31,17 +31,13 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     formData.content.trim().length > 0 &&
     formData.category.length > 0;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setError(null);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid) return;
+    if (!isValid) {
+      setError('모든 필수 항목을 입력해주세요.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (!isEdit && !profileId) {
       setError('로그인이 필요합니다.');
       return;
@@ -53,21 +49,15 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     try {
       if (isEdit && postId) {
         await communityService.updatePost(postId, formData);
-        if (onSubmitSuccess) {
-          onSubmitSuccess(postId);
-        } else {
-          router.push(ROUTES.COMMUNITY_DETAIL(postId));
-        }
+        if (onSubmitSuccess) onSubmitSuccess(postId);
+        else router.push(ROUTES.COMMUNITY_DETAIL(postId));
       } else {
         const post = await communityService.createPost(formData, profileId!);
-        if (onSubmitSuccess) {
-          onSubmitSuccess(post.id);
-        } else {
-          router.push(ROUTES.COMMUNITY_DETAIL(post.id));
-        }
+        if (onSubmitSuccess) onSubmitSuccess(post.id);
+        else router.push(ROUTES.COMMUNITY_DETAIL(post.id));
       }
     } catch {
-      setError(isEdit ? '수정에 실패했습니다. 다시 시도해주세요.' : '게시글 작성에 실패했습니다. 다시 시도해주세요.');
+      setError(isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -76,91 +66,75 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-4 rounded-lg bg-red-50 text-red-600 text-sm">
+        <div className="p-3 bg-red-50 border-l-4 border-red-500 text-sm text-red-700">
           {error}
         </div>
       )}
 
       {/* Category */}
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-text-primary mb-1.5">
-          카테고리 <span className="text-red-500">*</span>
-        </label>
-        <select
-          id="category"
-          name="category"
-          value={formData.category}
-          onChange={handleChange}
-          className="input-field"
-          required
-        >
-          <option value="" disabled>
-            카테고리를 선택해주세요
-          </option>
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-800">카테고리 <span className="text-red-500">*</span></label>
+        <div className="flex flex-wrap gap-2">
           {POST_CATEGORIES.map((cat) => (
-            <option key={cat.value} value={cat.value}>
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
+              className={`px-4 py-2 text-sm font-medium border transition-colors ${
+                formData.category === cat.value
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
+              }`}
+            >
               {cat.label}
-            </option>
+            </button>
           ))}
-        </select>
+        </div>
       </div>
 
       {/* Title */}
-      <div>
-        <label htmlFor="title" className="block text-sm font-medium text-text-primary mb-1.5">
-          제목 <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-semibold text-gray-800">제목 <span className="text-red-500">*</span></label>
+          <span className="text-xs text-gray-400">{formData.title.length}/100</span>
+        </div>
         <input
-          id="title"
-          name="title"
           type="text"
           value={formData.title}
-          onChange={handleChange}
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
           placeholder="제목을 입력해주세요"
-          className="input-field"
+          className="w-full px-4 py-3 border border-gray-300 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           maxLength={100}
           required
         />
       </div>
 
       {/* Content */}
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1.5">
-          내용 <span className="text-red-500">*</span>
-        </label>
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-red-500">*</span></label>
         <RichTextEditor
           value={formData.content}
           onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
-          placeholder="내용을 입력해주세요"
-          minHeight={240}
+          placeholder="내용을 입력해주세요. 이미지, 굵기, 제목 등 다양한 서식을 사용할 수 있어요."
+          minHeight={300}
         />
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
         <button
           type="button"
           onClick={() => router.back()}
-          className="btn-outline text-sm"
+          className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="btn-primary text-sm"
+          className="px-8 py-2.5 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              {isEdit ? '수정 중...' : '등록 중...'}
-            </span>
-          ) : (
-            isEdit ? '수정하기' : '게시글 등록'
-          )}
+          {isSubmitting ? (isEdit ? '수정 중...' : '등록 중...') : (isEdit ? '수정하기' : '게시글 등록')}
         </button>
       </div>
     </form>
