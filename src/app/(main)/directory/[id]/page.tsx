@@ -11,7 +11,6 @@ import {
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
-import ProfileAvatar from '@/shared/components/ProfileAvatar';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,41 +70,36 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Card */}
-      <div className="bg-white border border-gray-200 overflow-hidden">
-        {/* Cover (first gallery image or gradient) */}
-        <div className="h-32 sm:h-40 bg-gradient-to-br from-primary/20 via-primary-50 to-primary-100 relative">
-          {profile.gallery && profile.gallery.length > 0 && (
-            <img
-              src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.gallery[0]}`}
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-70"
-            />
-          )}
-        </div>
-
-        <div className="px-6 md:px-8 pb-6">
-          {/* Avatar + Edit button row */}
-          <div className="flex items-start justify-between -mt-12 mb-4">
-            <ProfileAvatar
-              profileImage={profile.profile_image}
-              name={displayName}
-              size="lg"
-              className="!w-24 !h-24 !rounded-xl border-4 border-white shadow-sm"
-            />
-            {isOwner && (
-              <Link
-                href={ROUTES.DIRECTORY_REGISTER}
-                className="mt-14 px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
-              >
-                수정하기
-              </Link>
+      <div className="bg-white border border-gray-200 p-6 md:p-8">
+        {/* Avatar + Name + Edit */}
+        <div className="flex items-start gap-5 mb-5">
+          {/* Logo */}
+          <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
+            {profile.profile_image ? (
+              <img
+                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`}
+                alt={displayName}
+                className="w-full h-full object-contain p-1"
+              />
+            ) : (
+              <span className="text-primary font-bold text-2xl">{displayName.charAt(0)}</span>
             )}
           </div>
 
           {/* Name + Tags */}
-          <div className="mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words mb-2">{displayName}</h1>
-            <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{displayName}</h1>
+              {isOwner && (
+                <Link
+                  href={ROUTES.DIRECTORY_REGISTER}
+                  className="shrink-0 px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                >
+                  수정하기
+                </Link>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
               {profile.business_type && profile.business_type.split(',').filter(Boolean).map((bt) => (
                 <span key={bt} className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary text-xs font-semibold">
                   {getBusinessTypeLabel(bt.trim())}
@@ -116,9 +110,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               </span>
             </div>
           </div>
+        </div>
 
-          {/* Quick Contact Actions */}
-          <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-gray-100">
+        {/* Quick Contact Actions */}
+        <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-gray-100">
             {profile.phone && (
               <a
                 href={`tel:${profile.phone}`}
@@ -145,20 +140,19 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             )}
           </div>
 
-          {/* Info Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-gray-100">
-            <InfoCell label="담당자" value={profile.contact_name} />
-            {profile.company_size && (
-              <InfoCell label="규모" value={profile.company_size === 'private' ? '비공개' : `${profile.company_size}명`} />
-            )}
-            {profile.established_year && (
-              <InfoCell label="설립" value={`${profile.established_year}년`} />
-            )}
-            <InfoCell label="등록일" value={formatDate(profile.created_at)} />
-            {profile.address && (
-              <InfoCell label="주소" value={profile.address} wide />
-            )}
-          </div>
+        {/* Info Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-gray-100">
+          <InfoCell label="담당자" value={profile.contact_name} />
+          {profile.company_size && (
+            <InfoCell label="규모" value={profile.company_size === 'private' ? '비공개' : `${profile.company_size}명`} />
+          )}
+          {profile.established_year && (
+            <InfoCell label="설립" value={`${profile.established_year}년`} />
+          )}
+          <InfoCell label="등록일" value={formatDate(profile.created_at)} />
+          {profile.address && (
+            <InfoCell label="주소" value={profile.address} wide />
+          )}
         </div>
       </div>
 
