@@ -4,19 +4,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { POST_CATEGORIES, ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
 
 interface PostFormProps {
   initialData?: PostFormData;
   postId?: string;
+  profileId?: string;
   onSubmitSuccess?: (postId: string) => void;
 }
 
-export default function PostForm({ initialData, postId, onSubmitSuccess }: PostFormProps) {
+export default function PostForm({ initialData, postId, profileId, onSubmitSuccess }: PostFormProps) {
   const router = useRouter();
-  const { profile } = useAuth();
   const isEdit = !!postId;
 
   const [formData, setFormData] = useState<PostFormData>({
@@ -42,7 +41,11 @@ export default function PostForm({ initialData, postId, onSubmitSuccess }: PostF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValid || !profile) return;
+    if (!isValid) return;
+    if (!isEdit && !profileId) {
+      setError('로그인이 필요합니다.');
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -56,7 +59,7 @@ export default function PostForm({ initialData, postId, onSubmitSuccess }: PostF
           router.push(ROUTES.COMMUNITY_DETAIL(postId));
         }
       } else {
-        const post = await communityService.createPost(formData, profile.id);
+        const post = await communityService.createPost(formData, profileId!);
         if (onSubmitSuccess) {
           onSubmitSuccess(post.id);
         } else {
