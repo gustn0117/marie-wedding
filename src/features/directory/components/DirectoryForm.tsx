@@ -423,13 +423,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
 function Section({ step, title, description, children }: { step: number; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="border-l-4 border-primary pl-5 py-2">
+    <section className="border-l-4 border-primary pl-3 sm:pl-5 py-2">
       <div className="flex items-center gap-2 mb-1">
-        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full">{step}</span>
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full shrink-0">{step}</span>
+        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
       </div>
-      <p className="text-sm text-gray-500 mb-4 ml-8">{description}</p>
-      <div className="ml-8">{children}</div>
+      <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:ml-8">{description}</p>
+      <div className="sm:ml-8">{children}</div>
     </section>
   );
 }

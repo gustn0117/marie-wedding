@@ -191,9 +191,9 @@ export default async function JobDetailPage({ params }: PageProps) {
 
 function QuickInfo({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className="px-6 py-4 border-r border-gray-100 last:border-r-0 even:border-r-0 sm:even:border-r sm:last:border-r-0 last-of-type:border-r-0">
+    <div className="px-4 sm:px-6 py-3 sm:py-4 border-r border-b sm:border-b-0 border-gray-100 last:border-r-0 even:border-r-0 sm:even:border-r sm:last:border-r-0 last-of-type:border-r-0">
       <p className="text-[11px] text-gray-400 mb-1">{label}</p>
-      <p className={`text-sm font-semibold ${highlight ? 'text-red-500' : 'text-gray-900'} truncate`}>{value}</p>
+      <p className={`text-sm font-semibold ${highlight ? 'text-red-500' : 'text-gray-900'} break-words`}>{value}</p>
     </div>
   );
 }

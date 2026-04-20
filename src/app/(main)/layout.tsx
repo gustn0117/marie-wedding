@@ -10,7 +10,7 @@ export default function MainLayout({
     <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-1">
-        <div className="max-w-[1200px] mx-auto px-4 py-8">
+        <div className="max-w-[1200px] mx-auto px-4 py-4 sm:py-8">
           {children}
         </div>
       </main>

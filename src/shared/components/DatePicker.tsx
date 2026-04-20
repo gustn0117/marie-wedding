@@ -86,7 +86,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
       )}
 
       {open && (
-        <div className="absolute z-50 mt-1 bg-white rounded-xl border border-gray-200 shadow-xl p-4 w-[300px]">
+        <div className="absolute z-50 mt-1 bg-white rounded-xl border border-gray-200 shadow-xl p-4 w-full min-w-[280px] max-w-[320px]">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <button type="button" onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">

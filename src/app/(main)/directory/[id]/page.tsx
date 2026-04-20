@@ -141,7 +141,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           </div>
 
         {/* Info Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-gray-100">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0 border border-gray-100">
           <InfoCell label="담당자" value={profile.contact_name} />
           {profile.company_size && (
             <InfoCell label="규모" value={profile.company_size === 'private' ? '비공개' : `${profile.company_size}명`} />

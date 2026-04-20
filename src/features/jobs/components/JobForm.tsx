@@ -307,13 +307,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
 function Section({ step, title, description, children }: { step: number; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="border-l-4 border-primary pl-5 py-2">
+    <section className="border-l-4 border-primary pl-3 sm:pl-5 py-2">
       <div className="flex items-center gap-2 mb-1">
-        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full">{step}</span>
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full shrink-0">{step}</span>
+        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
       </div>
-      <p className="text-sm text-gray-500 mb-4 ml-8">{description}</p>
-      <div className="ml-8">{children}</div>
+      <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:ml-8">{description}</p>
+      <div className="sm:ml-8">{children}</div>
     </section>
   );
 }
@@ -401,7 +401,7 @@ function RegionPicker({ value, onChange }: { value: string; onChange: (v: string
         </div>
       )}
       <div className="flex border border-gray-300">
-        <div className={`${details ? 'w-1/3 border-r border-gray-200' : 'w-full'} max-h-[260px] overflow-y-auto`}>
+        <div className={`${details ? 'w-[45%] sm:w-1/3 border-r border-gray-200' : 'w-full'} max-h-[260px] overflow-y-auto`}>
           {REGIONS.map((r) => {
             const hasDetails = !!REGION_DETAILS[r.value];
             const isActive = browsing === r.value || (value === r.value && !browsing);
@@ -428,7 +428,7 @@ function RegionPicker({ value, onChange }: { value: string; onChange: (v: string
           })}
         </div>
         {details && (
-          <div className="w-2/3 max-h-[260px] overflow-y-auto">
+          <div className="w-[55%] sm:w-2/3 max-h-[260px] overflow-y-auto">
             <button
               type="button"
               onClick={() => { onChange(browsing); setBrowsing(''); }}

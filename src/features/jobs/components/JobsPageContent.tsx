@@ -189,7 +189,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         {/* Filter Section */}
           <div className="bg-white border border-gray-200 rounded-lg overflow-hidden mb-6">
             {/* Filter Controls Bar */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-gray-50">
               {/* Region Dropdown */}
               <div className="relative">
                 <button
@@ -515,13 +515,13 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                         {job.title}
                       </h3>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{job.author?.company_name ?? '알 수 없음'}</span>
-                      <span className="text-gray-300">|</span>
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs sm:text-sm text-gray-500">
+                      <span className="font-medium text-gray-700 truncate max-w-[140px] sm:max-w-none">{job.author?.company_name ?? '알 수 없음'}</span>
+                      <span className="text-gray-300">·</span>
                       <span>{job.author?.region ? getRegionLabel(job.author.region) : ''}</span>
-                      <span className="text-gray-300">|</span>
+                      <span className="text-gray-300">·</span>
                       <span>{getEmploymentTypeLabel(job.employment_type)}</span>
-                      <span className="text-gray-300">|</span>
+                      <span className="text-gray-300">·</span>
                       <span>{getBusinessTypeLabel(job.business_type)}</span>
                     </div>
                     {job.salary_info && (
