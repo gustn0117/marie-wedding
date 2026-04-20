@@ -86,4 +86,7 @@ export const ROUTES = {
   ADMIN_JOBS: '/admin/jobs',
   ADMIN_POSTS: '/admin/posts',
   ADMIN_COMMENTS: '/admin/comments',
+  ADMIN_EVENTS: '/admin/events',
+  ADMIN_EVENTS_NEW: '/admin/events/new',
+  ADMIN_EVENTS_EDIT: (id: string) => `/admin/events/${id}/edit`,
 } as const;

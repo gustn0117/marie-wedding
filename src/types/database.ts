@@ -71,3 +71,22 @@ export interface Comment {
   // joined
   author?: Profile;
 }
+
+export type EventType = 'event' | 'news' | 'notice';
+
+export interface Event {
+  id: string;
+  title: string;
+  content: string;
+  type: EventType;
+  image: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  location: string | null;
+  link_url: string | null;
+  is_pinned: boolean;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
