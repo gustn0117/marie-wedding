@@ -11,6 +11,7 @@ import {
 } from '@/shared/utils/format';
 import type { Job } from '@/types/database';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
+import RichTextView from '@/shared/components/RichTextView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 
 export const dynamic = 'force-dynamic';
@@ -89,7 +90,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           </div>
           <div className="space-y-3">
             <h2 className="text-lg font-semibold text-gray-900">상세 내용</h2>
-            <div className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{job.description}</div>
+            <RichTextView html={job.description} className="text-sm text-gray-600 leading-relaxed" />
           </div>
         </div>
 

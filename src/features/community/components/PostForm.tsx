@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { POST_CATEGORIES, ROUTES } from '@/shared/constants';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
@@ -121,18 +122,14 @@ export default function PostForm({ initialData, postId, onSubmitSuccess }: PostF
 
       {/* Content */}
       <div>
-        <label htmlFor="content" className="block text-sm font-medium text-text-primary mb-1.5">
+        <label className="block text-sm font-medium text-text-primary mb-1.5">
           내용 <span className="text-red-500">*</span>
         </label>
-        <textarea
-          id="content"
-          name="content"
+        <RichTextEditor
           value={formData.content}
-          onChange={handleChange}
+          onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
           placeholder="내용을 입력해주세요"
-          className="input-field resize-y"
-          rows={8}
-          required
+          minHeight={240}
         />
       </div>
 

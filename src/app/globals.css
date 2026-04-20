@@ -103,6 +103,37 @@
   .naver-pill-inactive {
     @apply bg-white text-gray-600 border-gray-300 hover:border-gray-500;
   }
+
+  /* Rich text content styling */
+  .rich-text-content h2 {
+    @apply text-xl font-bold text-gray-900 my-3;
+  }
+  .rich-text-content h3 {
+    @apply text-base font-bold text-gray-900 my-2;
+  }
+  .rich-text-content p {
+    @apply my-1 leading-relaxed;
+  }
+  .rich-text-content strong,
+  .rich-text-content b {
+    @apply font-bold;
+  }
+  .rich-text-content em,
+  .rich-text-content i {
+    @apply italic;
+  }
+  .rich-text-content u {
+    @apply underline;
+  }
+  .rich-text-content ul {
+    @apply list-disc pl-6 my-2;
+  }
+  .rich-text-content ol {
+    @apply list-decimal pl-6 my-2;
+  }
+  .rich-text-content li {
+    @apply my-0.5;
+  }
 }
 
 @layer utilities {

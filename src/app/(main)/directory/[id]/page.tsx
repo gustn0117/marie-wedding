@@ -10,6 +10,7 @@ import {
   formatDate,
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
+import RichTextView from '@/shared/components/RichTextView';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 
 export const dynamic = 'force-dynamic';
@@ -147,7 +148,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         {profile.bio && (
           <div className="mb-6">
             <h2 className="text-sm font-semibold text-gray-900 mb-2">소개</h2>
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{profile.bio}</p>
+            <RichTextView html={profile.bio} className="text-sm text-gray-600 leading-relaxed" />
           </div>
         )}
 

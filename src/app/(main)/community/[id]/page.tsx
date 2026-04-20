@@ -5,6 +5,7 @@ import { ROUTES } from '@/shared/constants';
 import { formatDate, getCategoryLabel } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
+import RichTextView from '@/shared/components/RichTextView';
 import PostDetailActions from '@/features/community/components/PostDetailActions';
 import CommentSection from '@/features/community/components/CommentSection';
 
@@ -70,7 +71,7 @@ export default async function PostDetailPage({ params }: PageProps) {
 
         <hr className="border-gray-100 mb-6" />
 
-        <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</div>
+        <RichTextView html={post.content} className="text-sm text-gray-700 leading-relaxed" />
       </article>
 
       <CommentSection postId={post.id} />

@@ -26,7 +26,7 @@ export default function PostCard({ post }: PostCardProps) {
 
             {/* Content Preview */}
             <p className="text-sm text-text-secondary line-clamp-2 mb-3 leading-relaxed">
-              {post.content}
+              {post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
             </p>
 
             {/* Meta Info */}

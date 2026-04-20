@@ -104,7 +104,7 @@ export default async function MyPage() {
               <p className="text-sm text-gray-500">{profile.contact_name}</p>
             )}
             {profile.bio && (
-              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{profile.bio}</p>
+              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{profile.bio.replace(/<[^>]+>/g, ' ').trim()}</p>
             )}
           </div>
 

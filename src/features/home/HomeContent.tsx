@@ -329,7 +329,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
                     {post.title}
                   </h3>
                   <p className="text-[13px] text-gray-500 line-clamp-2 leading-relaxed">
-                    {post.content}
+                    {post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
                   </p>
                   <div className="flex items-center gap-2 mt-3 text-[12px] text-gray-400">
                     <span>조회 {post.view_count}</span>

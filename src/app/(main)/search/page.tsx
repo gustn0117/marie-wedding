@@ -161,7 +161,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                   <span className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded">{getCategoryLabel(post.category)}</span>
                   <h3 className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors truncate">{post.title}</h3>
                 </div>
-                <p className="text-xs text-gray-400 truncate">{post.content}</p>
+                <p className="text-xs text-gray-400 truncate">{post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}</p>
               </div>
               <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(post.created_at)}</span>
             </Link>

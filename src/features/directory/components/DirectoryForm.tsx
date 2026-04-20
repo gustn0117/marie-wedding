@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -346,13 +347,12 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             />
           </FieldRow>
 
-          <FieldRow label="업체 소개" hint="어떤 업체인지, 어떤 강점이 있는지 자세히 설명해주세요">
-            <textarea
+          <FieldRow label="업체 소개" hint="글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요">
+            <RichTextEditor
               value={formData.bio}
-              onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
-              rows={5}
-              className="w-full px-4 py-3 border border-gray-300 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-y leading-relaxed"
+              onChange={(html) => setFormData(prev => ({ ...prev, bio: html }))}
               placeholder="업체 소개, 특장점, 운영 철학 등을 자유롭게 작성해주세요."
+              minHeight={180}
             />
           </FieldRow>
         </div>
