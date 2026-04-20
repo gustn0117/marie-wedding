@@ -134,6 +134,10 @@
   .rich-text-content li {
     @apply my-0.5;
   }
+  .rich-text-content img,
+  .rich-text-content .rich-text-image {
+    @apply max-w-full h-auto my-3 rounded block;
+  }
 }
 
 @layer utilities {

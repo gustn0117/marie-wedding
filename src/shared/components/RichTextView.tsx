@@ -14,7 +14,7 @@ function sanitizeServer(html: string): string {
     .replace(/\son\w+="[^"]*"/gi, '')
     .replace(/\son\w+='[^']*'/gi, '')
     .replace(/javascript:/gi, '')
-    .replace(/<(?!\/?(?:p|br|div|span|strong|b|em|i|u|h2|h3|ul|ol|li)\b)[^>]+>/gi, '');
+    .replace(/<(?!\/?(?:p|br|div|span|strong|b|em|i|u|h2|h3|ul|ol|li|img)\b)[^>]+>/gi, '');
 }
 
 export default function RichTextView({ html, className = '' }: RichTextViewProps) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface RichTextEditorProps {
   value: string;
@@ -8,11 +9,14 @@ interface RichTextEditorProps {
   placeholder?: string;
   minHeight?: number;
   className?: string;
+  /** 이미지 업로드에 사용할 Supabase Storage 버킷 */
+  imageBucket?: string;
 }
 
-// 허용 태그로만 이루어진 HTML만 보존 (XSS 방지)
-const ALLOWED_TAGS = ['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li'];
-const ALLOWED_STYLES = ['font-weight', 'font-style', 'text-decoration'];
+// 허용 태그 (img 포함)
+const ALLOWED_TAGS = ['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'img'];
+const ALLOWED_STYLES = ['font-weight', 'font-style', 'text-decoration', 'max-width', 'width', 'height'];
+const IMG_ALLOWED_ATTRS = ['src', 'alt'];
 
 function sanitize(html: string): string {
   if (typeof document === 'undefined') return html;
@@ -26,16 +30,20 @@ function sanitize(html: string): string {
         const el = child as HTMLElement;
         const tag = el.tagName.toLowerCase();
         if (!ALLOWED_TAGS.includes(tag)) {
-          // 허용되지 않은 태그는 내부 텍스트만 보존
           const textNode = document.createTextNode(el.textContent || '');
           el.parentNode?.replaceChild(textNode, el);
           return;
         }
-        // 모든 속성 제거 (style도 제거하되, 안전한 inline style만 남기려면 추가 처리 필요)
         const attrs = Array.from(el.attributes);
         attrs.forEach(attr => {
+          if (tag === 'img' && IMG_ALLOWED_ATTRS.includes(attr.name.toLowerCase())) {
+            // img는 src/alt 유지
+            if (attr.name.toLowerCase() === 'src' && attr.value.startsWith('javascript:')) {
+              el.removeAttribute(attr.name);
+            }
+            return;
+          }
           if (attr.name === 'style') {
-            // 안전한 스타일만 남기기
             const styles = attr.value.split(';').filter(s => {
               const prop = s.split(':')[0]?.trim().toLowerCase();
               return ALLOWED_STYLES.includes(prop);
@@ -46,6 +54,10 @@ function sanitize(html: string): string {
             el.removeAttribute(attr.name);
           }
         });
+        // img는 반응형 클래스 추가
+        if (tag === 'img') {
+          el.setAttribute('class', 'rich-text-image');
+        }
         walk(el);
       } else if (child.nodeType === Node.COMMENT_NODE) {
         toRemove.push(child);
@@ -58,11 +70,12 @@ function sanitize(html: string): string {
   return template.innerHTML;
 }
 
-export default function RichTextEditor({ value, onChange, placeholder, minHeight = 160, className = '' }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, minHeight = 160, className = '', imageBucket = 'job-images' }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
   const [activeFormats, setActiveFormats] = useState<Record<string, boolean>>({});
+  const [uploading, setUploading] = useState(false);
 
-  // 초기 value 세팅 (외부에서 value 바뀔 때만)
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value || '';
@@ -94,15 +107,60 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    // 붙여넣기 이미지(클립보드 이미지)를 업로드
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          uploadAndInsertImage(file);
+          return;
+        }
+      }
+    }
+    // 그 외에는 plain text 붙여넣기
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text);
   };
 
+  const uploadAndInsertImage = async (file: File) => {
+    if (file.size > 10 * 1024 * 1024) {
+      alert('이미지는 10MB 이하여야 합니다.');
+      return;
+    }
+    if (!file.type.startsWith('image/')) return;
+
+    setUploading(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `content_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from(imageBucket).upload(path, file);
+      if (uploadError) throw new Error(uploadError.message);
+      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
+
+      editorRef.current?.focus();
+      document.execCommand('insertHTML', false, `<img src="${url}" alt="" class="rich-text-image" /><p><br></p>`);
+      handleInput();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadAndInsertImage(file);
+    if (imgInputRef.current) imgInputRef.current.value = '';
+  };
+
   return (
     <div className={`border border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${className}`}>
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50">
+      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50">
         <ToolbarButton active={activeFormats.bold} onClick={() => exec('bold')} title="굵게 (Cmd+B)">
           <span className="font-bold text-sm">B</span>
         </ToolbarButton>
@@ -137,6 +195,23 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 111.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 010 2.25H3.74m0-.002h.375a1.125 1.125 0 010 2.25H2.99" />
           </svg>
         </ToolbarButton>
+
+        <div className="w-px h-5 bg-gray-300 mx-1" />
+
+        {/* Image Upload */}
+        <ToolbarButton onClick={() => imgInputRef.current?.click()} title="이미지 추가">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+        </ToolbarButton>
+        {uploading && <span className="text-xs text-gray-500 ml-2">업로드 중...</span>}
+        <input
+          ref={imgInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageSelect}
+          className="hidden"
+        />
       </div>
 
       {/* Editor */}
@@ -155,7 +230,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           onKeyUp={updateActiveFormats}
           onMouseUp={updateActiveFormats}
           onFocus={updateActiveFormats}
-          className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content"
+          className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content break-words"
           style={{ minHeight }}
         />
       </div>
