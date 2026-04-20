@@ -151,9 +151,11 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     }
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) uploadAndInsertImage(file);
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    for (const file of files) {
+      await uploadAndInsertImage(file);
+    }
     if (imgInputRef.current) imgInputRef.current.value = '';
   };
 
@@ -196,26 +198,40 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           </svg>
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-gray-300 mx-1" />
+        <div className="flex-1" />
 
-        {/* Image Upload */}
-        <ToolbarButton onClick={() => imgInputRef.current?.click()} title="이미지 추가">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        {/* Prominent Image Upload Button */}
+        <button
+          type="button"
+          onClick={() => imgInputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
           </svg>
-        </ToolbarButton>
-        {uploading && <span className="text-xs text-gray-500 ml-2">업로드 중...</span>}
+          {uploading ? '업로드 중...' : '사진 추가'}
+        </button>
         <input
           ref={imgInputRef}
           type="file"
           accept="image/*"
+          multiple
           onChange={handleImageSelect}
           className="hidden"
         />
       </div>
 
       {/* Editor */}
-      <div className="relative">
+      <div
+        className="relative"
+        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
+        onDrop={async (e) => {
+          e.preventDefault();
+          const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+          for (const file of files) await uploadAndInsertImage(file);
+        }}
+      >
         {!value && placeholder && (
           <div className="absolute top-3 left-4 text-gray-400 pointer-events-none text-[15px]">
             {placeholder}
@@ -233,6 +249,14 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content break-words"
           style={{ minHeight }}
         />
+      </div>
+
+      {/* Bottom Hint */}
+      <div className="border-t border-gray-100 px-3 py-2 bg-gray-50 text-[11px] text-gray-400 flex items-center gap-1.5">
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+        </svg>
+        <span>사진은 드래그 또는 붙여넣기로도 추가할 수 있어요</span>
       </div>
     </div>
   );
