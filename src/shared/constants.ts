@@ -12,6 +12,9 @@ export const BUSINESS_TYPES = [
   { value: 'makeup', label: '메이크업' },
   { value: 'planner', label: '웨딩플래너' },
   { value: 'assistant', label: '예식 도우미' },
+  { value: 'mc', label: '사회자' },
+  { value: 'designer', label: '디자이너' },
+  { value: 'singer', label: '축가' },
   { value: 'other', label: '기타' },
 ] as const;
 
