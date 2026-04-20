@@ -58,6 +58,51 @@
   .badge-urgent {
     @apply badge bg-red-50 text-red-600;
   }
+
+  /* Naver-style writing form */
+  .naver-form {
+    @apply bg-white border-t border-b border-gray-300;
+  }
+
+  .naver-row {
+    @apply flex border-b border-gray-200;
+  }
+
+  .naver-row:last-child {
+    @apply border-b-0;
+  }
+
+  .naver-label {
+    @apply w-[120px] px-5 py-4 text-sm font-semibold text-gray-700 bg-gray-50 border-r border-gray-200 flex items-center shrink-0;
+  }
+
+  .naver-content {
+    @apply flex-1 px-5 py-4;
+  }
+
+  .naver-input {
+    @apply w-full px-0 py-1 bg-transparent border-0 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0;
+  }
+
+  .naver-title {
+    @apply w-full px-0 py-2 bg-transparent border-0 text-2xl font-bold text-gray-900 placeholder:text-gray-300 focus:outline-none focus:ring-0;
+  }
+
+  .naver-textarea {
+    @apply w-full px-0 py-1 bg-transparent border-0 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 resize-none;
+  }
+
+  .naver-pill {
+    @apply px-3 py-1.5 text-sm border transition-colors;
+  }
+
+  .naver-pill-active {
+    @apply bg-primary text-white border-primary;
+  }
+
+  .naver-pill-inactive {
+    @apply bg-white text-gray-600 border-gray-300 hover:border-gray-500;
+  }
 }
 
 @layer utilities {

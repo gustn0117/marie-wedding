@@ -93,10 +93,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   };
 
   const handleToggle = async () => {
-    if (!listed && !formData.region) {
-      setError('지역을 1개 이상 선택해주세요.');
-      return;
-    }
+    if (!listed && !formData.region) { setError('지역을 1개 이상 선택해주세요.'); return; }
     setSubmitting(true);
     setError(null);
     try {
@@ -119,7 +116,6 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     try {
       const supabase = createClient();
 
-      // 프로필 이미지 업로드
       let profileImage = profile.profile_image;
       if (imageFile) {
         const ext = imageFile.name.split('.').pop();
@@ -131,7 +127,6 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         profileImage = null;
       }
 
-      // 갤러리 이미지 업로드
       const uploadedGallery = [...existingGallery];
       for (const file of galleryFiles) {
         const ext = file.name.split('.').pop();
@@ -165,209 +160,249 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     }
   };
 
+  const togglePill = (field: 'business_type' | 'region', val: string) => {
+    const current = formData[field].split(',').filter(Boolean);
+    const next = current.includes(val) ? current.filter(v => v !== val) : [...current, val];
+    setFormData(prev => ({ ...prev, [field]: next.join(',') }));
+  };
+
   return (
-    <>
-      {/* Status */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">등록 상태</h2>
-            <p className="text-sm text-gray-500 mt-0.5">디렉토리에 공개하면 다른 사용자가 찾을 수 있습니다.</p>
-          </div>
+    <div className="space-y-6">
+      {error && <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
+      {success && <div className="p-3 bg-green-50 border border-green-200 text-green-600 text-sm">저장되었습니다.</div>}
+
+      {/* Status Bar */}
+      <div className="flex items-center justify-between py-3 border-t border-b border-gray-300">
+        <div className="flex items-center gap-3">
+          <span className={`px-2 py-0.5 text-xs font-semibold ${listed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+            {listed ? '등록됨' : '미등록'}
+          </span>
+          <span className="text-sm text-gray-600">디렉토리 공개 여부</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {listed && (
+            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="text-xs text-primary hover:underline">
+              내 페이지 보기
+            </Link>
+          )}
           <button
             onClick={handleToggle}
             disabled={submitting}
-            className={`px-5 py-2 text-sm font-medium rounded-lg transition-colors ${
-              listed
-                ? 'border border-gray-300 text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                : 'bg-primary text-white hover:bg-primary-dark'
+            className={`px-4 py-1.5 text-xs font-medium border ${
+              listed ? 'border-gray-300 text-gray-600 hover:bg-gray-50' : 'bg-primary text-white border-primary hover:bg-primary-dark'
             }`}
           >
             {submitting ? '처리 중...' : listed ? '등록 해제' : '디렉토리에 등록'}
           </button>
         </div>
-        {listed && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="text-sm text-primary hover:underline">내 디렉토리 페이지 보기</Link>
-          </div>
-        )}
       </div>
 
-      {/* Edit Form */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
-        <h2 className="text-lg font-semibold text-gray-900">디렉토리 정보 수정</h2>
-
-        {error && <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
-        {success && <div className="p-3 rounded-lg bg-green-50 border border-green-200 text-green-600 text-sm">저장되었습니다.</div>}
-
-        {/* Profile Image */}
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shrink-0">
-            {imagePreview ? (
-              <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                <span className="text-primary font-bold text-xl">{(formData.company_name || profile.contact_name || '?').charAt(0)}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <button type="button" onClick={() => fileInputRef.current?.click()} className="text-sm text-primary hover:underline text-left">
-              로고 {imagePreview ? '변경' : '등록'}
-            </button>
-            {imagePreview && <button type="button" onClick={handleRemoveImage} className="text-sm text-red-400 hover:underline text-left">삭제</button>}
-            <p className="text-[11px] text-gray-400">JPG, PNG 최대 2MB</p>
-          </div>
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-        </div>
-
-        {/* Company Name */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-800">업체명 / 표시 이름</label>
-          <input type="text" value={formData.company_name} onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))} placeholder="디렉토리에 표시할 이름" className="input-field w-full" />
-        </div>
-
-        {/* Business Type */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-800">업종 <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span></label>
-          <div className="flex flex-wrap gap-2">
-            {BUSINESS_TYPES.map((t) => {
-              const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
-              return (
-                <button key={t.value} type="button" onClick={() => {
-                  const current = formData.business_type.split(',').filter(Boolean);
-                  const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
-                  setFormData(prev => ({ ...prev, business_type: next.join(',') }));
-                }} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'}`}>
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Region */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-800">지역 <span className="text-red-500">*</span> <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span></label>
-          <div className="flex flex-wrap gap-2">
-            {REGIONS.map((r) => {
-              const regions = formData.region.split(',').filter(Boolean);
-              const selected = regions.includes(r.value);
-              return (
-                <button key={r.value} type="button" onClick={() => {
-                  const next = selected ? regions.filter(v => v !== r.value) : [...regions, r.value];
-                  setFormData(prev => ({ ...prev, region: next.join(',') }));
-                }} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${selected ? 'bg-primary text-white shadow-sm' : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'}`}>
-                  {r.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Company Size */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-800">업체 규모</label>
-          <div className="flex flex-wrap gap-2">
-            {COMPANY_SIZES.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, company_size: prev.company_size === s.value ? '' : s.value }))}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  formData.company_size === s.value
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Established Year */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-800">설립연도</label>
-          <input type="text" value={formData.established_year} onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))} placeholder="예: 2020" className="input-field w-full" maxLength={4} />
-        </div>
-
-        {/* Address */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-800">주소</label>
-          <input type="text" value={formData.address} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} placeholder="상세 주소를 입력해주세요" className="input-field w-full" />
-        </div>
-
-        {/* Bio */}
-        <div className="space-y-1.5">
-          <label className="block text-sm font-medium text-gray-800">소개</label>
-          <textarea value={formData.bio} onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))} rows={3} className="input-field w-full resize-y" placeholder="업체 소개를 입력해주세요" />
-        </div>
-
-        {/* Phone & Website */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-800">연락처</label>
-            <input type="tel" value={formData.phone} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} className="input-field w-full" placeholder="010-0000-0000" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-800">웹사이트</label>
-            <input type="text" value={formData.website} onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} className="input-field w-full" placeholder="https://" />
-          </div>
-        </div>
-
-        {/* Gallery */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-800">갤러리 <span className="text-xs text-gray-400 font-normal">(업체 사진, 작업물 등)</span></label>
-          {galleryPreviews.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {galleryPreviews.map((src, i) => (
-                <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 group">
-                  <img src={src} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveGalleryItem(i)}
-                    className="absolute top-1 right-1 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+      {/* Logo + Company Name */}
+      <div className="flex items-start gap-4 pb-6 border-b border-gray-200">
+        <div className="w-20 h-20 bg-gray-100 overflow-hidden shrink-0">
+          {imagePreview ? (
+            <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-primary/10 flex items-center justify-center">
+              <span className="text-primary font-bold text-xl">{(formData.company_name || profile.contact_name || '?').charAt(0)}</span>
             </div>
           )}
-          <button
-            type="button"
-            onClick={() => galleryInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-primary/40 hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-6 h-6 text-gray-300 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            <p className="text-sm text-gray-500">사진 추가하기</p>
-            <p className="text-xs text-gray-400 mt-0.5">JPG, PNG 최대 5MB</p>
-          </button>
-          <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
+        </div>
+        <div className="flex-1 space-y-2">
+          <input
+            type="text"
+            value={formData.company_name}
+            onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
+            placeholder="업체명 / 표시 이름"
+            className="naver-title"
+          />
+          <div className="flex gap-2 text-xs">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="text-primary hover:underline">
+              로고 {imagePreview ? '변경' : '등록'}
+            </button>
+            {imagePreview && (
+              <>
+                <span className="text-gray-300">|</span>
+                <button type="button" onClick={handleRemoveImage} className="text-red-400 hover:underline">삭제</button>
+              </>
+            )}
+            <span className="text-gray-400 ml-auto">JPG, PNG 최대 2MB</span>
+          </div>
+        </div>
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+      </div>
+
+      {/* Info Rows */}
+      <div className="naver-form">
+        <div className="naver-row">
+          <div className="naver-label">업종</div>
+          <div className="naver-content">
+            <div className="flex flex-wrap gap-1.5">
+              {BUSINESS_TYPES.map((t) => {
+                const selected = formData.business_type.split(',').filter(Boolean).includes(t.value);
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => togglePill('business_type', t.value)}
+                    className={`naver-pill ${selected ? 'naver-pill-active' : 'naver-pill-inactive'}`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Save */}
-        <div className="pt-2">
-          <button onClick={handleSave} disabled={saving} className="btn-primary text-sm px-6 py-2.5 disabled:opacity-50">
-            {saving ? '저장 중...' : '저장하기'}
-          </button>
+        <div className="naver-row">
+          <div className="naver-label">지역<span className="text-red-500 ml-0.5">*</span></div>
+          <div className="naver-content">
+            <div className="flex flex-wrap gap-1.5">
+              {REGIONS.map((r) => {
+                const selected = formData.region.split(',').filter(Boolean).includes(r.value);
+                return (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => togglePill('region', r.value)}
+                    className={`naver-pill ${selected ? 'naver-pill-active' : 'naver-pill-inactive'}`}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <div className="naver-row">
+          <div className="naver-label">업체 규모</div>
+          <div className="naver-content">
+            <div className="flex flex-wrap gap-1.5">
+              {COMPANY_SIZES.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, company_size: prev.company_size === s.value ? '' : s.value }))}
+                  className={`naver-pill ${formData.company_size === s.value ? 'naver-pill-active' : 'naver-pill-inactive'}`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="naver-row">
+          <div className="naver-label">설립연도</div>
+          <div className="naver-content">
+            <input
+              type="text"
+              value={formData.established_year}
+              onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))}
+              placeholder="예: 2020"
+              maxLength={4}
+              className="naver-input"
+            />
+          </div>
+        </div>
+
+        <div className="naver-row">
+          <div className="naver-label">주소</div>
+          <div className="naver-content">
+            <input
+              type="text"
+              value={formData.address}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder="상세 주소를 입력해주세요"
+              className="naver-input"
+            />
+          </div>
+        </div>
+
+        <div className="naver-row">
+          <div className="naver-label">연락처</div>
+          <div className="naver-content">
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="010-0000-0000"
+              className="naver-input"
+            />
+          </div>
+        </div>
+
+        <div className="naver-row">
+          <div className="naver-label">웹사이트</div>
+          <div className="naver-content">
+            <input
+              type="text"
+              value={formData.website}
+              onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+              placeholder="https://"
+              className="naver-input"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Info */}
-      <div className="bg-gray-50 rounded-xl p-5">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2">안내</h3>
-        <ul className="space-y-1.5 text-[13px] text-gray-500">
-          <li>- 등록하면 업체 디렉토리에 정보가 공개됩니다.</li>
-          <li>- 프로필 사진, 갤러리, 소개글을 작성하면 더 많은 관심을 받을 수 있습니다.</li>
-          <li>- 언제든지 등록을 해제할 수 있습니다.</li>
-        </ul>
+      {/* Bio */}
+      <div className="border-b border-gray-200 pb-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">소개</label>
+        <textarea
+          value={formData.bio}
+          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+          rows={4}
+          className="naver-textarea"
+          placeholder="업체 소개를 입력해주세요"
+        />
       </div>
-    </>
+
+      {/* Gallery */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">갤러리</label>
+        {galleryPreviews.length > 0 && (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2">
+            {galleryPreviews.map((src, i) => (
+              <div key={i} className="relative aspect-square border border-gray-200 overflow-hidden group">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveGalleryItem(i)}
+                  className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => galleryInputRef.current?.click()}
+          className="w-full border border-dashed border-gray-300 py-6 text-center hover:border-gray-500 transition-colors"
+        >
+          <p className="text-sm text-gray-500">+ 사진 추가</p>
+          <p className="text-xs text-gray-400 mt-0.5">JPG, PNG 최대 5MB (여러 장 선택 가능)</p>
+        </button>
+        <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
+      </div>
+
+      {/* Save */}
+      <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
+        <Link href={ROUTES.MYPAGE} className="px-5 py-2.5 border border-gray-300 text-sm text-gray-600 hover:bg-gray-50">취소</Link>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-8 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+        >
+          {saving ? '저장 중...' : '저장하기'}
+        </button>
+      </div>
+    </div>
   );
 }

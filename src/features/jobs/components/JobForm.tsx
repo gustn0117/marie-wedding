@@ -25,46 +25,21 @@ const EMPTY_FORM: JobFormData = {
   image: null,
 };
 
-export default function JobForm({
-  initialData,
-  onSubmit,
-  submitLabel = '등록하기',
-}: JobFormProps) {
-  const [formData, setFormData] = useState<JobFormData>({
-    ...EMPTY_FORM,
-    ...initialData,
-  });
+export default function JobForm({ initialData, onSubmit, submitLabel = '등록하기' }: JobFormProps) {
+  const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}`
-      : null
+    initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}` : null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
-    }));
-  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError('이미지 크기는 5MB 이하여야 합니다.');
-      return;
-    }
-    if (!file.type.startsWith('image/')) {
-      setError('이미지 파일만 업로드할 수 있습니다.');
-      return;
-    }
+    if (file.size > 5 * 1024 * 1024) { setError('이미지 크기는 5MB 이하여야 합니다.'); return; }
+    if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     setError(null);
@@ -82,9 +57,7 @@ export default function JobForm({
     const supabase = createClient();
     const ext = imageFile.name.split('.').pop();
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from('job-images')
-      .upload(path, imageFile, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from('job-images').upload(path, imageFile, { upsert: true });
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
   };
@@ -101,21 +74,14 @@ export default function JobForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-
     const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
+    if (validationError) { setError(validationError); return; }
 
     setLoading(true);
     try {
       let imagePath = formData.image;
-      if (imageFile) {
-        imagePath = await uploadImage();
-      } else if (!imagePreview) {
-        imagePath = null;
-      }
+      if (imageFile) imagePath = await uploadImage();
+      else if (!imagePreview) imagePath = null;
       await onSubmit({ ...formData, image: imagePath });
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
@@ -125,350 +91,246 @@ export default function JobForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="card p-6 md:p-8 space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-          {error}
-        </div>
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>
       )}
 
-      {/* Posting Type */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-text-primary">
-          공고 유형 <span className="text-red-500">*</span>
-        </label>
-        <div className="flex gap-3">
-          {POSTING_TYPES.map((type) => (
-            <label
-              key={type.value}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                formData.postingType === type.value
-                  ? 'border-primary bg-primary-50 text-primary'
-                  : 'border-gray-200 hover:border-gray-300 text-gray-600'
-              }`}
-            >
-              <input
-                type="radio"
-                name="postingType"
-                value={type.value}
-                checked={formData.postingType === type.value}
-                onChange={handleChange}
-                className="sr-only"
-              />
-              <span className="font-medium">{type.label}</span>
-              <span className="text-xs text-gray-400">
-                {type.value === 'hiring' ? '직원 채용' : '협력업체 섭외'}
-              </span>
-            </label>
-          ))}
-        </div>
+      {/* Posting Type Tabs */}
+      <div className="flex border-b border-gray-300">
+        {POSTING_TYPES.map((type) => (
+          <button
+            key={type.value}
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, postingType: type.value }))}
+            className={`px-6 py-3 text-sm font-semibold transition-colors ${
+              formData.postingType === type.value
+                ? 'text-primary border-b-2 border-primary -mb-px'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {type.label}
+          </button>
+        ))}
       </div>
 
-      {/* Title */}
-      <div className="space-y-1.5">
-        <label htmlFor="title" className="block text-sm font-medium text-text-primary">
-          제목 <span className="text-red-500">*</span>
-        </label>
+      {/* Title - Big Input */}
+      <div className="border-b border-gray-200 pb-4">
         <input
-          id="title"
           name="title"
           type="text"
           value={formData.title}
-          onChange={handleChange}
-          placeholder="공고 제목을 입력하세요"
-          className="input-field w-full"
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+          placeholder="제목을 입력해주세요"
+          className="naver-title"
           maxLength={100}
         />
       </div>
 
       {/* Image Upload */}
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-text-primary">대표 이미지</label>
-        {imagePreview ? (
-          <div className="relative rounded-lg overflow-hidden border border-gray-200">
-            <img src={imagePreview} alt="미리보기" className="w-full aspect-[2/1] object-cover" />
-            <div className="absolute top-2 right-2 flex gap-1.5">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="px-3 py-1.5 bg-white/90 text-gray-700 text-xs font-medium rounded-lg hover:bg-white transition-colors shadow-sm"
-              >
-                변경
-              </button>
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                className="px-3 py-1.5 bg-white/90 text-red-500 text-xs font-medium rounded-lg hover:bg-white transition-colors shadow-sm"
-              >
-                삭제
-              </button>
-            </div>
+      {imagePreview ? (
+        <div className="relative border border-gray-200">
+          <img src={imagePreview} alt="미리보기" className="w-full max-h-[360px] object-contain bg-gray-50" />
+          <div className="absolute top-2 right-2 flex gap-1.5">
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium hover:bg-gray-50">변경</button>
+            <button type="button" onClick={handleRemoveImage} className="px-3 py-1.5 bg-white border border-gray-300 text-red-500 text-xs font-medium hover:bg-gray-50">삭제</button>
           </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-gray-200 rounded-lg p-8 text-center hover:border-primary/40 hover:bg-gray-50 transition-colors"
-          >
-            <svg className="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M18 18.75h.008v.008H18v-.008zm-3-3h.008v.008H15v-.008z" />
-            </svg>
-            <p className="text-sm text-gray-500">클릭하여 이미지를 업로드하세요</p>
-            <p className="text-xs text-gray-400 mt-1">JPG, PNG 최대 5MB</p>
-          </button>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleImageSelect}
-          className="hidden"
-        />
-      </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full border border-dashed border-gray-300 py-10 text-center hover:border-gray-500 transition-colors"
+        >
+          <svg className="w-8 h-8 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M18 18.75h.008v.008H18v-.008zm-3-3h.008v.008H15v-.008z" />
+          </svg>
+          <p className="text-sm text-gray-500">대표 이미지 추가</p>
+          <p className="text-xs text-gray-400 mt-0.5">JPG, PNG 최대 5MB</p>
+        </button>
+      )}
+      <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
 
       {/* Description */}
-      <div className="space-y-1.5">
-        <label htmlFor="description" className="block text-sm font-medium text-text-primary">
-          설명 <span className="text-red-500">*</span>
-        </label>
+      <div className="border-b border-gray-200 pb-4">
         <textarea
-          id="description"
           name="description"
           value={formData.description}
-          onChange={handleChange}
+          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
           placeholder="업무 내용, 자격 요건 등을 자세히 기재해주세요"
-          rows={8}
-          className="input-field w-full resize-y min-h-[160px]"
+          rows={10}
+          className="naver-textarea"
         />
       </div>
 
-      {/* 업종 */}
-      <DropdownSelect
-        label="업종"
-        required
-        value={formData.businessType}
-        options={BUSINESS_TYPES}
-        onChange={(v) => setFormData(prev => ({ ...prev, businessType: v }))}
-      />
+      {/* Detail Rows - Naver Style */}
+      <div className="naver-form">
+        {/* 업종 */}
+        <div className="naver-row">
+          <div className="naver-label">업종<span className="text-red-500 ml-0.5">*</span></div>
+          <div className="naver-content">
+            <PillGroup
+              options={BUSINESS_TYPES}
+              value={formData.businessType}
+              onChange={(v) => setFormData(prev => ({ ...prev, businessType: v }))}
+            />
+          </div>
+        </div>
 
-      {/* 고용형태 */}
-      <DropdownSelect
-        label="고용형태"
-        required
-        value={formData.employmentType}
-        options={EMPLOYMENT_TYPES}
-        onChange={(v) => setFormData(prev => ({ ...prev, employmentType: v }))}
-      />
+        {/* 고용형태 */}
+        <div className="naver-row">
+          <div className="naver-label">고용형태<span className="text-red-500 ml-0.5">*</span></div>
+          <div className="naver-content">
+            <PillGroup
+              options={EMPLOYMENT_TYPES}
+              value={formData.employmentType}
+              onChange={(v) => setFormData(prev => ({ ...prev, employmentType: v }))}
+            />
+          </div>
+        </div>
 
-      {/* 지역 */}
-      <RegionSelect
-        value={formData.region}
-        onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
-      />
+        {/* 지역 */}
+        <div className="naver-row">
+          <div className="naver-label">지역<span className="text-red-500 ml-0.5">*</span></div>
+          <div className="naver-content">
+            <RegionPicker
+              value={formData.region}
+              onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
+            />
+          </div>
+        </div>
 
-      {/* Salary Info */}
-      <div className="space-y-1.5">
-        <label htmlFor="salaryInfo" className="block text-sm font-medium text-text-primary">급여 정보</label>
-        <input id="salaryInfo" name="salaryInfo" type="text" value={formData.salaryInfo} onChange={handleChange} placeholder="예: 월 300만원 이상, 시급 15,000원, 면접 후 결정" className="input-field w-full" />
-      </div>
+        {/* 급여 정보 */}
+        <div className="naver-row">
+          <div className="naver-label">급여 정보</div>
+          <div className="naver-content">
+            <input
+              name="salaryInfo"
+              type="text"
+              value={formData.salaryInfo}
+              onChange={(e) => setFormData(prev => ({ ...prev, salaryInfo: e.target.value }))}
+              placeholder="예: 월 300만원 이상, 시급 15,000원, 면접 후 결정"
+              className="naver-input"
+            />
+          </div>
+        </div>
 
-      {/* Deadline */}
-      <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-text-primary">마감일</label>
-        <DatePicker
-          value={formData.deadline}
-          onChange={(val) => setFormData(prev => ({ ...prev, deadline: val }))}
-          placeholder="마감일을 선택하세요"
-        />
+        {/* 마감일 */}
+        <div className="naver-row">
+          <div className="naver-label">마감일</div>
+          <div className="naver-content">
+            <DatePicker
+              value={formData.deadline}
+              onChange={(val) => setFormData(prev => ({ ...prev, deadline: val }))}
+              placeholder="마감일을 선택하세요"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Submit */}
-      <div className="pt-2">
-        <button type="submit" disabled={loading} className="btn-primary w-full sm:w-auto px-8 py-3 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              처리 중...
-            </span>
-          ) : submitLabel}
+      <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
+        <button
+          type="submit"
+          disabled={loading}
+          className="px-8 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading ? '처리 중...' : submitLabel}
         </button>
       </div>
     </form>
   );
 }
 
-function DropdownSelect({ label, required, value, options, onChange }: {
-  label: string;
-  required?: boolean;
-  value: string;
+function PillGroup({ options, value, onChange }: {
   options: readonly { value: string; label: string }[];
-  onChange: (value: string) => void;
+  value: string;
+  onChange: (v: string) => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const selected = options.find(o => o.value === value);
-
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-text-primary">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm transition-colors text-left ${
-          open ? 'border-primary ring-2 ring-primary/20 bg-white' : 'border-gray-200 hover:border-gray-300'
-        }`}
-      >
-        <span className={selected ? 'text-gray-900' : 'text-gray-400'}>
-          {selected ? selected.label : '선택해주세요'}
-        </span>
-        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
-      </button>
-      {open && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-          {options.map((opt, i) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                i < options.length - 1 ? 'border-b border-gray-50' : ''
-              } ${
-                value === opt.value
-                  ? 'bg-primary-50 text-primary font-medium'
-                  : 'text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {opt.label}
-              {value === opt.value && (
-                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                </svg>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(value === opt.value ? '' : opt.value)}
+          className={`naver-pill ${value === opt.value ? 'naver-pill-active' : 'naver-pill-inactive'}`}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
 
-function RegionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
+function RegionPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [browsing, setBrowsing] = useState('');
-
-  const selectedLabel = value
-    ? REGIONS.find(r => r.value === value)?.label || value
-    : '';
-
+  const selectedLabel = value ? REGIONS.find(r => r.value === value)?.label : '';
   const details = browsing ? REGION_DETAILS[browsing] : null;
 
-  const handleSelectRegion = (regionValue: string) => {
-    if (REGION_DETAILS[regionValue]) {
-      setBrowsing(regionValue);
-    } else {
-      onChange(regionValue);
-      setOpen(false);
-      setBrowsing('');
-    }
-  };
-
-  const handleSelectDetail = (regionValue: string) => {
-    onChange(regionValue);
-    setOpen(false);
-    setBrowsing('');
-  };
-
-  const handleSelectWholeRegion = () => {
-    onChange(browsing);
-    setOpen(false);
-    setBrowsing('');
-  };
-
   return (
-    <div className="space-y-1.5">
-      <label className="block text-sm font-medium text-text-primary">
-        지역 <span className="text-red-500">*</span>
-      </label>
-      <button
-        type="button"
-        onClick={() => { setOpen(!open); if (open) setBrowsing(''); }}
-        className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg border text-sm transition-colors text-left ${
-          open ? 'border-primary ring-2 ring-primary/20 bg-white' : 'border-gray-200 hover:border-gray-300'
-        }`}
-      >
-        <span className={selectedLabel ? 'text-gray-900' : 'text-gray-400'}>
-          {selectedLabel || '선택해주세요'}
-        </span>
-        <svg className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-        </svg>
-      </button>
-      {open && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-          <div className="flex">
-            {/* 시/도 목록 */}
-            <div className={`${details ? 'w-1/3 border-r border-gray-100' : 'w-full'} max-h-[280px] overflow-y-auto`}>
-              {REGIONS.map((r) => {
-                const hasDetails = !!REGION_DETAILS[r.value];
-                return (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => handleSelectRegion(r.value)}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors flex items-center justify-between ${
-                      browsing === r.value
-                        ? 'bg-primary-50 text-primary font-medium'
-                        : value === r.value && !browsing
-                          ? 'bg-primary-50 text-primary font-medium'
-                          : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {r.label}
-                    {hasDetails && (
-                      <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* 구/군 상세 */}
-            {details && (
-              <div className="w-2/3 max-h-[280px] overflow-y-auto">
-                <button
-                  type="button"
-                  onClick={handleSelectWholeRegion}
-                  className="w-full text-left px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary-50 transition-colors border-b border-gray-100"
-                >
-                  {REGIONS.find(r => r.value === browsing)?.label} 전체
-                </button>
-                {details.map((d) => (
-                  <button
-                    key={d.value}
-                    type="button"
-                    onClick={() => handleSelectDetail(d.value)}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                      value === d.value
-                        ? 'bg-primary-50 text-primary font-medium'
-                        : 'text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {d.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+    <div>
+      {selectedLabel && (
+        <div className="mb-2 inline-flex items-center gap-1.5 px-3 py-1 bg-primary text-white text-xs font-medium">
+          {selectedLabel}
+          <button type="button" onClick={() => onChange('')} className="hover:bg-white/20">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
       )}
+      <div className="flex gap-0 border border-gray-300">
+        <div className={`${details ? 'w-1/3 border-r border-gray-200' : 'w-full'} max-h-[240px] overflow-y-auto`}>
+          {REGIONS.map((r) => {
+            const hasDetails = !!REGION_DETAILS[r.value];
+            const isActive = browsing === r.value || (value === r.value && !browsing);
+            return (
+              <button
+                key={r.value}
+                type="button"
+                onClick={() => {
+                  if (hasDetails) setBrowsing(r.value);
+                  else { onChange(r.value); setBrowsing(''); }
+                }}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors flex items-center justify-between ${
+                  isActive ? 'bg-primary-50 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {r.label}
+                {hasDetails && (
+                  <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {details && (
+          <div className="w-2/3 max-h-[240px] overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => { onChange(browsing); setBrowsing(''); }}
+              className="w-full text-left px-4 py-2 text-sm font-medium text-primary hover:bg-primary-50 border-b border-gray-100"
+            >
+              {REGIONS.find(r => r.value === browsing)?.label} 전체
+            </button>
+            {details.map((d) => (
+              <button
+                key={d.value}
+                type="button"
+                onClick={() => { onChange(d.value); setBrowsing(''); }}
+                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                  value === d.value ? 'bg-primary-50 text-primary font-medium' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
