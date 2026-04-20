@@ -84,37 +84,37 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         </div>
 
         <div className="px-6 md:px-8 pb-6">
-          {/* Avatar + Name + Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 mb-4">
-            <div className="relative">
-              <ProfileAvatar
-                profileImage={profile.profile_image}
-                name={displayName}
-                size="lg"
-                className="!w-24 !h-24 !rounded-xl border-4 border-white shadow-sm"
-              />
-            </div>
-            <div className="flex-1 min-w-0 sm:pb-1">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">{displayName}</h1>
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                {profile.business_type && profile.business_type.split(',').filter(Boolean).map((bt) => (
-                  <span key={bt} className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary text-xs font-semibold">
-                    {getBusinessTypeLabel(bt.trim())}
-                  </span>
-                ))}
-                <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-semibold">
-                  {getRegionLabel(profile.region)}
-                </span>
-              </div>
-            </div>
+          {/* Avatar + Edit button row */}
+          <div className="flex items-start justify-between -mt-12 mb-4">
+            <ProfileAvatar
+              profileImage={profile.profile_image}
+              name={displayName}
+              size="lg"
+              className="!w-24 !h-24 !rounded-xl border-4 border-white shadow-sm"
+            />
             {isOwner && (
               <Link
                 href={ROUTES.DIRECTORY_REGISTER}
-                className="px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors shrink-0"
+                className="mt-14 px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
               >
                 수정하기
               </Link>
             )}
+          </div>
+
+          {/* Name + Tags */}
+          <div className="mb-4">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words mb-2">{displayName}</h1>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {profile.business_type && profile.business_type.split(',').filter(Boolean).map((bt) => (
+                <span key={bt} className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary text-xs font-semibold">
+                  {getBusinessTypeLabel(bt.trim())}
+                </span>
+              ))}
+              <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-700 text-xs font-semibold">
+                {getRegionLabel(profile.region)}
+              </span>
+            </div>
           </div>
 
           {/* Quick Contact Actions */}
