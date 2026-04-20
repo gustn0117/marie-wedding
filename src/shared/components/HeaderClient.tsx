@@ -48,9 +48,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setProfile(null);
     setProfileMenuOpen(false);
-    router.push('/login');
-    router.refresh();
-  }, [router]);
+    // 전체 새로고침으로 서버 상태 완전 초기화
+    window.location.href = '/';
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 bg-white">
