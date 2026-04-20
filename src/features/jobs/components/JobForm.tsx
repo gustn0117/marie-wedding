@@ -5,6 +5,7 @@ import { BUSINESS_TYPES, EMPLOYMENT_TYPES, POSTING_TYPES, REGIONS } from '@/shar
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import RichTextEditor from '@/shared/components/RichTextEditor';
+import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { createClient } from '@/lib/supabase/client';
 import type { JobFormData } from '../types';
 
@@ -181,7 +182,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
+            <label className="block text-sm font-semibold text-gray-800 mb-1">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
+            <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="5MB" note="목록에서 잘 보이도록 가로가 넓은 이미지 권장" />
+            <div className="mt-2">
             {imagePreview ? (
               <div className="relative border border-gray-300 overflow-hidden">
                 <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
@@ -199,11 +202,11 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 <svg className="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
-                <p className="text-sm font-medium text-gray-700">이미지 추가</p>
-                <p className="text-xs text-gray-400 mt-1">클릭하여 업로드 · JPG, PNG · 최대 5MB</p>
+                <p className="text-sm font-medium text-gray-700">클릭하여 이미지 추가</p>
               </button>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            </div>
           </div>
         </div>
       </Section>

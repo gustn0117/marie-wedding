@@ -6,6 +6,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
+import ImageUploadHint from '@/shared/components/ImageUploadHint';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -219,7 +220,7 @@ export default function EditProfilePage() {
               </>
             )}
           </div>
-          <p className="text-xs text-gray-400">JPG, PNG 최대 2MB</p>
+          <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="2MB" />
         </div>
 
         <hr className="border-gray-100" />

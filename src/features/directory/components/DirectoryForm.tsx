@@ -6,6 +6,7 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import RichTextEditor from '@/shared/components/RichTextEditor';
+import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -244,7 +245,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 </>
               )}
             </div>
-            <p className="text-[11px] text-gray-400">JPG, PNG · 2MB</p>
+            <div className="mt-1">
+              <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="2MB" note="로고는 정사각형이 가장 잘 보여요" />
+            </div>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
           </div>
 
@@ -360,6 +363,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       {/* STEP 4: 갤러리 */}
       <Section step={4} title="갤러리 (선택)" description="업체 사진, 작업물, 공간 사진 등을 업로드하면 훨씬 매력적으로 보여요.">
+        <div className="mb-3">
+          <ImageUploadHint ratio="1:1 (정사각형) 권장" recommendedSize="800 × 800px" maxSize="5MB" note="여러 장 동시 선택 가능" />
+        </div>
         {galleryPreviews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
             {galleryPreviews.map((src, i) => (
@@ -386,8 +392,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <svg className="w-8 h-8 text-gray-300 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          <p className="text-sm font-medium text-gray-700">사진 추가</p>
-          <p className="text-xs text-gray-400 mt-0.5">여러 장 선택 가능 · JPG, PNG · 최대 5MB</p>
+          <p className="text-sm font-medium text-gray-700">사진 추가 (여러 장 가능)</p>
         </button>
         <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
       </Section>

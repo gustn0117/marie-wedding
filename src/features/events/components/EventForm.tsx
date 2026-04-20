@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import DatePicker from '@/shared/components/DatePicker';
+import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { createClient } from '@/lib/supabase/client';
 import { eventService } from '../services/event-service';
 import { EVENT_TYPES } from '../types';
@@ -141,6 +142,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       {/* Image */}
       <div className="space-y-2">
         <label className="block text-sm font-semibold text-gray-800">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
+        <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="5MB" note="목록 카드에 크게 노출됩니다" />
         {imagePreview ? (
           <div className="relative border border-gray-200">
             <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
