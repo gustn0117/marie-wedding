@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
+import { compressImage } from '@/shared/utils/image';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import type { Profile } from '@/types/database';
@@ -115,25 +116,34 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     try {
       const supabase = createClient();
 
-      let profileImage = profile.profile_image;
-      if (imageFile) {
-        const ext = imageFile.name.split('.').pop();
-        const path = `${profile.user_id}/avatar.${ext}`;
-        const { error: err } = await supabase.storage.from('avatars').upload(path, imageFile, { upsert: true });
-        if (err) throw new Error('프로필 이미지 업로드 실패');
-        profileImage = path;
-      } else if (!imagePreview) {
-        profileImage = null;
-      }
+      // 프로필 이미지 + 갤러리 병렬 압축 + 업로드
+      const profileImagePromise: Promise<string | null> = (async () => {
+        if (imageFile) {
+          const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
+          const ext = compressed.name.split('.').pop() || 'jpg';
+          const path = `${profile.user_id}/avatar.${ext}`;
+          const { error: err } = await supabase.storage.from('avatars').upload(path, compressed, { upsert: true });
+          if (err) throw new Error('프로필 이미지 업로드 실패');
+          return path;
+        }
+        return !imagePreview ? null : profile.profile_image;
+      })();
 
-      const uploadedGallery = [...existingGallery];
-      for (const file of galleryFiles) {
-        const ext = file.name.split('.').pop();
+      const galleryPromises = galleryFiles.map(async (file) => {
+        const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+        const ext = compressed.name.split('.').pop() || 'jpg';
         const path = `${profile.user_id}/gallery_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: err } = await supabase.storage.from('avatars').upload(path, file);
+        const { error: err } = await supabase.storage.from('avatars').upload(path, compressed);
         if (err) throw new Error('갤러리 이미지 업로드 실패');
-        uploadedGallery.push(path);
-      }
+        return path;
+      });
+
+      const [profileImage, ...newGallery] = await Promise.all([
+        profileImagePromise,
+        ...galleryPromises,
+      ]);
+
+      const uploadedGallery = [...existingGallery, ...newGallery];
 
       await directoryService.updateProfile(profile.id, {
         company_name: formData.company_name.trim() || null,
@@ -150,11 +160,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       });
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      setSuccess(true);
-      setTimeout(() => { window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id); }, 500);
+      // 즉시 이동 (setTimeout 제거)
+      window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
-    } finally {
       setSaving(false);
     }
   };

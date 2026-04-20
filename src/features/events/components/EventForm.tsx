@@ -6,6 +6,7 @@ import Link from 'next/link';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import { compressImage } from '@/shared/utils/image';
 import { createClient } from '@/lib/supabase/client';
 import { eventService } from '../services/event-service';
 import { EVENT_TYPES } from '../types';
@@ -61,9 +62,10 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return formData.image || null;
     const supabase = createClient();
-    const ext = imageFile.name.split('.').pop() || 'jpg';
+    const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
+    const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('event-images').upload(path, imageFile, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from('event-images').upload(path, compressed, { upsert: true });
     if (uploadError) throw new Error('이미지 업로드 실패');
     return path;
   };

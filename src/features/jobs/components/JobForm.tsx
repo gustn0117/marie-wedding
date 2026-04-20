@@ -6,6 +6,7 @@ import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import { compressImage } from '@/shared/utils/image';
 import { createClient } from '@/lib/supabase/client';
 import type { JobFormData } from '../types';
 
@@ -57,9 +58,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return formData.image || null;
     const supabase = createClient();
-    const ext = imageFile.name.split('.').pop();
+    const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
+    const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('job-images').upload(path, imageFile, { upsert: true });
+    const { error: uploadError } = await supabase.storage.from('job-images').upload(path, compressed, { upsert: true });
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
   };

@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { compressImage } from '@/shared/utils/image';
 
 interface RichTextEditorProps {
   value: string;
@@ -135,9 +136,10 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split('.').pop() || 'png';
+      const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+      const ext = compressed.name.split('.').pop() || 'jpg';
       const path = `content_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(imageBucket).upload(path, file);
+      const { error: uploadError } = await supabase.storage.from(imageBucket).upload(path, compressed);
       if (uploadError) throw new Error(uploadError.message);
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
 

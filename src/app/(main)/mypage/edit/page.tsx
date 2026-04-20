@@ -7,6 +7,7 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import { compressImage } from '@/shared/utils/image';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -80,12 +81,13 @@ export default function EditProfilePage() {
     if (!imageFile || !profile) return profile?.profile_image || null;
 
     const supabase = createClient();
-    const ext = imageFile.name.split('.').pop();
+    const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
+    const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${profile.user_id}/avatar.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(path, imageFile, { upsert: true });
+      .upload(path, compressed, { upsert: true });
 
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
