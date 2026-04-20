@@ -363,7 +363,21 @@ function PillGroup({ options, value, onChange }: {
 
 function RegionPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const [browsing, setBrowsing] = useState('');
-  const selectedLabel = value ? (REGIONS.find(r => r.value === value)?.label || value) : '';
+  // 시/도 또는 구/군에서 label 찾기
+  const findLabel = (val: string): string => {
+    const region = REGIONS.find(r => r.value === val);
+    if (region) return region.label;
+    for (const details of Object.values(REGION_DETAILS)) {
+      const detail = details.find(d => d.value === val);
+      if (detail) {
+        const parentKey = Object.keys(REGION_DETAILS).find(k => REGION_DETAILS[k].some(d => d.value === val));
+        const parentLabel = parentKey ? REGIONS.find(r => r.value === parentKey)?.label : '';
+        return parentLabel ? `${parentLabel} ${detail.label}` : detail.label;
+      }
+    }
+    return val;
+  };
+  const selectedLabel = value ? findLabel(value) : '';
   const details = browsing ? REGION_DETAILS[browsing] : null;
 
   return (

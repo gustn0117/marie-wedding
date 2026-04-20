@@ -1,3 +1,4 @@
+import { REGION_DETAILS } from '@/shared/constants/regions';
 import {
   BUSINESS_TYPES,
   EMPLOYMENT_TYPES,
@@ -71,16 +72,28 @@ export function getEmploymentTypeLabel(type: string): string {
 
 /**
  * Convert a region enum value to its Korean label.
+ * Supports sub-region values from REGION_DETAILS (e.g. 'yeongdo' → '부산 영도구').
  */
-export function getRegionLabel(type: string): string {
-  if (type.includes(',')) {
-    return type.split(',').map(r => {
-      const found = REGIONS.find((item) => item.value === r.trim());
-      return found?.label ?? r.trim();
-    }).join(', ');
+function findRegionLabel(value: string): string {
+  const region = REGIONS.find((item) => item.value === value);
+  if (region) return region.label;
+  for (const parentKey of Object.keys(REGION_DETAILS)) {
+    const details = REGION_DETAILS[parentKey];
+    const detail = details.find((d) => d.value === value);
+    if (detail) {
+      const parent = REGIONS.find((r) => r.value === parentKey);
+      return parent ? `${parent.label} ${detail.label}` : detail.label;
+    }
   }
-  const found = REGIONS.find((item) => item.value === type);
-  return found?.label ?? type;
+  return value;
+}
+
+export function getRegionLabel(type: string): string {
+  if (!type) return '';
+  if (type.includes(',')) {
+    return type.split(',').map(r => findRegionLabel(r.trim())).join(', ');
+  }
+  return findRegionLabel(type);
 }
 
 /**
