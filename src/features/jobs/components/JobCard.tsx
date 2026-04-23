@@ -23,15 +23,15 @@ export default function JobCard({ job }: JobCardProps) {
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
-      <article className="card p-5 h-full flex flex-col gap-3 transition-shadow duration-200 group-hover:shadow-md">
+      <article className="card p-5 h-full flex flex-col gap-3 group-hover:border-primary">
         {/* Header: Badges */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 flex-wrap">
           <span
-            className={`${getEmploymentBadgeClass(job.employment_type)} text-xs font-medium px-2.5 py-1 rounded-full`}
+            className={`${getEmploymentBadgeClass(job.employment_type)} text-[11px] font-bold tracking-tight px-1.5 py-0.5 rounded-none`}
           >
             {getEmploymentTypeLabel(job.employment_type)}
           </span>
-          <span className="badge-accent text-xs font-medium px-2.5 py-1 rounded-full">
+          <span className="badge-accent text-[11px] font-bold tracking-tight px-1.5 py-0.5 rounded-none">
             {getBusinessTypeLabel(job.business_type)}
           </span>
         </div>

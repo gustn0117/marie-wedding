@@ -23,7 +23,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   return (
     <Link
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="block rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+      className="block border border-gray-200 overflow-hidden group hover:border-primary transition-colors duration-150"
     >
       {/* Thumbnail */}
       <div className="aspect-[2/1] bg-gray-50 overflow-hidden flex items-center justify-center">
@@ -49,18 +49,18 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           {businessTypes.length > 0 ? (
             <>
               {businessTypes.slice(0, 3).map((bt) => (
-                <span key={bt} className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded">
+                <span key={bt} className="text-[10px] font-bold tracking-tight text-primary bg-primary-50 px-1.5 py-0.5">
                   {getBusinessTypeLabel(bt)}
                 </span>
               ))}
               {businessTypes.length > 3 && (
-                <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                <span className="text-[10px] font-bold tracking-tight text-gray-500 bg-gray-100 px-1.5 py-0.5">
                   +{businessTypes.length - 3}
                 </span>
               )}
             </>
           ) : (
-            <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">미등록</span>
+            <span className="text-[10px] font-bold tracking-tight text-gray-500 bg-gray-100 px-1.5 py-0.5">미등록</span>
           )}
         </div>
 
