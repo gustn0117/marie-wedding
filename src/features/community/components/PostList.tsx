@@ -55,16 +55,16 @@ export default function PostList({ initialPosts, initialCount }: PostListProps =
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded border border-gray-200 bg-white px-4 py-3">
+      <div className="platform-panel flex items-center justify-between px-4 py-3">
         <p className="text-sm text-gray-500">
-          총 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
+          게시글 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
         </p>
         <Link href={ROUTES.COMMUNITY_NEW} className="text-sm font-bold text-primary hover:text-primary-dark">
           글쓰기
         </Link>
       </div>
 
-      <div className="overflow-hidden rounded border border-gray-200 bg-white">
+      <div className="platform-panel">
         {posts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}

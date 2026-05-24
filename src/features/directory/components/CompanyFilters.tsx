@@ -34,7 +34,7 @@ export default function CompanyFilters() {
   const resetAll = () => router.push('/directory', { scroll: false });
 
   return (
-    <aside className="bg-white border border-gray-200 rounded divide-y divide-gray-100 sticky-sidebar overflow-hidden">
+    <aside className="platform-panel divide-y divide-gray-100 sticky-sidebar">
       {/* 검색 */}
       <div className="p-3">
         <form onSubmit={handleSearch}>

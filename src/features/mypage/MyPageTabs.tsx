@@ -24,13 +24,13 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
   const applicationCount = sentApplications.length + receivedApplications.length;
 
   return (
-    <div className="bg-white rounded border border-gray-200 overflow-hidden">
+    <div className="platform-panel">
       <div className="border-b border-gray-200">
         <div className="flex">
           <button
             onClick={() => setActiveTab('jobs')}
             className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'jobs' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
+              activeTab === 'jobs' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             내 공고 ({jobs.length})
@@ -38,7 +38,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           <button
             onClick={() => setActiveTab('posts')}
             className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'posts' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
+              activeTab === 'posts' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             내 게시글 ({posts.length})
@@ -46,7 +46,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           <button
             onClick={() => setActiveTab('applications')}
             className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'applications' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
+              activeTab === 'applications' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             지원/문의 ({applicationCount})

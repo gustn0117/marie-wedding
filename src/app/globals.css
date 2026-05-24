@@ -8,10 +8,15 @@
   body {
     @apply font-sans text-gray-800 bg-background antialiased;
     font-feature-settings: "tnum" 1;
+    background-image: linear-gradient(180deg, #fbfcff 0, #f5f7fa 320px, #f5f7fa 100%);
   }
 
   ::selection {
     @apply bg-primary-100 text-primary-900;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-300 ring-offset-2 ring-offset-white;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -144,6 +149,36 @@
 
   .saramin-link-grid {
     @apply grid grid-cols-2 sm:grid-cols-3 gap-x-3 gap-y-2 text-sm;
+  }
+
+  .platform-panel {
+    @apply bg-white border border-gray-200 rounded overflow-hidden;
+    box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+  }
+
+  .platform-panel-soft {
+    @apply bg-surface-alt border border-gray-200 rounded overflow-hidden;
+  }
+
+  .platform-eyebrow {
+    @apply text-[12px] font-bold uppercase text-primary;
+    letter-spacing: 0;
+  }
+
+  .platform-section-title {
+    @apply text-[17px] font-bold text-gray-950;
+  }
+
+  .metric-tile {
+    @apply rounded border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-primary-300;
+  }
+
+  .action-tile {
+    @apply flex min-h-[84px] items-start gap-3 rounded border border-gray-200 bg-white p-4 text-left transition-colors hover:border-primary-300 hover:bg-primary-50/40;
+  }
+
+  .icon-box {
+    @apply flex h-9 w-9 shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-primary;
   }
 }
 

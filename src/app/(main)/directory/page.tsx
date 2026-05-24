@@ -48,23 +48,44 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
 
 export default async function DirectoryPage({ searchParams }: PageProps) {
   const { profiles, count } = await getProfiles(searchParams);
+  const activeFilterCount = ['businessType', 'region', 'search'].filter((key) => searchParams[key]).length;
 
   return (
     <div className="space-y-4">
-      <section className="saramin-section p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="platform-panel p-5">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
           <div>
-            <p className="mb-1 text-sm font-bold text-primary">Company Directory</p>
-            <h1 className="text-h2 font-bold text-text-primary">업체 디렉토리</h1>
-            <p className="mt-1 text-small text-text-secondary">웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 찾아보세요.</p>
+            <p className="platform-eyebrow">Company Directory</p>
+            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">업체 디렉토리</h1>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+              웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 업종과 지역별로 탐색하세요.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <div className="metric-tile">
+                <span className="block text-[12px] font-bold text-gray-500">등록 업체</span>
+                <span className="mt-1 block text-[20px] font-bold text-gray-950">{count.toLocaleString()}개</span>
+              </div>
+              <div className="metric-tile">
+                <span className="block text-[12px] font-bold text-gray-500">선택 조건</span>
+                <span className="mt-1 block text-[20px] font-bold text-gray-950">{activeFilterCount.toLocaleString()}개</span>
+              </div>
+            </div>
           </div>
-          <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary shrink-0">
-            업체 등록
-          </Link>
+          <div className="platform-panel-soft p-3">
+            <p className="text-[12px] font-bold text-gray-500">파트너 운영</p>
+            <div className="mt-3 grid gap-2">
+              <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary w-full">
+                업체 등록
+              </Link>
+              <Link href={`${ROUTES.JOBS}?type=matching`} className="btn-secondary w-full">
+                섭외 공고 보기
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
         <Suspense
           fallback={<div className="hidden lg:block h-[400px] bg-gray-100 rounded-sm animate-pulse" />}
         >

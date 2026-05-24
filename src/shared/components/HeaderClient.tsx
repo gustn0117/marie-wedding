@@ -60,28 +60,29 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-      <div className="hidden md:block bg-secondary-50 border-b border-gray-100">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 shadow-[0_1px_2px_rgba(31,41,55,0.04)] backdrop-blur">
+      <div className="hidden md:block bg-gray-950">
         <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 h-9 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-4 text-gray-500">
-            <Link href={ROUTES.JOBS_NEW} className="hover:text-primary transition-colors">공고 등록</Link>
-            <Link href={ROUTES.DIRECTORY_REGISTER} className="hover:text-primary transition-colors">업체 등록</Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">고객센터</Link>
+          <div className="flex items-center gap-3 text-gray-300">
+            <span className="rounded border border-white/10 bg-white/10 px-2 py-0.5 font-bold text-white">Marié 운영 네트워크</span>
+            <Link href={ROUTES.JOBS_NEW} className="hover:text-white transition-colors">공고 등록</Link>
+            <Link href={ROUTES.DIRECTORY_REGISTER} className="hover:text-white transition-colors">업체 등록</Link>
+            <Link href="/contact" className="hover:text-white transition-colors">고객센터</Link>
           </div>
-          <div className="flex items-center gap-3 text-gray-500">
+          <div className="flex items-center gap-3 text-gray-300">
             {isAuthenticated ? (
               <>
-                <Link href={ROUTES.MYPAGE} className="hover:text-primary transition-colors">마이페이지</Link>
-                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="hover:text-primary transition-colors">알림</Link>
+                <Link href={ROUTES.MYPAGE} className="hover:text-white transition-colors">마이페이지</Link>
+                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="hover:text-white transition-colors">알림</Link>
                 {profile.role === 'admin' && (
-                  <Link href={ROUTES.ADMIN} className="hover:text-primary transition-colors">관리자</Link>
+                  <Link href={ROUTES.ADMIN} className="hover:text-white transition-colors">관리자</Link>
                 )}
               </>
             ) : (
               <>
-                <Link href={ROUTES.LOGIN} className="hover:text-primary transition-colors">로그인</Link>
-                <span className="w-px h-3 bg-gray-200" />
-                <Link href={ROUTES.SIGNUP} className="hover:text-primary transition-colors">회원가입</Link>
+                <Link href={ROUTES.LOGIN} className="hover:text-white transition-colors">로그인</Link>
+                <span className="w-px h-3 bg-white/20" />
+                <Link href={ROUTES.SIGNUP} className="hover:text-white transition-colors">회원가입</Link>
               </>
             )}
           </div>
@@ -89,13 +90,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
-        <div className="h-[74px] flex items-center gap-5">
+        <div className="h-[68px] flex items-center gap-5">
           <Link href={ROUTES.HOME} className="shrink-0" aria-label="Marié 홈">
             <Logo variant="full" size="md" />
           </Link>
 
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[560px]">
-            <div className="flex h-12 w-full items-center overflow-hidden rounded border-2 border-primary bg-white">
+            <div className="flex h-11 w-full items-center overflow-hidden rounded border border-gray-300 bg-white shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-100">
               <div className="pl-4 text-primary">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -108,15 +109,25 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                 placeholder="직무, 업체명, 지역으로 검색"
                 className="min-w-0 flex-1 px-3 text-[15px] outline-none placeholder:text-gray-400"
               />
-              <button type="submit" className="h-full px-5 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors">
+              <button type="submit" className="h-full px-5 bg-gray-950 text-sm font-bold text-white transition-colors hover:bg-primary">
                 검색
               </button>
             </div>
           </form>
 
           <div className="hidden lg:flex items-center gap-2 ml-auto">
-            <Link href={ROUTES.JOBS_NEW} className="btn-outline px-4 py-2 text-xs">채용공고 등록</Link>
-            <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary px-4 py-2 text-xs">글쓰기</Link>
+            <Link href={ROUTES.JOBS_NEW} className="btn-outline px-3.5 py-2 text-xs">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25A2.25 2.25 0 0118 20.65H6a2.25 2.25 0 01-2.25-2.25v-4.25M8.25 6.15V5.25A2.25 2.25 0 0110.5 3h3a2.25 2.25 0 012.25 2.25v.9" />
+              </svg>
+              공고 등록
+            </Link>
+            <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary px-3.5 py-2 text-xs">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              글쓰기
+            </Link>
           </div>
 
           {isAuthenticated && (
@@ -198,23 +209,22 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           </button>
         </div>
 
-        <nav className="hidden md:flex h-12 items-center gap-1 border-t border-gray-100">
-          <Link href={ROUTES.JOBS} className="mr-2 inline-flex h-8 items-center gap-1.5 rounded bg-gray-900 px-3 text-sm font-bold text-white">
+        <nav className="hidden md:flex h-11 items-center gap-1 border-t border-gray-100">
+          <Link href={ROUTES.JOBS} className="mr-2 inline-flex h-8 items-center gap-1.5 rounded bg-gray-950 px-3 text-sm font-bold text-white transition-colors hover:bg-primary">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
-            전체메뉴
+            플랫폼 메뉴
           </Link>
           {NAV_LINKS.map((link) => (
             <Link
               key={link.label}
               href={link.href}
-              className={`relative px-3.5 py-3 text-[15px] font-bold transition-colors ${
-                isActive(link.href) ? 'text-primary' : 'text-gray-800 hover:text-primary'
+              className={`relative rounded px-3.5 py-2 text-[14px] font-bold transition-colors ${
+                isActive(link.href) ? 'bg-primary-50 text-primary' : 'text-gray-800 hover:bg-gray-50 hover:text-primary'
               }`}
             >
               {link.label}
-              {isActive(link.href) && <span className="absolute inset-x-3 bottom-0 h-0.5 bg-primary" />}
             </Link>
           ))}
           <div className="ml-auto flex items-center gap-3 text-xs text-gray-500">

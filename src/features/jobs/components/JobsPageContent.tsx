@@ -169,22 +169,29 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   };
 
   const browsingRegionDetails = browsingRegion ? REGION_DETAILS[browsingRegion] : null;
+  const pageTitle = postingType === 'matching' ? '파트너 섭외' : '채용정보';
+  const selectedFilterCount = activeFilters.length + (search.trim() ? 1 : 0);
 
   return (
     <div className="space-y-4">
-      <section className="saramin-section p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="platform-panel p-5">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
           <div>
-            <p className="mb-1 text-sm font-bold text-primary">Wedding Recruit</p>
-            <h1 className="text-h2 font-bold text-gray-900">
-              {postingType === 'matching' ? '파트너 섭외' : '채용정보'}
-            </h1>
-            <p className="mt-1 text-small text-gray-500">웨딩 업계 직무, 지역, 고용형태별 공고를 빠르게 찾아보세요.</p>
+            <p className="platform-eyebrow">Wedding Recruit</p>
+            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">{pageTitle}</h1>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+              웨딩 업계 직무, 지역, 고용형태별 공고를 한 화면에서 비교하고 지원 흐름까지 이어갑니다.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              <HeaderMetric label="전체 결과" value={`${totalCount.toLocaleString()}건`} />
+              <HeaderMetric label="선택 조건" value={`${selectedFilterCount.toLocaleString()}개`} />
+              <HeaderMetric label="보기 방식" value={viewMode === 'list' ? '리스트' : '카드'} />
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
             <Link
               href={`${ROUTES.JOBS}?type=hiring`}
-              className={`rounded border px-4 py-2 text-sm font-bold transition-colors ${
+              className={`rounded border px-4 py-3 text-center text-sm font-bold transition-colors ${
                 postingType === 'hiring' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
               }`}
             >
@@ -192,13 +199,16 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             </Link>
             <Link
               href={`${ROUTES.JOBS}?type=matching`}
-              className={`rounded border px-4 py-2 text-sm font-bold transition-colors ${
+              className={`rounded border px-4 py-3 text-center text-sm font-bold transition-colors ${
                 postingType === 'matching' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
               }`}
             >
               파트너 섭외
             </Link>
-            <Link href={ROUTES.JOBS_NEW} className="btn-primary">
+            <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[46px]">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
               공고 등록
             </Link>
           </div>
@@ -509,9 +519,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       )}
 
       {/* Results Info + View Toggle */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="platform-panel flex items-center justify-between px-4 py-3">
         <p className="text-small text-gray-500" aria-live="polite">
-          총 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
+          검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
         </p>
         <ViewToggle value={viewMode} onChange={setViewMode} />
       </div>
@@ -583,6 +593,15 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function HeaderMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="metric-tile min-h-[70px]">
+      <span className="block text-[12px] font-bold text-gray-500">{label}</span>
+      <span className="mt-1 block text-[20px] font-bold text-gray-950">{value}</span>
     </div>
   );
 }

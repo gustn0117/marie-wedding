@@ -25,8 +25,8 @@ export default function JobListRow({ job }: Props) {
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className={`group grid gap-3 border-b border-gray-100 bg-white px-4 py-4 transition-colors hover:bg-primary-50/50 md:grid-cols-[180px_1fr_130px] md:items-center ${
-        tier === 2 ? 'bg-primary-50/70' : ''
+      className={`group grid gap-3 border-b border-gray-100 bg-white px-4 py-4 transition-colors hover:bg-primary-50/45 md:grid-cols-[210px_1fr_150px] md:items-center ${
+        tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/60' : ''
       }`}
     >
       <div className="min-w-0">
@@ -47,7 +47,7 @@ export default function JobListRow({ job }: Props) {
           {fresh && !urgent && <Badge kind="new">NEW</Badge>}
           {tier === 2 && <Badge kind="promoted">추천</Badge>}
         </div>
-        <h3 className="truncate text-[16px] font-bold text-gray-900 group-hover:text-primary transition-colors">
+        <h3 className="truncate text-[16px] font-bold text-gray-950 group-hover:text-primary transition-colors">
           {job.title}
         </h3>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">
@@ -64,7 +64,7 @@ export default function JobListRow({ job }: Props) {
         ) : (
           <span className="font-bold text-gray-500">상시채용</span>
         )}
-        <span className="hidden rounded border border-gray-200 px-3 py-1.5 font-bold text-primary group-hover:border-primary md:inline-flex">
+        <span className="hidden rounded border border-gray-200 bg-white px-3 py-1.5 font-bold text-primary group-hover:border-primary md:inline-flex">
           상세보기
         </span>
       </div>

@@ -25,9 +25,9 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   return (
     <Link
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="block bg-white border border-gray-200 rounded overflow-hidden group hover:border-primary transition-colors duration-150"
+      className="platform-panel block group transition-colors duration-150 hover:border-primary"
     >
-      <div className="aspect-[2/1] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100">
+      <div className="aspect-[16/9] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
@@ -36,7 +36,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         )}
       </div>
 
-      <div className="p-3">
+      <div className="p-4">
         <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
           {displayName}
         </h3>
@@ -66,9 +66,16 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           <span className="truncate">{profile.contact_name}</span>
         </div>
 
-        {bioText && (
-          <p className="text-small text-gray-500 line-clamp-2 leading-snug">{bioText}</p>
-        )}
+        <p className="min-h-[36px] text-small text-gray-500 line-clamp-2 leading-snug">
+          {bioText || '업체 소개가 준비 중입니다.'}
+        </p>
+
+        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+          <span className="text-micro font-bold text-gray-400">파트너 상세</span>
+          <span className="rounded border border-gray-200 px-2.5 py-1 text-micro font-bold text-primary transition-colors group-hover:border-primary">
+            보기
+          </span>
+        </div>
       </div>
     </Link>
   );

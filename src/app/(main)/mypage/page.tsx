@@ -91,16 +91,27 @@ export default async function MyPage() {
     : null;
 
   return (
-    <div className="max-w-[1000px] mx-auto space-y-4">
-      <section className="saramin-section p-5">
-        <p className="text-sm font-bold text-primary">My Page</p>
-        <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
+    <div className="mx-auto max-w-[1440px] space-y-4">
+      <section className="platform-panel p-5">
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
+          <div>
+            <p className="platform-eyebrow">My Workspace</p>
+            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">마이페이지</h1>
+            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+              등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[44px]">공고 등록</Link>
+            <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary min-h-[44px]">업체 관리</Link>
+          </div>
+        </div>
       </section>
 
       {/* Profile Card */}
-      <div className="bg-white rounded border border-gray-200 p-6">
+      <div className="platform-panel p-6">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded bg-gray-100 overflow-hidden flex-shrink-0">
+          <div className="w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
             {imageUrl ? (
               <img src={imageUrl} alt="프로필" className="w-full h-full object-cover" />
             ) : (
@@ -131,7 +142,7 @@ export default async function MyPage() {
             )}
           </div>
 
-          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary transition-colors shrink-0 ml-auto">
+          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary transition-colors shrink-0 ml-auto">
             프로필 수정
           </Link>
         </div>
@@ -178,14 +189,11 @@ export default async function MyPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-3">
-          <Link href={ROUTES.MYPAGE_EDIT} className="text-sm text-gray-500 hover:text-primary transition-colors">프로필 수정</Link>
-          <span className="text-gray-200">|</span>
-          <Link href={ROUTES.MYPAGE_PASSWORD} className="text-sm text-gray-500 hover:text-primary transition-colors">비밀번호 변경</Link>
-          <span className="text-gray-200">|</span>
-          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="text-sm text-gray-500 hover:text-primary transition-colors">알림</Link>
-          <span className="text-gray-200">|</span>
-          <Link href={ROUTES.DIRECTORY_REGISTER} className="text-sm text-gray-500 hover:text-primary transition-colors flex items-center gap-1">
+        <div className="mt-4 pt-4 border-t border-gray-100 grid gap-2 sm:grid-cols-4">
+          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">프로필 수정</Link>
+          <Link href={ROUTES.MYPAGE_PASSWORD} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">비밀번호 변경</Link>
+          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">알림</Link>
+          <Link href={ROUTES.DIRECTORY_REGISTER} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors flex items-center gap-1">
             디렉토리 등록
             {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
           </Link>
@@ -193,19 +201,27 @@ export default async function MyPage() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-1">등록한 공고</p>
-          <p className="text-2xl font-bold text-gray-900">{jobs.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
-        </div>
-        <div className="bg-white rounded border border-gray-200 p-5">
-          <p className="text-sm text-gray-500 mb-1">작성한 게시글</p>
-          <p className="text-2xl font-bold text-gray-900">{posts.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
-        </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <WorkspaceMetric label="등록한 공고" value={jobs.length} />
+        <WorkspaceMetric label="작성한 게시글" value={posts.length} />
+        <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
+        <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
       </div>
 
       {/* Tabs */}
       <MyPageTabs jobs={jobs} posts={posts} sentApplications={sentApplications} receivedApplications={receivedApplications} />
+    </div>
+  );
+}
+
+function WorkspaceMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="metric-tile p-5">
+      <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
+      <p className="text-2xl font-bold text-gray-950">
+        {value}
+        <span className="text-sm font-normal text-gray-400 ml-1">건</span>
+      </p>
     </div>
   );
 }
