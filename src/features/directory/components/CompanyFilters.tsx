@@ -34,7 +34,7 @@ export default function CompanyFilters() {
   const resetAll = () => router.push('/directory', { scroll: false });
 
   return (
-    <aside className="bg-white border border-gray-200 rounded-sm divide-y divide-gray-100 sticky-sidebar">
+    <aside className="bg-white border border-gray-200 rounded divide-y divide-gray-100 sticky-sidebar overflow-hidden">
       {/* 검색 */}
       <div className="p-3">
         <form onSubmit={handleSearch}>
@@ -45,7 +45,7 @@ export default function CompanyFilters() {
               name="search"
               defaultValue={search}
               placeholder="업체명·담당자"
-              className="input-field pr-8"
+            className="input-field pr-8"
             />
             <button
               type="submit"
@@ -66,7 +66,7 @@ export default function CompanyFilters() {
         <div className="flex flex-col gap-0.5">
           <button
             onClick={() => updateParams({ businessType: '' })}
-            className={`text-left text-small py-1 px-2 rounded-sm transition-colors ${
+            className={`text-left text-small py-1.5 px-2 rounded font-semibold transition-colors ${
               !businessType ? 'bg-primary-50 text-primary font-medium' : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -76,7 +76,7 @@ export default function CompanyFilters() {
             <button
               key={b.value}
               onClick={() => updateParams({ businessType: b.value })}
-              className={`text-left text-small py-1 px-2 rounded-sm transition-colors ${
+              className={`text-left text-small py-1.5 px-2 rounded font-semibold transition-colors ${
                 businessType === b.value
                   ? 'bg-primary-50 text-primary font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -94,7 +94,7 @@ export default function CompanyFilters() {
         <div className="flex flex-col gap-0.5 max-h-[280px] overflow-y-auto">
           <button
             onClick={() => updateParams({ region: '' })}
-            className={`text-left text-small py-1 px-2 rounded-sm transition-colors ${
+            className={`text-left text-small py-1.5 px-2 rounded font-semibold transition-colors ${
               !region ? 'bg-primary-50 text-primary font-medium' : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -104,7 +104,7 @@ export default function CompanyFilters() {
             <button
               key={r.value}
               onClick={() => updateParams({ region: r.value })}
-              className={`text-left text-small py-1 px-2 rounded-sm transition-colors ${
+              className={`text-left text-small py-1.5 px-2 rounded font-semibold transition-colors ${
                 region === r.value
                   ? 'bg-primary-50 text-primary font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
@@ -119,7 +119,7 @@ export default function CompanyFilters() {
       <div className="p-3">
         <button
           onClick={resetAll}
-          className="w-full text-micro text-gray-500 hover:text-gray-700 py-1.5 border border-gray-200 rounded-sm hover:border-gray-400 transition-colors"
+          className="w-full text-micro font-semibold text-gray-500 hover:text-gray-700 py-2 border border-gray-200 rounded hover:border-gray-400 transition-colors"
         >
           필터 초기화
         </button>

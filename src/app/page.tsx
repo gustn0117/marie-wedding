@@ -34,7 +34,7 @@ export default async function HomePage() {
   const { posts } = await getHomeData();
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <HomeContent posts={posts} />
       <Footer />

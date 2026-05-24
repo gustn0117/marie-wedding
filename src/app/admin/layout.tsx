@@ -62,9 +62,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <form onSubmit={handleLegacyLogin} className="w-full max-w-sm">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+          <div className="bg-white rounded border border-gray-200 shadow-sm p-8">
             <div className="text-center mb-8">
-              <h1 className="font-serif text-2xl font-bold text-primary tracking-wide">Marié</h1>
+              <h1 className="text-2xl font-black text-primary tracking-tight">Marié</h1>
               <p className="text-sm text-gray-500 mt-1">관리자 페이지</p>
             </div>
             <div className="space-y-4">
@@ -102,7 +102,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        <span className="font-serif text-lg font-bold text-primary">Marié Admin</span>
+        <span className="text-lg font-black text-primary">Marié Admin</span>
         <Link href={ROUTES.HOME} className="text-sm text-gray-500 hover:text-gray-800">사이트로</Link>
       </div>
 
@@ -116,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="h-14 flex items-center px-6 border-b border-gray-100">
-          <Link href={ROUTES.ADMIN} className="font-serif text-xl font-bold text-primary tracking-wide">Marié</Link>
+          <Link href={ROUTES.ADMIN} className="text-xl font-black text-primary tracking-tight">Marié</Link>
           <span className="ml-2 text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded">ADMIN</span>
         </div>
         <nav className="p-3 space-y-0.5">
@@ -125,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               key={item.href}
               href={item.href}
               onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded text-sm font-bold transition-colors ${
                 isActive(item.href)
                   ? 'bg-primary text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -141,7 +141,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
           <Link
             href={ROUTES.HOME}
-            className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-gray-600 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex items-center justify-center gap-2 w-full rounded bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
@@ -150,7 +150,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <button
             onClick={handleLogout}
-            className="mt-2 flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+            className="mt-2 flex items-center justify-center gap-2 w-full rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors"
           >
             로그아웃
           </button>

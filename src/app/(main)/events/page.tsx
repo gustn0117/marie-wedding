@@ -54,19 +54,20 @@ export default async function EventsPage({ searchParams }: PageProps) {
   const regular = events.filter(e => !e.is_pinned);
 
   return (
-    <div className="max-w-[1440px] mx-auto space-y-4">
+    <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h1 className="text-h2 font-bold text-gray-900">이벤트 & 소식</h1>
-        <p className="text-small text-gray-500 mt-0.5">Marié의 새로운 이벤트와 업계 소식을 확인하세요</p>
-      </div>
+      <section className="saramin-section p-5">
+        <p className="mb-1 text-sm font-bold text-primary">News & Event</p>
+        <h1 className="text-h2 font-black text-gray-900">이벤트 & 소식</h1>
+        <p className="mt-1 text-small text-gray-500">Marié의 새로운 이벤트와 웨딩 업계 소식을 확인하세요.</p>
+      </section>
 
       {/* Filter Tabs */}
-      <div className="flex border-b border-gray-300">
+      <div className="flex overflow-x-auto rounded border border-gray-200 bg-white">
         <Link
           href="/events"
-          className={`px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
-            !activeType ? 'text-primary border-primary -mb-px' : 'text-gray-500 border-transparent hover:text-gray-700'
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+            !activeType ? 'text-primary border-primary' : 'text-gray-500 border-transparent hover:text-gray-700'
           }`}
         >
           전체
@@ -75,8 +76,8 @@ export default async function EventsPage({ searchParams }: PageProps) {
           <Link
             key={t.value}
             href={`/events?type=${t.value}`}
-            className={`px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
-              activeType === t.value ? 'text-primary border-primary -mb-px' : 'text-gray-500 border-transparent hover:text-gray-700'
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+              activeType === t.value ? 'text-primary border-primary' : 'text-gray-500 border-transparent hover:text-gray-700'
             }`}
           >
             {t.label}
@@ -86,7 +87,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
       {/* Events List */}
       {events.length === 0 ? (
-        <div className="bg-white border border-gray-200 py-16 text-center">
+        <div className="bg-white border border-gray-200 rounded py-16 text-center">
           <svg className="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
           </svg>
@@ -134,7 +135,7 @@ function EventCard({ event }: { event: Event }) {
   return (
     <Link
       href={`/events/${event.id}`}
-      className="block bg-white border border-gray-200 hover:border-primary transition-colors overflow-hidden group rounded-sm"
+      className="block bg-white border border-gray-200 hover:border-primary transition-colors overflow-hidden group rounded"
     >
       {imageUrl ? (
         <div className="aspect-[16/9] bg-gray-50 overflow-hidden">
@@ -142,8 +143,8 @@ function EventCard({ event }: { event: Event }) {
           <img src={imageUrl} alt={event.title} className="w-full h-full object-cover" />
         </div>
       ) : (
-        <div className="aspect-[16/9] bg-gradient-to-br from-primary/5 to-primary/15 flex items-center justify-center">
-          <span className="text-primary/30 font-serif text-4xl font-bold">M</span>
+        <div className="aspect-[16/9] bg-secondary-50 flex items-center justify-center">
+          <span className="text-primary/30 text-4xl font-black">M</span>
         </div>
       )}
 
@@ -152,7 +153,7 @@ function EventCard({ event }: { event: Event }) {
           <span className={`badge ${getTypeColor(event.type)}`}>{getTypeLabel(event.type)}</span>
           {event.is_pinned && <span className="badge-urgent">고정</span>}
         </div>
-        <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
+        <h3 className="text-body-lg font-black text-gray-900 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
           {event.title}
         </h3>
         {preview && (

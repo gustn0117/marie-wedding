@@ -142,8 +142,8 @@ export default function EditProfilePage() {
     return (
       <div className="max-w-2xl mx-auto space-y-6 animate-pulse">
         <div className="h-8 w-40 bg-gray-200 rounded" />
-        <div className="bg-white rounded-xl border border-gray-200 p-8 space-y-4">
-          <div className="h-20 w-20 rounded-full bg-gray-200 mx-auto" />
+        <div className="bg-white rounded border border-gray-200 p-8 space-y-4">
+          <div className="h-20 w-20 rounded bg-gray-200 mx-auto" />
           <div className="h-10 rounded bg-gray-200" />
           <div className="h-10 rounded bg-gray-200" />
         </div>
@@ -154,31 +154,34 @@ export default function EditProfilePage() {
   if (!profile) {
     return (
       <div className="max-w-2xl mx-auto text-center py-16">
-        <h2 className="text-xl font-semibold text-gray-900 mb-3">로그인이 필요합니다</h2>
+        <h2 className="text-xl font-black text-gray-900 mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href={ROUTES.MYPAGE} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="max-w-[760px] mx-auto space-y-4">
+      <div className="saramin-section p-5 flex items-center gap-3">
+        <Link href={ROUTES.MYPAGE} className="p-2 rounded hover:bg-primary-50 transition-colors">
           <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">프로필 수정</h1>
+        <div>
+          <p className="text-sm font-bold text-primary">My Page</p>
+          <h1 className="text-2xl font-black text-gray-900">프로필 수정</h1>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 md:p-8 space-y-6">
-        {error && <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
-        {success && <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">프로필이 수정되었습니다.</div>}
+      <form onSubmit={handleSubmit} className="bg-white rounded border border-gray-200 p-6 md:p-8 space-y-6">
+        {error && <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
+        {success && <div className="p-4 rounded bg-green-50 border border-green-200 text-green-700 text-sm">프로필이 수정되었습니다.</div>}
 
         {/* Profile Image */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 bg-gray-100">
+            <div className="w-24 h-24 rounded overflow-hidden border-2 border-gray-200 bg-gray-100">
               {imagePreview ? (
                 <img src={imagePreview} alt="프로필" className="w-full h-full object-cover" />
               ) : (
@@ -192,7 +195,7 @@ export default function EditProfilePage() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-md hover:bg-primary-dark transition-colors"
+              className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary text-white rounded flex items-center justify-center shadow-md hover:bg-primary-dark transition-colors"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
@@ -260,7 +263,7 @@ export default function EditProfilePage() {
                     setError(null);
                     setSuccess(false);
                   }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded text-sm font-bold transition-all ${
                     selected
                       ? 'bg-primary text-white shadow-sm'
                       : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
@@ -294,7 +297,7 @@ export default function EditProfilePage() {
                     setError(null);
                     setSuccess(false);
                   }}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded text-sm font-bold transition-all ${
                     selected
                       ? 'bg-primary text-white shadow-sm'
                       : 'bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary'
@@ -327,7 +330,7 @@ export default function EditProfilePage() {
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-2">
-          <Link href={ROUTES.MYPAGE} className="px-5 py-2.5 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">취소</Link>
+          <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-5 py-2.5 text-sm font-bold hover:border-primary hover:text-primary transition-colors">취소</Link>
           <button type="submit" disabled={submitting} className="btn-primary text-sm px-5 py-2.5">
             {submitting ? '저장 중...' : '저장하기'}
           </button>

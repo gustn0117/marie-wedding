@@ -57,29 +57,32 @@ export default function ChangePasswordPage() {
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto text-center py-16">
-        <h2 className="text-xl font-semibold text-text-primary mb-3">로그인이 필요합니다</h2>
+        <h2 className="text-xl font-black text-text-primary mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-md mx-auto space-y-6">
-      <div className="flex items-center gap-3">
+    <div className="max-w-md mx-auto space-y-4">
+      <div className="saramin-section p-5 flex items-center gap-3">
         <Link
           href={ROUTES.MYPAGE}
-          className="p-2 rounded-lg hover:bg-secondary transition-colors duration-200"
+          className="p-2 rounded hover:bg-primary-50 transition-colors duration-200"
         >
           <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-text-primary">비밀번호 변경</h1>
+        <div>
+          <p className="text-sm font-bold text-primary">My Page</p>
+          <h1 className="text-2xl font-black text-text-primary">비밀번호 변경</h1>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="card p-6 md:p-8 space-y-6">
-        {error && <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
-        {success && <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 text-sm">비밀번호가 변경되었습니다.</div>}
+        {error && <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
+        {success && <div className="p-4 rounded bg-green-50 border border-green-200 text-green-700 text-sm">비밀번호가 변경되었습니다.</div>}
 
         <div className="space-y-1.5">
           <label htmlFor="newPassword" className="block text-sm font-medium text-text-primary">

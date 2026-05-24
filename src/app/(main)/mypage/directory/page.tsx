@@ -32,14 +32,17 @@ export default async function DirectoryRegisterPage() {
   if (!profile) redirect(ROUTES.LOGIN);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href={ROUTES.MYPAGE} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="max-w-[860px] mx-auto space-y-4">
+      <div className="saramin-section p-5 flex items-center gap-3">
+        <Link href={ROUTES.MYPAGE} className="p-2 rounded hover:bg-primary-50 transition-colors">
           <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">디렉토리 등록 / 수정</h1>
+        <div>
+          <p className="text-sm font-bold text-primary">Company Directory</p>
+          <h1 className="text-2xl font-black text-gray-900">디렉토리 등록 / 수정</h1>
+        </div>
       </div>
 
       <DirectoryForm profile={profile} />

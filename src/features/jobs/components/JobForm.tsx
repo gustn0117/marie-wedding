@@ -111,9 +111,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const progress = Math.round((requiredFilled / totalRequired) * 100);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Progress Bar */}
-      <div className="sticky top-[110px] z-10 bg-white pb-2">
+      <div className="sticky top-[138px] z-10 rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-gray-500">필수 항목 입력 <span className="font-semibold text-primary">{requiredFilled}/{totalRequired}</span></span>
           <span className="text-xs font-semibold text-primary">{progress}%</span>
@@ -142,14 +142,14 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 key={type.value}
                 type="button"
                 onClick={() => setFormData(prev => ({ ...prev, postingType: type.value }))}
-                className={`p-5 border-2 text-left transition-all ${
+                className={`rounded p-5 border-2 text-left transition-all ${
                   isActive ? 'border-primary bg-primary-50' : 'border-gray-200 hover:border-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className={`text-base font-bold ${isActive ? 'text-primary' : 'text-gray-800'}`}>{type.label}</span>
                   {isActive && (
-                    <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                    <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
@@ -178,7 +178,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder="예) 강남 예식장 예약 매니저 정규직 채용"
-              className="w-full px-4 py-3 border border-gray-300 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               maxLength={100}
             />
           </div>
@@ -188,18 +188,18 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="5MB" note="목록에서 잘 보이도록 가로가 넓은 이미지 권장" />
             <div className="mt-2">
             {imagePreview ? (
-              <div className="relative border border-gray-300 overflow-hidden">
+              <div className="relative overflow-hidden rounded border border-gray-300">
                 <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
                 <div className="absolute top-2 right-2 flex gap-1.5">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-gray-700 text-xs font-medium hover:bg-white">변경</button>
-                  <button type="button" onClick={handleRemoveImage} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-red-500 text-xs font-medium hover:bg-white">삭제</button>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-gray-700 text-xs font-bold hover:bg-white">변경</button>
+                  <button type="button" onClick={handleRemoveImage} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-red-500 text-xs font-bold hover:bg-white">삭제</button>
                 </div>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full border-2 border-dashed border-gray-300 py-10 text-center hover:border-primary hover:bg-primary-50/30 transition-colors"
+                className="w-full rounded border-2 border-dashed border-gray-300 py-10 text-center hover:border-primary hover:bg-primary-50/30 transition-colors"
               >
                 <svg className="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -265,7 +265,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               value={formData.salaryInfo}
               onChange={(e) => setFormData(prev => ({ ...prev, salaryInfo: e.target.value }))}
               placeholder="예) 월 300만원 이상 · 시급 15,000원 · 면접 후 결정"
-              className="w-full px-4 py-2.5 border border-gray-300 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
           </FieldRow>
 
@@ -280,7 +280,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* Submit */}
-      <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-300 sticky bottom-0 bg-white -mx-4 px-4 py-4">
+      <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-4">
         <p className="text-xs text-gray-500">
           필수 항목 {requiredFilled}/{totalRequired}개 입력 완료
         </p>
@@ -288,14 +288,14 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           <button
             type="button"
             onClick={() => window.history.back()}
-            className="px-6 py-3 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary"
           >
             취소
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-10 py-3 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? '처리 중...' : submitLabel}
           </button>
@@ -307,10 +307,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
 function Section({ step, title, description, children }: { step: number; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="border-l-4 border-primary pl-3 sm:pl-5 py-2">
+    <section className="rounded border border-gray-200 bg-white p-5">
       <div className="flex items-center gap-2 mb-1">
-        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full shrink-0">{step}</span>
-        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
+        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded shrink-0">{step}</span>
+        <h2 className="text-base sm:text-lg font-black text-gray-900">{title}</h2>
       </div>
       <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:ml-8">{description}</p>
       <div className="sm:ml-8">{children}</div>
@@ -347,7 +347,7 @@ function PillGroup({ options, value, onChange }: {
             key={opt.value}
             type="button"
             onClick={() => onChange(active ? '' : opt.value)}
-            className={`px-4 py-2 text-sm font-medium border transition-all ${
+            className={`rounded px-4 py-2 text-sm font-bold border transition-all ${
               active
                 ? 'bg-primary text-white border-primary'
                 : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
@@ -390,7 +390,7 @@ function RegionPicker({ value, onChange }: { value: string; onChange: (v: string
       {selectedLabel && (
         <div className="mb-2 flex items-center gap-2">
           <span className="text-xs text-gray-500">선택됨:</span>
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-primary text-white text-sm font-medium">
+          <span className="inline-flex items-center gap-1 rounded bg-primary px-3 py-1 text-sm font-bold text-white">
             {selectedLabel}
             <button type="button" onClick={() => onChange('')} className="hover:opacity-70">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
@@ -400,7 +400,7 @@ function RegionPicker({ value, onChange }: { value: string; onChange: (v: string
           </span>
         </div>
       )}
-      <div className="border border-gray-300 overflow-hidden">
+      <div className="overflow-hidden rounded border border-gray-300 bg-white">
         {/* 모바일: 뷰 전환 / 데스크톱: 2단 */}
         <div className="flex sm:flex-row">
           {/* 시/도 목록 - 모바일에선 details 있으면 숨김 */}

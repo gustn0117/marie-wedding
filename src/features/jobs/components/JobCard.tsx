@@ -25,27 +25,33 @@ export default function JobCard({ job }: JobCardProps) {
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
-      <article className={`card ${tierClass} h-full flex flex-col gap-2 group-hover:border-primary`}>
+      <article className={`card ${tierClass} h-full min-h-[210px] flex flex-col gap-3 group-hover:border-primary`}>
         {/* Status badges */}
         <div className="flex items-center gap-1 flex-wrap min-h-[18px]">
           {urgent && <Badge kind="urgent">마감임박</Badge>}
           {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
-          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
+          {tier === 2 && <Badge kind="promoted">추천</Badge>}
         </div>
 
-        <h3 className="text-h4 font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="text-[17px] font-black text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors">
           {job.title}
         </h3>
 
-        <div className="flex items-center gap-1.5 text-small text-text-secondary">
-          <span className="font-medium truncate">{companyName}</span>
+        <div className="flex items-center gap-2 text-small text-text-secondary">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary-50 text-xs font-black text-primary">
+            {companyName.charAt(0)}
+          </span>
+          <span className="font-bold truncate">{companyName}</span>
           {region && (
             <>
-              <span className="text-border">|</span>
               <span className="truncate">{region}</span>
             </>
           )}
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
+          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
         </div>
 
         {job.salary_info && (

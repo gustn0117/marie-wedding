@@ -72,7 +72,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       )}
 
       {/* Category */}
-      <div className="space-y-2">
+      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
         <label className="block text-sm font-semibold text-gray-800">카테고리 <span className="text-red-500">*</span></label>
         <div className="flex flex-wrap gap-2">
           {POST_CATEGORIES.map((cat) => (
@@ -80,7 +80,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
               key={cat.value}
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-              className={`px-4 py-2 text-sm font-medium border transition-colors ${
+              className={`rounded px-4 py-2 text-sm font-bold border transition-colors ${
                 formData.category === cat.value
                   ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
@@ -93,7 +93,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       </div>
 
       {/* Title */}
-      <div className="space-y-2">
+      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-gray-800">제목 <span className="text-red-500">*</span></label>
           <span className="text-xs text-gray-400">{formData.title.length}/100</span>
@@ -103,14 +103,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
           placeholder="제목을 입력해주세요"
-          className="w-full px-4 py-3 border border-gray-300 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
           maxLength={100}
           required
         />
       </div>
 
       {/* Content */}
-      <div className="space-y-2">
+      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
         <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-red-500">*</span></label>
         <RichTextEditor
           value={formData.content}
@@ -125,14 +125,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50"
+          className="rounded border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary"
         >
           취소
         </button>
         <button
           type="submit"
           disabled={!isValid || isSubmitting}
-          className="px-8 py-2.5 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded bg-primary px-8 py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (isEdit ? '수정 중...' : '등록 중...') : (isEdit ? '수정하기' : '게시글 등록')}
         </button>

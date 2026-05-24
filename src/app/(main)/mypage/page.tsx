@@ -71,13 +71,16 @@ export default async function MyPage() {
     : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
+    <div className="max-w-[1000px] mx-auto space-y-4">
+      <section className="saramin-section p-5">
+        <p className="text-sm font-bold text-primary">My Page</p>
+        <h1 className="text-2xl font-black text-gray-900">마이페이지</h1>
+      </section>
 
       {/* Profile Card */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-white rounded border border-gray-200 p-6">
         <div className="flex items-start gap-4">
-          <div className="w-14 h-14 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+          <div className="w-14 h-14 rounded bg-gray-100 overflow-hidden flex-shrink-0">
             {imageUrl ? (
               <img src={imageUrl} alt="프로필" className="w-full h-full object-cover" />
             ) : (
@@ -91,7 +94,7 @@ export default async function MyPage() {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xl font-bold text-gray-900 truncate">
+              <h2 className="text-xl font-black text-gray-900 truncate">
                 {profile.company_name || profile.contact_name}
               </h2>
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
@@ -108,7 +111,7 @@ export default async function MyPage() {
             )}
           </div>
 
-          <Link href={ROUTES.MYPAGE_EDIT} className="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 ml-auto">
+          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary transition-colors shrink-0 ml-auto">
             프로필 수정
           </Link>
         </div>
@@ -169,13 +172,13 @@ export default async function MyPage() {
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded border border-gray-200 p-5">
           <p className="text-sm text-gray-500 mb-1">등록한 공고</p>
-          <p className="text-2xl font-bold text-gray-900">{jobs.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
+          <p className="text-2xl font-black text-gray-900">{jobs.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
+        <div className="bg-white rounded border border-gray-200 p-5">
           <p className="text-sm text-gray-500 mb-1">작성한 게시글</p>
-          <p className="text-2xl font-bold text-gray-900">{posts.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
+          <p className="text-2xl font-black text-gray-900">{posts.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
         </div>
       </div>
 

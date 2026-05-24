@@ -40,8 +40,8 @@ export default async function EditJobPage({ params }: PageProps) {
   if (me.id !== job.author_id) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-xl border border-gray-200 p-8 text-center space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">수정 권한이 없습니다</h2>
+        <div className="bg-white rounded border border-gray-200 p-8 text-center space-y-4">
+          <h2 className="text-lg font-black text-gray-900">수정 권한이 없습니다</h2>
           <Link href={ROUTES.JOBS_DETAIL(params.id)} className="btn-outline text-sm inline-block">돌아가기</Link>
         </div>
       </div>
@@ -61,14 +61,17 @@ export default async function EditJobPage({ params }: PageProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div className="flex items-center gap-3">
-        <Link href={ROUTES.JOBS_DETAIL(params.id)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="max-w-[860px] mx-auto space-y-4">
+      <div className="saramin-section p-5 flex items-center gap-3">
+        <Link href={ROUTES.JOBS_DETAIL(params.id)} className="p-2 rounded hover:bg-primary-50 transition-colors">
           <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">공고 수정</h1>
+        <div>
+          <p className="text-sm font-bold text-primary">Recruit Posting</p>
+          <h1 className="text-2xl font-black text-gray-900">공고 수정</h1>
+        </div>
       </div>
 
       <JobEditForm jobId={params.id} initialData={initialData} />

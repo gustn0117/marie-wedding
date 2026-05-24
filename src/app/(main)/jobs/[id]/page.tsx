@@ -41,7 +41,7 @@ export default async function JobDetailPage({ params }: PageProps) {
     : null;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-[1000px] mx-auto space-y-4">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.JOBS} className="text-gray-500 hover:text-primary transition-colors">
@@ -54,7 +54,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Header Card */}
-      <div className="bg-white border border-gray-200 overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded overflow-hidden">
         {/* Image */}
         {job.image && (
           <div className="border-b border-gray-200">
@@ -100,7 +100,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               profileImage={job.author?.profile_image}
               name={job.author?.company_name || job.author?.contact_name || '?'}
               size="sm"
-              className="!rounded-lg"
+              className="!rounded"
             />
             <div>
               <p className="text-sm font-semibold text-gray-900">
@@ -127,14 +127,14 @@ export default async function JobDetailPage({ params }: PageProps) {
       </div>
 
       {/* Description */}
-      <div className="bg-white border border-gray-200 p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">상세 내용</h2>
         <RichTextView html={job.description} className="text-[15px] text-gray-700 leading-relaxed" />
       </div>
 
       {/* Company Card */}
       {job.author && (
-        <div className="bg-white border border-gray-200 p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">업체 정보</h2>
           <Link
             href={ROUTES.DIRECTORY_DETAIL(job.author.id)}
@@ -144,7 +144,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               profileImage={job.author.profile_image}
               name={job.author.company_name || job.author.contact_name}
               size="lg"
-              className="!rounded-lg"
+              className="!rounded"
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -177,7 +177,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       <div className="flex justify-center pt-4">
         <Link
           href={ROUTES.JOBS}
-          className="inline-flex items-center gap-2 px-6 py-3 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center gap-2 rounded border border-gray-300 bg-white px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />

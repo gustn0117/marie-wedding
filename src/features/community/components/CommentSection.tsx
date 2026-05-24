@@ -67,14 +67,14 @@ export default function CommentSection({ postId }: CommentSectionProps) {
   };
 
   return (
-    <section className="bg-white border border-gray-200">
+    <section className="bg-white border border-gray-200 rounded overflow-hidden">
       <header className="px-6 md:px-8 py-4 border-b border-gray-100 flex items-center gap-2">
         <h3 className="text-base font-bold text-gray-900">댓글</h3>
         <span className="text-sm font-bold text-primary">{comments.length}</span>
       </header>
 
       {/* Input (상단으로 이동) */}
-      <div className="px-6 md:px-8 py-5 border-b border-gray-100 bg-gray-50">
+      <div className="px-6 md:px-8 py-5 border-b border-gray-100 bg-secondary-50">
         {profile ? (
           <form onSubmit={handleSubmit} className="space-y-2">
             <div className="flex items-start gap-3">
@@ -89,7 +89,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
                   onChange={(e) => setContent(e.target.value)}
                   placeholder="댓글을 입력해주세요"
                   rows={3}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none"
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100 resize-none"
                 />
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
               <button
                 type="submit"
                 disabled={!content.trim() || isSubmitting}
-                className="px-5 py-2 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
+                className="px-5 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? '등록 중...' : '댓글 등록'}
               </button>
@@ -107,7 +107,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
         ) : (
           <div className="text-center py-4">
             <p className="text-sm text-gray-500 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
-            <Link href={ROUTES.LOGIN} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
+            <Link href={ROUTES.LOGIN} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
               로그인하기
             </Link>
           </div>

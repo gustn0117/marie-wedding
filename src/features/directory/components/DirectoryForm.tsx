@@ -175,7 +175,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {error && (
         <div className="p-4 bg-red-50 border-l-4 border-red-500 flex items-start gap-3">
           <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -194,9 +194,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       )}
 
       {/* Status Card */}
-      <div className={`flex items-center justify-between p-4 border-2 ${listed ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50'}`}>
+      <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${listed ? 'bg-green-500' : 'bg-gray-300'}`}>
+          <div className={`w-10 h-10 rounded flex items-center justify-center ${listed ? 'bg-green-500' : 'bg-gray-300'}`}>
             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               {listed ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -214,14 +214,14 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </div>
         <div className="flex items-center gap-2">
           {listed && (
-            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="px-3 py-1.5 text-xs font-medium border border-gray-300 hover:bg-white">
+            <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold hover:bg-white">
               페이지 보기
             </Link>
           )}
           <button
             onClick={handleToggle}
             disabled={submitting}
-            className={`px-4 py-1.5 text-xs font-bold ${
+            className={`rounded px-4 py-1.5 text-xs font-bold ${
               listed ? 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50' : 'bg-primary text-white hover:bg-primary-dark'
             }`}
           >
@@ -234,7 +234,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       <Section step={1} title="업체 기본 정보" description="로고와 업체명은 디렉토리에서 가장 먼저 보이는 정보입니다.">
         <div className="flex items-start gap-5">
           <div className="flex flex-col items-center gap-2">
-            <div className="w-24 h-24 border border-gray-300 bg-gray-50 overflow-hidden">
+            <div className="w-24 h-24 overflow-hidden rounded border border-gray-300 bg-gray-50">
               {imagePreview ? (
                 <img src={imagePreview} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -267,7 +267,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               value={formData.company_name}
               onChange={(e) => setFormData(prev => ({ ...prev, company_name: e.target.value }))}
               placeholder="예) 그랜드 웨딩홀"
-              className="w-full px-4 py-3 border border-gray-300 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
             <p className="text-xs text-gray-400 mt-1">디렉토리와 검색 결과에 표시되는 이름입니다.</p>
           </div>
@@ -306,7 +306,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                     key={s.value}
                     type="button"
                     onClick={() => setFormData(prev => ({ ...prev, company_size: active ? '' : s.value }))}
-                    className={`px-4 py-2 text-sm font-medium border transition-all ${
+                    className={`rounded px-4 py-2 text-sm font-bold border transition-all ${
                       active ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
                     }`}
                   >
@@ -325,7 +325,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 onChange={(e) => setFormData(prev => ({ ...prev, established_year: e.target.value }))}
                 placeholder="예) 2020"
                 maxLength={4}
-                className="w-full px-4 py-2.5 border border-gray-300 text-[15px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               />
             </FieldRow>
             <FieldRow label="연락처">
@@ -334,7 +334,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="010-0000-0000"
-                className="w-full px-4 py-2.5 border border-gray-300 text-[15px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               />
             </FieldRow>
           </div>
@@ -345,7 +345,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               value={formData.address}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
               placeholder="예) 서울 강남구 테헤란로 123"
-              className="w-full px-4 py-2.5 border border-gray-300 text-[15px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
           </FieldRow>
 
@@ -355,7 +355,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               value={formData.website}
               onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
               placeholder="https://"
-              className="w-full px-4 py-2.5 border border-gray-300 text-[15px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
           </FieldRow>
 
@@ -378,12 +378,12 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         {galleryPreviews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
             {galleryPreviews.map((src, i) => (
-              <div key={i} className="relative aspect-square border border-gray-200 overflow-hidden group">
+              <div key={i} className="relative aspect-square overflow-hidden rounded border border-gray-200 group">
                 <img src={src} alt="" className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => handleRemoveGalleryItem(i)}
-                  className="absolute top-1 right-1 w-6 h-6 bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-1 right-1 w-6 h-6 rounded bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -396,7 +396,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         <button
           type="button"
           onClick={() => galleryInputRef.current?.click()}
-          className="w-full border-2 border-dashed border-gray-300 py-8 text-center hover:border-primary hover:bg-primary-50/30 transition-colors"
+          className="w-full rounded border-2 border-dashed border-gray-300 py-8 text-center hover:border-primary hover:bg-primary-50/30 transition-colors"
         >
           <svg className="w-8 h-8 text-gray-300 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -407,12 +407,12 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       </Section>
 
       {/* Save */}
-      <div className="flex items-center justify-end gap-2 pt-6 border-t border-gray-300 sticky bottom-0 bg-white -mx-4 px-4 py-4">
-        <Link href={ROUTES.MYPAGE} className="px-6 py-3 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</Link>
+      <div className="sticky bottom-0 -mx-4 flex items-center justify-end gap-2 border-t border-gray-200 bg-white px-4 py-4">
+        <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-10 py-3 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
+          className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
           {saving ? '저장 중...' : '저장하기'}
         </button>
@@ -423,10 +423,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
 function Section({ step, title, description, children }: { step: number; title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="border-l-4 border-primary pl-3 sm:pl-5 py-2">
+    <section className="rounded border border-gray-200 bg-white p-5">
       <div className="flex items-center gap-2 mb-1">
-        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded-full shrink-0">{step}</span>
-        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
+        <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded shrink-0">{step}</span>
+        <h2 className="text-base sm:text-lg font-black text-gray-900">{title}</h2>
       </div>
       <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:ml-8">{description}</p>
       <div className="sm:ml-8">{children}</div>
@@ -463,7 +463,7 @@ function PillGroup({ options, selected, onToggle }: {
             key={opt.value}
             type="button"
             onClick={() => onToggle(opt.value)}
-            className={`px-4 py-2 text-sm font-medium border transition-all ${
+            className={`rounded px-4 py-2 text-sm font-bold border transition-all ${
               active ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
             }`}
           >

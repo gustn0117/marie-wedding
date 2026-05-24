@@ -1,353 +1,241 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
-import {
-  formatRelativeTime,
-  getCategoryLabel,
-} from '@/shared/utils/format';
+import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
 import Badge from '@/shared/components/Badge';
 import type { Post } from '@/types/database';
-
-function BusinessIcon({ type, className = 'w-5 h-5' }: { type: string; className?: string }) {
-  const icons: Record<string, React.ReactNode> = {
-    venue: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
-      </svg>
-    ),
-    dress: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
-      </svg>
-    ),
-    studio: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-      </svg>
-    ),
-    makeup: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-      </svg>
-    ),
-    planner: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15a2.25 2.25 0 012.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
-      </svg>
-    ),
-    assistant: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-1.053M18 6.75a3 3 0 11-6 0 3 3 0 016 0zM6.75 9.75a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
-    mc: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
-      </svg>
-    ),
-    designer: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" />
-      </svg>
-    ),
-    singer: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 9l10.5-3m0 6.553v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 11-.99-3.467l2.31-.66a2.25 2.25 0 001.632-2.163zm0 0V2.25L9 5.25v10.303m0 0v3.75a2.25 2.25 0 01-1.632 2.163l-1.32.377a1.803 1.803 0 01-.99-3.467l2.31-.66A2.25 2.25 0 009 15.553z" />
-      </svg>
-    ),
-    other: (
-      <svg className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 7.5l-2.25-1.313M21 7.5v2.25m0-2.25l-2.25 1.313M3 7.5l2.25-1.313M3 7.5l2.25 1.313M3 7.5v2.25m9 3l2.25-1.313M12 12.75l-2.25-1.313M12 12.75V15m0 6.75l2.25-1.313M12 21.75V19.5m0 2.25l-2.25-1.313m0-16.875L12 2.25l2.25 1.313M21 14.25v2.25l-2.25 1.313m-13.5 0L3 16.5v-2.25" />
-      </svg>
-    ),
-  };
-  return <>{icons[type] || icons.other}</>;
-}
 
 interface HomeContentProps {
   posts: Post[];
 }
 
+const featuredJobs = [
+  { company: '그랜드 웨딩홀', title: '예식장 매니저 정규직 채용', type: '예식장', region: '서울 강남', pay: '연 3,400만원' },
+  { company: '로즈드레스 청담', title: '드레스 피팅 전문가 경력직 모집', type: '드레스샵', region: '서울 청담', pay: '면접 후 결정' },
+  { company: '루미에르 스튜디오', title: '웨딩 포토그래퍼 및 보정 담당자', type: '스튜디오', region: '서울 마포', pay: '월 280만원' },
+  { company: '블룸 메이크업', title: '브라이덜 메이크업 아티스트', type: '메이크업', region: '경기 성남', pay: '협의' },
+  { company: '엘레강스 플래너', title: '웨딩플래너 신입/경력 공개채용', type: '웨딩플래너', region: '서울', pay: '성과급' },
+] as const;
+
+const partnerCompanies = [
+  { name: '그랜드 웨딩홀', desc: '대형 연회장 운영 및 신입 교육 체계 보유', type: '예식장', region: '서울' },
+  { name: '로즈드레스 청담', desc: '수입 드레스 편집숍, 주말 피팅팀 상시 모집', type: '드레스샵', region: '서울' },
+  { name: '루미에르 스튜디오', desc: '촬영, 보정, 앨범 제작을 함께 운영하는 스튜디오', type: '스튜디오', region: '서울' },
+  { name: '블룸 메이크업', desc: '브라이덜 헤어·메이크업 전문 파트너', type: '메이크업', region: '경기' },
+] as const;
+
+const searchTags = ['웨딩플래너', '예식장 매니저', '드레스 피팅', '주말 알바', '스튜디오 보정'];
+
 export default function HomeContent({ posts }: HomeContentProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const router = useRouter();
+  const [keyword, setKeyword] = useState('');
 
-  const banners = [
-    {
-      bg: 'bg-gradient-to-r from-[#1B2A4A] to-[#2E4470]',
-      badge: 'Grand Open',
-      title: 'Marié 서비스 오픈',
-      desc: '웨딩 업계를 하나로 잇는 B2B 플랫폼이 문을 열었습니다.',
-      cta: '자세히 보기',
-      href: ROUTES.JOBS,
-    },
-    {
-      bg: 'bg-gradient-to-r from-[#6B2D5B] to-[#A24D8B]',
-      badge: '채용',
-      title: '웨딩 업계 채용 공고',
-      desc: '예식장, 드레스샵, 스튜디오 등 다양한 웨딩 분야 채용 정보를 확인하세요.',
-      cta: '공고 보기',
-      href: ROUTES.JOBS,
-    },
-    {
-      bg: 'bg-gradient-to-r from-[#1a3a2a] to-[#2d6b4a]',
-      badge: '업체 등록',
-      title: '무료 업체 등록',
-      desc: '지금 업체를 등록하고 웨딩 업계 네트워크에 참여하세요.',
-      cta: '등록하기',
-      href: ROUTES.SIGNUP,
-    },
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [banners.length]);
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = keyword.trim();
+    router.push(q ? `${ROUTES.JOBS}?search=${encodeURIComponent(q)}` : ROUTES.JOBS);
+  };
 
   return (
-    <>
-      {/* BANNER SLIDER */}
-      <section className="bg-white pt-4 pb-2">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
-          <div className="relative overflow-hidden rounded-md">
-            <div
-              className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-            >
-              {banners.map((banner, i) => (
-                <Link key={i} href={banner.href} className={`w-full shrink-0 ${banner.bg} block`}>
-                  <div className="px-8 sm:px-12 py-8 sm:py-10 flex items-center justify-between">
-                    <div>
-                      <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded-sm mb-3">
-                        {banner.badge}
-                      </span>
-                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5">{banner.title}</h2>
-                      <p className="text-sm text-white/70 max-w-sm">{banner.desc}</p>
-                    </div>
-                    <div className="hidden sm:block">
-                      <span className="font-serif text-6xl font-bold text-white/10">Marié</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
+    <div className="bg-background pb-8">
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-[1200px] mx-auto px-4 py-7">
+          <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+            <div className="min-w-0">
+              <div className="mb-4 flex flex-wrap items-center gap-2 text-sm font-semibold text-gray-600">
+                <span className="rounded bg-primary-50 px-2 py-1 text-primary">웨딩업계 채용 플랫폼</span>
+                <span>채용, 업체 섭외, 커뮤니티를 한 번에</span>
+              </div>
 
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {banners.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => { e.preventDefault(); setCurrentSlide(i); }}
-                  className={`h-1.5 rounded-full transition-all ${
-                    currentSlide === i ? 'bg-white w-5' : 'bg-white/40 w-1.5 hover:bg-white/60'
-                  }`}
-                  aria-label={`슬라이드 ${i + 1}`}
+              <form onSubmit={handleSearch} className="flex min-h-[58px] overflow-hidden rounded border-2 border-primary bg-white shadow-sm">
+                <div className="flex items-center pl-5 text-primary">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                </div>
+                <input
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  placeholder="직무, 업체명, 지역을 검색해보세요"
+                  className="min-w-0 flex-1 px-4 text-lg font-semibold outline-none placeholder:text-gray-400"
                 />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+                <button type="submit" className="bg-primary px-7 text-base font-bold text-white hover:bg-primary-dark transition-colors">
+                  검색
+                </button>
+              </form>
 
-      {/* HOT JOBS */}
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-h4 font-bold text-gray-900">지금 핫한 채용</h2>
-              <Badge kind="promoted">광고</Badge>
-            </div>
-            <Link href={ROUTES.JOBS} className="text-small text-gray-500 hover:text-primary transition-colors">
-              더보기 &rarr;
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {[
-              { company: '그랜드 웨딩홀', title: '예식장 매니저 정규직 채용', type: 'venue', region: '서울 강남', employment: '정규직' },
-              { company: '로즈드레스', title: '피팅 전문가 경력직 모집', type: 'dress', region: '경기 성남', employment: '정규직' },
-              { company: '루미에르 스튜디오', title: '웨딩 포토그래퍼 모집', type: 'studio', region: '서울 마포', employment: '계약직' },
-              { company: '블룸 메이크업', title: '시니어 메이크업 아티스트', type: 'makeup', region: '서울 청담', employment: '정규직' },
-              { company: '엘레강스 플래너', title: '웨딩 플래너 신입 모집', type: 'planner', region: '서울 강남', employment: '정규직' },
-            ].map((job, i) => (
-              <Link
-                key={i}
-                href={ROUTES.JOBS}
-                className="card hover:border-primary transition-colors group"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-8 h-8 bg-primary-50 rounded-sm flex items-center justify-center text-primary shrink-0">
-                    <BusinessIcon type={job.type} className="w-4 h-4" />
-                  </span>
-                  <span className="text-micro font-semibold text-gray-500 truncate">{job.company}</span>
-                </div>
-                <h3 className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-2 line-clamp-2">
-                  {job.title}
-                </h3>
-                <div className="flex items-center gap-1 flex-wrap">
-                  <Badge kind="attr">{job.region}</Badge>
-                  <Badge kind="category">{job.employment}</Badge>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOT COMPANIES */}
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-h4 font-bold text-gray-900">지금 핫한 업체</h2>
-              <Badge kind="promoted">광고</Badge>
-            </div>
-            <Link href={ROUTES.DIRECTORY} className="text-small text-gray-500 hover:text-primary transition-colors">
-              더보기 &rarr;
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {[
-              { name: '그랜드 웨딩홀', type: 'venue', region: '서울 강남', desc: '강남 최대 규모 프리미엄 웨딩홀' },
-              { name: '로즈드레스 청담', type: 'dress', region: '서울 청담', desc: '수입 드레스 전문 편집숍' },
-              { name: '루미에르 스튜디오', type: 'studio', region: '서울 마포', desc: '감성 웨딩 촬영 전문 스튜디오' },
-              { name: '블룸 메이크업', type: 'makeup', region: '서울 청담', desc: '브라이덜 메이크업 전문' },
-              { name: '엘레강스 플래너', type: 'planner', region: '서울 강남', desc: '프리미엄 웨딩 컨설팅' },
-            ].map((company, i) => (
-              <Link
-                key={i}
-                href={ROUTES.DIRECTORY}
-                className="card hover:border-primary transition-colors group"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="w-10 h-10 bg-primary-50 rounded-sm flex items-center justify-center text-primary shrink-0">
-                    <BusinessIcon type={company.type} className="w-5 h-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors truncate">{company.name}</p>
-                    <p className="text-micro text-gray-500 truncate">{company.region}</p>
-                  </div>
-                </div>
-                <p className="text-small text-gray-500 line-clamp-2 leading-snug">{company.desc}</p>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CATEGORY BROWSE */}
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <h2 className="text-body-lg font-bold text-gray-900">업종별 채용</h2>
-                <Link href={ROUTES.JOBS} className="text-micro text-gray-500 hover:text-primary transition-colors">더보기</Link>
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-bold text-gray-800">인기검색어</span>
+                {searchTags.map((tag) => (
+                  <Link key={tag} href={`${ROUTES.JOBS}?search=${encodeURIComponent(tag)}`} className="rounded-full border border-gray-200 px-3 py-1 text-gray-600 hover:border-primary hover:text-primary transition-colors">
+                    {tag}
+                  </Link>
+                ))}
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                  {BUSINESS_TYPES.map((type) => (
-                    <Link
-                      key={type.value}
-                      href={`${ROUTES.JOBS}?business=${type.value}`}
-                      className="flex flex-col items-center gap-1.5 py-2 rounded-sm hover:bg-gray-50 transition-colors group"
-                    >
-                      <span className="w-9 h-9 bg-primary-50 rounded-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                        <BusinessIcon type={type.value} className="w-4 h-4" />
-                      </span>
-                      <span className="text-micro font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
-                    </Link>
-                  ))}
-                </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <SummaryCard label="오늘 올라온 공고" value="128" href={ROUTES.JOBS} color="text-primary" />
+                <SummaryCard label="등록 업체" value="2,430" href={ROUTES.DIRECTORY} color="text-accent" />
+                <SummaryCard label="커뮤니티 글" value="8,920" href={ROUTES.COMMUNITY} color="text-state-promoted" />
               </div>
             </div>
 
-            <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <h2 className="text-body-lg font-bold text-gray-900">지역별 채용</h2>
-                <Link href={ROUTES.JOBS} className="text-micro text-gray-500 hover:text-primary transition-colors">더보기</Link>
+            <aside className="saramin-section p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <h2 className="text-base font-bold text-gray-900">기업회원 서비스</h2>
+                <Badge kind="verified">무료</Badge>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-9 gap-1.5">
-                  {REGIONS.map((region) => (
-                    <Link
-                      key={region.value}
-                      href={`${ROUTES.JOBS}?region=${region.value}`}
-                      className="py-1.5 text-center text-small text-gray-600 bg-gray-50 rounded-sm hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
-                    >
-                      {region.label}
-                    </Link>
-                  ))}
-                </div>
+              <div className="space-y-2">
+                <Link href={ROUTES.JOBS_NEW} className="btn-primary w-full">채용공고 등록</Link>
+                <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary w-full">업체 프로필 등록</Link>
               </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs text-gray-500">
+                <Link href={`${ROUTES.JOBS}?type=matching`} className="rounded border border-gray-200 px-2 py-3 hover:border-primary hover:text-primary transition-colors">
+                  파트너 섭외
+                </Link>
+                <Link href={ROUTES.COMMUNITY_NEW} className="rounded border border-gray-200 px-2 py-3 hover:border-primary hover:text-primary transition-colors">
+                  소식 공유
+                </Link>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-[1200px] mx-auto px-4 py-5 space-y-5">
+        <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="saramin-section">
+            <div className="saramin-section-title flex items-center justify-between">
+              <span>직무별 채용</span>
+              <Link href={ROUTES.JOBS} className="text-xs font-semibold text-gray-500 hover:text-primary">전체보기</Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FULL-WIDTH BANNER */}
-      <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="bg-white text-primary text-[11px] font-bold px-2 py-0.5 rounded-sm">Marié</span>
-            <p className="text-white font-semibold text-small sm:text-body-lg">
-              웨딩업계 인재를 찾고 계신가요?
-              <span className="text-primary-200 hidden sm:inline ml-1">지금 무료로 공고를 등록하세요</span>
-            </p>
-          </div>
-          <Link
-            href={ROUTES.JOBS_NEW}
-            className="shrink-0 bg-white text-primary text-small font-semibold px-3 py-1.5 rounded-sm hover:bg-gray-100 transition-colors"
-          >
-            공고 등록 &rarr;
-          </Link>
-        </div>
-      </section>
-
-      {/* COMMUNITY SECTION */}
-      <section className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-h4 font-bold text-gray-900">커뮤니티</h2>
-            <Link href={ROUTES.COMMUNITY} className="text-small text-gray-500 hover:text-primary transition-colors">
-              더보기 &rarr;
-            </Link>
-          </div>
-          {posts.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {posts.map((post) => (
+            <div className="grid grid-cols-2 sm:grid-cols-5">
+              {BUSINESS_TYPES.map((type, index) => (
                 <Link
-                  key={post.id}
-                  href={ROUTES.COMMUNITY_DETAIL(post.id)}
-                  className="card hover:border-primary transition-colors group"
+                  key={type.value}
+                  href={`${ROUTES.JOBS}?businessType=${type.value}`}
+                  className="group flex min-h-[82px] flex-col justify-center border-b border-r border-gray-100 px-4 py-3 hover:bg-primary-50/70 transition-colors"
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Badge kind="category">{getCategoryLabel(post.category)}</Badge>
-                    <span className="text-micro text-gray-400">{formatRelativeTime(post.created_at)}</span>
-                  </div>
-                  <h3 className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors mb-1 line-clamp-1">
-                    {post.title}
-                  </h3>
-                  <p className="text-small text-gray-500 line-clamp-2 leading-snug">
-                    {post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2 text-micro text-gray-400">
-                    <span>조회 {post.view_count}</span>
-                    {post.comment_count !== undefined && post.comment_count > 0 && (
-                      <>
-                        <span>·</span>
-                        <span>댓글 {post.comment_count}</span>
-                      </>
-                    )}
-                  </div>
+                  <span className={`mb-2 flex h-8 w-8 items-center justify-center rounded text-sm font-black ${
+                    index % 3 === 0 ? 'bg-primary-50 text-primary' : index % 3 === 1 ? 'bg-accent-50 text-accent' : 'bg-orange-50 text-orange-600'
+                  }`}>
+                    {type.label.charAt(0)}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 group-hover:text-primary">{type.label}</span>
                 </Link>
               ))}
             </div>
-          )}
-        </div>
-      </section>
-    </>
+          </div>
+
+          <div className="saramin-section">
+            <div className="saramin-section-title flex items-center justify-between">
+              <span>지역별 채용</span>
+              <Link href={ROUTES.JOBS} className="text-xs font-semibold text-gray-500 hover:text-primary">전체보기</Link>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5 p-4">
+              {REGIONS.slice(0, 15).map((region) => (
+                <Link
+                  key={region.value}
+                  href={`${ROUTES.JOBS}?region=${region.value}`}
+                  className="rounded border border-gray-200 px-2 py-2 text-center text-sm font-semibold text-gray-700 hover:border-primary hover:bg-primary-50 hover:text-primary transition-colors"
+                >
+                  {region.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="saramin-section">
+          <div className="saramin-section-title flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span>추천 채용정보</span>
+              <Badge kind="promoted">광고</Badge>
+            </div>
+            <Link href={ROUTES.JOBS} className="text-xs font-semibold text-gray-500 hover:text-primary">더보기</Link>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {featuredJobs.map((job) => (
+              <Link key={`${job.company}-${job.title}`} href={ROUTES.JOBS} className="grid gap-3 px-4 py-4 hover:bg-primary-50/50 transition-colors md:grid-cols-[190px_1fr_150px] md:items-center">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-gray-900">{job.company}</p>
+                  <p className="mt-1 text-xs text-gray-500">{job.region}</p>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate text-[16px] font-bold text-gray-900">{job.title}</h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Badge kind="category">{job.type}</Badge>
+                    <Badge kind="attr">{job.pay}</Badge>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between gap-2 md:justify-end">
+                  <span className="text-xs font-semibold text-state-urgent">상시채용</span>
+                  <span className="rounded border border-gray-200 px-3 py-1.5 text-xs font-bold text-primary">상세보기</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
+          <div className="saramin-section">
+            <div className="saramin-section-title flex items-center justify-between">
+              <span>추천 업체</span>
+              <Link href={ROUTES.DIRECTORY} className="text-xs font-semibold text-gray-500 hover:text-primary">더보기</Link>
+            </div>
+            <div className="grid gap-0 sm:grid-cols-2">
+              {partnerCompanies.map((company) => (
+                <Link key={company.name} href={ROUTES.DIRECTORY} className="flex gap-3 border-b border-r border-gray-100 p-4 hover:bg-primary-50/50 transition-colors">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-lg font-black text-primary">
+                    {company.name.charAt(0)}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-gray-900">{company.name}</span>
+                    <span className="mt-1 block text-xs text-gray-500">{company.type} · {company.region}</span>
+                    <span className="mt-1 block line-clamp-2 text-xs leading-relaxed text-gray-500">{company.desc}</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="saramin-section">
+            <div className="saramin-section-title flex items-center justify-between">
+              <span>커뮤니티 인기글</span>
+              <Link href={ROUTES.COMMUNITY} className="text-xs font-semibold text-gray-500 hover:text-primary">더보기</Link>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {posts.length > 0 ? posts.map((post) => (
+                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="block px-4 py-3 hover:bg-primary-50/50 transition-colors">
+                  <div className="mb-1 flex items-center gap-2">
+                    <Badge kind="category">{getCategoryLabel(post.category)}</Badge>
+                    <time className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</time>
+                  </div>
+                  <p className="line-clamp-1 text-sm font-bold text-gray-900">{post.title}</p>
+                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                    <span>조회 {post.view_count.toLocaleString()}</span>
+                    <span>댓글 {post.comment_count ?? 0}</span>
+                  </div>
+                </Link>
+              )) : (
+                <div className="px-4 py-10 text-center text-sm text-gray-400">아직 커뮤니티 글이 없습니다.</div>
+              )}
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SummaryCard({ label, value, href, color }: { label: string; value: string; href: string; color: string }) {
+  return (
+    <Link href={href} className="rounded border border-gray-200 bg-secondary-50 px-4 py-3 hover:border-primary-300 hover:bg-white transition-colors">
+      <span className="block text-xs font-semibold text-gray-500">{label}</span>
+      <span className={`mt-1 block text-2xl font-black ${color}`}>{value}</span>
+    </Link>
   );
 }

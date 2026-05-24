@@ -171,21 +171,44 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const browsingRegionDetails = browsingRegion ? REGION_DETAILS[browsingRegion] : null;
 
   return (
-    <div className="max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-4">
-      {/* Page Title */}
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-h2 font-bold text-gray-900">
-          {postingType === 'matching' ? '업체 섭외' : '채용'}
-        </h1>
-        <Link href={ROUTES.JOBS_NEW} className="btn-primary">
-          공고 등록 →
-        </Link>
-      </div>
+    <div className="space-y-4">
+      <section className="saramin-section p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="mb-1 text-sm font-bold text-primary">Wedding Recruit</p>
+            <h1 className="text-h2 font-black text-gray-900">
+              {postingType === 'matching' ? '파트너 섭외' : '채용정보'}
+            </h1>
+            <p className="mt-1 text-small text-gray-500">웨딩 업계 직무, 지역, 고용형태별 공고를 빠르게 찾아보세요.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`${ROUTES.JOBS}?type=hiring`}
+              className={`rounded border px-4 py-2 text-sm font-bold transition-colors ${
+                postingType === 'hiring' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
+              }`}
+            >
+              채용정보
+            </Link>
+            <Link
+              href={`${ROUTES.JOBS}?type=matching`}
+              className={`rounded border px-4 py-2 text-sm font-bold transition-colors ${
+                postingType === 'matching' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
+              }`}
+            >
+              파트너 섭외
+            </Link>
+            <Link href={ROUTES.JOBS_NEW} className="btn-primary">
+              공고 등록
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Filter Section */}
-      <div className="bg-white border border-gray-200 rounded-sm overflow-hidden mb-3">
+      <div className="bg-white border border-gray-200 rounded overflow-hidden">
         {/* Filter Controls Bar */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 border-b border-gray-100 bg-secondary-50">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-secondary-50">
           {/* Region Dropdown */}
           <div className="relative">
             <button
@@ -195,7 +218,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 setRegionDropdownOpen(opening);
                 if (opening) setBrowsingRegion(selectedRegion);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-sm text-small transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                 regionDropdownOpen
                   ? 'border-primary ring-2 ring-primary/20'
                   : 'border-gray-300 hover:border-gray-400'
@@ -232,7 +255,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 closeAllDropdowns();
                 setBusinessTypeDropdownOpen(opening);
               }}
-              className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-sm text-small transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                 businessTypeDropdownOpen
                   ? 'border-primary ring-2 ring-primary/20'
                   : 'border-gray-300 hover:border-gray-400'
@@ -267,7 +290,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   closeAllDropdowns();
                   setEmploymentTypeDropdownOpen(opening);
                 }}
-                className={`flex items-center gap-2 px-3 py-1.5 bg-white border rounded-sm text-small transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                   employmentTypeDropdownOpen
                     ? 'border-primary ring-2 ring-primary/20'
                     : 'border-gray-300 hover:border-gray-400'
@@ -308,12 +331,12 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') updateParams({ search });
                 }}
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-gray-300 rounded-sm text-small focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded text-small focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-primary"
               />
             </div>
             <button
               onClick={() => updateParams({ search })}
-              className="px-3 py-1.5 bg-primary text-white text-small font-medium rounded-sm hover:bg-primary-dark transition-colors shrink-0"
+              className="px-4 py-2 bg-primary text-white text-small font-bold rounded hover:bg-primary-dark transition-colors shrink-0"
             >
               검색
             </button>
@@ -341,7 +364,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                       onClick={() =>
                         hasDetails ? handleRegionBrowse(r.value) : handleRegionConfirm(r.value)
                       }
-                      className={`w-full text-left px-4 py-2 text-small hover:bg-gray-50 transition-colors flex items-center justify-between ${
+                    className={`w-full text-left px-4 py-2 text-small hover:bg-primary-50/50 transition-colors flex items-center justify-between ${
                         browsingRegion === r.value
                           ? 'bg-primary-50 text-primary font-semibold'
                           : 'text-gray-700'
@@ -378,7 +401,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                     {browsingRegionDetails.map((detail) => (
                       <label
                         key={detail.value}
-                        className="flex items-center gap-2 px-2 py-1 text-small text-gray-600 hover:text-gray-900 cursor-pointer rounded-sm hover:bg-gray-50"
+                        className="flex items-center gap-2 px-2 py-1.5 text-small text-gray-600 hover:text-gray-900 cursor-pointer rounded hover:bg-primary-50/50"
                       >
                         <input
                           type="checkbox"
@@ -405,7 +428,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   setSelectedBusinessTypes([]);
                   updateParams({ businessType: '' });
                 }}
-                className={`px-3 py-1.5 rounded-sm text-small transition-colors ${
+                className={`px-3 py-1.5 rounded text-small font-semibold transition-colors ${
                   selectedBusinessTypes.length === 0
                     ? 'bg-primary text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -419,7 +442,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   <button
                     key={bt.value}
                     onClick={() => handleBusinessTypeToggle(bt.value)}
-                    className={`px-3 py-1.5 rounded-sm text-small transition-colors flex items-center gap-1 ${
+                    className={`px-3 py-1.5 rounded text-small font-semibold transition-colors flex items-center gap-1 ${
                       selected
                         ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -444,7 +467,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => handleEmploymentTypeSelect('')}
-                className={`px-3 py-1.5 rounded-sm text-small transition-colors ${
+                className={`px-3 py-1.5 rounded text-small font-semibold transition-colors ${
                   !selectedEmploymentType
                     ? 'bg-primary text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -456,7 +479,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 <button
                   key={et.value}
                   onClick={() => handleEmploymentTypeSelect(et.value)}
-                  className={`px-3 py-1.5 rounded-sm text-small transition-colors ${
+                  className={`px-3 py-1.5 rounded text-small font-semibold transition-colors ${
                     selectedEmploymentType === et.value
                       ? 'bg-primary text-white'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -495,7 +518,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
       {/* Results */}
       {jobs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-sm p-10 text-center">
+        <div className="bg-white border border-gray-200 rounded p-10 text-center">
           <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -508,7 +531,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           </Link>
         </div>
       ) : viewMode === 'list' ? (
-        <div className="border border-gray-200 rounded-sm overflow-hidden bg-white">
+        <div className="border border-gray-200 rounded overflow-hidden bg-white">
           {jobs.map((job) => (
             <JobListRow key={job.id} job={job} />
           ))}

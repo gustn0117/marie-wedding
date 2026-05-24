@@ -87,11 +87,11 @@ export default function SignupForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-surface rounded-2xl border border-border p-8 shadow-lg">
+      <div className="bg-surface rounded border border-border p-8 shadow-sm">
         {/* Logo */}
         <div className="text-center mb-6">
           <Link href={ROUTES.HOME} className="inline-block">
-            <h1 className="font-serif text-3xl font-bold text-primary tracking-wide">Marié</h1>
+            <h1 className="text-3xl font-black text-primary tracking-tight">Marié</h1>
           </Link>
           <p className="mt-2 text-sm text-text-secondary">웨딩업계 B2B 플랫폼 회원가입</p>
         </div>
@@ -100,7 +100,7 @@ export default function SignupForm() {
         <div className="flex items-center justify-center gap-2 mb-8">
           {Array.from({ length: totalSteps }, (_, i) => (
             <div key={i} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+              <div className={`w-8 h-8 rounded flex items-center justify-center text-sm font-bold transition-colors ${
                 step >= i ? 'bg-primary text-white' : 'bg-gray-200 text-text-muted'
               }`}>
                 {i + 1}
@@ -113,7 +113,7 @@ export default function SignupForm() {
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
+          <div className="mb-6 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -124,10 +124,10 @@ export default function SignupForm() {
                 <button
                   type="button"
                   onClick={() => { setFormData(prev => ({ ...prev, accountType: 'individual' })); setStep(STEPS.ACCOUNT); }}
-                  className="w-full p-5 rounded-xl border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
+                  className="w-full p-5 rounded border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center">
                       <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                       </svg>
@@ -142,10 +142,10 @@ export default function SignupForm() {
                 <button
                   type="button"
                   onClick={() => { setFormData(prev => ({ ...prev, accountType: 'business' })); setStep(STEPS.ACCOUNT); }}
-                  className="w-full p-5 rounded-xl border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
+                  className="w-full p-5 rounded border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center">
+                    <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center">
                       <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                       </svg>
@@ -199,12 +199,12 @@ export default function SignupForm() {
                     {formData.businessTypes.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
                         {formData.businessTypes.map((bt) => (
-                          <span key={bt} className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-primary text-white text-xs font-medium rounded-lg">
+                          <span key={bt} className="inline-flex items-center gap-1.5 rounded bg-primary pl-3 pr-2 py-1.5 text-xs font-bold text-white">
                             {BUSINESS_TYPES.find(t => t.value === bt)?.label}
                             <button
                               type="button"
                               onClick={() => setFormData(prev => ({ ...prev, businessTypes: prev.businessTypes.filter(v => v !== bt) }))}
-                              className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
+                              className="w-4 h-4 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
                             >
                               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -229,7 +229,7 @@ export default function SignupForm() {
                                   : [...prev.businessTypes, type.value],
                               }));
                             }}
-                            className={`py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                            className={`py-2.5 rounded text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
                               selected
                                 ? 'bg-primary text-white shadow-md'
                                 : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary hover:shadow-sm'
@@ -260,12 +260,12 @@ export default function SignupForm() {
                 {formData.regions.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {formData.regions.map((r) => (
-                      <span key={r} className="inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-primary text-white text-xs font-medium rounded-lg">
+                      <span key={r} className="inline-flex items-center gap-1.5 rounded bg-primary pl-3 pr-2 py-1.5 text-xs font-bold text-white">
                         {r === 'all' ? '전국' : REGIONS.find(reg => reg.value === r)?.label}
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, regions: prev.regions.filter(v => v !== r) }))}
-                          className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors"
+                          className="w-4 h-4 flex items-center justify-center rounded hover:bg-white/20 transition-colors"
                         >
                           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -293,7 +293,7 @@ export default function SignupForm() {
                       setFormData(prev => ({ ...prev, regions: ['all'] }));
                     }
                   }}
-                  className={`w-full py-3 rounded-xl text-sm font-semibold transition-all mb-3 flex items-center justify-center gap-2 ${
+                  className={`w-full py-3 rounded text-sm font-bold transition-all mb-3 flex items-center justify-center gap-2 ${
                     formData.regions.includes('all')
                       ? 'bg-primary text-white shadow-md'
                       : 'bg-gray-50 text-gray-700 border border-gray-200 hover:border-primary hover:text-primary'
@@ -322,7 +322,7 @@ export default function SignupForm() {
                                 : [...prev.regions, region.value],
                             }));
                           }}
-                          className={`py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${
+                          className={`py-2.5 rounded text-sm font-bold transition-all flex items-center justify-center gap-1.5 ${
                             selected
                               ? 'bg-primary text-white shadow-md'
                               : 'bg-white text-gray-600 border border-gray-200 hover:border-primary/40 hover:text-primary hover:shadow-sm'
@@ -380,7 +380,7 @@ export default function SignupForm() {
                 setError('카카오 로그인에 실패했습니다.');
               }
             }}
-            className="w-12 h-12 rounded-full bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
+            className="w-12 h-12 rounded bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
             title="카카오로 가입"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">

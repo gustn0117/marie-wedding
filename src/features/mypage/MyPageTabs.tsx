@@ -20,12 +20,12 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
   const [activeTab, setActiveTab] = useState<'jobs' | 'posts'>('jobs');
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded border border-gray-200 overflow-hidden">
       <div className="border-b border-gray-200">
         <div className="flex">
           <button
             onClick={() => setActiveTab('jobs')}
-            className={`flex-1 px-5 py-3.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
               activeTab === 'jobs' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -33,7 +33,7 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
           </button>
           <button
             onClick={() => setActiveTab('posts')}
-            className={`flex-1 px-5 py-3.5 text-sm font-semibold transition-colors ${
+            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
               activeTab === 'posts' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -55,10 +55,10 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
           ) : (
             <div className="divide-y divide-gray-100">
               {jobs.map((job) => (
-                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="flex items-center justify-between gap-3 py-3.5 px-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="flex items-center justify-between gap-3 rounded py-3.5 px-2 hover:bg-primary-50/50 transition-colors group">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-medium text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
+                      <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
                       <span>{getEmploymentTypeLabel(job.employment_type)}</span>
@@ -83,11 +83,11 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
           ) : (
             <div className="divide-y divide-gray-100">
               {posts.map((post) => (
-                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center justify-between gap-3 py-3.5 px-2 rounded-lg hover:bg-gray-50 transition-colors group">
+                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center justify-between gap-3 rounded py-3.5 px-2 hover:bg-primary-50/50 transition-colors group">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded">{getCategoryLabel(post.category)}</span>
-                      <h3 className="text-sm font-medium text-gray-800 group-hover:text-primary transition-colors truncate">{post.title}</h3>
+                      <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{post.title}</h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
                       <span>조회 {post.view_count}</span>

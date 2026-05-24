@@ -48,7 +48,7 @@ export default function AdminDashboard() {
         <h1 className="text-2xl font-bold text-gray-900">대시보드</h1>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-5 h-28 animate-pulse" />
+            <div key={i} className="bg-white rounded border border-gray-200 p-5 h-28 animate-pulse" />
           ))}
         </div>
       </div>
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
           <Link
             key={card.label}
             href={card.href}
-            className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition-shadow"
+            className="bg-white rounded border border-gray-200 p-5 hover:shadow-md transition-shadow"
           >
             <p className="text-sm text-gray-500">{card.label}</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{card.value.toLocaleString()}</p>
@@ -85,7 +85,7 @@ export default function AdminDashboard() {
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Users */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="bg-white rounded border border-gray-200">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-900">최근 가입 회원</h2>
             <Link href={ROUTES.ADMIN_USERS} className="text-sm text-primary hover:underline">전체보기</Link>
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Jobs */}
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className="bg-white rounded border border-gray-200">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-900">최근 등록 공고</h2>
             <Link href={ROUTES.ADMIN_JOBS} className="text-sm text-primary hover:underline">전체보기</Link>

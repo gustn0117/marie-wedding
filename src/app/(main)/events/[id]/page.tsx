@@ -47,7 +47,7 @@ export default async function EventDetailPage({ params }: PageProps) {
     : null;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-[920px] mx-auto space-y-4">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href="/events" className="text-gray-500 hover:text-primary transition-colors">이벤트 &amp; 소식</Link>
@@ -58,7 +58,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Article */}
-      <article className="bg-white border border-gray-200 overflow-hidden">
+      <article className="bg-white border border-gray-200 rounded overflow-hidden">
         {imageUrl && (
           <img src={imageUrl} alt={event.title} className="w-full max-h-[480px] object-cover" />
         )}
@@ -75,7 +75,7 @@ export default async function EventDetailPage({ params }: PageProps) {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-3">{event.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-snug mb-3">{event.title}</h1>
 
           {/* Meta */}
           <div className="flex items-center gap-2 text-xs text-gray-400 pb-6 border-b border-gray-200 mb-6">
@@ -86,7 +86,7 @@ export default async function EventDetailPage({ params }: PageProps) {
 
           {/* Event Info */}
           {(event.start_date || event.location || event.link_url) && (
-            <div className="bg-gray-50 p-4 mb-6 space-y-2">
+            <div className="bg-secondary-50 rounded p-4 mb-6 space-y-2">
               {event.start_date && (
                 <div className="flex items-center gap-2 text-sm">
                   <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -128,7 +128,7 @@ export default async function EventDetailPage({ params }: PageProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+        <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-secondary-50">
           <Link href="/events" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 15.75L3 12m0 0l3.75-3.75M3 12h18" />

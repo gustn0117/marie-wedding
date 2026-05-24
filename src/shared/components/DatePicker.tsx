@@ -86,16 +86,16 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
       )}
 
       {open && (
-        <div className="absolute z-50 mt-1 bg-white rounded-xl border border-gray-200 shadow-xl p-4 w-full min-w-[280px] max-w-[320px]">
+        <div className="absolute z-50 mt-1 w-full min-w-[280px] max-w-[320px] rounded border border-gray-200 bg-white p-4 shadow-lg">
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
-            <button type="button" onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+            <button type="button" onClick={prevMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
               <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
               </svg>
             </button>
             <span className="text-sm font-semibold text-gray-900">{year}년 {monthNames[month]}</span>
-            <button type="button" onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+            <button type="button" onClick={nextMonth} className="p-1.5 rounded hover:bg-gray-100 transition-colors">
               <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
@@ -129,7 +129,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
                   type="button"
                   disabled={isPast}
                   onClick={() => handleSelect(day)}
-                  className={`w-full aspect-square flex items-center justify-center text-sm rounded-lg transition-colors ${
+                  className={`w-full aspect-square flex items-center justify-center text-sm rounded transition-colors ${
                     isSelected
                       ? 'bg-primary text-white font-semibold'
                       : isPast

@@ -9,7 +9,6 @@ import {
 } from '@/shared/utils/format';
 import { getDDayLabel, isUrgent, isNew, getJobTier } from '@/shared/utils/tier';
 import Badge from '@/shared/components/Badge';
-import ProfileAvatar from '@/shared/components/ProfileAvatar';
 
 interface Props {
   job: Job;
@@ -20,66 +19,54 @@ export default function JobListRow({ job }: Props) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
   const fresh = isNew(job.created_at);
+  const companyName = job.author?.company_name ?? job.author?.contact_name ?? '알 수 없음';
+  const region = job.author?.region ? getRegionLabel(job.author.region) : getRegionLabel(job.region);
 
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className={`list-row group ${tier === 2 ? 'bg-primary-50/40' : ''}`}
+      className={`group grid gap-3 border-b border-gray-100 bg-white px-4 py-4 transition-colors hover:bg-primary-50/50 md:grid-cols-[180px_1fr_130px] md:items-center ${
+        tier === 2 ? 'bg-primary-50/70' : ''
+      }`}
     >
-      {/* Thumbnail */}
-      {job.image ? (
-        <div className="w-10 h-10 rounded-sm overflow-hidden bg-gray-100 flex-shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`}
-            alt=""
-            className="w-full h-full object-cover"
-          />
-        </div>
-      ) : (
-        <ProfileAvatar
-          profileImage={job.author?.profile_image}
-          name={job.author?.company_name || job.author?.contact_name || '업체'}
-          size="sm"
-          className="!rounded-sm"
-        />
-      )}
-
-      {/* Main */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-          {urgent && <Badge kind="urgent">마감임박</Badge>}
-          {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-          <h3 className="text-body-lg font-semibold text-gray-900 group-hover:text-primary transition-colors truncate">
-            {job.title}
-          </h3>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-small text-gray-500">
-          <span className="font-medium text-gray-700 truncate max-w-[140px] sm:max-w-none">
-            {job.author?.company_name ?? '알 수 없음'}
+      <div className="min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-gray-200 bg-secondary-50 text-sm font-black text-primary">
+            {companyName.charAt(0)}
           </span>
-          <span className="text-gray-300">·</span>
-          <span>{job.author?.region ? getRegionLabel(job.author.region) : ''}</span>
-          <span className="text-gray-300">·</span>
-          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
-          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold text-gray-900">{companyName}</p>
+            <p className="mt-0.5 text-xs text-gray-500">{region}</p>
+          </div>
         </div>
-        {job.salary_info && (
-          <p className="text-small text-gray-500 mt-0.5">
-            <span className="text-text-muted">급여</span>{' '}
-            <span className="font-medium text-text-primary">{job.salary_info}</span>
-          </p>
-        )}
       </div>
 
-      {/* Right */}
-      <div className="flex flex-col items-end gap-0.5 flex-shrink-0 text-micro text-gray-400">
-        <time>{formatRelativeTime(job.created_at)}</time>
-        {dDay && (
-          <span className={`font-semibold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
-            {dDay}
-          </span>
+      <div className="min-w-0">
+        <div className="mb-2 flex min-h-[20px] flex-wrap items-center gap-1.5">
+          {urgent && <Badge kind="urgent">마감임박</Badge>}
+          {fresh && !urgent && <Badge kind="new">NEW</Badge>}
+          {tier === 2 && <Badge kind="promoted">추천</Badge>}
+        </div>
+        <h3 className="truncate text-[16px] font-bold text-gray-900 group-hover:text-primary transition-colors">
+          {job.title}
+        </h3>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">
+          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
+          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
+          {job.salary_info && <span className="font-semibold text-gray-700">{job.salary_info}</span>}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 text-xs md:flex-col md:items-end">
+        <time className="text-gray-400">{formatRelativeTime(job.created_at)}</time>
+        {dDay ? (
+          <span className={`font-black ${urgent ? 'text-state-urgent' : 'text-primary'}`}>{dDay}</span>
+        ) : (
+          <span className="font-bold text-gray-500">상시채용</span>
         )}
+        <span className="hidden rounded border border-gray-200 px-3 py-1.5 font-bold text-primary group-hover:border-primary md:inline-flex">
+          상세보기
+        </span>
       </div>
     </Link>
   );

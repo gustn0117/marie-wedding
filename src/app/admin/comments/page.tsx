@@ -75,7 +75,7 @@ export default function AdminCommentsPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <form onSubmit={handleSearch} className="flex-1 min-w-[200px] max-w-md">
-          <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="flex bg-white border border-gray-200 rounded overflow-hidden">
             <input
               type="text"
               value={search}
@@ -101,7 +101,7 @@ export default function AdminCommentsPage() {
         </label>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>

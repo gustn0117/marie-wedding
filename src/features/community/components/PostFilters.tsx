@@ -46,14 +46,14 @@ export default function PostFilters() {
   };
 
   return (
-    <div className="bg-white border border-gray-200">
+    <div className="bg-white border border-gray-200 rounded overflow-hidden">
       {/* Category Tabs */}
-      <div className="flex border-b border-gray-200 overflow-x-auto">
+      <div className="flex border-b border-gray-200 overflow-x-auto bg-white">
         {TABS.map((tab) => (
           <button
             key={tab.value}
             onClick={() => updateParams({ category: tab.value })}
-            className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+            className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
               activeCategory === tab.value
                 ? 'border-primary text-primary'
                 : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -65,7 +65,7 @@ export default function PostFilters() {
       </div>
 
       {/* Search + Sort */}
-      <div className="flex items-center gap-3 p-3 flex-wrap">
+      <div className="flex items-center gap-3 p-3 flex-wrap bg-secondary-50">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2 min-w-[200px]">
           <div className="relative flex-1">
             <svg
@@ -82,7 +82,7 @@ export default function PostFilters() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder="게시글 검색"
-              className="w-full pl-10 pr-10 py-2 text-sm border border-gray-300 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
             {searchValue && (
               <button
@@ -96,7 +96,7 @@ export default function PostFilters() {
               </button>
             )}
           </div>
-          <button type="submit" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-gray-700 transition-colors">
+          <button type="submit" className="px-5 py-2.5 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
             검색
           </button>
         </form>
@@ -107,7 +107,7 @@ export default function PostFilters() {
             <button
               key={opt.value}
               onClick={() => updateParams({ sort: opt.value === 'latest' ? '' : opt.value })}
-              className={`px-3 py-2 text-xs font-medium transition-colors ${
+              className={`px-3 py-2 text-xs font-bold rounded transition-colors ${
                 activeSort === opt.value
                   ? 'bg-primary text-white'
                   : 'bg-white text-gray-600 border border-gray-300 hover:border-gray-500'

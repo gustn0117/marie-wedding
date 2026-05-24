@@ -50,11 +50,11 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-surface rounded-2xl border border-border p-8 shadow-lg">
+      <div className="bg-surface rounded border border-border p-8 shadow-sm">
         {/* Logo / Brand */}
         <div className="text-center mb-8">
           <Link href={ROUTES.HOME} className="inline-block">
-            <h1 className="font-serif text-3xl font-bold text-primary tracking-wide">Marié</h1>
+            <h1 className="text-3xl font-black text-primary tracking-tight">Marié</h1>
           </Link>
           <p className="mt-2 text-sm text-text-secondary">
             웨딩업계 B2B 플랫폼
@@ -63,7 +63,7 @@ export default function LoginForm() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">
+          <div className="mb-6 p-3 rounded bg-red-50 border border-red-200 text-red-600 text-sm">
             {error}
           </div>
         )}
@@ -148,7 +148,7 @@ export default function LoginForm() {
                 setError('카카오 로그인에 실패했습니다.');
               }
             }}
-            className="w-12 h-12 rounded-full bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
+            className="w-12 h-12 rounded bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
             title="카카오 로그인"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">

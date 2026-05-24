@@ -59,7 +59,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const displayName = profile.company_name || profile.contact_name;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-[1000px] mx-auto space-y-4">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-500">
         <Link href={ROUTES.DIRECTORY} className="hover:text-primary transition-colors">업체 디렉토리</Link>
@@ -70,7 +70,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Card */}
-      <div className="bg-white border border-gray-200 p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
         {/* Avatar + Name + Edit */}
         <div className="flex items-start gap-5 mb-5">
           {/* Logo */}
@@ -89,11 +89,11 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           {/* Name + Tags */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{displayName}</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-gray-900 break-words">{displayName}</h1>
               {isOwner && (
                 <Link
                   href={ROUTES.DIRECTORY_REGISTER}
-                  className="shrink-0 px-4 py-2 text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="shrink-0 rounded border border-gray-300 px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary transition-colors"
                 >
                   수정하기
                 </Link>
@@ -117,7 +117,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             {profile.phone && (
               <a
                 href={`tel:${profile.phone}`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-colors"
+                className="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
@@ -130,7 +130,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                 href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary hover:text-primary transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
@@ -158,7 +158,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Bio */}
       {profile.bio && (
-        <div className="bg-white border border-gray-200 p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">소개</h2>
           <RichTextView html={profile.bio} className="text-[15px] text-gray-700 leading-relaxed" />
         </div>
@@ -166,7 +166,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Gallery */}
       {profile.gallery && profile.gallery.length > 0 && (
-        <div className="bg-white border border-gray-200 p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
           </h2>
@@ -191,7 +191,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       )}
 
       {/* Jobs */}
-      <div className="bg-white border border-gray-200 p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
           채용 공고 <span className="text-sm text-gray-400 font-normal ml-1">{jobs.length}</span>
         </h2>

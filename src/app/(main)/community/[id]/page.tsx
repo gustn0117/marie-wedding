@@ -63,7 +63,7 @@ export default async function PostDetailPage({ params }: PageProps) {
   const { post, commentCount } = result;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-[980px] mx-auto space-y-4">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.COMMUNITY} className="text-gray-500 hover:text-primary transition-colors">커뮤니티</Link>
@@ -76,13 +76,13 @@ export default async function PostDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Post Card */}
-      <article className="bg-white border border-gray-200">
+      <article className="bg-white border border-gray-200 rounded overflow-hidden">
         {/* Header */}
         <header className="p-6 md:p-8 border-b border-gray-100">
           <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold mb-3">
             {getCategoryLabel(post.category)}
           </span>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-4">{post.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-snug mb-4">{post.title}</h1>
 
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
@@ -136,7 +136,7 @@ export default async function PostDetailPage({ params }: PageProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+        <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-secondary-50">
           <Link
             href={ROUTES.COMMUNITY}
             className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"

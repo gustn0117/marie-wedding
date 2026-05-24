@@ -24,19 +24,19 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   return (
     <Link
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="block bg-white border border-gray-200 rounded-sm overflow-hidden group hover:border-primary transition-colors duration-150"
+      className="block bg-white border border-gray-200 rounded overflow-hidden group hover:border-primary transition-colors duration-150"
     >
-      <div className="aspect-[2/1] bg-gray-50 overflow-hidden flex items-center justify-center">
+      <div className="aspect-[2/1] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
         ) : (
-          <span className="font-serif text-3xl text-gray-300 font-bold">M</span>
+          <span className="text-3xl text-primary-200 font-black">M</span>
         )}
       </div>
 
       <div className="p-3">
-        <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
+        <h3 className="text-body-lg font-black text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
           {displayName}
         </h3>
 

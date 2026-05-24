@@ -19,8 +19,8 @@ export default function PostCard({ post }: PostCardProps) {
   const preview = post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
   return (
-    <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="block bg-white border border-gray-200 hover:border-primary transition-colors group">
-      <div className="flex gap-4 p-4 sm:p-5">
+    <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="block bg-white border-b border-gray-100 last:border-b-0 hover:bg-primary-50/50 transition-colors group">
+      <div className="flex gap-4 p-4">
         <div className="flex-1 min-w-0">
           {/* Category + New Badge */}
           <div className="flex items-center gap-1.5 mb-2">
@@ -33,7 +33,7 @@ export default function PostCard({ post }: PostCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900 group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
+          <h3 className="text-[16px] sm:text-[17px] font-black text-gray-900 group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
             {post.title}
             {post.comment_count !== undefined && post.comment_count > 0 && (
               <span className="text-primary font-bold ml-1.5 text-sm">[{post.comment_count}]</span>
@@ -81,7 +81,7 @@ export default function PostCard({ post }: PostCardProps) {
 
         {/* Thumbnail */}
         {thumbnail && (
-          <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 overflow-hidden border border-gray-100">
+          <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 overflow-hidden rounded border border-gray-100">
             <img src={thumbnail} alt="" className="w-full h-full object-cover" />
           </div>
         )}
