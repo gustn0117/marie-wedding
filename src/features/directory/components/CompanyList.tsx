@@ -6,7 +6,7 @@ import CompanyCard from './CompanyCard';
 import Pagination from '@/shared/components/Pagination';
 import EmptyState from '@/shared/components/EmptyState';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 interface CompanyListProps {
   initialProfiles?: Profile[];
@@ -39,17 +39,17 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
 
   return (
     <div>
-      <p className="text-sm text-gray-500 mb-4">
-        총 <span className="font-semibold text-gray-900">{totalCount}</span>개 업체
+      <p className="text-small text-gray-500 mb-3" aria-live="polite">
+        총 <span className="font-semibold text-gray-900">{totalCount.toLocaleString()}</span>개 업체
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
         {profiles.map((profile) => (
           <CompanyCard key={profile.id} profile={profile} />
         ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}

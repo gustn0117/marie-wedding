@@ -20,7 +20,7 @@ interface PageProps {
 async function getProfiles(searchParams: Record<string, string | undefined>) {
   const supabase = createServerQueryClient();
   const page = Number(searchParams.page) || 1;
-  const pageSize = 12;
+  const pageSize = 20;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -50,32 +50,35 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
   const { profiles, count } = await getProfiles(searchParams);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">업체 디렉토리</h1>
-          <p className="mt-1.5 text-sm text-text-secondary">웨딩 업계 파트너를 찾아보세요</p>
+          <h1 className="text-h2 font-bold text-text-primary">업체 디렉토리</h1>
+          <p className="mt-0.5 text-small text-text-secondary">웨딩 업계 파트너를 찾아보세요</p>
         </div>
-        <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm px-5 py-2.5 rounded-lg shrink-0">
-          업체 등록하기
+        <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary shrink-0">
+          업체 등록
         </Link>
       </div>
 
-      <Suspense fallback={<div className="card h-20 animate-pulse bg-secondary" />}>
-        <CompanyFilters />
-      </Suspense>
-
-      <Suspense
-        fallback={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="card animate-pulse h-48" />
-            ))}
-          </div>
-        }
-      >
-        <CompanyList initialProfiles={profiles} initialCount={count} />
-      </Suspense>
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-4">
+        <Suspense
+          fallback={<div className="hidden lg:block h-[400px] bg-gray-100 rounded-sm animate-pulse" />}
+        >
+          <CompanyFilters />
+        </Suspense>
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="card animate-pulse h-48" />
+              ))}
+            </div>
+          }
+        >
+          <CompanyList initialProfiles={profiles} initialCount={count} />
+        </Suspense>
+      </div>
     </div>
   );
 }
