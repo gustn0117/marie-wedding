@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
+import { SUPABASE_SCHEMA } from './schema';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -49,7 +50,7 @@ export async function updateSession(request: NextRequest) {
         const serviceClient = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          { db: { schema: 'marie_wedding' } }
+          { db: { schema: SUPABASE_SCHEMA } }
         );
         const { data: profile } = await serviceClient
           .from('profiles')

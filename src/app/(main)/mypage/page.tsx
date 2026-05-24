@@ -8,7 +8,7 @@ import {
   getRegionLabel,
   formatDate,
 } from '@/shared/utils/format';
-import type { Profile, Job, Post } from '@/types/database';
+import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 async function getMyData(profileId: string) {
   const supabase = createServerQueryClient();
 
-  const [profileRes, jobsRes, postsRes] = await Promise.all([
+  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', profileId).single(),
     supabase
       .from('jobs')
@@ -32,6 +32,20 @@ async function getMyData(profileId: string) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
+    supabase
+      .from('applications')
+      .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
+      .eq('applicant_id', profileId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(0, 49),
+    supabase
+      .from('applications')
+      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      .eq('job.author_id', profileId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(0, 49),
   ]);
 
   const profile = profileRes.data as Profile | null;
@@ -42,7 +56,13 @@ async function getMyData(profileId: string) {
     return { ...rest, comment_count: commentAgg?.[0]?.count ?? 0 } as Post;
   });
 
-  return { profile, jobs, posts };
+  return {
+    profile,
+    jobs,
+    posts,
+    sentApplications: (sentApplicationsRes.data ?? []) as Application[],
+    receivedApplications: (receivedApplicationsRes.data ?? []) as Application[],
+  };
 }
 
 export default async function MyPage() {
@@ -62,7 +82,7 @@ export default async function MyPage() {
 
   if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
 
-  const { profile, jobs, posts } = await getMyData(cookieProfile.id);
+  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(cookieProfile.id);
 
   if (!profile) redirect(ROUTES.LOGIN);
 
@@ -163,6 +183,8 @@ export default async function MyPage() {
           <span className="text-gray-200">|</span>
           <Link href={ROUTES.MYPAGE_PASSWORD} className="text-sm text-gray-500 hover:text-primary transition-colors">비밀번호 변경</Link>
           <span className="text-gray-200">|</span>
+          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="text-sm text-gray-500 hover:text-primary transition-colors">알림</Link>
+          <span className="text-gray-200">|</span>
           <Link href={ROUTES.DIRECTORY_REGISTER} className="text-sm text-gray-500 hover:text-primary transition-colors flex items-center gap-1">
             디렉토리 등록
             {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
@@ -183,7 +205,7 @@ export default async function MyPage() {
       </div>
 
       {/* Tabs */}
-      <MyPageTabs jobs={jobs} posts={posts} />
+      <MyPageTabs jobs={jobs} posts={posts} sentApplications={sentApplications} receivedApplications={receivedApplications} />
     </div>
   );
 }

@@ -8,7 +8,7 @@ import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
 import { createClient } from '@/lib/supabase/client';
-import { eventService } from '../services/event-service';
+import { adminService } from '@/features/admin/services/admin-service';
 import { EVENT_TYPES } from '../types';
 import type { EventFormData } from '../types';
 
@@ -85,10 +85,10 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       const payload = { ...formData, image: imagePath };
 
       if (isEdit && eventId) {
-        await eventService.updateEvent(eventId, payload);
+        await adminService.updateEvent(eventId, payload);
         router.push(`/admin/events`);
       } else {
-        await eventService.createEvent(payload);
+        await adminService.createEvent(payload);
         router.push(`/admin/events`);
       }
     } catch (err) {

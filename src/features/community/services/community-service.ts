@@ -200,31 +200,13 @@ export const communityService = {
   async toggleLike(postId: string, profileId: string): Promise<{ liked: boolean; likeCount: number }> {
     const supabase = createClient();
 
-    // 기존 좋아요 확인
-    const { data: existing } = await supabase
-      .from('post_likes')
-      .select('id')
-      .eq('post_id', postId)
-      .eq('profile_id', profileId)
-      .maybeSingle();
+    const { data, error } = await supabase
+      .rpc('toggle_post_like', { p_post_id: postId, p_profile_id: profileId })
+      .single();
 
-    if (existing) {
-      // 좋아요 취소
-      await supabase.from('post_likes').delete().eq('id', existing.id);
-    } else {
-      // 좋아요 추가
-      await supabase.from('post_likes').insert({ post_id: postId, profile_id: profileId });
-    }
+    if (error) throw error;
 
-    // 현재 like_count 재계산
-    const { count } = await supabase
-      .from('post_likes')
-      .select('id', { count: 'exact', head: true })
-      .eq('post_id', postId);
-
-    const likeCount = count ?? 0;
-    await supabase.from('posts').update({ like_count: likeCount }).eq('id', postId);
-
-    return { liked: !existing, likeCount };
+    const result = data as { liked: boolean; like_count: number };
+    return { liked: result.liked, likeCount: result.like_count };
   },
 };

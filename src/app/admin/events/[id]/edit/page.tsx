@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import EventForm from '@/features/events/components/EventForm';
-import { eventService } from '@/features/events/services/event-service';
+import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import type { Event } from '@/types/database';
 
@@ -15,8 +15,11 @@ export default function AdminEventEditPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    eventService.getEventById(id).then((data) => {
+    adminService.getEvent(id).then((data) => {
       setEvent(data);
+      setLoading(false);
+    }).catch(() => {
+      setEvent(null);
       setLoading(false);
     });
   }, [id]);

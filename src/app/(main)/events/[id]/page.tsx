@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceClient } from '@/lib/supabase/service';
 import { formatDate, formatRelativeTime } from '@/shared/utils/format';
 import { EVENT_TYPES } from '@/features/events/types';
 import type { Event } from '@/types/database';
@@ -24,11 +24,7 @@ async function getEvent(id: string): Promise<Event | null> {
   if (!data) return null;
 
   // Increment view count (service role)
-  const svc = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { db: { schema: 'marie_wedding' } }
-  );
+  const svc = createServiceClient();
   await svc.from('events').update({ view_count: (data.view_count || 0) + 1 }).eq('id', id);
 
   return data as Event;

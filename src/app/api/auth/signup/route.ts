@@ -1,7 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
-
-const SCHEMA = 'marie_wedding';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,11 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { db: { schema: SCHEMA } }
-    );
+    const supabase = createServiceClient();
 
     // 1. Create auth user (auto-confirmed with admin API)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({

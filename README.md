@@ -34,9 +34,11 @@ supabase/
 ## 주요 기능
 
 - **인증**: 이메일 로그인/회원가입, 업종·지역 선택, 인증 미들웨어
-- **채용 공고**: 공고 CRUD, 업종/지역/고용형태 필터링, 긴급매칭
-- **업체 디렉토리**: 업체 프로필, 업종별/지역별 검색
-- **커뮤니티**: 글 작성/조회/댓글, 카테고리별 필터
+- **채용/섭외 공고**: 공고 CRUD, 업종/지역/고용형태 필터링, 지원·문의 접수/상태 관리
+- **업체 디렉토리**: 업체 프로필, 갤러리, 업종별/지역별 검색, 공개 여부 관리
+- **커뮤니티**: 글 작성/조회/댓글/좋아요/저장, 카테고리별 필터
+- **플랫폼 레이어**: 공고·게시글 저장, 알림, 신고 접수 및 관리자 처리
+- **관리자**: 회원/공고/게시글/댓글/신고/이벤트 관리
 
 ## 로컬 실행 방법
 
@@ -93,4 +95,7 @@ docker-compose logs -f
 |------|------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase 프로젝트 URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Anonymous Key |
+| `SUPABASE_SERVICE_ROLE_KEY` | 서버 전용 Supabase Service Role Key |
+| `NEXT_PUBLIC_SUPABASE_SCHEMA` | Supabase DB 스키마 (기본: `marie_wedding`) |
+| `ADMIN_PASSWORD` | 비상 관리자 비밀번호 (일반 운영은 `profiles.role = admin` 권장) |
 | `NEXT_PUBLIC_APP_URL` | 앱 URL (기본: http://localhost:3000) |

@@ -13,6 +13,9 @@ import type { Job } from '@/types/database';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import RichTextView from '@/shared/components/RichTextView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
+import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
+import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
+import ReportButton from '@/features/reports/components/ReportButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -193,6 +196,13 @@ export default async function JobDetailPage({ params }: PageProps) {
 
       {/* Author Actions */}
       <JobDetailActions jobId={job.id} authorId={job.author_id} />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <BookmarkButton targetType="job" targetId={job.id} label="공고 저장" />
+        <ReportButton targetType="job" targetId={job.id} />
+      </div>
+
+      <JobApplicationBox jobId={job.id} authorId={job.author_id} postingType={job.posting_type} />
 
       {/* Back to list */}
       <div className="flex justify-center pt-4">

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
@@ -32,11 +32,7 @@ export async function GET(request: Request) {
       // Check if profile exists, if not create one for social login users
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const serviceClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          { db: { schema: 'marie_wedding' } }
-        );
+        const serviceClient = createServiceClient();
 
         const { data: existingProfile } = await serviceClient
           .from('profiles')

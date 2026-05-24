@@ -1,16 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
-
-const ADMIN_PASSWORD = '1234';
-const SCHEMA = 'marie_wedding';
-
-function getServiceClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { db: { schema: SCHEMA } }
-  );
-}
+import { isAdminRequest } from '@/lib/admin-auth';
+import { createServiceClient } from '@/lib/supabase/service';
 
 function unauthorized() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -20,22 +10,26 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const { password, action, ...params } = body;
 
-  if (password !== ADMIN_PASSWORD) return unauthorized();
+  if (!(await isAdminRequest(password))) return unauthorized();
 
-  const supabase = getServiceClient();
+  const supabase = createServiceClient();
 
   try {
     switch (action) {
+      case 'ping':
+        return NextResponse.json({ success: true });
+
       // ── Stats ──
       case 'getStats': {
         const now = new Date();
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-        const [users, jobs, posts, comments, recentUsers, recentJobs] = await Promise.all([
+        const [users, jobs, posts, comments, reports, recentUsers, recentJobs] = await Promise.all([
           supabase.from('profiles').select('*', { count: 'exact', head: true }).is('deleted_at', null),
           supabase.from('jobs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
           supabase.from('posts').select('*', { count: 'exact', head: true }).is('deleted_at', null),
           supabase.from('comments').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'open'),
           supabase.from('profiles').select('*', { count: 'exact', head: true }).is('deleted_at', null).gte('created_at', weekAgo),
           supabase.from('jobs').select('*', { count: 'exact', head: true }).is('deleted_at', null).gte('created_at', weekAgo),
         ]);
@@ -45,6 +39,7 @@ export async function POST(request: NextRequest) {
           jobs: jobs.count ?? 0,
           posts: posts.count ?? 0,
           comments: comments.count ?? 0,
+          reports: reports.count ?? 0,
           recentUsers: recentUsers.count ?? 0,
           recentJobs: recentJobs.count ?? 0,
         });
@@ -209,6 +204,122 @@ export async function POST(request: NextRequest) {
 
       case 'restoreComment': {
         const { error } = await supabase.from('comments').update({ deleted_at: null }).eq('id', params.id);
+        if (error) throw error;
+        return NextResponse.json({ success: true });
+      }
+
+      // ── Reports ──
+      case 'getReports': {
+        const { page = 1, status } = params;
+        const pageSize = 20;
+        const from = (page - 1) * pageSize;
+
+        let query = supabase
+          .from('reports')
+          .select('*, reporter:profiles!reporter_id(*)', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+
+        if (status) query = query.eq('status', status);
+
+        const { data, count, error } = await query;
+        if (error) throw error;
+        return NextResponse.json({ data: data ?? [], count: count ?? 0 });
+      }
+
+      case 'updateReportStatus': {
+        const { data, error } = await supabase
+          .from('reports')
+          .update({ status: params.status })
+          .eq('id', params.id)
+          .select('*, reporter:profiles!reporter_id(*)')
+          .single();
+        if (error) throw error;
+        return NextResponse.json(data);
+      }
+
+      // ── Events ──
+      case 'getEvents': {
+        const { page = 1, search, type, showDeleted = false } = params;
+        const pageSize = 20;
+        const from = (page - 1) * pageSize;
+
+        let query = supabase
+          .from('events')
+          .select('*', { count: 'exact' })
+          .order('is_pinned', { ascending: false })
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1);
+
+        if (!showDeleted) query = query.is('deleted_at', null);
+        if (type) query = query.eq('type', type);
+        if (search) query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
+
+        const { data, count, error } = await query;
+        if (error) throw error;
+        return NextResponse.json({ data: data ?? [], count: count ?? 0 });
+      }
+
+      case 'getEvent': {
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('id', params.id)
+          .single();
+        if (error) throw error;
+        return NextResponse.json(data);
+      }
+
+      case 'createEvent': {
+        const { data, error } = await supabase
+          .from('events')
+          .insert({
+            title: params.title,
+            content: params.content,
+            type: params.type,
+            image: params.image || null,
+            start_date: params.start_date || null,
+            end_date: params.end_date || null,
+            location: params.location || null,
+            link_url: params.link_url || null,
+            is_pinned: !!params.is_pinned,
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        return NextResponse.json(data);
+      }
+
+      case 'updateEvent': {
+        const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (params.title !== undefined) payload.title = params.title;
+        if (params.content !== undefined) payload.content = params.content;
+        if (params.type !== undefined) payload.type = params.type;
+        if (params.image !== undefined) payload.image = params.image || null;
+        if (params.start_date !== undefined) payload.start_date = params.start_date || null;
+        if (params.end_date !== undefined) payload.end_date = params.end_date || null;
+        if (params.location !== undefined) payload.location = params.location || null;
+        if (params.link_url !== undefined) payload.link_url = params.link_url || null;
+        if (params.is_pinned !== undefined) payload.is_pinned = !!params.is_pinned;
+
+        const { data, error } = await supabase
+          .from('events')
+          .update(payload)
+          .eq('id', params.id)
+          .select()
+          .single();
+        if (error) throw error;
+        return NextResponse.json(data);
+      }
+
+      case 'softDeleteEvent': {
+        const { error } = await supabase.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', params.id);
+        if (error) throw error;
+        return NextResponse.json({ success: true });
+      }
+
+      case 'restoreEvent': {
+        const { error } = await supabase.from('events').update({ deleted_at: null }).eq('id', params.id);
         if (error) throw error;
         return NextResponse.json({ success: true });
       }

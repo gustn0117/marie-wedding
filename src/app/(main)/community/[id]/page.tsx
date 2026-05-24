@@ -10,6 +10,8 @@ import RichTextView from '@/shared/components/RichTextView';
 import PostDetailActions from '@/features/community/components/PostDetailActions';
 import CommentSection from '@/features/community/components/CommentSection';
 import LikeButton from '@/features/community/components/LikeButton';
+import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
+import ReportButton from '@/features/reports/components/ReportButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,13 +128,17 @@ export default async function PostDetailPage({ params }: PageProps) {
 
         {/* Like Button */}
         <div className="flex justify-center pb-6 md:pb-8">
-          <LikeButton
-            postId={post.id}
-            initialLiked={post.is_liked ?? false}
-            initialCount={post.like_count}
-            canLike={!!viewerProfileId}
-            viewerProfileId={viewerProfileId}
-          />
+          <div className="flex flex-wrap justify-center gap-2">
+            <LikeButton
+              postId={post.id}
+              initialLiked={post.is_liked ?? false}
+              initialCount={post.like_count}
+              canLike={!!viewerProfileId}
+              viewerProfileId={viewerProfileId}
+            />
+            <BookmarkButton targetType="post" targetId={post.id} label="글 저장" />
+            <ReportButton targetType="post" targetId={post.id} />
+          </div>
         </div>
 
         {/* Footer */}

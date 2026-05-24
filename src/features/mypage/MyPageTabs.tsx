@@ -9,15 +9,19 @@ import {
   formatRelativeTime,
   getCategoryLabel,
 } from '@/shared/utils/format';
-import type { Job, Post } from '@/types/database';
+import type { Application, Job, Post } from '@/types/database';
+import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
 
 interface MyPageTabsProps {
   jobs: Job[];
   posts: Post[];
+  sentApplications: Application[];
+  receivedApplications: Application[];
 }
 
-export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
-  const [activeTab, setActiveTab] = useState<'jobs' | 'posts'>('jobs');
+export default function MyPageTabs({ jobs, posts, sentApplications, receivedApplications }: MyPageTabsProps) {
+  const [activeTab, setActiveTab] = useState<'jobs' | 'posts' | 'applications'>('jobs');
+  const applicationCount = sentApplications.length + receivedApplications.length;
 
   return (
     <div className="bg-white rounded border border-gray-200 overflow-hidden">
@@ -38,6 +42,14 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
             }`}
           >
             내 게시글 ({posts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('applications')}
+            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
+              activeTab === 'applications' ? 'text-primary border-b-2 border-primary' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            지원/문의 ({applicationCount})
           </button>
         </div>
       </div>
@@ -71,7 +83,7 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
               ))}
             </div>
           )
-        ) : (
+        ) : activeTab === 'posts' ? (
           posts.length === 0 ? (
             <div className="text-center py-10">
               <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
@@ -104,8 +116,64 @@ export default function MyPageTabs({ jobs, posts }: MyPageTabsProps) {
               ))}
             </div>
           )
+        ) : (
+          <div className="grid gap-5 lg:grid-cols-2">
+            <ApplicationList title="받은 지원/문의" empty="내 공고에 접수된 내역이 없습니다." items={receivedApplications} mode="received" />
+            <ApplicationList title="보낸 지원/문의" empty="아직 지원/문의한 공고가 없습니다." items={sentApplications} mode="sent" />
+          </div>
         )}
       </div>
     </div>
+  );
+}
+
+function ApplicationList({
+  title,
+  empty,
+  items,
+  mode,
+}: {
+  title: string;
+  empty: string;
+  items: Application[];
+  mode: 'sent' | 'received';
+}) {
+  return (
+    <section className="rounded border border-gray-200">
+      <div className="border-b border-gray-100 px-4 py-3">
+        <h3 className="text-sm font-bold text-gray-900">{title} <span className="text-primary">{items.length}</span></h3>
+      </div>
+      {items.length === 0 ? (
+        <div className="px-4 py-10 text-center text-sm text-gray-400">{empty}</div>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {items.map((item) => (
+            <Link
+              key={item.id}
+              href={item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS}
+              className="block px-4 py-3 hover:bg-primary-50/50 transition-colors"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-gray-900">
+                    {item.job?.title ?? '공고'}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {mode === 'received'
+                      ? item.applicant?.company_name || item.applicant?.contact_name || '지원자'
+                      : item.job?.author?.company_name || item.job?.author?.contact_name || '작성자'}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs text-gray-400">{item.message}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
+                  <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

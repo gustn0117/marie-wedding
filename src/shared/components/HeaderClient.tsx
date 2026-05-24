@@ -72,6 +72,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             {isAuthenticated ? (
               <>
                 <Link href={ROUTES.MYPAGE} className="hover:text-primary transition-colors">마이페이지</Link>
+                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="hover:text-primary transition-colors">알림</Link>
                 {profile.role === 'admin' && (
                   <Link href={ROUTES.ADMIN} className="hover:text-primary transition-colors">관리자</Link>
                 )}
@@ -160,6 +161,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                     </Link>
                     <div className="border-t border-gray-100 py-1">
                       <MenuLink href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} label="프로필 관리" />
+                      <MenuLink href={ROUTES.MYPAGE_NOTIFICATIONS} onClick={() => setProfileMenuOpen(false)} label="알림" />
                       <MenuLink href={ROUTES.MYPAGE_PASSWORD} onClick={() => setProfileMenuOpen(false)} label="비밀번호 변경" />
                       {profile.role === 'admin' && (
                         <MenuLink href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} label="관리자 패널" />

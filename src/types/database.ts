@@ -90,3 +90,55 @@ export interface Event {
   updated_at: string;
   deleted_at: string | null;
 }
+
+export type ApplicationStatus = 'pending' | 'reviewing' | 'accepted' | 'rejected' | 'cancelled';
+
+export interface Application {
+  id: string;
+  job_id: string;
+  applicant_id: string;
+  message: string;
+  contact_phone: string | null;
+  status: ApplicationStatus;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  job?: Job;
+  applicant?: Profile;
+}
+
+export type BookmarkTargetType = 'job' | 'profile' | 'post' | 'event';
+
+export interface Bookmark {
+  id: string;
+  profile_id: string;
+  target_type: BookmarkTargetType;
+  target_id: string;
+  created_at: string;
+}
+
+export interface Notification {
+  id: string;
+  profile_id: string;
+  type: string;
+  title: string;
+  message: string | null;
+  link_url: string | null;
+  read_at: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+
+export type ReportTargetType = 'job' | 'profile' | 'post' | 'comment' | 'event';
+
+export interface Report {
+  id: string;
+  reporter_id: string | null;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: string;
+  details: string | null;
+  status: 'open' | 'reviewing' | 'resolved' | 'dismissed';
+  created_at: string;
+  updated_at: string;
+}

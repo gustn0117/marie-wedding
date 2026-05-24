@@ -1,12 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_SCHEMA } from './schema';
 
-// Server-side Supabase client for data fetching (no cookies needed)
-// Uses service_role to bypass RLS for read operations
-export function createServerQueryClient() {
+export function createServiceClient() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { db: { schema: SUPABASE_SCHEMA } }
+    { db: { schema: SUPABASE_SCHEMA } },
   );
 }

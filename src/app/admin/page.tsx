@@ -12,6 +12,7 @@ interface Stats {
   jobs: number;
   posts: number;
   comments: number;
+  reports: number;
   recentUsers: number;
   recentJobs: number;
 }
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
     { label: '전체 회원', value: stats?.users ?? 0, change: `+${stats?.recentUsers ?? 0} 이번 주`, href: ROUTES.ADMIN_USERS, color: 'text-blue-600 bg-blue-50' },
     { label: '채용 공고', value: stats?.jobs ?? 0, change: `+${stats?.recentJobs ?? 0} 이번 주`, href: ROUTES.ADMIN_JOBS, color: 'text-green-600 bg-green-50' },
     { label: '게시글', value: stats?.posts ?? 0, change: '', href: ROUTES.ADMIN_POSTS, color: 'text-purple-600 bg-purple-50' },
-    { label: '댓글', value: stats?.comments ?? 0, change: '', href: ROUTES.ADMIN_COMMENTS, color: 'text-orange-600 bg-orange-50' },
+    { label: '미처리 신고', value: stats?.reports ?? 0, change: '', href: ROUTES.ADMIN_REPORTS, color: 'text-red-600 bg-red-50' },
   ];
 
   return (

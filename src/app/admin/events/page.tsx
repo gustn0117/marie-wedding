@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { eventService } from '@/features/events/services/event-service';
+import { adminService } from '@/features/admin/services/admin-service';
 import { EVENT_TYPES } from '@/features/events/types';
 import { formatDate } from '@/shared/utils/format';
 import { ROUTES } from '@/shared/constants';
@@ -20,7 +20,7 @@ export default function AdminEventsPage() {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await eventService.getEvents({}, 1, 100);
+      const { data } = await adminService.getEvents(1, undefined, undefined, false);
       setEvents(data);
     } catch (err) {
       console.error(err);
@@ -37,7 +37,7 @@ export default function AdminEventsPage() {
     if (!confirm('정말 삭제하시겠습니까?')) return;
     setDeleting(id);
     try {
-      await eventService.deleteEvent(id);
+      await adminService.softDeleteEvent(id);
       setEvents(prev => prev.filter(e => e.id !== id));
     } catch {
       alert('삭제에 실패했습니다.');

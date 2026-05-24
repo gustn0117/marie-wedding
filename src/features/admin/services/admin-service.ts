@@ -1,9 +1,10 @@
-import type { Profile, Job, Post, Comment } from '@/types/database';
+import type { Profile, Job, Post, Comment, Event, Report } from '@/types/database';
 
-const STORAGE_KEY = 'marie_admin_auth';
+const STORAGE_KEY = 'marie_admin_password';
 
 function getPassword(): string {
-  return sessionStorage.getItem(STORAGE_KEY) === 'true' ? '1234' : '';
+  if (typeof sessionStorage === 'undefined') return '';
+  return sessionStorage.getItem(STORAGE_KEY) ?? '';
 }
 
 async function adminFetch(action: string, params: Record<string, unknown> = {}) {
@@ -20,9 +21,14 @@ async function adminFetch(action: string, params: Record<string, unknown> = {}) 
 }
 
 export const adminService = {
+  ping: (password?: string) => adminFetch('ping', password ? { password } : {}) as Promise<{ success: true }>,
+  savePassword: (password: string) => sessionStorage.setItem(STORAGE_KEY, password),
+  clearPassword: () => sessionStorage.removeItem(STORAGE_KEY),
+  hasSavedPassword: () => sessionStorage.getItem(STORAGE_KEY) !== null,
+
   // ── Dashboard ──
   getStats: () => adminFetch('getStats') as Promise<{
-    users: number; jobs: number; posts: number; comments: number;
+    users: number; jobs: number; posts: number; comments: number; reports: number;
     recentUsers: number; recentJobs: number;
   }>,
 
@@ -53,4 +59,19 @@ export const adminService = {
     adminFetch('getComments', { page, search, showDeleted }) as Promise<{ data: (Comment & { post?: Post })[]; count: number }>,
   softDeleteComment: (id: string) => adminFetch('softDeleteComment', { id }),
   restoreComment: (id: string) => adminFetch('restoreComment', { id }),
+
+  // ── Reports ──
+  getReports: (page = 1, status?: string) =>
+    adminFetch('getReports', { page, status }) as Promise<{ data: (Report & { reporter?: Profile })[]; count: number }>,
+  updateReportStatus: (id: string, status: Report['status']) =>
+    adminFetch('updateReportStatus', { id, status }) as Promise<Report & { reporter?: Profile }>,
+
+  // ── Events ──
+  getEvents: (page = 1, search?: string, type?: string, showDeleted = false) =>
+    adminFetch('getEvents', { page, search, type, showDeleted }) as Promise<{ data: Event[]; count: number }>,
+  getEvent: (id: string) => adminFetch('getEvent', { id }) as Promise<Event>,
+  createEvent: (data: Partial<Event>) => adminFetch('createEvent', data as Record<string, unknown>) as Promise<Event>,
+  updateEvent: (id: string, data: Partial<Event>) => adminFetch('updateEvent', { id, ...data }) as Promise<Event>,
+  softDeleteEvent: (id: string) => adminFetch('softDeleteEvent', { id }),
+  restoreEvent: (id: string) => adminFetch('restoreEvent', { id }),
 };
