@@ -76,9 +76,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   if (!q) {
     return (
-      <div className="max-w-3xl mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">검색</h1>
-        <p className="text-sm text-gray-500">검색어를 입력해주세요.</p>
+      <div className="max-w-[1100px] mx-auto text-center py-16">
+        <h1 className="text-h2 font-bold text-gray-900 mb-1">검색</h1>
+        <p className="text-small text-gray-500">검색어를 입력해주세요.</p>
       </div>
     );
   }
@@ -87,16 +87,16 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const totalCount = results.hiring.length + results.matching.length + results.directory.length + results.posts.length;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-[1100px] mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-h2 font-bold text-gray-900">
           &ldquo;{q}&rdquo; 검색 결과
         </h1>
-        <p className="text-sm text-gray-500 mt-1">총 {totalCount}건</p>
+        <p className="text-small text-gray-500 mt-0.5" aria-live="polite">총 {totalCount}건</p>
       </div>
 
       {totalCount === 0 && (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+        <div className="text-center py-12 bg-white rounded-sm border border-gray-200">
           <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
@@ -174,10 +174,12 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
 function Section({ title, count, moreHref, children }: { title: string; count: number; moreHref: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
-        <h2 className="text-[15px] font-semibold text-gray-900">{title} <span className="text-primary text-sm font-normal ml-1">{count}</span></h2>
-        <Link href={moreHref} className="text-xs text-gray-400 hover:text-primary transition-colors">더보기</Link>
+    <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+        <h2 className="text-body-lg font-semibold text-gray-900">
+          {title} <span className="text-primary text-small font-normal ml-1">{count}</span>
+        </h2>
+        <Link href={moreHref} className="text-micro text-gray-400 hover:text-primary transition-colors">더보기</Link>
       </div>
       <div className="divide-y divide-gray-50 px-2 py-1">
         {children}

@@ -47,7 +47,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage <= 1}
-        className="p-2 rounded-lg text-text-secondary hover:bg-secondary transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-2 rounded-sm text-text-secondary hover:bg-secondary transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="이전 페이지"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -68,7 +68,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors duration-200 ${
+            className={`w-10 h-10 rounded-sm text-sm font-medium transition-colors duration-200 ${
               page === currentPage
                 ? 'bg-primary text-white'
                 : 'text-text-secondary hover:bg-secondary'
@@ -85,7 +85,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= totalPages}
-        className="p-2 rounded-lg text-text-secondary hover:bg-secondary transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="p-2 rounded-sm text-text-secondary hover:bg-secondary transition-colors duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="다음 페이지"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

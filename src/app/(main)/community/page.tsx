@@ -64,15 +64,15 @@ export default async function CommunityPage({ searchParams }: PageProps) {
   const { posts, count } = await getPosts(searchParams);
 
   return (
-    <div className="max-w-3xl mx-auto space-y-5">
+    <div className="max-w-[1100px] mx-auto space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">커뮤니티</h1>
-          <p className="text-sm text-gray-500 mt-1">웨딩업계 종사자들과 소통해보세요</p>
+          <h1 className="text-h2 font-bold text-gray-900">커뮤니티</h1>
+          <p className="text-small text-gray-500 mt-0.5">웨딩업계 종사자들과 소통해보세요</p>
         </div>
-        <Link href={ROUTES.COMMUNITY_NEW} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary inline-flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
           글쓰기
