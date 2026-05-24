@@ -7,6 +7,7 @@ import {
   formatRelativeTime,
   getCategoryLabel,
 } from '@/shared/utils/format';
+import Badge from '@/shared/components/Badge';
 import type { Post } from '@/types/database';
 
 function BusinessIcon({ type, className = 'w-5 h-5' }: { type: string; className?: string }) {
@@ -109,23 +110,23 @@ export default function HomeContent({ posts }: HomeContentProps) {
 
   return (
     <>
-      {/* BANNER SLIDER - Card Style */}
-      <section className="bg-white pt-6 pb-2">
-        <div className="max-w-[1200px] mx-auto px-4">
-          <div className="relative overflow-hidden rounded-2xl">
+      {/* BANNER SLIDER */}
+      <section className="bg-white pt-4 pb-2">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
+          <div className="relative overflow-hidden rounded-md">
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{ transform: `translateX(-${currentSlide * 100}%)` }}
             >
               {banners.map((banner, i) => (
                 <Link key={i} href={banner.href} className={`w-full shrink-0 ${banner.bg} block`}>
-                  <div className="px-8 sm:px-12 py-10 sm:py-14 flex items-center justify-between">
+                  <div className="px-8 sm:px-12 py-8 sm:py-10 flex items-center justify-between">
                     <div>
-                      <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-3 py-1 rounded-full mb-4">
+                      <span className="inline-block text-[11px] font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded-sm mb-3">
                         {banner.badge}
                       </span>
-                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">{banner.title}</h2>
-                      <p className="text-sm text-white/60 max-w-sm">{banner.desc}</p>
+                      <h2 className="text-xl sm:text-2xl font-bold text-white mb-1.5">{banner.title}</h2>
+                      <p className="text-sm text-white/70 max-w-sm">{banner.desc}</p>
                     </div>
                     <div className="hidden sm:block">
                       <span className="font-serif text-6xl font-bold text-white/10">Marié</span>
@@ -135,8 +136,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
               ))}
             </div>
 
-            {/* Dots */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
               {banners.map((_, i) => (
                 <button
                   key={i}
@@ -144,51 +144,51 @@ export default function HomeContent({ posts }: HomeContentProps) {
                   className={`h-1.5 rounded-full transition-all ${
                     currentSlide === i ? 'bg-white w-5' : 'bg-white/40 w-1.5 hover:bg-white/60'
                   }`}
+                  aria-label={`슬라이드 ${i + 1}`}
                 />
               ))}
             </div>
-
           </div>
         </div>
       </section>
 
-      {/* PREMIUM / HOT JOBS */}
+      {/* HOT JOBS */}
       <section className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-5">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-bold text-gray-900">지금 핫한 채용</h2>
-              <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded">AD</span>
+              <h2 className="text-h4 font-bold text-gray-900">지금 핫한 채용</h2>
+              <Badge kind="promoted">광고</Badge>
             </div>
-            <Link href={ROUTES.JOBS} className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors">
+            <Link href={ROUTES.JOBS} className="text-small text-gray-500 hover:text-primary transition-colors">
               더보기 &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {[
               { company: '그랜드 웨딩홀', title: '예식장 매니저 정규직 채용', type: 'venue', region: '서울 강남', employment: '정규직' },
               { company: '로즈드레스', title: '피팅 전문가 경력직 모집', type: 'dress', region: '경기 성남', employment: '정규직' },
               { company: '루미에르 스튜디오', title: '웨딩 포토그래퍼 모집', type: 'studio', region: '서울 마포', employment: '계약직' },
               { company: '블룸 메이크업', title: '시니어 메이크업 아티스트', type: 'makeup', region: '서울 청담', employment: '정규직' },
+              { company: '엘레강스 플래너', title: '웨딩 플래너 신입 모집', type: 'planner', region: '서울 강남', employment: '정규직' },
             ].map((job, i) => (
               <Link
                 key={i}
                 href={ROUTES.JOBS}
-                className="border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-primary/30 transition-all group"
+                className="card hover:border-primary transition-colors group"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
-                    <BusinessIcon type={job.type} className="w-[18px] h-[18px]" />
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-8 h-8 bg-primary-50 rounded-sm flex items-center justify-center text-primary shrink-0">
+                    <BusinessIcon type={job.type} className="w-4 h-4" />
                   </span>
-                  <span className="text-[12px] font-semibold text-gray-500">{job.company}</span>
+                  <span className="text-micro font-semibold text-gray-500 truncate">{job.company}</span>
                 </div>
-                <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-3 line-clamp-2">
+                <h3 className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors leading-snug mb-2 line-clamp-2">
                   {job.title}
                 </h3>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] text-gray-400">{job.region}</span>
-                  <span className="text-[11px] text-gray-300">|</span>
-                  <span className="text-[11px] text-gray-400">{job.employment}</span>
+                <div className="flex items-center gap-1 flex-wrap">
+                  <Badge kind="attr">{job.region}</Badge>
+                  <Badge kind="category">{job.employment}</Badge>
                 </div>
               </Link>
             ))}
@@ -196,40 +196,41 @@ export default function HomeContent({ posts }: HomeContentProps) {
         </div>
       </section>
 
-      {/* PREMIUM / HOT COMPANIES */}
+      {/* HOT COMPANIES */}
       <section className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-5">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-bold text-gray-900">지금 핫한 업체</h2>
-              <span className="text-[10px] font-bold text-white bg-red-500 px-1.5 py-0.5 rounded">AD</span>
+              <h2 className="text-h4 font-bold text-gray-900">지금 핫한 업체</h2>
+              <Badge kind="promoted">광고</Badge>
             </div>
-            <Link href={ROUTES.DIRECTORY} className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors">
+            <Link href={ROUTES.DIRECTORY} className="text-small text-gray-500 hover:text-primary transition-colors">
               더보기 &rarr;
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {[
               { name: '그랜드 웨딩홀', type: 'venue', region: '서울 강남', desc: '강남 최대 규모 프리미엄 웨딩홀' },
               { name: '로즈드레스 청담', type: 'dress', region: '서울 청담', desc: '수입 드레스 전문 편집숍' },
               { name: '루미에르 스튜디오', type: 'studio', region: '서울 마포', desc: '감성 웨딩 촬영 전문 스튜디오' },
               { name: '블룸 메이크업', type: 'makeup', region: '서울 청담', desc: '브라이덜 메이크업 전문' },
+              { name: '엘레강스 플래너', type: 'planner', region: '서울 강남', desc: '프리미엄 웨딩 컨설팅' },
             ].map((company, i) => (
               <Link
                 key={i}
                 href={ROUTES.DIRECTORY}
-                className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md hover:border-primary/30 transition-all group"
+                className="card hover:border-primary transition-colors group"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="w-11 h-11 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="w-10 h-10 bg-primary-50 rounded-sm flex items-center justify-center text-primary shrink-0">
                     <BusinessIcon type={company.type} className="w-5 h-5" />
                   </span>
-                  <div>
-                    <p className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors">{company.name}</p>
-                    <p className="text-[11px] text-gray-400">{company.region}</p>
+                  <div className="min-w-0">
+                    <p className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors truncate">{company.name}</p>
+                    <p className="text-micro text-gray-500 truncate">{company.region}</p>
                   </div>
                 </div>
-                <p className="text-[13px] text-gray-500 line-clamp-2">{company.desc}</p>
+                <p className="text-small text-gray-500 line-clamp-2 leading-snug">{company.desc}</p>
               </Link>
             ))}
           </div>
@@ -238,43 +239,43 @@ export default function HomeContent({ posts }: HomeContentProps) {
 
       {/* CATEGORY BROWSE */}
       <section className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 className="text-[16px] font-bold text-gray-900">업종별 채용</h2>
-                <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <h2 className="text-body-lg font-bold text-gray-900">업종별 채용</h2>
+                <Link href={ROUTES.JOBS} className="text-micro text-gray-500 hover:text-primary transition-colors">더보기</Link>
               </div>
-              <div className="p-5">
-                <div className="grid grid-cols-4 gap-3">
+              <div className="p-4">
+                <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                   {BUSINESS_TYPES.map((type) => (
                     <Link
                       key={type.value}
                       href={`${ROUTES.JOBS}?business=${type.value}`}
-                      className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                      className="flex flex-col items-center gap-1.5 py-2 rounded-sm hover:bg-gray-50 transition-colors group"
                     >
-                      <span className="w-10 h-10 bg-primary-50 rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                        <BusinessIcon type={type.value} className="w-5 h-5" />
+                      <span className="w-9 h-9 bg-primary-50 rounded-sm flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                        <BusinessIcon type={type.value} className="w-4 h-4" />
                       </span>
-                      <span className="text-[12px] font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
+                      <span className="text-micro font-medium text-gray-600 group-hover:text-primary">{type.label}</span>
                     </Link>
                   ))}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 className="text-[16px] font-bold text-gray-900">지역별 채용</h2>
-                <Link href={ROUTES.JOBS} className="text-[12px] text-gray-400 hover:text-primary transition-colors">더보기</Link>
+            <div className="bg-white rounded-sm border border-gray-200 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <h2 className="text-body-lg font-bold text-gray-900">지역별 채용</h2>
+                <Link href={ROUTES.JOBS} className="text-micro text-gray-500 hover:text-primary transition-colors">더보기</Link>
               </div>
-              <div className="p-5">
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-9 gap-2">
+              <div className="p-4">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-9 gap-1.5">
                   {REGIONS.map((region) => (
                     <Link
                       key={region.value}
                       href={`${ROUTES.JOBS}?region=${region.value}`}
-                      className="py-2 text-center text-[13px] text-gray-600 bg-gray-50 rounded-lg hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
+                      className="py-1.5 text-center text-small text-gray-600 bg-gray-50 rounded-sm hover:bg-primary-50 hover:text-primary transition-colors font-medium border border-gray-100 hover:border-primary-200"
                     >
                       {region.label}
                     </Link>
@@ -288,16 +289,17 @@ export default function HomeContent({ posts }: HomeContentProps) {
 
       {/* FULL-WIDTH BANNER */}
       <section className="bg-gradient-to-r from-primary-dark via-primary to-primary-dark">
-        <div className="max-w-[1200px] mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="bg-white text-primary text-xs font-bold px-2.5 py-1 rounded">Marié</span>
-            <p className="text-white font-bold text-[15px] sm:text-lg">
-              웨딩업계 인재를 찾고 계신가요? <span className="text-primary-200 hidden sm:inline">지금 무료로 공고를 등록하세요</span>
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="bg-white text-primary text-[11px] font-bold px-2 py-0.5 rounded-sm">Marié</span>
+            <p className="text-white font-semibold text-small sm:text-body-lg">
+              웨딩업계 인재를 찾고 계신가요?
+              <span className="text-primary-200 hidden sm:inline ml-1">지금 무료로 공고를 등록하세요</span>
             </p>
           </div>
           <Link
             href={ROUTES.JOBS_NEW}
-            className="shrink-0 bg-white text-primary text-sm font-semibold px-4 py-2 rounded hover:bg-gray-100 transition-colors"
+            className="shrink-0 bg-white text-primary text-small font-semibold px-3 py-1.5 rounded-sm hover:bg-gray-100 transition-colors"
           >
             공고 등록 &rarr;
           </Link>
@@ -306,32 +308,32 @@ export default function HomeContent({ posts }: HomeContentProps) {
 
       {/* COMMUNITY SECTION */}
       <section className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-4 py-8">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[18px] font-bold text-gray-900">커뮤니티</h2>
-            <Link href={ROUTES.COMMUNITY} className="text-[13px] text-gray-400 hover:text-gray-600 transition-colors">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-h4 font-bold text-gray-900">커뮤니티</h2>
+            <Link href={ROUTES.COMMUNITY} className="text-small text-gray-500 hover:text-primary transition-colors">
               더보기 &rarr;
             </Link>
           </div>
           {posts.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {posts.map((post) => (
                 <Link
                   key={post.id}
                   href={ROUTES.COMMUNITY_DETAIL(post.id)}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all group"
+                  className="card hover:border-primary transition-colors group"
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[11px] font-semibold text-primary bg-primary-50 px-2 py-0.5 rounded">{getCategoryLabel(post.category)}</span>
-                    <span className="text-[11px] text-gray-400">{formatRelativeTime(post.created_at)}</span>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Badge kind="category">{getCategoryLabel(post.category)}</Badge>
+                    <span className="text-micro text-gray-400">{formatRelativeTime(post.created_at)}</span>
                   </div>
-                  <h3 className="text-[14px] font-semibold text-gray-800 group-hover:text-primary transition-colors mb-1.5 line-clamp-1">
+                  <h3 className="text-body font-semibold text-gray-800 group-hover:text-primary transition-colors mb-1 line-clamp-1">
                     {post.title}
                   </h3>
-                  <p className="text-[13px] text-gray-500 line-clamp-2 leading-relaxed">
+                  <p className="text-small text-gray-500 line-clamp-2 leading-snug">
                     {post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()}
                   </p>
-                  <div className="flex items-center gap-2 mt-3 text-[12px] text-gray-400">
+                  <div className="flex items-center gap-2 mt-2 text-micro text-gray-400">
                     <span>조회 {post.view_count}</span>
                     {post.comment_count !== undefined && post.comment_count > 0 && (
                       <>
@@ -346,7 +348,6 @@ export default function HomeContent({ posts }: HomeContentProps) {
           )}
         </div>
       </section>
-
     </>
   );
 }
