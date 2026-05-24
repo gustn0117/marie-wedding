@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>마리에 (Marié) 창업지원사업 사업계획서</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    font-family: "Pretendard", "Pretendard Variable", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+    color: #000;
+    line-height: 1.55;
+    font-size: 10.5pt;
+    font-feature-settings: "tnum" 1;
+    font-variant-numeric: tabular-nums;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Korean platform-style badge */
+  .badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 8.5pt;
+    font-weight: 700;
+    line-height: 1.4;
+    border: 1px solid #000;
+    letter-spacing: 0;
+    vertical-align: 1px;
+    margin-left: 6px;
+    white-space: nowrap;
+  }
+  .badge.solid {
+    background: #000;
+    color: #fff;
+  }
+  .badge.dot::before {
+    content: "";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background: #000;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: 1px;
+  }
+  h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+  .doc-meta {
+    font-size: 10pt;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 10.5pt;
+    color: #000;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #000;
+  }
+  h2 {
+    font-size: 14pt;
+    font-weight: 700;
+    margin: 22px 0 8px;
+    page-break-after: avoid;
+    break-after: avoid;
+    border-left: 4px solid #000;
+    padding-left: 10px;
+  }
+  h3 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    margin: 14px 0 4px;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  h4 {
+    font-size: 10.5pt;
+    font-weight: 700;
+    margin: 8px 0 4px;
+  }
+  p { margin: 5px 0; }
+  ul { padding-left: 18px; margin: 5px 0; }
+  ol { padding-left: 18px; margin: 5px 0; }
+  li { margin: 2px 0; }
+  strong { font-weight: 700; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 10pt;
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+  th, td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  th {
+    font-weight: 700;
+    background: #f5f5f5;
+  }
+  td.center, th.center { text-align: center; }
+  td.right { text-align: right; }
+
+  .section {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  .summary-box {
+    border: 1.5px solid #000;
+    padding: 12px 14px;
+    margin: 8px 0 14px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .summary-box h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #000;
+    padding-bottom: 5px;
+  }
+
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  .cover {
+    height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    page-break-after: always;
+    break-after: page;
+    padding: 24px 20px;
+    border: 2px solid #000;
+  }
+  .cover .top {
+    text-align: center;
+    padding-top: 30px;
+  }
+  .cover .top .label {
+    font-size: 12pt;
+    margin-bottom: 20px;
+    letter-spacing: 4px;
+  }
+  .cover .top h1 {
+    font-size: 28pt;
+    margin: 0 0 16px;
+  }
+  .cover .top .tagline {
+    font-size: 12pt;
+    display: inline-block;
+    border-top: 1px solid #000;
+    padding: 16px 26px 0;
+    margin-top: 8px;
+  }
+  .cover .info-table {
+    margin: 0 30px;
+  }
+  .cover .info-table table td { padding: 9px 12px; }
+  .cover .info-table table td:first-child {
+    background: #f5f5f5;
+    font-weight: 700;
+    width: 30%;
+  }
+  .cover .footer {
+    text-align: center;
+    font-size: 10.5pt;
+  }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<section class="cover">
+  <div class="top">
+    <div class="label">사업계획서</div>
+    <h1>마리에 (Marié)</h1>
+    <p style="font-size: 12pt; margin-bottom: 10px;">
+      웨딩업계 B2B 네트워킹 플랫폼
+      <span class="badge solid">개발 중</span>
+      <span class="badge">1인 운영</span>
+    </p>
+    <div class="tagline">"흩어진 웨딩 산업을 하나로 연결하다"</div>
+  </div>
+
+  <div class="info-table">
+    <table>
+      <tr><td>아이템명</td><td>마리에(Marié) — 웨딩업계 B2B 네트워킹 플랫폼</td></tr>
+      <tr><td>분야</td><td>정보통신 · 플랫폼 서비스</td></tr>
+      <tr><td>세부 영역</td><td>웨딩 산업 B2B / HR Tech / Community</td></tr>
+      <tr><td>제출자</td><td>심현수 (1인 운영)</td></tr>
+      <tr><td>제출일</td><td>2026년 04월</td></tr>
+      <tr><td>서비스 URL</td><td>https://marie-wedding.hsweb.pics</td></tr>
+    </table>
+  </div>
+
+  <div class="footer">&nbsp;</div>
+</section>
+
+<!-- 요약 -->
+<h1>마리에 (Marié) 사업계획서</h1>
+<div class="doc-meta">웨딩업계 B2B 네트워킹 플랫폼 · 2026.04</div>
+<div class="subtitle">PSST (Problem · Solution · Scale-up · Team) 기반 사업계획서</div>
+
+<section class="section summary-box">
+  <h3>사업 요약 (Executive Summary)</h3>
+  <p><strong>마리에(Marié)</strong>는 예식장·드레스·스튜디오·메이크업·플래너·도우미·사회자·축가 등 파편화된 웨딩 업종 종사자를 하나로 연결하는 <strong>B2B 네트워킹 플랫폼</strong>입니다. 현재 웨딩 업계는 인맥과 카톡방에 의존한 비공식 구인·섭외 구조로 인해 인력 수급 비효율, 신규 진입자의 정보 단절, 프리랜서의 일감 불안정이라는 구조적 문제를 안고 있습니다.</p>
+  <p>마리에는 <strong>채용 공고 · 업체 섭외 · 업체 디렉토리 · 커뮤니티 · 이벤트</strong>를 하나의 프로필로 통합하여, 웨딩 종사자가 동료를 찾고 일을 나누며 성장할 수 있는 전문 네트워크를 제공합니다. 현재 Next.js 14 · 자체 호스팅 Supabase 기반으로 <strong>개발이 진행 중</strong>이며, 핵심 기능 대부분이 구현 단계에 있습니다.</p>
+  <p>운영자는 이미 <strong>웹 개발 외주 사업자</strong>로 등록되어 홈페이지·웹 애플리케이션·프로그램 개발 용역을 수행하며 수익을 창출하고 있는 <strong>현역 개발자</strong>입니다. 이 사업 기반 덕에 <strong>개발 외주비 · 자체 서버 호스팅 비용이 이미 내재화</strong>되어 있으며, 별도의 인프라 투자 없이 본 서비스를 지속 개발·고도화할 수 있는 구조를 갖추고 있습니다.</p>
+</section>
+
+<!-- 1. 일반현황 -->
+<section class="section">
+  <h2>1. 일반 현황</h2>
+  <table>
+    <tr>
+      <th style="width: 22%">항목</th>
+      <th>내용</th>
+    </tr>
+    <tr><td>사업 아이템명</td><td>마리에(Marié) — 웨딩업계 B2B 네트워킹 플랫폼</td></tr>
+    <tr><td>산업·기술 분야</td><td>정보통신업 · 플랫폼 서비스 / HR Tech / Vertical SaaS</td></tr>
+    <tr><td>핵심 기능</td><td>채용·섭외 공고, 업체 디렉토리, 커뮤니티, 이벤트&amp;소식, 프로필 관리</td></tr>
+    <tr><td>타깃 고객</td><td>대한민국 웨딩 산업 종사자 (B2B / 프리랜서)</td></tr>
+    <tr><td>현재 단계</td><td>프로토타입 개발 진행 중 · 핵심 기능 구현 단계 <span class="badge solid">NOW</span></td></tr>
+    <tr><td>개발 환경</td><td>개발 서버 운영 (marie-wedding.hsweb.pics)</td></tr>
+  </table>
+</section>
+
+<!-- 2. 문제인식 (Problem) -->
+<section class="section">
+  <h2>2. 문제인식 (Problem)</h2>
+
+  <h3>2-1. 창업 배경 및 동기</h3>
+  <p>국내 웨딩 산업은 예식장을 중심으로 드레스·스튜디오·메이크업(이하 스드메), 플래너, 예식 도우미, 사회자, 축가 등 <strong>수십 개 직군이 한 예식에 얽혀있는 프로젝트형 산업</strong>입니다. 그러나 현재 업계의 협업과 인력 수급은 전적으로 <strong>개인 인맥과 카카오톡 단체방</strong>에 의존하고 있으며, 정작 채용이 필요할 때는 웨딩 특화 플랫폼이 부재하여 <strong>사람인·알바몬 등 범용 구인구직 사이트</strong>에 의지해야 하는 실정입니다. 이 두 채널 모두 웨딩 업종의 실제 업무 구조와 직군 분류를 반영하지 못해, 적합한 인재를 찾기도 · 자신을 드러내기도 어렵다는 점이 업계 전반의 고질적인 문제로 지적되어 왔습니다.</p>
+
+  <table>
+    <tr>
+      <th style="width: 26%">현행 채널</th>
+      <th>한계</th>
+    </tr>
+    <tr>
+      <td>카카오톡 · 개인 인맥</td>
+      <td>인맥에 없으면 접근 불가 · 정보 폐쇄성 · 정식 계약/기록이 없어 분쟁 발생 시 보호 수단 전무</td>
+    </tr>
+    <tr>
+      <td>사람인 · 알바몬 (범용 구인구직)</td>
+      <td>웨딩 특화 업종·직군 분류 없음 · 스드메/사회자/축가 등 세부 역할 매칭 불가 · 업계 전용 포트폴리오 노출 어려움</td>
+    </tr>
+    <tr>
+      <td>업체별 블로그 · SNS</td>
+      <td>공식 창구 부재 · 구인 정보가 산발적이고 탐색 비용 과다 · 신뢰도 검증 어려움</td>
+    </tr>
+  </table>
+  <p>즉, 국내 웨딩 업계에는 <strong>전문적인 B2B 네트워킹 · 채용 · 섭외를 모두 아우르는 자체 플랫폼이 존재하지 않으며</strong>, 이 공백을 마리에가 선점하고자 합니다.</p>
+
+  <h3>2-2. 목표 고객의 문제 정의</h3>
+  <table>
+    <tr>
+      <th style="width: 22%">고객 유형</th>
+      <th>겪고 있는 문제</th>
+    </tr>
+    <tr>
+      <td>웨딩 업체 대표</td>
+      <td>성수기에 숙련된 도우미·프리랜서를 구하지 못해 예식 운영에 차질. 업체 간 협업 제안을 받을 공식 창구가 없음.</td>
+    </tr>
+    <tr>
+      <td>프리랜서(사회자·축가·도우미)</td>
+      <td>일감이 특정 인맥에 집중되어 신규 진입이 어렵고, 지역·업체 정보를 체계적으로 얻을 경로가 없음.</td>
+    </tr>
+    <tr>
+      <td>신규 업체·디자이너</td>
+      <td>자본 부족으로 홈페이지·광고 진행이 어려워, 개업 후 잠재 파트너에 도달하기 어려움.</td>
+    </tr>
+    <tr>
+      <td>업계 실무자 전반</td>
+      <td>업계 이슈·트렌드·박람회 정보가 공식 채널이 아닌 단체방에 산발적으로 공유됨.</td>
+    </tr>
+  </table>
+
+  <h3>2-3. 목표 시장 현황</h3>
+  <table>
+    <tr><th style="width: 22%">구분</th><th>내용</th></tr>
+    <tr><td>산업 규모</td><td>국내 연간 혼인 건수 약 19만 건, 웨딩 업종 수만 개 업체가 프로젝트형으로 협업</td></tr>
+    <tr><td>타깃 풀</td><td>수도권 기준 스드메·프리랜서 약 1만 5천 개 업체/종사자 풀 (우선 진입)</td></tr>
+    <tr><td>확장 가능성</td><td>수도권 → 광역시 → 전국 · 장기적으로 해외 K-웨딩 시장까지 연계 가능</td></tr>
+    <tr><td>경쟁 환경</td><td>사람인·알바몬 등 범용 구인구직 플랫폼만 존재 · 웨딩 산업 전용 B2B / 채용 / 섭외 플랫폼은 현재까지 부재 <span class="badge">공백</span> · 업계 내 협업은 여전히 카카오톡 단체방·개인 인맥에 의존</td></tr>
+  </table>
+</section>
+
+<!-- 3. 실현가능성 (Solution) -->
+<section class="section">
+  <h2>3. 실현가능성 (Solution)</h2>
+
+  <h3>3-1. 솔루션 개요</h3>
+  <p>마리에는 웨딩 산업 종사자를 위한 <strong>통합 B2B 프로필 네트워크</strong>입니다. 한 번의 가입으로 (1) 업체/개인 프로필을 공개 디렉토리에 노출하고 (2) 채용·섭외 공고를 등록/지원하며 (3) 커뮤니티에서 정보를 주고받고 (4) 박람회·업계 이벤트를 확인할 수 있습니다.</p>
+
+  <h3>3-2. 핵심 기능 및 차별성</h3>
+  <table>
+    <tr>
+      <th style="width: 20%">핵심 기능</th>
+      <th style="width: 45%">내용</th>
+      <th>차별 포인트</th>
+    </tr>
+    <tr>
+      <td>채용 / 업체 섭외</td>
+      <td>업종·지역·고용형태 다중 필터, 마감일 D-day, 대표이미지, 리치텍스트 상세</td>
+      <td>웨딩 특화 필터·분류 체계</td>
+    </tr>
+    <tr>
+      <td>업체 디렉토리</td>
+      <td>로고·소개·규모·설립연도·주소·갤러리·연락처 통합</td>
+      <td>업체별 공개 프로필 표준화</td>
+    </tr>
+    <tr>
+      <td>커뮤니티</td>
+      <td>자유게시판, 좋아요·댓글, 이미지 첨부, 최신/인기 정렬</td>
+      <td>업계 전용 정보 축적</td>
+    </tr>
+    <tr>
+      <td>이벤트 &amp; 소식</td>
+      <td>박람회·세미나·공지 등을 관리자가 등록</td>
+      <td>공식 정보 채널화</td>
+    </tr>
+    <tr>
+      <td>간편 로그인</td>
+      <td>이메일 가입 + 카카오 OAuth</td>
+      <td>진입 장벽 최소화</td>
+    </tr>
+  </table>
+
+  <h3>3-3. 개발 현황</h3>
+  <ul>
+    <li><strong>진행 단계</strong> — 핵심 기능(채용·디렉토리·커뮤니티·이벤트·마이페이지) 개발 진행 중</li>
+    <li><strong>기술 스택</strong> — Next.js 14 (App Router), TypeScript, Tailwind CSS, Supabase, Docker + Nginx</li>
+    <li><strong>반응형 UI</strong> — 모바일·태블릿·데스크탑 대응 구현 중</li>
+    <li><strong>이미지 최적화</strong> — 클라이언트 사이드 압축, Storage 버킷 분리 관리</li>
+    <li><strong>자동 배포</strong> — Git push 기반 웹훅 CI/CD 구축 완료</li>
+  </ul>
+
+  <h3>3-4. 추진 방향</h3>
+  <table>
+    <tr>
+      <th style="width: 20%">단계</th>
+      <th>주요 활동</th>
+    </tr>
+    <tr><td>초기</td><td>MVP 개발 완성 · 정식 서비스 오픈 · 피드백 기반 UI/UX 개선</td></tr>
+    <tr><td>중기</td><td>업체 디렉토리 노출 개선 · 공고 추천 알고리즘 도입 · 모바일 앱 확장</td></tr>
+    <tr><td>장기</td><td>수도권 외 지역 확장 · 프리랜서 평판 시스템 · 서비스 고도화</td></tr>
+  </table>
+</section>
+
+<!-- 4. 성장전략 (Scale-up) -->
+<section class="section">
+  <h2>4. 성장전략 (Scale-up)</h2>
+
+  <h3>4-1. 시장 진입 및 사용자 확보 전략</h3>
+  <ol>
+    <li><strong>얼리어답터 업체 직접 온보딩</strong> — 수도권 핵심 플래너·스튜디오·드레스샵 우선 초청</li>
+    <li><strong>프리랜서 풀 구축</strong> — 사회자·축가·도우미 커뮤니티 공략, 초기 프로필 등록 이벤트</li>
+    <li><strong>업계 박람회 협력</strong> — 웨딩 박람회 부스 운영 및 QR 가입 유도</li>
+    <li><strong>SNS 콘텐츠 마케팅</strong> — 인스타그램·유튜브 웨딩 인플루언서 협업</li>
+    <li><strong>입소문 루프 설계</strong> — 업체 프로필 공유 링크, 공고 공유 시 가입 유도</li>
+  </ol>
+
+  <h3>4-2. 성장 단계별 핵심 지표 (KPI)</h3>
+  <table>
+    <tr>
+      <th style="width: 22%">단계</th>
+      <th>핵심 지표</th>
+    </tr>
+    <tr><td>초기 진입</td><td>가입 업체 수, 공고 등록 수, 방문자 수</td></tr>
+    <tr><td>네트워크 형성</td><td>프로필 완성도, 커뮤니티 게시글·댓글 수, 재방문율</td></tr>
+    <tr><td>확장기</td><td>지역별 커버리지, 채용 성사율, 앱 활성 사용자(MAU)</td></tr>
+  </table>
+
+  <h3>4-3. 리스크 관리</h3>
+  <table>
+    <tr>
+      <th style="width: 28%">예상 리스크</th>
+      <th>대응 방안</th>
+    </tr>
+    <tr>
+      <td>초기 사용자 확보 지연</td>
+      <td>얼리어답터 직접 온보딩 병행, 박람회·커뮤니티 오프라인 채널 활용</td>
+    </tr>
+    <tr>
+      <td>콘텐츠 품질 관리</td>
+      <td>업체 인증 배지 도입, 스팸·허위 공고 검수 프로세스 구축</td>
+    </tr>
+    <tr>
+      <td>지역 편중</td>
+      <td>수도권 집중 후 지방 거점 업체와 MOU 형태로 확장</td>
+    </tr>
+    <tr>
+      <td>경쟁 서비스 출현</td>
+      <td>웨딩 특화 데이터·커뮤니티 자산 선점, 도메인 전문성 강화</td>
+    </tr>
+  </table>
+</section>
+
+<!-- 5. 운영자 -->
+<section class="section">
+  <h2>5. 운영자 (1인 운영)</h2>
+
+  <table>
+    <tr><th style="width: 22%">성명</th><td>심현수</td></tr>
+    <tr><th>역할</th><td>기획 · 개발 · 디자인 · 운영 전반 (1인 단독 운영)</td></tr>
+    <tr><th>현업 상태</th><td>웹 개발 외주 사업자 등록 · 홈페이지 / 웹 애플리케이션 / 프로그램 개발 용역 수행 중 · 현역 수익 창출</td></tr>
+    <tr><th>주요 역량</th><td>Next.js / TypeScript / Supabase 기반 웹 서비스 풀스택 설계·개발 · UI/UX 디자인 · 자체 인프라 운용</td></tr>
+    <tr><th>핵심 성과</th><td>다수 외주 프로젝트를 직접 기획·개발·배포한 실전 경험 · 마리에 플랫폼 단독 기획·설계·개발 주도</td></tr>
+  </table>
+
+  <h3>5-1. 운영 기반의 강점</h3>
+  <p>본 프로젝트는 일반적인 창업 초기 단계의 리스크 — 개발 인력 확보, 서버 인프라 구축, 초기 현금 흐름 — 를 <strong>운영자가 이미 보유한 자원과 사업 기반으로 상당 부분 내재화</strong>하고 있어 구조적 지속성이 높다는 특장점이 있습니다.</p>
+  <table>
+    <tr>
+      <th style="width: 28%">보유 자원</th>
+      <th>사업적 의미</th>
+    </tr>
+    <tr>
+      <td>사업자 등록 완료 <span class="badge">완료</span></td>
+      <td>웹 개발 외주 분야에서 이미 사업자 등록 · 정상 운영 · 수익 발생 중 — 세무·계약 등 행정적 준비가 이미 마무리되어 있음</td>
+    </tr>
+    <tr>
+      <td>자체 개발 역량 <span class="badge solid">0원</span></td>
+      <td>풀스택 개발을 운영자가 직접 수행 — <strong>개발 외주비가 구조적으로 발생하지 않음</strong></td>
+    </tr>
+    <tr>
+      <td>자체 서버 보유 <span class="badge solid">0원</span></td>
+      <td>기존 외주 사업을 위해 운용 중인 <strong>자체 서버를 그대로 활용</strong> — 별도 호스팅/클라우드 비용 부담 없음</td>
+    </tr>
+    <tr>
+      <td>도메인 관심도 &amp; 몰입</td>
+      <td>웨딩 업계 B2B라는 도메인에 지속적인 관심과 문제의식을 보유 — 단기 프로젝트가 아닌 장기 운영 전제</td>
+    </tr>
+  </table>
+
+  <h3>5-2. 지속 가능성 및 경쟁력 판단</h3>
+  <ul>
+    <li><strong>고정비 최소화</strong> — 개발·서버 비용이 사실상 제로에 가깝기 때문에, 초기 사용자 확보 기간이 길어지더라도 서비스 유지가 안정적입니다.</li>
+    <li><strong>빠른 개발 사이클</strong> — 기획/설계/개발/배포가 1인 파이프라인으로 이뤄져 의사결정과 반영 속도가 매우 빠릅니다.</li>
+    <li><strong>실전 개발 경험</strong> — 외주 업무를 통해 다양한 도메인의 요구사항을 처리해 본 경험이 있어, 사용자 피드백 반영이 능숙합니다.</li>
+    <li><strong>장기 운영 가능성</strong> — 본업 수익 기반이 별도로 존재하므로, 본 프로젝트가 단기 수익 압박 없이 <strong>충분한 시간 동안 성장시킬 수 있는 여유</strong>가 확보되어 있습니다.</li>
+  </ul>
+</section>
+
+<!-- 6. 기대효과 -->
+<section class="section">
+  <h2>6. 기대효과 및 사회적 가치</h2>
+
+  <h3>6-1. 산업적 효과</h3>
+  <ul>
+    <li>웨딩 업계 프리랜서의 일감 매칭 효율 개선</li>
+    <li>중소 웨딩 업체의 인력 수급 리드타임 단축</li>
+    <li>지역 소규모 업체의 노출·유입 확대로 지역 균형 발전 기여</li>
+  </ul>
+
+  <h3>6-2. 사회적 효과</h3>
+  <ul>
+    <li>인맥 중심의 폐쇄적 구조를 공개 플랫폼으로 전환 → 업계 진입장벽 완화</li>
+    <li>업계 정보의 투명한 공유 → 불공정 거래 관행 개선</li>
+    <li>프리랜서 활동 기반 안정화 → 지속 가능한 직업군으로서의 웨딩업 확장</li>
+  </ul>
+
+  <h3>6-3. 장기 비전</h3>
+  <p>마리에는 단순한 구인구직 게시판을 넘어, 웨딩 산업 종사자의 <strong>프로필·포트폴리오·평판이 축적되는 신뢰 레이어</strong>를 구축하는 것을 목표로 합니다. 장기적으로 웨딩 산업의 디지털 전환을 선도하는 B2B 허브로 성장시키고자 합니다.</p>
+</section>
+
+</body>
+</html>
