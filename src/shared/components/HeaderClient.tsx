@@ -64,7 +64,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
           {/* Search Bar - Absolute Center */}
           <form onSubmit={handleSearch} className="hidden md:flex absolute left-1/2 -translate-x-1/2 w-full max-w-[520px]">
-            <div className="flex w-full bg-gray-50 border border-gray-200 rounded-full overflow-hidden focus-within:border-primary focus-within:bg-white transition-all">
+            <div className="flex w-full bg-gray-50 border border-gray-200 rounded-md overflow-hidden focus-within:border-primary focus-within:bg-white transition-all">
               <div className="flex items-center pl-5 text-gray-400">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -250,7 +250,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       {mobileMenuOpen && (
         <div className="md:hidden bg-white border-b border-gray-200 shadow-lg">
           <form onSubmit={handleSearch} className="px-4 pt-3">
-            <div className="flex bg-gray-50 border border-gray-200 rounded-full overflow-hidden">
+            <div className="flex bg-gray-50 border border-gray-200 rounded-md overflow-hidden">
               <input
                 type="text"
                 value={searchQuery}
