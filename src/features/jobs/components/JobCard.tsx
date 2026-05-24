@@ -7,65 +7,59 @@ import {
   getEmploymentTypeLabel,
   getRegionLabel,
 } from '@/shared/utils/format';
+import { getJobTier, isUrgent, isNew, getDDayLabel } from '@/shared/utils/tier';
+import Badge from '@/shared/components/Badge';
 
 interface JobCardProps {
   job: Job;
 }
 
-function getEmploymentBadgeClass(employmentType: string): string {
-  if (employmentType === 'full_time') return 'badge-primary';
-  return 'badge-accent';
-}
-
 export default function JobCard({ job }: JobCardProps) {
   const companyName = job.author?.company_name ?? '알 수 없음';
   const region = job.author?.region ? getRegionLabel(job.author.region) : '';
+  const tier = getJobTier(job);
+  const tierClass = tier === 2 ? 'card-tier-2' : '';
+  const dDay = getDDayLabel(job.deadline);
+  const urgent = isUrgent(job.deadline);
+  const fresh = isNew(job.created_at);
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
-      <article className="card p-5 h-full flex flex-col gap-3 group-hover:border-primary">
-        {/* Header: Badges */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span
-            className={`${getEmploymentBadgeClass(job.employment_type)} text-[11px] font-bold tracking-tight px-1.5 py-0.5 rounded-none`}
-          >
-            {getEmploymentTypeLabel(job.employment_type)}
-          </span>
-          <span className="badge-accent text-[11px] font-bold tracking-tight px-1.5 py-0.5 rounded-none">
-            {getBusinessTypeLabel(job.business_type)}
-          </span>
+      <article className={`card ${tierClass} h-full flex flex-col gap-2 group-hover:border-primary`}>
+        {/* Status badges */}
+        <div className="flex items-center gap-1 flex-wrap min-h-[18px]">
+          {urgent && <Badge kind="urgent">마감임박</Badge>}
+          {fresh && !urgent && <Badge kind="new">NEW</Badge>}
+          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
+          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
         </div>
 
-        {/* Title */}
-        <h3 className="text-lg font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors duration-200">
+        <h3 className="text-h4 font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors">
           {job.title}
         </h3>
 
-        {/* Company & Region */}
-        <div className="flex items-center gap-2 text-sm text-text-secondary">
-          <span className="font-medium">{companyName}</span>
+        <div className="flex items-center gap-1.5 text-small text-text-secondary">
+          <span className="font-medium truncate">{companyName}</span>
           {region && (
             <>
               <span className="text-border">|</span>
-              <span>{region}</span>
+              <span className="truncate">{region}</span>
             </>
           )}
         </div>
 
-        {/* Salary */}
         {job.salary_info && (
-          <p className="text-sm text-text-secondary">
+          <p className="text-small text-text-secondary">
             <span className="text-text-muted">급여</span>{' '}
             <span className="font-medium text-text-primary">{job.salary_info}</span>
           </p>
         )}
 
-        {/* Footer */}
-        <div className="mt-auto pt-3 border-t border-border flex items-center justify-between text-xs text-text-muted">
+        <div className="mt-auto pt-2 border-t border-border flex items-center justify-between text-micro text-text-muted">
           <time dateTime={job.created_at}>{formatRelativeTime(job.created_at)}</time>
-          {job.deadline && (
-            <span className="text-accent-600">
-              마감 {new Date(job.deadline).toLocaleDateString('ko-KR')}
+          {dDay && (
+            <span className={`font-semibold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
+              {dDay}
             </span>
           )}
         </div>
