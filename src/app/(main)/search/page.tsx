@@ -77,7 +77,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   if (!q) {
     return (
       <div className="saramin-section mx-auto max-w-[760px] py-16 text-center">
-        <h1 className="text-h2 font-black text-gray-900 mb-1">검색</h1>
+        <h1 className="text-h2 font-bold text-gray-900 mb-1">검색</h1>
         <p className="text-small text-gray-500">검색어를 입력해주세요.</p>
       </div>
     );
@@ -89,7 +89,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-4">
       <div className="saramin-section p-5">
-        <h1 className="text-h2 font-black text-gray-900">
+        <h1 className="text-h2 font-bold text-gray-900">
           &ldquo;{q}&rdquo; 검색 결과
         </h1>
         <p className="text-small text-gray-500 mt-0.5" aria-live="polite">총 {totalCount}건</p>
@@ -176,7 +176,7 @@ function Section({ title, count, moreHref, children }: { title: string; count: n
   return (
     <div className="bg-white rounded border border-gray-200 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h2 className="text-body-lg font-black text-gray-900">
+        <h2 className="text-body-lg font-bold text-gray-900">
           {title} <span className="text-primary text-small font-normal ml-1">{count}</span>
         </h2>
         <Link href={moreHref} className="text-micro text-gray-400 hover:text-primary transition-colors">더보기</Link>

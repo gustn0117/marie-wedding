@@ -31,7 +31,7 @@ export default function JobListRow({ job }: Props) {
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-gray-200 bg-secondary-50 text-sm font-black text-primary">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded border border-gray-200 bg-secondary-50 text-sm font-bold text-primary">
             {companyName.charAt(0)}
           </span>
           <div className="min-w-0">
@@ -60,7 +60,7 @@ export default function JobListRow({ job }: Props) {
       <div className="flex items-center justify-between gap-3 text-xs md:flex-col md:items-end">
         <time className="text-gray-400">{formatRelativeTime(job.created_at)}</time>
         {dDay ? (
-          <span className={`font-black ${urgent ? 'text-state-urgent' : 'text-primary'}`}>{dDay}</span>
+          <span className={`font-bold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>{dDay}</span>
         ) : (
           <span className="font-bold text-gray-500">상시채용</span>
         )}

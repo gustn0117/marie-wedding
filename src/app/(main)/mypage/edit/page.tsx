@@ -154,7 +154,7 @@ export default function EditProfilePage() {
   if (!profile) {
     return (
       <div className="max-w-2xl mx-auto text-center py-16">
-        <h2 className="text-xl font-black text-gray-900 mb-3">로그인이 필요합니다</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>
       </div>
     );
@@ -170,7 +170,7 @@ export default function EditProfilePage() {
         </Link>
         <div>
           <p className="text-sm font-bold text-primary">My Page</p>
-          <h1 className="text-2xl font-black text-gray-900">프로필 수정</h1>
+          <h1 className="text-2xl font-bold text-gray-900">프로필 수정</h1>
         </div>
       </div>
 

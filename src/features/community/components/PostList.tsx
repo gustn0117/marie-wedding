@@ -57,7 +57,7 @@ export default function PostList({ initialPosts, initialCount }: PostListProps =
     <div className="space-y-3">
       <div className="flex items-center justify-between rounded border border-gray-200 bg-white px-4 py-3">
         <p className="text-sm text-gray-500">
-          총 <span className="font-black text-primary">{totalCount.toLocaleString()}</span>건
+          총 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
         </p>
         <Link href={ROUTES.COMMUNITY_NEW} className="text-sm font-bold text-primary hover:text-primary-dark">
           글쓰기

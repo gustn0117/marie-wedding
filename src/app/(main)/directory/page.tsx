@@ -55,7 +55,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="mb-1 text-sm font-bold text-primary">Company Directory</p>
-            <h1 className="text-h2 font-black text-text-primary">업체 디렉토리</h1>
+            <h1 className="text-h2 font-bold text-text-primary">업체 디렉토리</h1>
             <p className="mt-1 text-small text-text-secondary">웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 찾아보세요.</p>
           </div>
           <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary shrink-0">

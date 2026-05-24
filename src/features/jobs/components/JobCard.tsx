@@ -33,12 +33,12 @@ export default function JobCard({ job }: JobCardProps) {
           {tier === 2 && <Badge kind="promoted">추천</Badge>}
         </div>
 
-        <h3 className="text-[17px] font-black text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="text-[17px] font-bold text-text-primary leading-snug line-clamp-2 group-hover:text-primary transition-colors">
           {job.title}
         </h3>
 
         <div className="flex items-center gap-2 text-small text-text-secondary">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary-50 text-xs font-black text-primary">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-primary-50 text-xs font-bold text-primary">
             {companyName.charAt(0)}
           </span>
           <span className="font-bold truncate">{companyName}</span>

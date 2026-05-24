@@ -3,6 +3,7 @@ import type { Profile } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import Badge from '@/shared/components/Badge';
+import Logo from '@/shared/components/Logo';
 
 interface CompanyCardProps {
   profile: Profile;
@@ -31,12 +32,12 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
         ) : (
-          <span className="text-3xl text-primary-200 font-black">M</span>
+          <Logo variant="mark" size="lg" className="text-primary-200" />
         )}
       </div>
 
       <div className="p-3">
-        <h3 className="text-body-lg font-black text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
+        <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
           {displayName}
         </h3>
 

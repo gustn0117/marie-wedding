@@ -176,7 +176,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="mb-1 text-sm font-bold text-primary">Wedding Recruit</p>
-            <h1 className="text-h2 font-black text-gray-900">
+            <h1 className="text-h2 font-bold text-gray-900">
               {postingType === 'matching' ? '파트너 섭외' : '채용정보'}
             </h1>
             <p className="mt-1 text-small text-gray-500">웨딩 업계 직무, 지역, 고용형태별 공고를 빠르게 찾아보세요.</p>

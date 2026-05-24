@@ -89,7 +89,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           {/* Name + Tags */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl md:text-3xl font-black text-gray-900 break-words">{displayName}</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 break-words">{displayName}</h1>
               {isOwner && (
                 <Link
                   href={ROUTES.DIRECTORY_REGISTER}

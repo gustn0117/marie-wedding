@@ -57,7 +57,7 @@ export default function ChangePasswordPage() {
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto text-center py-16">
-        <h2 className="text-xl font-black text-text-primary mb-3">로그인이 필요합니다</h2>
+        <h2 className="text-xl font-bold text-text-primary mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>
       </div>
     );
@@ -76,7 +76,7 @@ export default function ChangePasswordPage() {
         </Link>
         <div>
           <p className="text-sm font-bold text-primary">My Page</p>
-          <h1 className="text-2xl font-black text-text-primary">비밀번호 변경</h1>
+          <h1 className="text-2xl font-bold text-text-primary">비밀번호 변경</h1>
         </div>
       </div>
 

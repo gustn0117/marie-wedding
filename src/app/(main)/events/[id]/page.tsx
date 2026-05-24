@@ -75,7 +75,7 @@ export default async function EventDetailPage({ params }: PageProps) {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-snug mb-3">{event.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-3">{event.title}</h1>
 
           {/* Meta */}
           <div className="flex items-center gap-2 text-xs text-gray-400 pb-6 border-b border-gray-200 mb-6">

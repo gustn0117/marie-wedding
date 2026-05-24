@@ -426,7 +426,7 @@ function Section({ step, title, description, children }: { step: number; title: 
     <section className="rounded border border-gray-200 bg-white p-5">
       <div className="flex items-center gap-2 mb-1">
         <span className="w-6 h-6 bg-primary text-white text-xs font-bold flex items-center justify-center rounded shrink-0">{step}</span>
-        <h2 className="text-base sm:text-lg font-black text-gray-900">{title}</h2>
+        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
       </div>
       <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:ml-8">{description}</p>
       <div className="sm:ml-8">{children}</div>

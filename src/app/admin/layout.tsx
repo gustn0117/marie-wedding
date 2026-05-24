@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/shared/hooks/useAuth';
+import Logo from '@/shared/components/Logo';
 
 const NAV_ITEMS = [
   { href: ROUTES.ADMIN, label: '대시보드', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -63,9 +64,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <form onSubmit={handleLegacyLogin} className="w-full max-w-sm">
           <div className="bg-white rounded border border-gray-200 shadow-sm p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-black text-primary tracking-tight">Marié</h1>
-              <p className="text-sm text-gray-500 mt-1">관리자 페이지</p>
+            <div className="flex flex-col items-center text-center mb-8 gap-2">
+              <Logo variant="full" size="md" />
+              <p className="text-sm text-gray-500">관리자 페이지</p>
             </div>
             <div className="space-y-4">
               <div>
@@ -97,12 +98,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-gray-50">
       {/* Mobile header */}
       <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 -ml-2 text-gray-600">
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 -ml-2 text-gray-600" aria-label="메뉴 열기">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
           </svg>
         </button>
-        <span className="text-lg font-black text-primary">Marié Admin</span>
+        <div className="flex items-center gap-2">
+          <Logo variant="full" size="sm" />
+          <span className="text-[11px] font-bold bg-primary text-white px-1.5 py-0.5 rounded">ADMIN</span>
+        </div>
         <Link href={ROUTES.HOME} className="text-sm text-gray-500 hover:text-gray-800">사이트로</Link>
       </div>
 
@@ -115,9 +119,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar */}
       <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="h-14 flex items-center px-6 border-b border-gray-100">
-          <Link href={ROUTES.ADMIN} className="text-xl font-black text-primary tracking-tight">Marié</Link>
-          <span className="ml-2 text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded">ADMIN</span>
+        <div className="h-14 flex items-center gap-2 px-6 border-b border-gray-100">
+          <Link href={ROUTES.ADMIN} aria-label="Marié Admin 홈">
+            <Logo variant="full" size="sm" />
+          </Link>
+          <span className="text-[10px] font-bold bg-primary text-white px-1.5 py-0.5 rounded">ADMIN</span>
         </div>
         <nav className="p-3 space-y-0.5">
           {NAV_ITEMS.map((item) => (

@@ -119,7 +119,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
                   href={`${ROUTES.JOBS}?businessType=${type.value}`}
                   className="group flex min-h-[82px] flex-col justify-center border-b border-r border-gray-100 px-4 py-3 hover:bg-primary-50/70 transition-colors"
                 >
-                  <span className={`mb-2 flex h-8 w-8 items-center justify-center rounded text-sm font-black ${
+                  <span className={`mb-2 flex h-8 w-8 items-center justify-center rounded text-sm font-bold ${
                     index % 3 === 0 ? 'bg-primary-50 text-primary' : index % 3 === 1 ? 'bg-accent-50 text-accent' : 'bg-orange-50 text-orange-600'
                   }`}>
                     {type.label.charAt(0)}
@@ -189,7 +189,7 @@ export default function HomeContent({ posts }: HomeContentProps) {
             <div className="grid gap-0 sm:grid-cols-2">
               {partnerCompanies.map((company) => (
                 <Link key={company.name} href={ROUTES.DIRECTORY} className="flex gap-3 border-b border-r border-gray-100 p-4 hover:bg-primary-50/50 transition-colors">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-lg font-black text-primary">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded border border-gray-200 bg-white text-lg font-bold text-primary">
                     {company.name.charAt(0)}
                   </span>
                   <span className="min-w-0">
@@ -235,7 +235,7 @@ function SummaryCard({ label, value, href, color }: { label: string; value: stri
   return (
     <Link href={href} className="rounded border border-gray-200 bg-secondary-50 px-4 py-3 hover:border-primary-300 hover:bg-white transition-colors">
       <span className="block text-xs font-semibold text-gray-500">{label}</span>
-      <span className={`mt-1 block text-2xl font-black ${color}`}>{value}</span>
+      <span className={`mt-1 block text-2xl font-bold ${color}`}>{value}</span>
     </Link>
   );
 }

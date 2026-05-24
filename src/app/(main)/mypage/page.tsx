@@ -74,7 +74,7 @@ export default async function MyPage() {
     <div className="max-w-[1000px] mx-auto space-y-4">
       <section className="saramin-section p-5">
         <p className="text-sm font-bold text-primary">My Page</p>
-        <h1 className="text-2xl font-black text-gray-900">마이페이지</h1>
+        <h1 className="text-2xl font-bold text-gray-900">마이페이지</h1>
       </section>
 
       {/* Profile Card */}
@@ -94,7 +94,7 @@ export default async function MyPage() {
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xl font-black text-gray-900 truncate">
+              <h2 className="text-xl font-bold text-gray-900 truncate">
                 {profile.company_name || profile.contact_name}
               </h2>
               <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${
@@ -174,11 +174,11 @@ export default async function MyPage() {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white rounded border border-gray-200 p-5">
           <p className="text-sm text-gray-500 mb-1">등록한 공고</p>
-          <p className="text-2xl font-black text-gray-900">{jobs.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
+          <p className="text-2xl font-bold text-gray-900">{jobs.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
         </div>
         <div className="bg-white rounded border border-gray-200 p-5">
           <p className="text-sm text-gray-500 mb-1">작성한 게시글</p>
-          <p className="text-2xl font-black text-gray-900">{posts.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
+          <p className="text-2xl font-bold text-gray-900">{posts.length}<span className="text-sm font-normal text-gray-400 ml-1">건</span></p>
         </div>
       </div>
 

@@ -82,7 +82,7 @@ export default async function PostDetailPage({ params }: PageProps) {
           <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold mb-3">
             {getCategoryLabel(post.category)}
           </span>
-          <h1 className="text-2xl md:text-3xl font-black text-gray-900 leading-snug mb-4">{post.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-4">{post.title}</h1>
 
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">

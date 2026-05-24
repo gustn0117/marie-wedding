@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { formatDate, formatRelativeTime } from '@/shared/utils/format';
 import { EVENT_TYPES } from '@/features/events/types';
+import Logo from '@/shared/components/Logo';
 import type { Event } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -58,7 +59,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
       {/* Header */}
       <section className="saramin-section p-5">
         <p className="mb-1 text-sm font-bold text-primary">News & Event</p>
-        <h1 className="text-h2 font-black text-gray-900">이벤트 & 소식</h1>
+        <h1 className="text-h2 font-bold text-gray-900">이벤트 & 소식</h1>
         <p className="mt-1 text-small text-gray-500">Marié의 새로운 이벤트와 웨딩 업계 소식을 확인하세요.</p>
       </section>
 
@@ -144,7 +145,7 @@ function EventCard({ event }: { event: Event }) {
         </div>
       ) : (
         <div className="aspect-[16/9] bg-secondary-50 flex items-center justify-center">
-          <span className="text-primary/30 text-4xl font-black">M</span>
+          <Logo variant="mark" size="lg" className="text-primary/30" />
         </div>
       )}
 
@@ -153,7 +154,7 @@ function EventCard({ event }: { event: Event }) {
           <span className={`badge ${getTypeColor(event.type)}`}>{getTypeLabel(event.type)}</span>
           {event.is_pinned && <span className="badge-urgent">고정</span>}
         </div>
-        <h3 className="text-body-lg font-black text-gray-900 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
+        <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors leading-snug line-clamp-2 mb-1.5">
           {event.title}
         </h3>
         {preview && (

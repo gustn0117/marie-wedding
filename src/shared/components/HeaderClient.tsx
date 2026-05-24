@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
+import Logo from './Logo';
 import type { AuthProfile } from './Header';
 
 const NAV_LINKS = [
@@ -88,9 +89,8 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
       <div className="max-w-[1200px] mx-auto px-4">
         <div className="h-[74px] flex items-center gap-5">
-          <Link href={ROUTES.HOME} className="shrink-0 flex items-center gap-2" aria-label="Marié 홈">
-            <span className="flex h-9 w-9 items-center justify-center rounded bg-primary text-white font-black text-lg">M</span>
-            <span className="text-[27px] font-black tracking-tight text-primary">Marié</span>
+          <Link href={ROUTES.HOME} className="shrink-0" aria-label="Marié 홈">
+            <Logo variant="full" size="md" />
           </Link>
 
           <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[560px]">

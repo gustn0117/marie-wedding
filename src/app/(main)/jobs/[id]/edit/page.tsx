@@ -41,7 +41,7 @@ export default async function EditJobPage({ params }: PageProps) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded border border-gray-200 p-8 text-center space-y-4">
-          <h2 className="text-lg font-black text-gray-900">수정 권한이 없습니다</h2>
+          <h2 className="text-lg font-bold text-gray-900">수정 권한이 없습니다</h2>
           <Link href={ROUTES.JOBS_DETAIL(params.id)} className="btn-outline text-sm inline-block">돌아가기</Link>
         </div>
       </div>
@@ -70,7 +70,7 @@ export default async function EditJobPage({ params }: PageProps) {
         </Link>
         <div>
           <p className="text-sm font-bold text-primary">Recruit Posting</p>
-          <h1 className="text-2xl font-black text-gray-900">공고 수정</h1>
+          <h1 className="text-2xl font-bold text-gray-900">공고 수정</h1>
         </div>
       </div>
 

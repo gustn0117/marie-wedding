@@ -102,7 +102,11 @@ export default function AdminEventsPage() {
                       ) : '-'}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {event.is_pinned && <span className="text-red-500 text-xs font-bold">★</span>}
+                      {event.is_pinned && (
+                        <svg className="w-4 h-4 inline text-state-urgent" fill="currentColor" viewBox="0 0 24 24" aria-label="고정됨">
+                          <path d="M16 9V4l1-1V1H7v2l1 1v5L6 11v2h5.2v7h1.6v-7H18v-2l-2-2z" />
+                        </svg>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center text-xs text-gray-500">{event.view_count}</td>
                     <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(event.created_at)}</td>

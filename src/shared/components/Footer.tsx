@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
+import Logo from './Logo';
 
 const SERVICE_LINKS = [
   { href: ROUTES.JOBS, label: '채용정보' },
@@ -28,10 +29,7 @@ export default function Footer() {
 
         <div className="grid gap-4 py-5 md:grid-cols-[1fr_auto] md:items-start">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-7 w-7 items-center justify-center rounded bg-primary text-white text-sm font-black">M</span>
-              <span className="text-xl font-black tracking-tight text-primary">Marié</span>
-            </div>
+            <Logo variant="full" size="sm" />
             <p className="mt-3 max-w-3xl text-xs leading-relaxed text-gray-500">
               마리에는 웨딩 업계 종사자와 업체를 위한 채용, 파트너 섭외, 업체 디렉토리, 커뮤니티 플랫폼입니다.
               서비스 이용 문의와 광고 제휴 문의는 고객센터를 통해 접수해주세요.

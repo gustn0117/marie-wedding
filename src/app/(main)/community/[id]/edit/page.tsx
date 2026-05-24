@@ -41,7 +41,7 @@ export default async function EditPostPage({ params }: PageProps) {
   if (me.id !== post.author_id) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <h2 className="text-xl font-black text-gray-900 mb-3">수정 권한이 없습니다</h2>
+        <h2 className="text-xl font-bold text-gray-900 mb-3">수정 권한이 없습니다</h2>
         <Link href={ROUTES.COMMUNITY_DETAIL(params.id)} className="btn-primary text-sm">돌아가기</Link>
       </div>
     );
@@ -60,7 +60,7 @@ export default async function EditPostPage({ params }: PageProps) {
           돌아가기
         </Link>
         <p className="text-sm font-bold text-primary">Community</p>
-        <h1 className="text-2xl font-black text-gray-900">글 수정</h1>
+        <h1 className="text-2xl font-bold text-gray-900">글 수정</h1>
       </div>
 
       <div className="bg-white border border-gray-200 rounded p-5">

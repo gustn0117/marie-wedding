@@ -27,7 +27,7 @@ export default async function NewJobPage() {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
-          <h2 className="text-lg font-black text-gray-900">업체 회원 전용 기능입니다</h2>
+          <h2 className="text-lg font-bold text-gray-900">업체 회원 전용 기능입니다</h2>
           <p className="text-sm text-gray-500">공고 등록은 업체 회원만 가능합니다.</p>
           <Link href={ROUTES.JOBS} className="btn-primary text-sm px-6 py-2.5 inline-block">목록으로 돌아가기</Link>
         </div>
@@ -45,7 +45,7 @@ export default async function NewJobPage() {
         </Link>
         <div>
           <p className="text-sm font-bold text-primary">Recruit Posting</p>
-          <h1 className="text-2xl font-black text-gray-900">공고 등록</h1>
+          <h1 className="text-2xl font-bold text-gray-900">공고 등록</h1>
         </div>
       </div>
 

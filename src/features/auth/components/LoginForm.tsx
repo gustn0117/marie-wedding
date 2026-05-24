@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { ROUTES } from '@/shared/constants';
+import Logo from '@/shared/components/Logo';
 import type { LoginFormData } from '@/features/auth/types';
 
 export default function LoginForm() {
@@ -52,13 +53,11 @@ export default function LoginForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-surface rounded border border-border p-8 shadow-sm">
         {/* Logo / Brand */}
-        <div className="text-center mb-8">
-          <Link href={ROUTES.HOME} className="inline-block">
-            <h1 className="text-3xl font-black text-primary tracking-tight">Marié</h1>
+        <div className="flex flex-col items-center text-center mb-8 gap-2">
+          <Link href={ROUTES.HOME} aria-label="Marié 홈">
+            <Logo variant="full" size="lg" />
           </Link>
-          <p className="mt-2 text-sm text-text-secondary">
-            웨딩업계 B2B 플랫폼
-          </p>
+          <p className="text-sm text-text-secondary">웨딩업계 B2B 플랫폼</p>
         </div>
 
         {/* Error Message */}

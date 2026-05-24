@@ -41,7 +41,7 @@ export default async function DirectoryRegisterPage() {
         </Link>
         <div>
           <p className="text-sm font-bold text-primary">Company Directory</p>
-          <h1 className="text-2xl font-black text-gray-900">디렉토리 등록 / 수정</h1>
+          <h1 className="text-2xl font-bold text-gray-900">디렉토리 등록 / 수정</h1>
         </div>
       </div>
 

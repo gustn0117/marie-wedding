@@ -69,7 +69,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="mb-1 text-sm font-bold text-primary">Community</p>
-            <h1 className="text-h2 font-black text-gray-900">커뮤니티</h1>
+            <h1 className="text-h2 font-bold text-gray-900">커뮤니티</h1>
             <p className="mt-1 text-small text-gray-500">현장 노하우, 업계 소식, 구인 경험을 웨딩업계 종사자들과 나눠보세요.</p>
           </div>
           <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary">
@@ -91,7 +91,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
         <aside className="space-y-3 lg:sticky lg:top-[150px] lg:self-start">
           <div className="saramin-section p-4">
-            <h2 className="text-base font-black text-gray-900">커뮤니티 바로가기</h2>
+            <h2 className="text-base font-bold text-gray-900">커뮤니티 바로가기</h2>
             <div className="mt-3 grid gap-2 text-sm">
               <Link href={`${ROUTES.COMMUNITY}?category=news`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">업계뉴스</Link>
               <Link href={`${ROUTES.COMMUNITY}?category=tips`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">노하우공유</Link>
@@ -99,7 +99,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
             </div>
           </div>
           <div className="saramin-section p-4">
-            <h2 className="text-base font-black text-gray-900">인기 서비스</h2>
+            <h2 className="text-base font-bold text-gray-900">인기 서비스</h2>
             <div className="mt-3 space-y-2 text-sm">
               <Link href={ROUTES.JOBS_NEW} className="btn-outline w-full">채용공고 등록</Link>
               <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary w-full">업체 프로필 등록</Link>
