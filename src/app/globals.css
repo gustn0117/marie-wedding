@@ -53,21 +53,29 @@
            hover:border-primary-300 transition-colors duration-150;
   }
   .card-tier-1 {
-    @apply border-state-promoted bg-state-promoted-bg;
+    @apply border-2 border-primary;
   }
   .card-tier-2 {
-    @apply border-2 border-primary bg-primary-50;
+    @apply border border-primary;
   }
 
-  /* === BADGES === */
+  /* === BADGES ===
+     원칙: 상태 표현은 단일 포인트 색(state-urgent)만 fill로 사용,
+     나머지는 무채색 outline 또는 primary outline. */
   .badge {
     @apply inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold tracking-tight;
   }
+  /* 마감임박: 유일한 강조 컬러 fill */
   .badge-urgent { @apply badge bg-state-urgent text-white; }
-  .badge-new { @apply badge bg-state-new text-white; }
-  .badge-promoted { @apply badge bg-state-promoted text-white; }
-  .badge-attr { @apply badge bg-gray-100 text-gray-700 border border-gray-200; }
-  .badge-verified { @apply badge bg-state-verified-bg text-state-verified border border-state-verified; }
+  /* 신규: primary outline (이전 emerald → 무채색 톤) */
+  .badge-new { @apply badge border border-primary text-primary; }
+  /* 광고/프리미엄: 무채색 outline */
+  .badge-promoted { @apply badge border border-gray-400 text-gray-700; }
+  /* 속성 무채색 outline */
+  .badge-attr { @apply badge bg-white text-gray-700 border border-gray-300; }
+  /* 인증: primary outline */
+  .badge-verified { @apply badge border border-primary text-primary; }
+  /* 카테고리: primary 옅은 fill (가장 가벼움) */
   .badge-category { @apply badge bg-primary-50 text-primary-600; }
   .badge-primary { @apply badge-category; }
   .badge-accent { @apply badge-attr; }

@@ -68,24 +68,22 @@ export default async function JobDetailPage({ params }: PageProps) {
 
         <div className="p-6 md:p-8">
           {/* Tags */}
-          <div className="flex items-center gap-2 flex-wrap mb-4">
-            <span className="inline-flex items-center px-2.5 py-1 bg-primary text-white text-xs font-semibold">
+          <div className="flex items-center gap-1.5 flex-wrap mb-4">
+            <span className="inline-flex items-center px-2 py-0.5 bg-primary text-white text-[11px] font-bold rounded">
               {job.posting_type === 'matching' ? '업체 섭외' : '채용'}
             </span>
-            <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold">
+            <span className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary-600 text-[11px] font-bold rounded">
               {getBusinessTypeLabel(job.business_type)}
             </span>
-            <span className="inline-flex items-center px-2.5 py-1 bg-gray-100 text-gray-700 text-xs font-semibold">
+            <span className="inline-flex items-center px-2 py-0.5 border border-gray-300 text-gray-700 text-[11px] font-bold rounded">
               {getEmploymentTypeLabel(job.employment_type)}
             </span>
             {isExpired ? (
-              <span className="inline-flex items-center px-2.5 py-1 bg-gray-200 text-gray-500 text-xs font-semibold">
+              <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-bold rounded">
                 마감됨
               </span>
             ) : daysLeft !== null && daysLeft <= 7 ? (
-              <span className="inline-flex items-center px-2.5 py-1 bg-red-50 text-red-600 text-xs font-semibold">
-                마감 {daysLeft}일 전
-              </span>
+              <span className="badge-urgent">마감 {daysLeft}일 전</span>
             ) : null}
           </div>
 
@@ -96,20 +94,43 @@ export default async function JobDetailPage({ params }: PageProps) {
 
           {/* Company + Meta */}
           <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-            <ProfileAvatar
-              profileImage={job.author?.profile_image}
-              name={job.author?.company_name || job.author?.contact_name || '?'}
-              size="sm"
-              className="!rounded"
-            />
-            <div>
-              <p className="text-sm font-semibold text-gray-900">
-                {job.author?.company_name || job.author?.contact_name || '알 수 없음'}
-              </p>
-              <p className="text-xs text-gray-400">
-                <time>{formatRelativeTime(job.created_at)}</time> 등록
-              </p>
-            </div>
+            {job.author ? (
+              <Link
+                href={ROUTES.DIRECTORY_DETAIL(job.author.id)}
+                className="group flex items-center gap-3"
+                aria-label={`${job.author.company_name || job.author.contact_name} 업체 상세 보기`}
+              >
+                <ProfileAvatar
+                  profileImage={job.author.profile_image}
+                  name={job.author.company_name || job.author.contact_name || '?'}
+                  size="sm"
+                  className="!rounded"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                    {job.author.company_name || job.author.contact_name || '알 수 없음'}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    <time>{formatRelativeTime(job.created_at)}</time> 등록
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-3">
+                <ProfileAvatar
+                  profileImage={null}
+                  name="?"
+                  size="sm"
+                  className="!rounded"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-500">알 수 없음</p>
+                  <p className="text-xs text-gray-400">
+                    <time>{formatRelativeTime(job.created_at)}</time> 등록
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Info Grid */}

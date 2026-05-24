@@ -15,7 +15,7 @@ const SERVICE_LINKS = [
 export default function Footer() {
   return (
     <footer className="mt-auto border-t border-gray-200 bg-white text-gray-600">
-      <div className="max-w-[1200px] mx-auto px-4 py-6">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-gray-100 pb-4 text-sm font-semibold text-gray-700">
           {SERVICE_LINKS.map((link) => (
             <Link key={link.label} href={link.href} className="hover:text-primary transition-colors">

@@ -62,7 +62,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
       <div className="hidden md:block bg-secondary-50 border-b border-gray-100">
-        <div className="max-w-[1200px] mx-auto px-4 h-9 flex items-center justify-between text-xs">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 h-9 flex items-center justify-between text-xs">
           <div className="flex items-center gap-4 text-gray-500">
             <Link href={ROUTES.JOBS_NEW} className="hover:text-primary transition-colors">공고 등록</Link>
             <Link href={ROUTES.DIRECTORY_REGISTER} className="hover:text-primary transition-colors">업체 등록</Link>
@@ -87,7 +87,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4">
+      <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
         <div className="h-[74px] flex items-center gap-5">
           <Link href={ROUTES.HOME} className="shrink-0" aria-label="Marié 홈">
             <Logo variant="full" size="md" />
