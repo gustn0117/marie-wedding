@@ -38,7 +38,25 @@ export interface Profile {
   response_rate: number;
   avg_response_minutes: number | null;
   completed_deals_count: number;
+  premium_tier: 'free' | 'basic' | 'pro';
+  premium_until: string | null;
 }
+
+export type TrustTier = 'unverified' | 'phone_verified' | 'business_verified' | 'deal_proven';
+
+export function computeTrustTier(profile: Pick<Profile, 'verification_status' | 'phone_verified' | 'completed_deals_count'>): TrustTier {
+  if (profile.completed_deals_count >= 5) return 'deal_proven';
+  if (profile.verification_status === 'verified') return 'business_verified';
+  if (profile.phone_verified) return 'phone_verified';
+  return 'unverified';
+}
+
+export const TRUST_TIER_LABELS: Record<TrustTier, string> = {
+  unverified: '미인증',
+  phone_verified: '실명 확인',
+  business_verified: '인증 업체',
+  deal_proven: '거래 검증',
+};
 
 export interface Job {
   id: string;
@@ -55,6 +73,8 @@ export interface Job {
   image: string | null;
   view_count: number;
   hidden_by_admin: boolean;
+  is_promoted: boolean;
+  promoted_until: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

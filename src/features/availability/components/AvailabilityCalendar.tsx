@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AvailabilitySlot, AvailabilityStatus } from '@/types/database';
 import { availabilityService, monthBounds, ymd } from '@/features/availability/services/availabilityService';
+import { toast } from '@/shared/components/Toast';
 
 interface Props {
   profileId: string;
@@ -71,7 +72,7 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
         setSlots((prev) => ({ ...prev, [key]: updated }));
       }
     } catch {
-      window.alert('업데이트에 실패했습니다.');
+      toast('업데이트에 실패했습니다.', 'error');
     }
   }
 

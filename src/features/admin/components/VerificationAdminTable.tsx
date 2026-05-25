@@ -9,10 +9,17 @@ import { getBusinessTypeLabel } from '@/shared/utils/format';
 import type { VerificationRow } from '@/features/verification/types';
 import { toast } from '@/shared/components/Toast';
 
+interface RejectModal {
+  id: string;
+  companyName: string;
+  reason: string;
+}
+
 export default function VerificationAdminTable({ rows }: { rows: VerificationRow[] }) {
   const [items, setItems] = useState(rows);
   const [pending, startTransition] = useTransition();
   const [docUrls, setDocUrls] = useState<Record<string, string>>({});
+  const [rejectModal, setRejectModal] = useState<RejectModal | null>(null);
 
   useEffect(() => {
     rows.forEach(async (r) => {
@@ -24,17 +31,35 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
   }, [rows]);
 
   function handle(id: string, decision: 'verified' | 'rejected') {
-    let reason: string | undefined;
     if (decision === 'rejected') {
-      const r = window.prompt('거절 사유를 입력하세요.');
-      if (!r?.trim()) return;
-      reason = r;
+      const row = items.find((x) => x.id === id);
+      setRejectModal({ id, companyName: row?.company_name || row?.contact_name || '업체', reason: '' });
+      return;
     }
     startTransition(async () => {
-      const result = await decideVerification(id, decision, reason);
+      const result = await decideVerification(id, 'verified');
       if (result.ok) {
         setItems((prev) => prev.filter((x) => x.id !== id));
-        toast(decision === 'verified' ? '인증을 승인했습니다.' : '인증을 거절했습니다.', 'success');
+        toast('인증을 승인했습니다.', 'success');
+      } else {
+        toast(result.error, 'error');
+      }
+    });
+  }
+
+  function confirmReject() {
+    if (!rejectModal) return;
+    const { id, reason } = rejectModal;
+    if (!reason.trim()) {
+      toast('거절 사유를 입력해 주세요.', 'error');
+      return;
+    }
+    startTransition(async () => {
+      const result = await decideVerification(id, 'rejected', reason.trim());
+      if (result.ok) {
+        setItems((prev) => prev.filter((x) => x.id !== id));
+        toast('인증을 거절했습니다.', 'success');
+        setRejectModal(null);
       } else {
         toast(result.error, 'error');
       }
@@ -46,6 +71,7 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
   }
 
   return (
+    <>
     <div className="border border-gray-200 overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-left">
@@ -110,5 +136,41 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
         </tbody>
       </table>
     </div>
+
+    {rejectModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div role="dialog" aria-modal="true" className="w-full max-w-md border border-gray-200 bg-white p-5 shadow-xl">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">인증 거절</p>
+          <h2 className="text-base font-bold text-gray-900 mb-3">{rejectModal.companyName}</h2>
+          <p className="text-xs text-gray-500 mb-3">거절 사유를 입력해 주세요. 사용자에게 알림으로 전송됩니다.</p>
+          <textarea
+            value={rejectModal.reason}
+            onChange={(e) => setRejectModal({ ...rejectModal, reason: e.target.value })}
+            rows={4}
+            placeholder="예) 사업자등록증 정보와 입력한 사업자번호가 일치하지 않습니다."
+            className="w-full border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none resize-none mb-4"
+          />
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setRejectModal(null)}
+              disabled={pending}
+              className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary"
+            >
+              취소
+            </button>
+            <button
+              type="button"
+              onClick={confirmReject}
+              disabled={pending || !rejectModal.reason.trim()}
+              className="rounded border border-state-urgent bg-state-urgent px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50"
+            >
+              거절 처리
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

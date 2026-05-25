@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { savedSearchService } from '@/features/saved-searches/services/savedSearchService';
 import type { SavedSearchScope } from '@/types/database';
+import { toast } from '@/shared/components/Toast';
 
 interface Props {
   scope: SavedSearchScope;
@@ -17,15 +18,17 @@ export default function SaveSearchButton({ scope, query, defaultName }: Props) {
   const [done, setDone] = useState(false);
 
   async function onSave() {
-    if (!profile) { window.alert('로그인이 필요합니다.'); return; }
+    if (!profile) { toast('로그인이 필요합니다.', 'error'); return; }
+    // 간단 inline prompt — 토스트 인프라 prompt 모달은 추후 통합
     const name = window.prompt('이 검색의 이름을 정해주세요.', defaultName ?? '');
     if (!name?.trim()) return;
     setBusy(true);
     try {
       await savedSearchService.create({ profileId: profile.id, name: name.trim(), scope, query });
       setDone(true);
+      toast('검색을 저장했습니다.', 'success');
     } catch {
-      window.alert('저장에 실패했습니다.');
+      toast('저장에 실패했습니다.', 'error');
     } finally {
       setBusy(false);
     }

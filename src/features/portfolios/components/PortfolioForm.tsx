@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Portfolio } from '@/types/database';
 import { portfolioService } from '@/features/portfolios/services/portfolioService';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 
 
@@ -108,14 +109,17 @@ export default function PortfolioForm({ profileId, initial }: Props) {
 
   async function onDelete() {
     if (!initial) return;
-    if (!window.confirm('이 포트폴리오를 삭제하시겠습니까?')) return;
+    const ok = await toastConfirm('이 포트폴리오를 삭제하시겠습니까?');
+    if (!ok) return;
     setBusy(true);
     try {
       await portfolioService.softDelete(initial.id);
+      toast('삭제되었습니다.', 'success');
       router.push('/mypage/portfolios');
       router.refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : '삭제 실패');
+      const msg = e instanceof Error ? e.message : '삭제 실패';
+      toast(msg, 'error');
       setBusy(false);
     }
   }
