@@ -53,6 +53,7 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
 
   query = query
+    .order('is_promoted', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
 

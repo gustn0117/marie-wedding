@@ -5,6 +5,7 @@ import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import Badge from '@/shared/components/Badge';
 import Logo from '@/shared/components/Logo';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface CompanyCardProps {
   profile: Profile;
@@ -25,6 +26,8 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const isVerified = profile.verification_status === 'verified';
   const deals = profile.completed_deals_count ?? 0;
   const responseRate = Math.round(profile.response_rate ?? 0);
+  const trustTier = computeTrustTier(profile);
+  const trustEmphasis = trustTier === 'deal_proven' || trustTier === 'business_verified';
 
   return (
     <Link
@@ -96,8 +99,9 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
             fillPercent={responseRate > 0 ? responseRate : undefined}
           />
           <TrustCell
-            label="상태"
-            value={isVerified ? '인증' : profile.phone_verified ? '실명' : '미인증'}
+            label="등급"
+            value={TRUST_TIER_LABELS[trustTier]}
+            emphasis={trustEmphasis}
           />
         </div>
       </div>
@@ -105,11 +109,11 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   );
 }
 
-function TrustCell({ label, value, fillPercent }: { label: string; value: string; fillPercent?: number }) {
+function TrustCell({ label, value, fillPercent, emphasis }: { label: string; value: string; fillPercent?: number; emphasis?: boolean }) {
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
-      <p className="text-xs font-bold text-gray-900 tabular-nums">{value}</p>
+      <p className={`text-xs font-bold tabular-nums ${emphasis ? 'text-gray-950' : 'text-gray-900'}`}>{value}</p>
       {typeof fillPercent === 'number' && (
         <div className="mt-1 h-0.5 bg-gray-100">
           <div className="h-full bg-gray-800" style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }} />
