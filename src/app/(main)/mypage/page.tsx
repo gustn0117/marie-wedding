@@ -14,6 +14,7 @@ import VerificationStatusPanel from '@/features/verification/components/Verifica
 import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
 import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
 import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
+import RecentJobsSection from '@/features/jobs/components/RecentJobsSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -242,6 +243,9 @@ export default async function MyPage() {
 
       {/* Pending Reviews */}
       <PendingReviewsSection profileId={profile.id} />
+
+      {/* Recent Jobs */}
+      <RecentJobsSection />
 
       {/* Recommended Jobs */}
       <RecommendedJobs profile={profile} />

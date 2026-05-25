@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client';
 
 const SESSION_KEY_PREFIX = 'mv:';
 const STORAGE_KEY = 'marie_viewer_token';
+export const RECENT_JOBS_KEY = 'marie_recent_jobs';
+const RECENT_MAX = 20;
 
 function getViewerKey(): string {
   try {
@@ -19,8 +21,19 @@ function getViewerKey(): string {
   }
 }
 
+function pushRecent(jobId: string) {
+  try {
+    const raw = localStorage.getItem(RECENT_JOBS_KEY) || '[]';
+    const arr = (JSON.parse(raw) as string[]).filter((id) => id && id !== jobId);
+    const next = [jobId, ...arr].slice(0, RECENT_MAX);
+    localStorage.setItem(RECENT_JOBS_KEY, JSON.stringify(next));
+  } catch { /* noop */ }
+}
+
 export default function JobViewTracker({ jobId }: { jobId: string }) {
   useEffect(() => {
+    pushRecent(jobId);
+
     let cancelled = false;
     const sessionKey = SESSION_KEY_PREFIX + jobId;
     try {
