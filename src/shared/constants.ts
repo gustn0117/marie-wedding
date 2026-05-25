@@ -98,6 +98,7 @@ export const ROUTES = {
   MYPAGE_PORTFOLIOS: '/mypage/portfolios',
   MYPAGE_PORTFOLIO_NEW: '/mypage/portfolios/new',
   MYPAGE_PORTFOLIO_EDIT: (id: string) => `/mypage/portfolios/${id}/edit`,
+  MYPAGE_PHONE_VERIFICATION: '/mypage/phone-verification',
 } as const;
 
 export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
