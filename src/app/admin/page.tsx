@@ -6,6 +6,7 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
+import { createClient } from '@/lib/supabase/client';
 
 interface Stats {
   users: number;
@@ -17,10 +18,18 @@ interface Stats {
   recentJobs: number;
 }
 
+interface FunnelStats {
+  totalApplications: number;
+  acceptedApplications: number;
+  completedDeals: number;
+  reviewsWritten: number;
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [recentUsers, setRecentUsers] = useState<Profile[]>([]);
   const [recentJobs, setRecentJobs] = useState<Job[]>([]);
+  const [funnel, setFunnel] = useState<FunnelStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,6 +43,22 @@ export default function AdminDashboard() {
         setStats(s);
         setRecentUsers(u);
         setRecentJobs(j);
+
+        // 퍼널 — 클라이언트 직접 query (admin RLS)
+        const sb = createClient();
+        const [appAll, appAccepted, deals, reviews] = await Promise.all([
+          sb.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+          sb.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'accepted'),
+          sb.from('applications').select('id', { count: 'exact', head: true })
+            .is('deleted_at', null).not('hiring_completed_at', 'is', null).not('applicant_completed_at', 'is', null),
+          sb.from('reviews').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+        ]);
+        setFunnel({
+          totalApplications: appAll.count ?? 0,
+          acceptedApplications: appAccepted.count ?? 0,
+          completedDeals: deals.count ?? 0,
+          reviewsWritten: reviews.count ?? 0,
+        });
       } catch (err) {
         console.error(err);
       } finally {
@@ -83,6 +108,20 @@ export default function AdminDashboard() {
           </Link>
         ))}
       </div>
+
+      {/* Conversion Funnel */}
+      {funnel && (
+        <section className="bg-white rounded border border-gray-200 p-5">
+          <h2 className="text-base font-bold text-gray-900 mb-1">전환 퍼널</h2>
+          <p className="text-xs text-gray-500 mb-4">지원 → 승인 → 거래 완료 → 리뷰 단계별 누적 수치 (% = 지원 대비)</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <FunnelStep label="지원/문의" value={funnel.totalApplications} base={funnel.totalApplications} highlight />
+            <FunnelStep label="승인" value={funnel.acceptedApplications} base={funnel.totalApplications} />
+            <FunnelStep label="거래 완료" value={funnel.completedDeals} base={funnel.totalApplications} />
+            <FunnelStep label="리뷰 작성" value={funnel.reviewsWritten} base={funnel.totalApplications} />
+          </div>
+        </section>
+      )}
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Recent Users */}
@@ -146,6 +185,20 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function FunnelStep({ label, value, base, highlight }: { label: string; value: number; base: number; highlight?: boolean }) {
+  const pct = base > 0 ? Math.round((value / base) * 100) : 0;
+  return (
+    <div className={`border bg-white p-4 ${highlight ? 'border-gray-950' : 'border-gray-200'}`}>
+      <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums ${highlight ? 'text-gray-950' : 'text-gray-700'}`}>{value.toLocaleString()}</p>
+      <div className="mt-2 h-1 bg-gray-100">
+        <div className="h-full bg-gray-800" style={{ width: `${pct}%` }} />
+      </div>
+      <p className="mt-1 text-[11px] text-gray-400 tabular-nums">{pct}%</p>
     </div>
   );
 }

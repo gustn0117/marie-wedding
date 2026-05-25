@@ -40,7 +40,13 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     query = query.or(`company_name.ilike.%${searchParams.search}%,contact_name.ilike.%${searchParams.search}%`);
   }
 
-  query = query.order('company_name', { ascending: true }).range(from, to);
+  // 정렬: 프리미엄 → 거래 검증 → 인증 업체 → 가나다순
+  query = query
+    .order('premium_tier', { ascending: false, nullsFirst: false })
+    .order('completed_deals_count', { ascending: false })
+    .order('verified_at', { ascending: false, nullsFirst: false })
+    .order('company_name', { ascending: true })
+    .range(from, to);
 
   const { data, count } = await query;
   return { profiles: (data ?? []) as Profile[], count: count ?? 0 };
