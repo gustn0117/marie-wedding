@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import Logo from './Logo';
 import type { AuthProfile } from './Header';
+import NotificationBadge from '@/features/notifications/components/NotificationBadge';
 
 const NAV_LINKS = [
   { href: `${ROUTES.JOBS}?type=hiring`, label: '채용정보' },
@@ -73,7 +74,10 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             {isAuthenticated ? (
               <>
                 <Link href={ROUTES.MYPAGE} className="hover:text-white transition-colors">마이페이지</Link>
-                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="hover:text-white transition-colors">알림</Link>
+                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="inline-flex items-center hover:text-white transition-colors">
+                  알림
+                  <NotificationBadge profileId={profile.id} />
+                </Link>
                 {profile.role === 'admin' && (
                   <Link href={ROUTES.ADMIN} className="hover:text-white transition-colors">관리자</Link>
                 )}

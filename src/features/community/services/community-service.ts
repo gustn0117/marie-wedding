@@ -96,6 +96,7 @@ export const communityService = {
         title: data.title,
         content: data.content,
         category: data.category,
+        region: data.region || null,
         author_id: authorId,
       })
       .select()

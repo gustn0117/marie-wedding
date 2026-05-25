@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { POST_CATEGORIES, ROUTES } from '@/shared/constants';
+import { POST_CATEGORIES, REGIONS, ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
@@ -22,6 +22,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     title: initialData?.title ?? '',
     content: initialData?.content ?? '',
     category: initialData?.category ?? '',
+    region: initialData?.region ?? '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +88,40 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
               }`}
             >
               {cat.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Region (선택, 지역소식 등에서 유용) */}
+      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
+        <label className="block text-sm font-semibold text-gray-800">
+          지역 <span className="text-xs font-normal text-gray-400">(선택, 지역소식·후기에 유용)</span>
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFormData(prev => ({ ...prev, region: '' }))}
+            className={`rounded px-3 py-1.5 text-xs font-bold border ${
+              !formData.region
+                ? 'bg-gray-950 text-white border-gray-950'
+                : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
+            }`}
+          >
+            없음
+          </button>
+          {REGIONS.map((r) => (
+            <button
+              key={r.value}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, region: r.value }))}
+              className={`rounded px-3 py-1.5 text-xs font-bold border ${
+                formData.region === r.value
+                  ? 'bg-gray-950 text-white border-gray-950'
+                  : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
+              }`}
+            >
+              {r.label}
             </button>
           ))}
         </div>

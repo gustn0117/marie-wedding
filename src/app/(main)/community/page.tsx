@@ -6,6 +6,7 @@ import PostFilters from '@/features/community/components/PostFilters';
 import PostList from '@/features/community/components/PostList';
 import HotPostsSection from '@/features/community/components/HotPostsSection';
 import type { Post } from '@/types/database';
+import { REGIONS } from '@/shared/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,9 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
   if (searchParams.category) {
     query = query.eq('category', searchParams.category);
+  }
+  if (searchParams.region) {
+    query = query.eq('region', searchParams.region);
   }
   if (searchParams.search) {
     const escaped = searchParams.search.replace(/[%_]/g, '\\$&');
@@ -63,7 +67,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
 export default async function CommunityPage({ searchParams }: PageProps) {
   const { posts, count } = await getPosts(searchParams);
-  const activeFilterCount = ['category', 'search', 'sort'].filter((key) => searchParams[key]).length;
+  const activeFilterCount = ['category', 'search', 'sort', 'region'].filter((key) => searchParams[key]).length;
 
   return (
     <div className="space-y-4">
@@ -123,6 +127,20 @@ export default async function CommunityPage({ searchParams }: PageProps) {
               <Link href={`${ROUTES.COMMUNITY}?category=local`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">지역소식</Link>
               <Link href={`${ROUTES.COMMUNITY}?category=jobtip`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">구인팁</Link>
               <Link href={`${ROUTES.COMMUNITY}?category=free`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">자유게시판</Link>
+            </div>
+          </div>
+          <div className="platform-panel p-4">
+            <h2 className="text-base font-bold text-gray-900">지역</h2>
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              {REGIONS.slice(0, 9).map((r) => (
+                <Link
+                  key={r.value}
+                  href={`${ROUTES.COMMUNITY}?region=${r.value}`}
+                  className="rounded border border-gray-200 px-2 py-1.5 text-center text-xs font-bold text-gray-600 hover:border-primary hover:text-primary"
+                >
+                  {r.label}
+                </Link>
+              ))}
             </div>
           </div>
           <div className="platform-panel p-4">

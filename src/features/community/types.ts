@@ -2,6 +2,7 @@ export interface PostFormData {
   title: string;
   content: string;
   category: string;
+  region?: string;
 }
 
 export interface CommentFormData {
