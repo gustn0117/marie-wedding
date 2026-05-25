@@ -28,6 +28,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const responseRate = Math.round(profile.response_rate ?? 0);
   const trustTier = computeTrustTier(profile);
   const trustEmphasis = trustTier === 'deal_proven' || trustTier === 'business_verified';
+  const isPremium = profile.premium_tier !== 'free';
 
   return (
     <Link
@@ -44,6 +45,11 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         {isVerified && (
           <span className="absolute top-2 right-2 inline-flex items-center px-1.5 py-0.5 bg-black text-white text-[10px] font-bold">
             ✓ 인증
+          </span>
+        )}
+        {isPremium && (
+          <span className="absolute top-2 left-2 inline-flex items-center px-1.5 py-0.5 bg-gray-950 text-white text-[10px] font-bold">
+            PREMIUM
           </span>
         )}
       </div>

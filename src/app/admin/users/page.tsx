@@ -18,6 +18,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [banModal, setBanModal] = useState<{ user: Profile; reason: string } | null>(null);
+  const [noteModal, setNoteModal] = useState<{ user: Profile; note: string } | null>(null);
 
   const totalPages = Math.ceil(count / 20);
 
@@ -102,6 +103,24 @@ export default function AdminUsersPage() {
     } catch (err) {
       toast('제재 처리에 실패했습니다.', 'error');
       console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const saveNote = async () => {
+    if (!noteModal) return;
+    const { user, note } = noteModal;
+    setActionLoading(user.id);
+    try {
+      const sb = createClient();
+      const { error } = await sb.from('profiles').update({ admin_note: note.trim() || null }).eq('id', user.id);
+      if (error) throw error;
+      toast('관리자 메모를 저장했습니다.', 'success');
+      setNoteModal(null);
+      await load();
+    } catch {
+      toast('저장에 실패했습니다.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -271,6 +290,14 @@ export default function AdminUsersPage() {
                               </button>
                             )}
                             <button
+                              onClick={() => setNoteModal({ user, note: user.admin_note ?? '' })}
+                              disabled={actionLoading === user.id}
+                              className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                              title={user.admin_note || '메모 없음'}
+                            >
+                              메모{user.admin_note ? ' ✱' : ''}
+                            </button>
+                            <button
                               onClick={() => handleDelete(user)}
                               disabled={actionLoading === user.id}
                               className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
@@ -324,6 +351,40 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {noteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div role="dialog" aria-modal="true" className="w-full max-w-md border border-gray-200 bg-white p-5 shadow-xl">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">관리자 메모</p>
+            <h2 className="text-base font-bold text-gray-900 mb-3">{noteModal.user.contact_name}</h2>
+            <textarea
+              value={noteModal.note}
+              onChange={(e) => setNoteModal({ ...noteModal, note: e.target.value })}
+              rows={6}
+              placeholder="이 회원에 대한 비공개 메모 (관리자만 봅니다)"
+              className="w-full border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none resize-none mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setNoteModal(null)}
+                disabled={actionLoading === noteModal.user.id}
+                className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={saveNote}
+                disabled={actionLoading === noteModal.user.id}
+                className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700 disabled:opacity-50"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {banModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
