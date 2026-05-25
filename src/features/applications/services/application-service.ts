@@ -84,4 +84,17 @@ export const applicationService = {
     if (error) throw error;
     return data as Application;
   },
+
+  async markCompleted(id: string): Promise<Application> {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('mark_deal_completed', { p_application_id: id });
+    if (error) throw error;
+    const { data, error: fetchErr } = await supabase
+      .from('applications')
+      .select('*, job:jobs(*), applicant:profiles(*)')
+      .eq('id', id)
+      .single();
+    if (fetchErr) throw fetchErr;
+    return data as Application;
+  },
 };

@@ -167,6 +167,9 @@ function ApplicationList({
                 </div>
                 <div className="shrink-0 text-right">
                   <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
+                  {item.hiring_completed_at && item.applicant_completed_at && (
+                    <p className="mt-1 text-[10px] font-bold text-primary">✓ 거래 완료</p>
+                  )}
                   <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
                 </div>
               </div>

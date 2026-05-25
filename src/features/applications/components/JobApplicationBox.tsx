@@ -96,6 +96,20 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
     }
   };
 
+  const markCompleted = async (id: string, target: 'received' | 'applied') => {
+    try {
+      const updated = await applicationService.markCompleted(id);
+      if (target === 'received') {
+        setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      } else {
+        setApplication(updated);
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      alert(msg.includes('not_accepted') ? '승인된 건만 거래 완료 처리할 수 있습니다.' : '거래 완료 처리에 실패했습니다.');
+    }
+  };
+
   if (isLoading || loading) {
     return (
       <section className="bg-white border border-gray-200 rounded p-6 md:p-8 animate-pulse">
@@ -162,6 +176,13 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
                         </button>
                       ))}
                     </div>
+                    {item.status === 'accepted' && (
+                      <DealCompletionRow
+                        application={item}
+                        side="hiring"
+                        onMark={() => markCompleted(item.id, 'received')}
+                      />
+                    )}
                   </div>
                 </div>
               </article>
@@ -181,6 +202,13 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
           <span className="text-gray-400">{formatRelativeTime(application.created_at)} 접수</span>
         </div>
         <p className="whitespace-pre-wrap rounded bg-secondary-50 px-4 py-3 text-sm text-gray-700">{application.message}</p>
+        {application.status === 'accepted' && (
+          <DealCompletionRow
+            application={application}
+            side="applicant"
+            onMark={() => markCompleted(application.id, 'applied')}
+          />
+        )}
       </section>
     );
   }
@@ -215,5 +243,49 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
         </div>
       </div>
     </section>
+  );
+}
+
+function DealCompletionRow({
+  application,
+  side,
+  onMark,
+}: {
+  application: Application;
+  side: 'hiring' | 'applicant';
+  onMark: () => void;
+}) {
+  const mine = side === 'hiring' ? application.hiring_completed_at : application.applicant_completed_at;
+  const other = side === 'hiring' ? application.applicant_completed_at : application.hiring_completed_at;
+  const bothDone = !!mine && !!other;
+
+  return (
+    <div className="mt-3 rounded border border-gray-200 p-3 text-xs">
+      {bothDone ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-bold text-gray-900">✓ 거래 완료</span>
+          <span className="text-gray-500">양쪽 확인 완료</span>
+        </div>
+      ) : mine ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-bold text-gray-900">✓ 내 측 완료 표시</span>
+          <span className="text-gray-500">상대방 확인 대기 중</span>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <p className="font-bold text-gray-900">거래 완료 표시</p>
+            <p className="text-gray-500 mt-0.5">{other ? '상대방이 먼저 완료 처리했어요. 확인해 주세요.' : '실제 거래가 마무리되었다면 표시해 주세요.'}</p>
+          </div>
+          <button
+            type="button"
+            onClick={onMark}
+            className="shrink-0 rounded border border-primary px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors"
+          >
+            완료 표시
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
