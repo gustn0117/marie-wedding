@@ -44,6 +44,19 @@ export interface Profile {
   banned_at: string | null;
   banned_reason: string | null;
   banned_by: string | null;
+  admin_note: string | null;
+}
+
+export type ModerationScope = 'job' | 'post' | 'comment' | 'all';
+export type ModerationAction = 'hide' | 'flag';
+
+export interface ModerationKeyword {
+  id: string;
+  keyword: string;
+  scope: ModerationScope;
+  action: ModerationAction;
+  created_by: string | null;
+  created_at: string;
 }
 
 export type TrustTier = 'unverified' | 'phone_verified' | 'business_verified' | 'deal_proven';
