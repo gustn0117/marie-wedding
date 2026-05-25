@@ -13,6 +13,7 @@ import MyPageTabs from '@/features/mypage/MyPageTabs';
 import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
 import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
 import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
+import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -238,6 +239,9 @@ export default async function MyPage() {
 
       {/* Onboarding */}
       <OnboardingChecklist profile={profile} portfolioCount={portfolioCount} jobCount={jobs.length} />
+
+      {/* Pending Reviews */}
+      <PendingReviewsSection profileId={profile.id} />
 
       {/* Recommended Jobs */}
       <RecommendedJobs profile={profile} />

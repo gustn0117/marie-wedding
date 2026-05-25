@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import {
@@ -9,8 +9,21 @@ import {
   formatRelativeTime,
   getCategoryLabel,
 } from '@/shared/utils/format';
-import type { Application, Job, Post } from '@/types/database';
+import type { Application, ApplicationStatus, Job, Post } from '@/types/database';
 import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
+
+type AppFilter = 'all' | 'active' | 'completed' | ApplicationStatus;
+
+const APP_FILTERS: { value: AppFilter; label: string }[] = [
+  { value: 'all', label: '전체' },
+  { value: 'active', label: '진행중' },
+  { value: 'pending', label: '접수' },
+  { value: 'reviewing', label: '검토중' },
+  { value: 'accepted', label: '승인' },
+  { value: 'completed', label: '거래완료' },
+  { value: 'rejected', label: '거절' },
+  { value: 'cancelled', label: '취소' },
+];
 
 interface MyPageTabsProps {
   jobs: Job[];
@@ -66,21 +79,36 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {jobs.map((job) => (
-                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="platform-data-row group flex items-center justify-between gap-3 rounded px-3 py-3.5">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
+              {jobs.map((job) => {
+                const receivedForThis = receivedApplications.filter((a) => a.job_id === job.id);
+                const pendingCount = receivedForThis.filter((a) => a.status === 'pending' || a.status === 'reviewing').length;
+                const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
+                return (
+                  <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="platform-data-row group block rounded px-3 py-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          {isExpired && <span className="badge-attr">마감</span>}
+                          <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                          <span>{getEmploymentTypeLabel(job.employment_type)}</span>
+                          <span>·</span>
+                          <span>{getRegionLabel(job.region)}</span>
+                          {job.view_count > 0 && (<><span>·</span><span>조회 {job.view_count.toLocaleString()}</span></>)}
+                          {receivedForThis.length > 0 && (
+                            <>
+                              <span>·</span>
+                              <span className="font-bold text-gray-700">지원 {receivedForThis.length}{pendingCount > 0 ? ` (검토 ${pendingCount})` : ''}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(job.created_at)}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>{getEmploymentTypeLabel(job.employment_type)}</span>
-                      <span>·</span>
-                      <span>{getRegionLabel(job.region)}</span>
-                    </div>
-                  </div>
-                  <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(job.created_at)}</span>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )
         ) : activeTab === 'posts' ? (
@@ -118,8 +146,8 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           )
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
-            <ApplicationList title="받은 지원/문의" empty="내 공고에 접수된 내역이 없습니다." items={receivedApplications} mode="received" />
-            <ApplicationList title="보낸 지원/문의" empty="아직 지원/문의한 공고가 없습니다." items={sentApplications} mode="sent" />
+            <FilterableApplicationList title="받은 지원/문의" empty="내 공고에 접수된 내역이 없습니다." items={receivedApplications} mode="received" />
+            <FilterableApplicationList title="보낸 지원/문의" empty="아직 지원/문의한 공고가 없습니다." items={sentApplications} mode="sent" />
           </div>
         )}
       </div>
@@ -127,7 +155,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
   );
 }
 
-function ApplicationList({
+function FilterableApplicationList({
   title,
   empty,
   items,
@@ -138,16 +166,43 @@ function ApplicationList({
   items: Application[];
   mode: 'sent' | 'received';
 }) {
+  const [filter, setFilter] = useState<AppFilter>('all');
+
+  const filtered = useMemo(() => {
+    if (filter === 'all') return items;
+    if (filter === 'active') return items.filter((a) => a.status === 'pending' || a.status === 'reviewing');
+    if (filter === 'completed') return items.filter((a) => a.hiring_completed_at && a.applicant_completed_at);
+    return items.filter((a) => a.status === filter);
+  }, [items, filter]);
+
   return (
     <section className="rounded border border-gray-200 bg-white">
-      <div className="border-b border-gray-100 bg-secondary-50 px-4 py-3">
-        <h3 className="text-sm font-bold text-gray-900">{title} <span className="text-primary">{items.length}</span></h3>
+      <div className="border-b border-gray-100 bg-secondary-50 px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
+        <h3 className="text-sm font-bold text-gray-900">{title} <span className="text-primary">{filtered.length}</span><span className="text-gray-400">/{items.length}</span></h3>
       </div>
-      {items.length === 0 ? (
-        <div className="px-4 py-10 text-center text-sm text-gray-400">{empty}</div>
+      <div className="border-b border-gray-100 px-3 py-2 flex items-center gap-1 overflow-x-auto">
+        {APP_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => setFilter(f.value)}
+            className={`shrink-0 rounded border px-2.5 py-1 text-xs font-bold transition-colors ${
+              filter === f.value
+                ? 'border-gray-950 bg-gray-950 text-white'
+                : 'border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+      {filtered.length === 0 ? (
+        <div className="px-4 py-10 text-center text-sm text-gray-400">
+          {items.length === 0 ? empty : '해당 상태의 항목이 없습니다.'}
+        </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {items.map((item) => (
+          {filtered.map((item) => (
             <Link
               key={item.id}
               href={item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS}
