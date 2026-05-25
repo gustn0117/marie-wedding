@@ -48,8 +48,19 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     query = query.eq('author.verification_status', 'verified');
   }
   if (searchParams.completed === '1') {
-    // 거래 완료 1건 이상 있는 업체만
     query = query.gt('author.completed_deals_count', 0);
+  }
+  if (searchParams.salaryMin) {
+    const v = Number(searchParams.salaryMin);
+    if (Number.isFinite(v) && v > 0) query = query.gte('salary_min', v);
+  }
+  if (searchParams.salaryMax) {
+    const v = Number(searchParams.salaryMax);
+    if (Number.isFinite(v) && v > 0) query = query.lte('salary_max', v);
+  }
+  if (searchParams.expMax) {
+    const v = Number(searchParams.expMax);
+    if (Number.isFinite(v) && v >= 0) query = query.lte('experience_min', v);
   }
 
   query = query
