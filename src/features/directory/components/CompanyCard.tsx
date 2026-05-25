@@ -22,30 +22,40 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const bioText = profile.bio
     ? profile.bio.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
     : '';
+  const isVerified = profile.verification_status === 'verified';
+  const deals = profile.completed_deals_count ?? 0;
+  const responseRate = Math.round(profile.response_rate ?? 0);
 
   return (
     <Link
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="platform-panel block group transition-colors duration-150 hover:border-primary"
+      className="platform-panel block group transition-all duration-150 hover:border-primary hover:shadow-sm"
     >
-      <div className="aspect-[16/9] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100">
+      <div className={`relative aspect-[3/2] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100 ${isVerified ? 'border-l-4 border-l-black' : ''}`}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
         ) : (
           <Logo variant="mark" size="lg" className="text-primary-200" />
         )}
+        {isVerified && (
+          <span className="absolute top-2 right-2 inline-flex items-center px-1.5 py-0.5 bg-black text-white text-[10px] font-bold">
+            ✓ 인증
+          </span>
+        )}
       </div>
 
-      <div className="p-4">
+      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-black' : ''}`}>
         <div className="flex items-center gap-2 mb-1.5 min-w-0">
           <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
             {displayName}
           </h3>
-          <VerificationBadge
-            verificationStatus={profile.verification_status}
-            phoneVerified={profile.phone_verified}
-          />
+          {!isVerified && (
+            <VerificationBadge
+              verificationStatus={profile.verification_status}
+              phoneVerified={profile.phone_verified}
+            />
+          )}
         </div>
 
         <div className="flex flex-wrap items-center gap-1 mb-1.5">
@@ -77,21 +87,34 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           {bioText || '업체 소개가 준비 중입니다.'}
         </p>
 
-        {(profile.completed_deals_count > 0 || profile.response_rate > 0) && (
-          <p className="mt-2 text-micro text-gray-600">
-            {profile.completed_deals_count > 0 && `거래 ${profile.completed_deals_count}건`}
-            {profile.completed_deals_count > 0 && profile.response_rate > 0 && ' · '}
-            {profile.response_rate > 0 && `응답률 ${Math.round(profile.response_rate)}%`}
-          </p>
-        )}
-
-        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-          <span className="text-micro font-bold text-gray-400">파트너 상세</span>
-          <span className="rounded border border-gray-200 px-2.5 py-1 text-micro font-bold text-primary transition-colors group-hover:border-primary">
-            보기
-          </span>
+        {/* Trust signals row */}
+        <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
+          <TrustCell label="거래" value={deals > 0 ? `${deals}건` : '-'} />
+          <TrustCell
+            label="응답률"
+            value={responseRate > 0 ? `${responseRate}%` : '-'}
+            fillPercent={responseRate > 0 ? responseRate : undefined}
+          />
+          <TrustCell
+            label="상태"
+            value={isVerified ? '인증' : profile.phone_verified ? '실명' : '미인증'}
+          />
         </div>
       </div>
     </Link>
+  );
+}
+
+function TrustCell({ label, value, fillPercent }: { label: string; value: string; fillPercent?: number }) {
+  return (
+    <div>
+      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
+      <p className="text-xs font-bold text-gray-900 tabular-nums">{value}</p>
+      {typeof fillPercent === 'number' && (
+        <div className="mt-1 h-0.5 bg-gray-100">
+          <div className="h-full bg-gray-800" style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }} />
+        </div>
+      )}
+    </div>
   );
 }

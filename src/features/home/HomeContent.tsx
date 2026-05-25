@@ -22,6 +22,8 @@ interface HomeContentProps {
     jobs: number;
     profiles: number;
     posts: number;
+    verified: number;
+    recentJobs: number;
   };
 }
 
@@ -127,11 +129,15 @@ export default function HomeContent({ posts, jobs, profiles, counts }: HomeConte
                 </div>
 
                 <div className="platform-panel-soft p-3">
-                  <p className="text-[12px] font-bold text-gray-500">오늘의 플랫폼 현황</p>
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <MiniMetric label="공고" value={metricJobs} />
-                    <MiniMetric label="업체" value={metricProfiles} />
-                    <MiniMetric label="글" value={metricPosts} />
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[12px] font-bold text-gray-500">실시간 현황</p>
+                    <Link href="/stats" className="text-[11px] font-bold text-primary hover:underline">전체 →</Link>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <MiniMetric label="인증 업체" value={counts.verified} accent />
+                    <MiniMetric label="30일 공고" value={counts.recentJobs} accent />
+                    <MiniMetric label="누적 공고" value={metricJobs} />
+                    <MiniMetric label="누적 업체" value={metricProfiles} />
                   </div>
                 </div>
               </div>
@@ -348,10 +354,10 @@ export default function HomeContent({ posts, jobs, profiles, counts }: HomeConte
   );
 }
 
-function MiniMetric({ label, value }: { label: string; value: number }) {
+function MiniMetric({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className="rounded border border-gray-200 bg-white px-2 py-2 text-center">
-      <span className="block text-[18px] font-bold text-gray-950">{value.toLocaleString()}</span>
+    <div className={`rounded border px-2 py-2 text-center tabular-nums ${accent ? 'border-black bg-white' : 'border-gray-200 bg-white'}`}>
+      <span className={`block text-[18px] font-bold ${accent ? 'text-gray-950' : 'text-gray-700'}`}>{value.toLocaleString()}</span>
       <span className="mt-0.5 block text-[11px] font-semibold text-gray-500">{label}</span>
     </div>
   );

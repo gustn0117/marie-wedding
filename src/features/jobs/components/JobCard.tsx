@@ -23,17 +23,22 @@ export default function JobCard({ job }: JobCardProps) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
   const fresh = isNew(job.created_at);
+  const isVerified = job.author?.verification_status === 'verified';
+  const deals = job.author?.completed_deals_count ?? 0;
+  const responseRate = Math.round(job.author?.response_rate ?? 0);
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
-      <article className={`platform-panel ${tierClass} h-full min-h-[230px] p-4 flex flex-col gap-3 transition-colors group-hover:border-primary`}>
+      <article
+        className={`platform-panel ${tierClass} relative h-full min-h-[252px] p-4 flex flex-col gap-3 transition-all group-hover:border-primary group-hover:shadow-sm ${isVerified ? 'border-l-4 border-l-black' : ''}`}
+      >
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-small text-text-secondary">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-gray-200 bg-primary-50 text-xs font-bold text-primary">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 text-small text-text-secondary flex-wrap">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-200 bg-primary-50 text-[11px] font-bold text-primary">
                 {companyName.charAt(0)}
               </span>
-              <span className="truncate font-bold text-gray-900">{companyName}</span>
+              <span className="truncate font-bold text-gray-900 max-w-[140px]">{companyName}</span>
               {job.author && (
                 <VerificationBadge
                   verificationStatus={job.author.verification_status}
@@ -73,16 +78,39 @@ export default function JobCard({ job }: JobCardProps) {
           </p>
         )}
 
+        {/* Trust signals row */}
+        {(deals > 0 || responseRate > 0) && (
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+            {deals > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">거래</p>
+                <p className="text-sm font-bold text-gray-900 tabular-nums">{deals}건</p>
+              </div>
+            )}
+            {responseRate > 0 && (
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">응답률</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-bold text-gray-900 tabular-nums">{responseRate}%</p>
+                  <div className="flex-1 h-1 bg-gray-100">
+                    <div className="h-full bg-gray-800" style={{ width: `${responseRate}%` }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="mt-auto pt-3 border-t border-border flex items-center justify-between text-micro text-text-muted">
           <time dateTime={job.created_at}>{formatRelativeTime(job.created_at)}</time>
           <div className="flex items-center gap-2">
-            {job.view_count > 0 && <span className="text-gray-400">조회 {job.view_count}</span>}
+            {job.view_count > 0 && <span className="text-gray-400 tabular-nums">조회 {job.view_count}</span>}
             {dDay && (
-              <span className={`font-semibold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
+              <span className={`font-semibold tabular-nums ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
                 {dDay}
               </span>
             )}
-            {!dDay && <span className="font-semibold text-gray-500">상시채용</span>}
+            {!dDay && <span className="font-semibold text-gray-500">상시</span>}
           </div>
         </div>
       </article>
