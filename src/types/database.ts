@@ -1,5 +1,9 @@
 import type { AccountType, BusinessType, EmploymentType, Region, PostCategory, PostingType } from '@/shared/constants';
 
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
+export type ReviewTagCategory = 'positive' | 'attention';
+export type ReviewDirection = 'hiring_to_applicant' | 'applicant_to_hiring';
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -21,6 +25,19 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  // 신뢰 레이어 (Phase 1+)
+  verification_status: VerificationStatus;
+  verification_document: string | null;
+  verification_submitted_at: string | null;
+  verification_reviewed_at: string | null;
+  verification_reject_reason: string | null;
+  business_number: string | null;
+  verified_at: string | null;
+  phone_verified: boolean;
+  phone_verified_at: string | null;
+  response_rate: number;
+  avg_response_minutes: number | null;
+  completed_deals_count: number;
 }
 
 export interface Job {
@@ -103,8 +120,55 @@ export interface Application {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  // 신뢰 레이어 Phase 2
+  hiring_completed_at: string | null;
+  applicant_completed_at: string | null;
+  first_responded_at: string | null;
   job?: Job;
   applicant?: Profile;
+}
+
+export interface ReviewTag {
+  id: string;
+  label: string;
+  category: ReviewTagCategory;
+  applies_to: Array<'hiring' | 'applicant'>;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Portfolio {
+  id: string;
+  profile_id: string;
+  title: string;
+  event_date: string | null;
+  role: string | null;
+  venue_name: string | null;
+  description: string | null;
+  images: string[];
+  cover_image: string | null;
+  is_featured: boolean;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface Review {
+  id: string;
+  application_id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  direction: ReviewDirection;
+  tags: string[];
+  is_public: boolean;
+  is_hidden_by_admin: boolean;
+  created_at: string;
+  deleted_at: string | null;
+  reviewer?: Profile;
+  resolved_tags?: ReviewTag[];
 }
 
 export type BookmarkTargetType = 'job' | 'profile' | 'post' | 'event';

@@ -10,6 +10,7 @@ import {
 } from '@/shared/utils/format';
 import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
+import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -199,6 +200,9 @@ export default async function MyPage() {
           </Link>
         </div>
       </div>
+
+      {/* Trust Status */}
+      <VerificationStatusPanel profile={profile} />
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

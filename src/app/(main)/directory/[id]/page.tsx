@@ -11,6 +11,8 @@ import {
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
+import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import { VERIFICATION_STATUS_LABELS } from '@/shared/constants';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,6 +102,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              <VerificationBadge
+                verificationStatus={profile.verification_status}
+                phoneVerified={profile.phone_verified}
+              />
               {profile.business_type && profile.business_type.split(',').filter(Boolean).map((bt) => (
                 <span key={bt} className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary text-xs font-semibold">
                   {getBusinessTypeLabel(bt.trim())}
@@ -155,6 +161,33 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {/* Trust Card */}
+      <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
+        <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">신뢰 지표</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <TrustCell
+            label="인증 상태"
+            value={VERIFICATION_STATUS_LABELS[profile.verification_status]}
+            sub={profile.verification_status === 'verified' ? '관리자 승인 완료' : profile.phone_verified ? '실명 확인' : '미확인'}
+          />
+          <TrustCell
+            label="거래 완료"
+            value={`${profile.completed_deals_count}건`}
+            sub={profile.completed_deals_count > 0 ? '플랫폼 내 처리' : '기록 없음'}
+          />
+          <TrustCell
+            label="응답률"
+            value={profile.response_rate > 0 ? `${Math.round(profile.response_rate)}%` : '-'}
+            sub="받은 지원·문의 기준"
+          />
+          <TrustCell
+            label="평균 응답"
+            value={profile.avg_response_minutes ? formatResponseMinutes(profile.avg_response_minutes) : '-'}
+            sub="첫 응답까지"
+          />
+        </div>
+      </section>
 
       {/* Bio */}
       {profile.bio && (
@@ -235,4 +268,21 @@ function InfoCell({ label, value, wide = false }: { label: string; value: string
       <p className="text-sm font-medium text-gray-900 truncate">{value}</p>
     </div>
   );
+}
+
+function TrustCell({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-500 mb-1">{label}</p>
+      <p className="text-xl font-bold text-gray-900 leading-tight">{value}</p>
+      <p className="text-[11px] text-gray-400 mt-1">{sub}</p>
+    </div>
+  );
+}
+
+function formatResponseMinutes(min: number): string {
+  if (min < 60) return `${min}분`;
+  const hours = Math.floor(min / 60);
+  if (hours < 24) return `${hours}시간`;
+  return `${Math.floor(hours / 24)}일`;
 }

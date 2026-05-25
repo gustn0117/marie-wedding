@@ -4,6 +4,7 @@ import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import Badge from '@/shared/components/Badge';
 import Logo from '@/shared/components/Logo';
+import VerificationBadge from '@/features/verification/components/VerificationBadge';
 
 interface CompanyCardProps {
   profile: Profile;
@@ -37,9 +38,15 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
       </div>
 
       <div className="p-4">
-        <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
-          {displayName}
-        </h3>
+        <div className="flex items-center gap-2 mb-1.5 min-w-0">
+          <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
+            {displayName}
+          </h3>
+          <VerificationBadge
+            verificationStatus={profile.verification_status}
+            phoneVerified={profile.phone_verified}
+          />
+        </div>
 
         <div className="flex flex-wrap items-center gap-1 mb-1.5">
           {businessTypes.length > 0 ? (
@@ -69,6 +76,14 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         <p className="min-h-[36px] text-small text-gray-500 line-clamp-2 leading-snug">
           {bioText || '업체 소개가 준비 중입니다.'}
         </p>
+
+        {(profile.completed_deals_count > 0 || profile.response_rate > 0) && (
+          <p className="mt-2 text-micro text-gray-600">
+            {profile.completed_deals_count > 0 && `거래 ${profile.completed_deals_count}건`}
+            {profile.completed_deals_count > 0 && profile.response_rate > 0 && ' · '}
+            {profile.response_rate > 0 && `응답률 ${Math.round(profile.response_rate)}%`}
+          </p>
+        )}
 
         <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
           <span className="text-micro font-bold text-gray-400">파트너 상세</span>

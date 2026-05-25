@@ -9,6 +9,7 @@ import {
 } from '@/shared/utils/format';
 import { getJobTier, isUrgent, isNew, getDDayLabel } from '@/shared/utils/tier';
 import Badge from '@/shared/components/Badge';
+import VerificationBadge from '@/features/verification/components/VerificationBadge';
 
 interface JobCardProps {
   job: Job;
@@ -33,6 +34,12 @@ export default function JobCard({ job }: JobCardProps) {
                 {companyName.charAt(0)}
               </span>
               <span className="truncate font-bold text-gray-900">{companyName}</span>
+              {job.author && (
+                <VerificationBadge
+                  verificationStatus={job.author.verification_status}
+                  phoneVerified={job.author.phone_verified}
+                />
+              )}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1 flex-wrap justify-end min-h-[18px]">
