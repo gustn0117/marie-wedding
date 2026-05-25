@@ -46,7 +46,7 @@ export default function PostFilters() {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded overflow-hidden">
+    <div className="platform-filter-dock">
       {/* Category Tabs */}
       <div className="flex border-b border-gray-200 overflow-x-auto bg-white">
         {TABS.map((tab) => (
@@ -65,7 +65,7 @@ export default function PostFilters() {
       </div>
 
       {/* Search + Sort */}
-      <div className="flex items-center gap-3 p-3 flex-wrap bg-secondary-50">
+      <div className="flex items-center gap-3 p-3 flex-wrap bg-white">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2 min-w-[200px]">
           <div className="relative flex-1">
             <svg

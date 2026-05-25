@@ -29,9 +29,9 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   return (
     <Link
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="platform-panel block group transition-all duration-150 hover:border-primary hover:shadow-sm"
+      className="platform-panel group block transition-all duration-150 hover:border-primary hover:shadow-sm"
     >
-      <div className={`relative aspect-[3/2] bg-secondary-50 overflow-hidden flex items-center justify-center border-b border-gray-100 ${isVerified ? 'border-l-4 border-l-black' : ''}`}>
+      <div className={`relative flex aspect-[3/2] items-center justify-center overflow-hidden border-b border-gray-100 bg-secondary-50 ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
@@ -45,7 +45,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         )}
       </div>
 
-      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-black' : ''}`}>
+      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}>
         <div className="flex items-center gap-2 mb-1.5 min-w-0">
           <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
             {displayName}
@@ -88,7 +88,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         </p>
 
         {/* Trust signals row */}
-        <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
+        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
           <TrustCell label="거래" value={deals > 0 ? `${deals}건` : '-'} />
           <TrustCell
             label="응답률"

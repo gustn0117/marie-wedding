@@ -11,7 +11,7 @@ import type { AuthProfile } from './Header';
 const NAV_LINKS = [
   { href: `${ROUTES.JOBS}?type=hiring`, label: '채용정보' },
   { href: `${ROUTES.JOBS}?type=matching`, label: '파트너 섭외' },
-  { href: ROUTES.DIRECTORY, label: '업체정보' },
+  { href: ROUTES.DIRECTORY, label: '업체 디렉토리' },
   { href: ROUTES.EVENTS, label: '이벤트' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
 ] as const;
@@ -60,7 +60,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 shadow-[0_1px_2px_rgba(31,41,55,0.04)] backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 shadow-[0_2px_12px_rgba(31,41,55,0.06)] backdrop-blur">
       <div className="hidden md:block bg-gray-950">
         <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 h-9 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3 text-gray-300">
@@ -90,13 +90,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       </div>
 
       <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
-        <div className="h-[68px] flex items-center gap-5">
+        <div className="h-[72px] flex items-center gap-5">
           <Link href={ROUTES.HOME} className="shrink-0" aria-label="Marié 홈">
             <Logo variant="full" size="md" />
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[560px]">
-            <div className="flex h-11 w-full items-center overflow-hidden rounded border border-gray-300 bg-white shadow-sm focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-100">
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[640px]">
+            <div className="flex h-12 w-full items-center overflow-hidden rounded border-2 border-primary bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary-100">
               <div className="pl-4 text-primary">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -109,7 +109,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                 placeholder="직무, 업체명, 지역으로 검색"
                 className="min-w-0 flex-1 px-3 text-[15px] outline-none placeholder:text-gray-400"
               />
-              <button type="submit" className="h-full px-5 bg-gray-950 text-sm font-bold text-white transition-colors hover:bg-primary">
+              <button type="submit" className="h-full px-6 bg-primary text-sm font-bold text-white transition-colors hover:bg-primary-dark">
                 검색
               </button>
             </div>
@@ -209,12 +209,12 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           </button>
         </div>
 
-        <nav className="hidden md:flex h-11 items-center gap-1 border-t border-gray-100">
+        <nav className="hidden md:flex h-12 items-center gap-1 border-t border-gray-100">
           <Link href={ROUTES.JOBS} className="mr-2 inline-flex h-8 items-center gap-1.5 rounded bg-gray-950 px-3 text-sm font-bold text-white transition-colors hover:bg-primary">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
-            플랫폼 메뉴
+            전체 메뉴
           </Link>
           {NAV_LINKS.map((link) => (
             <Link

@@ -30,12 +30,12 @@ export default function JobCard({ job }: JobCardProps) {
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
       <article
-        className={`platform-panel ${tierClass} relative h-full min-h-[252px] p-4 flex flex-col gap-3 transition-all group-hover:border-primary group-hover:shadow-sm ${isVerified ? 'border-l-4 border-l-black' : ''}`}
+        className={`platform-panel ${tierClass} relative flex h-full min-h-[270px] flex-col gap-3 p-4 transition-all group-hover:border-primary group-hover:shadow-sm ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5 text-small text-text-secondary flex-wrap">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-gray-200 bg-primary-50 text-[11px] font-bold text-primary">
+              <span className="company-mark !h-8 !w-8 text-[11px]">
                 {companyName.charAt(0)}
               </span>
               <span className="truncate font-bold text-gray-900 max-w-[140px]">{companyName}</span>
@@ -71,12 +71,10 @@ export default function JobCard({ job }: JobCardProps) {
           <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
         </div>
 
-        {job.salary_info && (
-          <p className="text-small text-text-secondary">
-            <span className="text-text-muted">급여</span>{' '}
-            <span className="font-medium text-text-primary">{job.salary_info}</span>
-          </p>
-        )}
+        <div className="rounded border border-gray-100 bg-secondary-50 px-3 py-2">
+          <p className="text-[11px] font-bold text-gray-400">급여</p>
+          <p className="mt-0.5 truncate text-sm font-bold text-gray-900">{job.salary_info || '협의 후 결정'}</p>
+        </div>
 
         {/* Trust signals row */}
         {(deals > 0 || responseRate > 0) && (

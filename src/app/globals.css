@@ -8,7 +8,9 @@
   body {
     @apply font-sans text-gray-800 bg-background antialiased;
     font-feature-settings: "tnum" 1;
-    background-image: linear-gradient(180deg, #fbfcff 0, #f5f7fa 320px, #f5f7fa 100%);
+    background-image:
+      linear-gradient(180deg, #ffffff 0, #f7f9fc 260px, #f2f5f9 100%),
+      linear-gradient(90deg, rgba(72, 118, 239, 0.04), rgba(0, 168, 107, 0.03));
   }
 
   ::selection {
@@ -153,7 +155,7 @@
 
   .platform-panel {
     @apply bg-white border border-gray-200 rounded overflow-hidden;
-    box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+    box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 30px rgba(31, 41, 55, 0.025);
   }
 
   .platform-panel-soft {
@@ -167,6 +169,79 @@
 
   .platform-section-title {
     @apply text-[17px] font-bold text-gray-950;
+  }
+
+  .platform-hero {
+    @apply relative overflow-hidden rounded border border-gray-200 bg-white;
+    box-shadow: 0 16px 40px rgba(31, 41, 55, 0.06);
+  }
+
+  .platform-hero::before {
+    content: "";
+    @apply absolute inset-x-0 top-0 h-1 bg-primary;
+  }
+
+  .platform-hero-grid {
+    @apply relative grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-stretch;
+  }
+
+  .platform-hero-copy {
+    @apply flex min-w-0 flex-col justify-between gap-5;
+  }
+
+  .platform-hero-title {
+    @apply text-[28px] font-bold leading-tight text-gray-950 sm:text-[34px];
+  }
+
+  .platform-hero-text {
+    @apply mt-2 max-w-3xl text-[15px] leading-relaxed text-gray-600;
+  }
+
+  .platform-search-box {
+    @apply flex min-h-[58px] overflow-hidden rounded border-2 border-primary bg-white shadow-sm;
+  }
+
+  .platform-filter-dock {
+    @apply bg-white border border-gray-200 rounded overflow-hidden;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.035);
+  }
+
+  .platform-toolbar {
+    @apply flex flex-wrap items-center justify-between gap-3 rounded border border-gray-200 bg-white px-4 py-3;
+    box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 30px rgba(31, 41, 55, 0.025);
+  }
+
+  .platform-stat-card {
+    @apply rounded border border-gray-200 bg-white px-4 py-3 transition-colors hover:border-primary-300;
+  }
+
+  .platform-stat-label {
+    @apply block text-[12px] font-bold text-gray-500;
+  }
+
+  .platform-stat-value {
+    @apply mt-1 block text-[22px] font-bold leading-none text-gray-950;
+  }
+
+  .platform-data-row {
+    @apply bg-white transition-colors hover:bg-primary-50/45;
+  }
+
+  .platform-data-table {
+    @apply overflow-hidden rounded border border-gray-200 bg-white;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.035);
+  }
+
+  .company-mark {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded border border-gray-200 bg-secondary-50 text-sm font-bold text-primary;
+  }
+
+  .trust-pill {
+    @apply inline-flex items-center gap-1 rounded border border-gray-200 bg-white px-2 py-1 text-[11px] font-bold text-gray-600;
+  }
+
+  .platform-link-tile {
+    @apply rounded border border-gray-200 bg-white px-3 py-3 transition-colors hover:border-primary-300 hover:bg-primary-50/40;
   }
 
   .metric-tile {

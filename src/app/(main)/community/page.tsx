@@ -66,31 +66,39 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <section className="platform-panel p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-          <div>
+      <section className="platform-hero">
+        <div className="platform-hero-grid">
+          <div className="platform-hero-copy">
+            <div>
             <p className="platform-eyebrow">Community</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">커뮤니티</h1>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+            <h1 className="platform-hero-title">커뮤니티</h1>
+            <p className="platform-hero-text">
               현장 노하우, 업계 소식, 구인 경험을 웨딩업계 종사자들과 나누는 실무형 지식 공간입니다.
             </p>
+            </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div className="metric-tile">
-                <span className="block text-[12px] font-bold text-gray-500">게시글</span>
-                <span className="mt-1 block text-[20px] font-bold text-gray-950">{count.toLocaleString()}건</span>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">게시글</span>
+                <span className="platform-stat-value">{count.toLocaleString()}건</span>
               </div>
-              <div className="metric-tile">
-                <span className="block text-[12px] font-bold text-gray-500">선택 조건</span>
-                <span className="mt-1 block text-[20px] font-bold text-gray-950">{activeFilterCount.toLocaleString()}개</span>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">선택 조건</span>
+                <span className="platform-stat-value">{activeFilterCount.toLocaleString()}개</span>
               </div>
             </div>
           </div>
-          <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary min-h-[46px]">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            글쓰기
-          </Link>
+          <div className="platform-panel-soft grid content-start gap-2 p-3">
+            <p className="text-[12px] font-bold text-gray-500">커뮤니티 운영</p>
+            <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary min-h-[46px]">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              글쓰기
+            </Link>
+            <Link href={ROUTES.JOBS} className="btn-secondary min-h-[46px]">
+              채용정보 보기
+            </Link>
+          </div>
         </div>
       </section>
 

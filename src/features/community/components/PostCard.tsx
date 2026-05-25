@@ -19,7 +19,7 @@ export default function PostCard({ post }: PostCardProps) {
   const preview = post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
   return (
-    <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="block bg-white border-b border-gray-100 last:border-b-0 hover:bg-primary-50/45 transition-colors group">
+    <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group block border-b border-gray-100 last:border-b-0">
       <div className="flex gap-4 p-4">
         <div className="flex-1 min-w-0">
           {/* Category + New Badge */}

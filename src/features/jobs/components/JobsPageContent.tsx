@@ -174,21 +174,24 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   return (
     <div className="space-y-4">
-      <section className="platform-panel p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-          <div>
+      <section className="platform-hero">
+        <div className="platform-hero-grid">
+          <div className="platform-hero-copy">
+            <div>
             <p className="platform-eyebrow">Wedding Recruit</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">{pageTitle}</h1>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+            <h1 className="platform-hero-title">{pageTitle}</h1>
+            <p className="platform-hero-text">
               웨딩 업계 직무, 지역, 고용형태별 공고를 한 화면에서 비교하고 지원 흐름까지 이어갑니다.
             </p>
+            </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <HeaderMetric label="전체 결과" value={`${totalCount.toLocaleString()}건`} />
               <HeaderMetric label="선택 조건" value={`${selectedFilterCount.toLocaleString()}개`} />
               <HeaderMetric label="보기 방식" value={viewMode === 'list' ? '리스트' : '카드'} />
             </div>
           </div>
-          <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="platform-panel-soft grid content-start gap-2 p-3">
+            <div className="grid grid-cols-2 gap-2">
             <Link
               href={`${ROUTES.JOBS}?type=hiring`}
               className={`rounded border px-4 py-3 text-center text-sm font-bold transition-colors ${
@@ -205,6 +208,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             >
               파트너 섭외
             </Link>
+            </div>
             <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[46px]">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -216,9 +220,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       </section>
 
       {/* Filter Section */}
-      <div className="bg-white border border-gray-200 rounded overflow-hidden">
+      <div className="platform-filter-dock">
         {/* Filter Controls Bar */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-secondary-50">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-white">
           {/* Region Dropdown */}
           <div className="relative">
             <button
@@ -505,7 +509,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
       {/* Active Filters */}
       {activeFilters.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-3 flex-wrap">
+        <div className="platform-panel-soft flex items-center gap-1.5 px-4 py-3 flex-wrap">
           {activeFilters.map((f) => (
             <FilterChip key={f.key} label={f.label} onRemove={() => handleRemoveFilter(f.key)} />
           ))}
@@ -519,16 +523,17 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       )}
 
       {/* Results Info + View Toggle */}
-      <div className="platform-panel flex items-center justify-between px-4 py-3">
-        <p className="text-small text-gray-500" aria-live="polite">
+      <div className="platform-toolbar">
+        <p className="text-sm font-semibold text-gray-600" aria-live="polite">
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
+          <span className="ml-2 text-xs font-medium text-gray-400">최신 등록순</span>
         </p>
         <ViewToggle value={viewMode} onChange={setViewMode} />
       </div>
 
       {/* Results */}
       {jobs.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded p-10 text-center">
+        <div className="platform-panel p-10 text-center">
           <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -541,7 +546,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           </Link>
         </div>
       ) : viewMode === 'list' ? (
-        <div className="border border-gray-200 rounded overflow-hidden bg-white">
+        <div className="platform-data-table">
           {jobs.map((job) => (
             <JobListRow key={job.id} job={job} />
           ))}
@@ -599,9 +604,9 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
 function HeaderMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="metric-tile min-h-[70px]">
-      <span className="block text-[12px] font-bold text-gray-500">{label}</span>
-      <span className="mt-1 block text-[20px] font-bold text-gray-950">{value}</span>
+    <div className="platform-stat-card min-h-[74px]">
+      <span className="platform-stat-label">{label}</span>
+      <span className="platform-stat-value">{value}</span>
     </div>
   );
 }

@@ -26,10 +26,10 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
   return (
     <div className="platform-panel">
       <div className="border-b border-gray-200">
-        <div className="flex">
+        <div className="flex overflow-x-auto bg-white">
           <button
             onClick={() => setActiveTab('jobs')}
-            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
+            className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
               activeTab === 'jobs' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
@@ -37,7 +37,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           </button>
           <button
             onClick={() => setActiveTab('posts')}
-            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
+            className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
               activeTab === 'posts' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
@@ -45,7 +45,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           </button>
           <button
             onClick={() => setActiveTab('applications')}
-            className={`flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
+            className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
               activeTab === 'applications' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
@@ -67,7 +67,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           ) : (
             <div className="divide-y divide-gray-100">
               {jobs.map((job) => (
-                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="flex items-center justify-between gap-3 rounded py-3.5 px-2 hover:bg-primary-50/50 transition-colors group">
+                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="platform-data-row group flex items-center justify-between gap-3 rounded px-3 py-3.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
@@ -95,7 +95,7 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
           ) : (
             <div className="divide-y divide-gray-100">
               {posts.map((post) => (
-                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center justify-between gap-3 rounded py-3.5 px-2 hover:bg-primary-50/50 transition-colors group">
+                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group flex items-center justify-between gap-3 rounded px-3 py-3.5">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-semibold text-primary bg-primary-50 px-1.5 py-0.5 rounded">{getCategoryLabel(post.category)}</span>
@@ -139,8 +139,8 @@ function ApplicationList({
   mode: 'sent' | 'received';
 }) {
   return (
-    <section className="rounded border border-gray-200">
-      <div className="border-b border-gray-100 px-4 py-3">
+    <section className="rounded border border-gray-200 bg-white">
+      <div className="border-b border-gray-100 bg-secondary-50 px-4 py-3">
         <h3 className="text-sm font-bold text-gray-900">{title} <span className="text-primary">{items.length}</span></h3>
       </div>
       {items.length === 0 ? (
@@ -151,7 +151,7 @@ function ApplicationList({
             <Link
               key={item.id}
               href={item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS}
-              className="block px-4 py-3 hover:bg-primary-50/50 transition-colors"
+              className="platform-data-row block px-4 py-3"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

@@ -34,11 +34,11 @@ export default function CompanyFilters() {
   const resetAll = () => router.push('/directory', { scroll: false });
 
   return (
-    <aside className="platform-panel divide-y divide-gray-100 sticky-sidebar">
+    <aside className="platform-filter-dock divide-y divide-gray-100 sticky-sidebar">
       {/* 검색 */}
       <div className="p-3">
         <form onSubmit={handleSearch}>
-          <label className="block text-micro font-semibold text-gray-700 mb-1.5">검색</label>
+          <label className="mb-1.5 block text-micro font-bold text-gray-700">검색</label>
           <div className="relative">
             <input
               type="text"
@@ -62,7 +62,7 @@ export default function CompanyFilters() {
 
       {/* 업종 */}
       <div className="p-3">
-        <h3 className="text-micro font-semibold text-gray-700 mb-1.5">업종</h3>
+        <h3 className="mb-1.5 text-micro font-bold text-gray-700">업종</h3>
         <div className="flex flex-col gap-0.5">
           <button
             onClick={() => updateParams({ businessType: '' })}
@@ -90,7 +90,7 @@ export default function CompanyFilters() {
 
       {/* 지역 */}
       <div className="p-3">
-        <h3 className="text-micro font-semibold text-gray-700 mb-1.5">지역</h3>
+        <h3 className="mb-1.5 text-micro font-bold text-gray-700">지역</h3>
         <div className="flex flex-col gap-0.5 max-h-[280px] overflow-y-auto">
           <button
             onClick={() => updateParams({ region: '' })}

@@ -103,24 +103,42 @@ export default async function MyPage() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-4">
-      <section className="platform-panel p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
-          <div>
+      <section className="platform-hero">
+        <div className="platform-hero-grid">
+          <div className="platform-hero-copy">
+            <div>
             <p className="platform-eyebrow">My Workspace</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">마이페이지</h1>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+            <h1 className="platform-hero-title">마이페이지</h1>
+            <p className="platform-hero-text">
               등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다.
             </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">등록 공고</span>
+                <span className="platform-stat-value">{jobs.length}건</span>
+              </div>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">받은 지원</span>
+                <span className="platform-stat-value">{receivedApplications.length}건</span>
+              </div>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">거래 완료</span>
+                <span className="platform-stat-value">{profile.completed_deals_count}건</span>
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="platform-panel-soft grid content-start gap-2 p-3">
+            <p className="text-[12px] font-bold text-gray-500">빠른 실행</p>
             <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[44px]">공고 등록</Link>
             <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary min-h-[44px]">업체 관리</Link>
+            <Link href={ROUTES.MYPAGE_MESSAGES} className="btn-secondary min-h-[44px]">메시지 확인</Link>
           </div>
         </div>
       </section>
 
       {/* Profile Card */}
-      <div className="platform-panel p-6">
+      <div className="platform-panel p-5 sm:p-6">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
             {imageUrl ? (
@@ -153,7 +171,7 @@ export default async function MyPage() {
             )}
           </div>
 
-          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:border-primary hover:text-primary transition-colors shrink-0 ml-auto">
+          <Link href={ROUTES.MYPAGE_EDIT} className="ml-auto shrink-0 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold transition-colors hover:border-primary hover:text-primary">
             프로필 수정
           </Link>
         </div>
@@ -200,15 +218,15 @@ export default async function MyPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-4 pt-4 border-t border-gray-100 grid gap-2 sm:grid-cols-4">
-          <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">프로필 수정</Link>
-          <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">포트폴리오</Link>
-          <Link href={ROUTES.MYPAGE_AVAILABILITY} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">가용 일정</Link>
-          <Link href={ROUTES.MYPAGE_MESSAGES} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">메시지</Link>
-          <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">저장한 검색</Link>
-          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">알림</Link>
-          <Link href={ROUTES.MYPAGE_PASSWORD} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">비밀번호</Link>
-          <Link href={ROUTES.DIRECTORY_REGISTER} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors flex items-center gap-1">
+        <div className="mt-4 grid gap-2 border-t border-gray-100 pt-4 sm:grid-cols-4">
+          <Link href={ROUTES.MYPAGE_EDIT} className="platform-link-tile text-sm font-bold text-gray-700">프로필 수정</Link>
+          <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="platform-link-tile text-sm font-bold text-gray-700">포트폴리오</Link>
+          <Link href={ROUTES.MYPAGE_AVAILABILITY} className="platform-link-tile text-sm font-bold text-gray-700">가용 일정</Link>
+          <Link href={ROUTES.MYPAGE_MESSAGES} className="platform-link-tile text-sm font-bold text-gray-700">메시지</Link>
+          <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="platform-link-tile text-sm font-bold text-gray-700">저장한 검색</Link>
+          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="platform-link-tile text-sm font-bold text-gray-700">알림</Link>
+          <Link href={ROUTES.MYPAGE_PASSWORD} className="platform-link-tile text-sm font-bold text-gray-700">비밀번호</Link>
+          <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1 text-sm font-bold text-gray-700">
             디렉토리 등록
             {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
           </Link>

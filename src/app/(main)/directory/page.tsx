@@ -52,22 +52,24 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <section className="platform-panel p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-          <div>
+      <section className="platform-hero">
+        <div className="platform-hero-grid">
+          <div className="platform-hero-copy">
+            <div>
             <p className="platform-eyebrow">Company Directory</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-tight text-gray-950">업체 디렉토리</h1>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
+            <h1 className="platform-hero-title">업체 디렉토리</h1>
+            <p className="platform-hero-text">
               웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 업종과 지역별로 탐색하세요.
             </p>
+            </div>
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div className="metric-tile">
-                <span className="block text-[12px] font-bold text-gray-500">등록 업체</span>
-                <span className="mt-1 block text-[20px] font-bold text-gray-950">{count.toLocaleString()}개</span>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">등록 업체</span>
+                <span className="platform-stat-value">{count.toLocaleString()}개</span>
               </div>
-              <div className="metric-tile">
-                <span className="block text-[12px] font-bold text-gray-500">선택 조건</span>
-                <span className="mt-1 block text-[20px] font-bold text-gray-950">{activeFilterCount.toLocaleString()}개</span>
+              <div className="platform-stat-card">
+                <span className="platform-stat-label">선택 조건</span>
+                <span className="platform-stat-value">{activeFilterCount.toLocaleString()}개</span>
               </div>
             </div>
           </div>

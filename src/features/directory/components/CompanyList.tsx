@@ -39,14 +39,14 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
 
   return (
     <div>
-      <div className="platform-panel mb-3 flex items-center justify-between px-4 py-3">
-        <p className="text-small text-gray-500" aria-live="polite">
+      <div className="platform-toolbar mb-3">
+        <p className="text-sm font-semibold text-gray-600" aria-live="polite">
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>개 업체
         </p>
-        <span className="text-micro font-bold text-gray-400">파트너 프로필</span>
+        <span className="trust-pill">파트너 프로필</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {profiles.map((profile) => (
           <CompanyCard key={profile.id} profile={profile} />
         ))}
