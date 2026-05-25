@@ -95,6 +95,9 @@ export const ROUTES = {
   ADMIN_EVENTS_EDIT: (id: string) => `/admin/events/${id}/edit`,
   ADMIN_VERIFICATIONS: '/admin/verifications',
   MYPAGE_VERIFICATION: '/mypage/verification',
+  MYPAGE_PORTFOLIOS: '/mypage/portfolios',
+  MYPAGE_PORTFOLIO_NEW: '/mypage/portfolios/new',
+  MYPAGE_PORTFOLIO_EDIT: (id: string) => `/mypage/portfolios/${id}/edit`,
 } as const;
 
 export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {

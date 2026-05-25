@@ -13,6 +13,8 @@ import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import { VERIFICATION_STATUS_LABELS } from '@/shared/constants';
+import PortfolioCard from '@/features/portfolios/components/PortfolioCard';
+import type { Portfolio } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,14 +41,27 @@ async function getData(id: string) {
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
-  return { profile: profile as Profile, jobs: (jobs ?? []) as Job[] };
+  const { data: portfolios } = await supabase
+    .from('portfolios')
+    .select('*')
+    .eq('profile_id', id)
+    .is('deleted_at', null)
+    .order('is_featured', { ascending: false })
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false });
+
+  return {
+    profile: profile as Profile,
+    jobs: (jobs ?? []) as Job[],
+    portfolios: (portfolios ?? []) as Portfolio[],
+  };
 }
 
 export default async function CompanyDetailPage({ params }: PageProps) {
   const result = await getData(params.id);
   if (!result) notFound();
 
-  const { profile, jobs } = result;
+  const { profile, jobs, portfolios } = result;
 
   let isOwner = false;
   try {
@@ -197,7 +212,21 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Gallery */}
+      {/* Portfolios */}
+      {portfolios.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+            포트폴리오 <span className="text-sm text-gray-400 font-normal ml-1">{portfolios.length}</span>
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {portfolios.map((p) => (
+              <PortfolioCard key={p.id} portfolio={p} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Gallery (deprecated, kept for legacy) */}
       {profile.gallery && profile.gallery.length > 0 && (
         <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
