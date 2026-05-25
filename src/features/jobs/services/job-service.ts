@@ -100,6 +100,10 @@ export const jobService = {
         employment_type: formData.employmentType,
         region: formData.region,
         salary_info: formData.salaryInfo || null,
+        salary_min: formData.salaryMin ?? null,
+        salary_max: formData.salaryMax ?? null,
+        salary_unit: formData.salaryUnit ?? 'monthly',
+        experience_min: formData.experienceMin ?? null,
         deadline: formData.deadline || null,
         image: formData.image || null,
       })
@@ -126,6 +130,10 @@ export const jobService = {
     if (formData.employmentType !== undefined) updateData.employment_type = formData.employmentType;
     if (formData.region !== undefined) updateData.region = formData.region;
     if (formData.salaryInfo !== undefined) updateData.salary_info = formData.salaryInfo || null;
+    if (formData.salaryMin !== undefined) updateData.salary_min = formData.salaryMin;
+    if (formData.salaryMax !== undefined) updateData.salary_max = formData.salaryMax;
+    if (formData.salaryUnit !== undefined) updateData.salary_unit = formData.salaryUnit;
+    if (formData.experienceMin !== undefined) updateData.experience_min = formData.experienceMin;
     if (formData.deadline !== undefined) updateData.deadline = formData.deadline || null;
     if (formData.image !== undefined) updateData.image = formData.image || null;
 

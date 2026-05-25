@@ -6,6 +6,10 @@ export interface JobFormData {
   employmentType: string;
   region: string;
   salaryInfo: string;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryUnit?: 'monthly' | 'yearly' | 'daily' | 'hourly';
+  experienceMin?: number | null;
   deadline: string;
   image?: string | null;
 }

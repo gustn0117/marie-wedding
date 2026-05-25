@@ -24,6 +24,10 @@ const EMPTY_FORM: JobFormData = {
   employmentType: '',
   region: '',
   salaryInfo: '',
+  salaryMin: null,
+  salaryMax: null,
+  salaryUnit: 'monthly',
+  experienceMin: null,
   deadline: '',
   image: null,
 };
@@ -267,6 +271,52 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               placeholder="예) 월 300만원 이상 · 시급 15,000원 · 면접 후 결정"
               className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
+          </FieldRow>
+
+          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 만원 단위로 입력하세요.">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-2">
+              <input
+                type="number"
+                value={formData.salaryMin ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, salaryMin: e.target.value ? Number(e.target.value) : null }))}
+                placeholder="최소 (만원)"
+                min={0}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              />
+              <input
+                type="number"
+                value={formData.salaryMax ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, salaryMax: e.target.value ? Number(e.target.value) : null }))}
+                placeholder="최대 (만원)"
+                min={0}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              />
+              <select
+                value={formData.salaryUnit ?? 'monthly'}
+                onChange={(e) => setFormData(prev => ({ ...prev, salaryUnit: e.target.value as 'monthly' | 'yearly' | 'daily' | 'hourly' }))}
+                className="w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:border-primary"
+              >
+                <option value="monthly">월급</option>
+                <option value="yearly">연봉</option>
+                <option value="daily">일급</option>
+                <option value="hourly">시급</option>
+              </select>
+            </div>
+          </FieldRow>
+
+          <FieldRow label="최소 경력" hint="신입 가능이면 0을 입력하세요. 미입력 시 무관.">
+            <div className="flex items-center gap-2 max-w-[200px]">
+              <input
+                type="number"
+                value={formData.experienceMin ?? ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, experienceMin: e.target.value !== '' ? Number(e.target.value) : null }))}
+                placeholder="예) 2"
+                min={0}
+                max={30}
+                className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:border-primary"
+              />
+              <span className="text-sm text-gray-500">년 이상</span>
+            </div>
           </FieldRow>
 
           <FieldRow label="마감일" hint="지원 마감일을 설정하면 구직자가 더 빠르게 지원해요">
