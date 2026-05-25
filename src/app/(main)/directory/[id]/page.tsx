@@ -14,7 +14,8 @@ import RichTextView from '@/shared/components/RichTextView';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import { VERIFICATION_STATUS_LABELS } from '@/shared/constants';
 import PortfolioCard from '@/features/portfolios/components/PortfolioCard';
-import type { Portfolio } from '@/types/database';
+import type { Portfolio, Review, ReviewTag } from '@/types/database';
+import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,10 +51,33 @@ async function getData(id: string) {
     .order('display_order', { ascending: true })
     .order('created_at', { ascending: false });
 
+  const { data: reviews } = await supabase
+    .from('reviews')
+    .select('*, reviewer:profiles!reviewer_id(id, company_name, contact_name)')
+    .eq('reviewee_id', id)
+    .eq('is_public', true)
+    .eq('is_hidden_by_admin', false)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  const tagIds = Array.from(new Set(((reviews ?? []) as Review[]).flatMap((r) => r.tags)));
+  let tagRows: ReviewTag[] = [];
+  if (tagIds.length > 0) {
+    const { data: tagsData } = await supabase
+      .from('review_tags')
+      .select('*')
+      .in('id', tagIds);
+    tagRows = (tagsData ?? []) as ReviewTag[];
+  }
+  const tagMap: Record<string, ReviewTag> = Object.fromEntries(tagRows.map((t) => [t.id, t]));
+
   return {
     profile: profile as Profile,
     jobs: (jobs ?? []) as Job[],
     portfolios: (portfolios ?? []) as Portfolio[],
+    reviews: (reviews ?? []) as Review[],
+    tagMap,
   };
 }
 
@@ -61,7 +85,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const result = await getData(params.id);
   if (!result) notFound();
 
-  const { profile, jobs, portfolios } = result;
+  const { profile, jobs, portfolios, reviews, tagMap } = result;
 
   let isOwner = false;
   try {
@@ -209,6 +233,23 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">소개</h2>
           <RichTextView html={profile.bio} className="text-[15px] text-gray-700 leading-relaxed" />
+        </div>
+      )}
+
+      {/* Reviews */}
+      {reviews.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+          <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+            받은 리뷰 <span className="text-sm text-gray-400 font-normal ml-1">{reviews.length}</span>
+          </h2>
+          <section className="mb-6">
+            <p className="text-xs text-gray-500 mb-3">받은 태그 빈도</p>
+            <TagFrequency reviews={reviews} tagMap={tagMap} />
+          </section>
+          <section>
+            <p className="text-xs text-gray-500 mb-3">개별 리뷰</p>
+            <ReviewList reviews={reviews as Parameters<typeof ReviewList>[0]['reviews']} tagMap={tagMap} />
+          </section>
         </div>
       )}
 
