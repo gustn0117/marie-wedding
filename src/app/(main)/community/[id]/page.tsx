@@ -162,7 +162,7 @@ export default async function PostDetailPage({ params }: PageProps) {
         </div>
       </article>
 
-      <CommentSection postId={post.id} />
+      <CommentSection postId={post.id} postAuthorId={post.author_id} adoptedCommentId={post.adopted_comment_id} />
     </div>
   );
 }

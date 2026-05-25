@@ -4,8 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
+import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 export default function AdminUsersPage() {
+  const { profile: me } = useAuth();
   const [users, setUsers] = useState<Profile[]>([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -13,6 +17,7 @@ export default function AdminUsersPage() {
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [banModal, setBanModal] = useState<{ user: Profile; reason: string } | null>(null);
 
   const totalPages = Math.ceil(count / 20);
 
@@ -71,8 +76,53 @@ export default function AdminUsersPage() {
       await adminService.restoreUser(user.id);
       await load();
     } catch (err) {
-      alert('복원에 실패했습니다.');
+      toast('복원에 실패했습니다.', 'error');
       console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const confirmBan = async () => {
+    if (!banModal) return;
+    const { user, reason } = banModal;
+    if (!reason.trim()) { toast('제재 사유를 입력해 주세요.', 'error'); return; }
+    setActionLoading(user.id);
+    try {
+      const sb = createClient();
+      const { error } = await sb.from('profiles').update({
+        banned_at: new Date().toISOString(),
+        banned_reason: reason.trim(),
+        banned_by: me?.id ?? null,
+      }).eq('id', user.id);
+      if (error) throw error;
+      toast(`${user.contact_name}님을 제재했습니다.`, 'success');
+      setBanModal(null);
+      await load();
+    } catch (err) {
+      toast('제재 처리에 실패했습니다.', 'error');
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleUnban = async (user: Profile) => {
+    const ok = await toastConfirm(`${user.contact_name}님의 제재를 해제하시겠습니까?`);
+    if (!ok) return;
+    setActionLoading(user.id);
+    try {
+      const sb = createClient();
+      const { error } = await sb.from('profiles').update({
+        banned_at: null,
+        banned_reason: null,
+        banned_by: null,
+      }).eq('id', user.id);
+      if (error) throw error;
+      toast('제재가 해제되었습니다.', 'success');
+      await load();
+    } catch {
+      toast('해제에 실패했습니다.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -178,6 +228,8 @@ export default function AdminUsersPage() {
                     <td className="px-5 py-3">
                       {user.deleted_at ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">삭제됨</span>
+                      ) : user.banned_at ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-950 text-white" title={user.banned_reason ?? undefined}>제재됨</span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-50 text-green-600">활성</span>
                       )}
@@ -201,6 +253,23 @@ export default function AdminUsersPage() {
                             >
                               {user.role === 'admin' ? '일반으로' : '관리자로'}
                             </button>
+                            {user.banned_at ? (
+                              <button
+                                onClick={() => handleUnban(user)}
+                                disabled={actionLoading === user.id}
+                                className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                              >
+                                제재 해제
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => setBanModal({ user, reason: '' })}
+                                disabled={actionLoading === user.id}
+                                className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                              >
+                                제재
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(user)}
                               disabled={actionLoading === user.id}
@@ -255,6 +324,41 @@ export default function AdminUsersPage() {
           </div>
         )}
       </div>
+
+      {banModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div role="dialog" aria-modal="true" className="w-full max-w-md border border-gray-200 bg-white p-5 shadow-xl">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">사용자 제재</p>
+            <h2 className="text-base font-bold text-gray-900 mb-1">{banModal.user.contact_name}</h2>
+            <p className="text-xs text-gray-500 mb-3">{banModal.user.company_name || '개인 회원'}</p>
+            <textarea
+              value={banModal.reason}
+              onChange={(e) => setBanModal({ ...banModal, reason: e.target.value })}
+              rows={4}
+              placeholder="제재 사유 (관리자 기록용)"
+              className="w-full border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none resize-none mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setBanModal(null)}
+                disabled={actionLoading === banModal.user.id}
+                className="rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={confirmBan}
+                disabled={actionLoading === banModal.user.id || !banModal.reason.trim()}
+                className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700 disabled:opacity-50"
+              >
+                제재 적용
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
