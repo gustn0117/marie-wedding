@@ -4,6 +4,7 @@ import { ROUTES } from '@/shared/constants';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import PostFilters from '@/features/community/components/PostFilters';
 import PostList from '@/features/community/components/PostList';
+import HotPostsSection from '@/features/community/components/HotPostsSection';
 import type { Post } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -104,6 +105,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         <div className="min-w-0 space-y-3">
+          <HotPostsSection />
           <Suspense fallback={null}>
             <PostFilters />
           </Suspense>
@@ -112,10 +114,14 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
         <aside className="space-y-3 lg:sticky lg:top-[150px] lg:self-start">
           <div className="platform-panel p-4">
-            <h2 className="text-base font-bold text-gray-900">커뮤니티 바로가기</h2>
+            <h2 className="text-base font-bold text-gray-900">카테고리</h2>
             <div className="mt-3 grid gap-2 text-sm">
-              <Link href={`${ROUTES.COMMUNITY}?category=news`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">업계뉴스</Link>
+              <Link href={`${ROUTES.COMMUNITY}?category=news`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">정보공유</Link>
               <Link href={`${ROUTES.COMMUNITY}?category=tips`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">노하우공유</Link>
+              <Link href={`${ROUTES.COMMUNITY}?category=qna`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">질문</Link>
+              <Link href={`${ROUTES.COMMUNITY}?category=review`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">후기</Link>
+              <Link href={`${ROUTES.COMMUNITY}?category=local`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">지역소식</Link>
+              <Link href={`${ROUTES.COMMUNITY}?category=jobtip`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">구인팁</Link>
               <Link href={`${ROUTES.COMMUNITY}?category=free`} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">자유게시판</Link>
             </div>
           </div>

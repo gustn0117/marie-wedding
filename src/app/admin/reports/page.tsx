@@ -6,6 +6,8 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import type { Profile, Report } from '@/types/database';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/shared/components/Toast';
 
 const STATUS_OPTIONS: { value: Report['status'] | ''; label: string }[] = [
   { value: '', label: '전체' },
@@ -31,6 +33,15 @@ const TARGET_LABELS: Record<Report['target_type'], string> = {
   review: '리뷰',
 };
 
+function StatTile({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+  return (
+    <div className={`border bg-white p-4 ${highlight ? 'border-gray-950' : 'border-gray-200'}`}>
+      <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums ${highlight ? 'text-gray-950' : 'text-gray-700'}`}>{value.toLocaleString()}</p>
+    </div>
+  );
+}
+
 function targetHref(report: Report): string {
   if (report.target_type === 'job') return ROUTES.JOBS_DETAIL(report.target_id);
   if (report.target_type === 'post') return ROUTES.COMMUNITY_DETAIL(report.target_id);
@@ -39,12 +50,21 @@ function targetHref(report: Report): string {
   return ROUTES.ADMIN_COMMENTS;
 }
 
+interface StatusStats {
+  open: number;
+  reviewing: number;
+  resolved: number;
+  dismissed: number;
+  today: number;
+}
+
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<(Report & { reporter?: Profile })[]>([]);
   const [status, setStatus] = useState<Report['status'] | ''>('open');
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [stats, setStats] = useState<StatusStats | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,15 +79,39 @@ export default function AdminReportsPage() {
     }
   }, [status]);
 
+  const loadStats = useCallback(async () => {
+    const sb = createClient();
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const todayIso = startOfDay.toISOString();
+    const [openRes, reviewingRes, resolvedRes, dismissedRes, todayRes] = await Promise.all([
+      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
+      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'resolved'),
+      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'dismissed'),
+      sb.from('reports').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+    ]);
+    setStats({
+      open: openRes.count ?? 0,
+      reviewing: reviewingRes.count ?? 0,
+      resolved: resolvedRes.count ?? 0,
+      dismissed: dismissedRes.count ?? 0,
+      today: todayRes.count ?? 0,
+    });
+  }, []);
+
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { loadStats(); }, [loadStats]);
 
   const updateStatus = async (report: Report, next: Report['status']) => {
     setActionLoading(report.id);
     try {
       const updated = await adminService.updateReportStatus(report.id, next);
       setReports((prev) => prev.map((item) => (item.id === report.id ? { ...item, ...updated } : item)));
+      toast('상태를 변경했습니다.', 'success');
+      loadStats();
     } catch {
-      alert('상태 변경에 실패했습니다.');
+      toast('상태 변경에 실패했습니다.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -81,6 +125,16 @@ export default function AdminReportsPage() {
           <p className="mt-1 text-sm text-gray-500">총 {count.toLocaleString()}건</p>
         </div>
       </div>
+
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+          <StatTile label="처리 대기" value={stats.open} highlight />
+          <StatTile label="검토 중" value={stats.reviewing} />
+          <StatTile label="처리 완료" value={stats.resolved} />
+          <StatTile label="반려" value={stats.dismissed} />
+          <StatTile label="오늘 신규" value={stats.today} />
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {STATUS_OPTIONS.map((option) => (

@@ -52,8 +52,12 @@ export const REGIONS = [
 ] as const;
 
 export const POST_CATEGORIES = [
-  { value: 'news', label: '업계뉴스' },
+  { value: 'news', label: '정보공유' },
   { value: 'tips', label: '노하우공유' },
+  { value: 'qna', label: '질문' },
+  { value: 'review', label: '후기' },
+  { value: 'local', label: '지역소식' },
+  { value: 'jobtip', label: '구인팁' },
   { value: 'free', label: '자유게시판' },
 ] as const;
 
