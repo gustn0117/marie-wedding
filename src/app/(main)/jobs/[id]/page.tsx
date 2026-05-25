@@ -16,6 +16,7 @@ import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
+import JobViewTracker from '@/features/jobs/components/JobViewTracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,10 +32,6 @@ async function getJob(id: string): Promise<Job | null> {
     .eq('id', id)
     .is('deleted_at', null)
     .single();
-  if (data) {
-    // fire-and-forget; service_role bypasses RLS
-    supabase.rpc('increment_job_view_count', { p_job_id: id }).then(() => {}, () => {});
-  }
   return data as Job | null;
 }
 
@@ -49,6 +46,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-4">
+      <JobViewTracker jobId={job.id} />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.JOBS} className="text-gray-500 hover:text-primary transition-colors">

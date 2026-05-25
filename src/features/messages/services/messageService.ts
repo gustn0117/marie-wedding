@@ -32,13 +32,8 @@ export const messageService = {
     return (data ?? []) as Message[];
   },
 
-  async markRead(conversationId: string, profileId: string): Promise<void> {
+  async markRead(conversationId: string): Promise<void> {
     const supabase = createClient();
-    await supabase
-      .from('messages')
-      .update({ read_at: new Date().toISOString() })
-      .eq('conversation_id', conversationId)
-      .neq('sender_id', profileId)
-      .is('read_at', null);
+    await supabase.rpc('mark_messages_read', { p_conversation_id: conversationId });
   },
 };

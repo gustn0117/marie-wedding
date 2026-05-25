@@ -18,8 +18,8 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    messageService.markRead(conversationId, myProfileId).catch(() => {});
-  }, [conversationId, myProfileId]);
+    messageService.markRead(conversationId).catch(() => {});
+  }, [conversationId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });

@@ -18,7 +18,14 @@ export async function POST(req: NextRequest) {
   const accessToken = auth.slice('Bearer '.length);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const salt = process.env.OTP_HASH_SALT || 'marie-default-salt-change-me';
+  const salt = process.env.OTP_HASH_SALT;
+  if (!salt || salt === 'marie-default-salt-change-me') {
+    if (process.env.NODE_ENV === 'production') {
+      return new NextResponse('서버 설정 오류: OTP 솔트가 구성되지 않았습니다.', { status: 500 });
+    }
+    console.warn('[OTP] WARNING: using insecure default salt (non-production)');
+  }
+  const effectiveSalt = salt || 'marie-dev-salt';
 
   const userSb = createSbClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
@@ -58,7 +65,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse('시도 횟수를 초과했습니다. 새 인증번호를 요청해 주세요.', { status: 429 });
   }
 
-  const codeHash = hashCode(code, salt);
+  const codeHash = hashCode(code, effectiveSalt);
   if (codeHash !== otp.code_hash) {
     await adminSb.from('phone_otps').update({ attempts: otp.attempts + 1 }).eq('id', otp.id);
     return new NextResponse('인증번호가 일치하지 않습니다.', { status: 400 });

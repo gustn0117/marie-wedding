@@ -20,7 +20,14 @@ export async function POST(req: NextRequest) {
   const accessToken = auth.slice('Bearer '.length);
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const salt = process.env.OTP_HASH_SALT || 'marie-default-salt-change-me';
+  const salt = process.env.OTP_HASH_SALT;
+  if (!salt || salt === 'marie-default-salt-change-me') {
+    if (process.env.NODE_ENV === 'production') {
+      return new NextResponse('서버 설정 오류: OTP 솔트가 구성되지 않았습니다.', { status: 500 });
+    }
+    console.warn('[OTP] WARNING: using insecure default salt (non-production)');
+  }
+  const effectiveSalt = salt || 'marie-dev-salt';
 
   const userSb = createSbClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     global: { headers: { Authorization: `Bearer ${accessToken}` } },
@@ -55,7 +62,7 @@ export async function POST(req: NextRequest) {
   }
 
   const code = String(Math.floor(100000 + Math.random() * 900000));
-  const codeHash = hashCode(code, salt);
+  const codeHash = hashCode(code, effectiveSalt);
   const expiresAt = new Date(Date.now() + OTP_TTL_MIN * 60 * 1000).toISOString();
 
   const { error } = await adminSb.from('phone_otps').insert({

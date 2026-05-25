@@ -2,8 +2,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+export const revalidate = 300; // 5분 캐싱 — 데이터 증가 시 더 늘릴 것
 
 export const metadata = {
   title: '플랫폼 통계 | Marié',

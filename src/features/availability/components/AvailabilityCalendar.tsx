@@ -41,7 +41,7 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
   useEffect(() => {
     const { from, to } = monthBounds(year, month);
     setBusy(true);
-    availabilityService.listForProfile(profileId, from, to)
+    availabilityService.listForProfile(profileId, from, to, { publicOnly: !editable })
       .then((rows) => {
         const map: Record<string, AvailabilitySlot> = {};
         rows.forEach((r) => { map[r.date] = r; });
@@ -49,7 +49,7 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
       })
       .catch(() => setSlots({}))
       .finally(() => setBusy(false));
-  }, [profileId, year, month]);
+  }, [profileId, year, month, editable]);
 
   function nextStatus(curr: AvailabilityStatus | null): AvailabilityStatus | null {
     if (curr === null) return 'available';

@@ -28,6 +28,7 @@ const TARGET_LABELS: Record<Report['target_type'], string> = {
   post: '게시글',
   comment: '댓글',
   event: '이벤트',
+  review: '리뷰',
 };
 
 function targetHref(report: Report): string {

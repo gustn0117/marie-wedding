@@ -238,7 +238,7 @@ export interface Notification {
   deleted_at: string | null;
 }
 
-export type ReportTargetType = 'job' | 'profile' | 'post' | 'comment' | 'event';
+export type ReportTargetType = 'job' | 'profile' | 'post' | 'comment' | 'event' | 'review';
 
 export interface Report {
   id: string;

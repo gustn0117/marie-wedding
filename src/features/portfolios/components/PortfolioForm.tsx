@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import type { Portfolio } from '@/types/database';
 import { portfolioService } from '@/features/portfolios/services/portfolioService';
 
+
+
 interface Props {
   profileId: string;
   initial?: Portfolio;
@@ -23,12 +25,33 @@ export default function PortfolioForm({ profileId, initial }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const draftIdRef = useRef<string | null>(null);
+
+  async function ensureDraftId(): Promise<string> {
+    if (initial) return initial.id;
+    if (draftIdRef.current) return draftIdRef.current;
+    // 빈 포트폴리오 행을 먼저 만들어서 안정된 ID 확보 → 이미지 path가 진짜 DB 행에 묶임
+    const draft = await portfolioService.create({
+      profile_id: profileId,
+      title: title.trim() || '제목 미정',
+      event_date: null,
+      role: null,
+      venue_name: null,
+      description: null,
+      images: [],
+      cover_image: null,
+      is_featured: false,
+      display_order: 0,
+    });
+    draftIdRef.current = draft.id;
+    return draft.id;
+  }
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const id = initial?.id ?? 'draft-' + Date.now();
     setBusy(true);
     try {
+      const id = await ensureDraftId();
       for (const file of Array.from(files)) {
         if (file.size > 5 * 1024 * 1024) { setError(`${file.name}: 5MB 초과`); continue; }
         const path = await portfolioService.uploadImage(profileId, id, file);
@@ -68,8 +91,12 @@ export default function PortfolioForm({ profileId, initial }: Props) {
         is_featured: isFeatured,
         display_order: initial?.display_order ?? 0,
       };
-      if (initial) await portfolioService.update(initial.id, payload);
-      else await portfolioService.create(payload);
+      const targetId = initial?.id ?? draftIdRef.current;
+      if (targetId) {
+        await portfolioService.update(targetId, payload);
+      } else {
+        await portfolioService.create(payload);
+      }
       router.push('/mypage/portfolios');
       router.refresh();
     } catch (e) {

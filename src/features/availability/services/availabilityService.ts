@@ -4,8 +4,22 @@ import { createClient } from '@/lib/supabase/client';
 import type { AvailabilitySlot, AvailabilityStatus } from '@/types/database';
 
 export const availabilityService = {
-  async listForProfile(profileId: string, fromIso: string, toIso: string): Promise<AvailabilitySlot[]> {
+  async listForProfile(profileId: string, fromIso: string, toIso: string, options?: { publicOnly?: boolean }): Promise<AvailabilitySlot[]> {
     const supabase = createClient();
+    if (options?.publicOnly) {
+      const { data, error } = await supabase.rpc('get_public_availability', {
+        p_profile_id: profileId,
+        p_from: fromIso,
+        p_to: toIso,
+      });
+      if (error) throw error;
+      return ((data ?? []) as Array<Pick<AvailabilitySlot, 'id' | 'profile_id' | 'date' | 'status'>>).map((r) => ({
+        ...r,
+        note: null,
+        created_at: '',
+        updated_at: '',
+      })) as AvailabilitySlot[];
+    }
     const { data, error } = await supabase
       .from('availability_slots')
       .select('*')
