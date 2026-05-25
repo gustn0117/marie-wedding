@@ -4,19 +4,22 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import type { SavedSearch } from '@/types/database';
 import { savedSearchService, searchUrl } from '@/features/saved-searches/services/savedSearchService';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 export default function SavedSearchTable({ items: initial }: { items: SavedSearch[] }) {
   const [items, setItems] = useState(initial);
   const [pending, startTransition] = useTransition();
 
-  function onDelete(id: string) {
-    if (!window.confirm('이 저장된 검색을 삭제하시겠습니까?')) return;
+  async function onDelete(id: string) {
+    const ok = await toastConfirm('이 저장된 검색을 삭제하시겠습니까?');
+    if (!ok) return;
     startTransition(async () => {
       try {
         await savedSearchService.remove(id);
         setItems((prev) => prev.filter((x) => x.id !== id));
+        toast('삭제되었습니다.', 'success');
       } catch {
-        window.alert('삭제에 실패했습니다.');
+        toast('삭제에 실패했습니다.', 'error');
       }
     });
   }

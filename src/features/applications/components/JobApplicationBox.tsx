@@ -11,6 +11,7 @@ import {
 } from '@/features/applications/services/application-service';
 import { formatRelativeTime } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -81,7 +82,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
       const msg = err instanceof Error && err.message.includes('duplicate')
         ? '이미 접수된 내역이 있습니다.'
         : '접수에 실패했습니다.';
-      alert(msg);
+      toast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +93,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
       const updated = await applicationService.updateStatus(id, status);
       setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
     } catch {
-      alert('상태 변경에 실패했습니다.');
+      toast('상태 변경에 실패했습니다.', 'error');
     }
   };
 
@@ -106,18 +107,20 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-      alert(msg.includes('not_accepted') ? '승인된 건만 거래 완료 처리할 수 있습니다.' : '거래 완료 처리에 실패했습니다.');
+      toast(msg.includes('not_accepted') ? '승인된 건만 거래 완료 처리할 수 있습니다.' : '거래 완료 처리에 실패했습니다.', 'error');
     }
   };
 
   const cancelMyApplication = async () => {
     if (!application) return;
-    if (!window.confirm('지원을 취소하시겠습니까? 취소 후 다시 지원하려면 새로 작성해야 합니다.')) return;
+    const ok = await toastConfirm('지원을 취소하시겠습니까? 취소 후 다시 지원하려면 새로 작성해야 합니다.');
+    if (!ok) return;
     try {
       const updated = await applicationService.updateStatus(application.id, 'cancelled');
       setApplication(updated);
+      toast('지원이 취소되었습니다.', 'success');
     } catch {
-      alert('취소에 실패했습니다.');
+      toast('취소에 실패했습니다.', 'error');
     }
   };
 

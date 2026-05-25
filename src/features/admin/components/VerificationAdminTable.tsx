@@ -7,6 +7,7 @@ import {
 } from '@/features/admin/services/adminVerificationService';
 import { getBusinessTypeLabel } from '@/shared/utils/format';
 import type { VerificationRow } from '@/features/verification/types';
+import { toast } from '@/shared/components/Toast';
 
 export default function VerificationAdminTable({ rows }: { rows: VerificationRow[] }) {
   const [items, setItems] = useState(rows);
@@ -31,8 +32,12 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
     }
     startTransition(async () => {
       const result = await decideVerification(id, decision, reason);
-      if (result.ok) setItems((prev) => prev.filter((x) => x.id !== id));
-      else window.alert(result.error);
+      if (result.ok) {
+        setItems((prev) => prev.filter((x) => x.id !== id));
+        toast(decision === 'verified' ? '인증을 승인했습니다.' : '인증을 거절했습니다.', 'success');
+      } else {
+        toast(result.error, 'error');
+      }
     });
   }
 
