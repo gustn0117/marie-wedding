@@ -168,7 +168,13 @@ function ApplicationList({
                 <div className="shrink-0 text-right">
                   <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
                   {item.hiring_completed_at && item.applicant_completed_at && (
-                    <p className="mt-1 text-[10px] font-bold text-primary">✓ 거래 완료</p>
+                    <Link
+                      href={`/applications/${item.id}/review`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-1 block text-[10px] font-bold text-gray-950 underline"
+                    >
+                      ✓ 거래 완료 · 리뷰 작성
+                    </Link>
                   )}
                   <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
                 </div>

@@ -110,6 +110,17 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
     }
   };
 
+  const cancelMyApplication = async () => {
+    if (!application) return;
+    if (!window.confirm('지원을 취소하시겠습니까? 취소 후 다시 지원하려면 새로 작성해야 합니다.')) return;
+    try {
+      const updated = await applicationService.updateStatus(application.id, 'cancelled');
+      setApplication(updated);
+    } catch {
+      alert('취소에 실패했습니다.');
+    }
+  };
+
   if (isLoading || loading) {
     return (
       <section className="bg-white border border-gray-200 rounded p-6 md:p-8 animate-pulse">
@@ -194,9 +205,21 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
   }
 
   if (application) {
+    const canCancel = application.status === 'pending' || application.status === 'reviewing';
     return (
       <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel} 접수 완료</h2>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-bold text-gray-900">{actionLabel} 접수 완료</h2>
+          {canCancel && (
+            <button
+              type="button"
+              onClick={cancelMyApplication}
+              className="text-xs text-gray-500 hover:text-state-urgent underline"
+            >
+              {actionLabel} 취소
+            </button>
+          )}
+        </div>
         <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
           <span className="badge-primary">{APPLICATION_STATUS_LABELS[application.status]}</span>
           <span className="text-gray-400">{formatRelativeTime(application.created_at)} 접수</span>
@@ -257,14 +280,24 @@ function DealCompletionRow({
 }) {
   const mine = side === 'hiring' ? application.hiring_completed_at : application.applicant_completed_at;
   const other = side === 'hiring' ? application.applicant_completed_at : application.hiring_completed_at;
+  // bothDone 시 리뷰 작성 링크
+  const reviewHref = `/applications/${application.id}/review`;
   const bothDone = !!mine && !!other;
 
   return (
     <div className="mt-3 rounded border border-gray-200 p-3 text-xs">
       {bothDone ? (
         <div className="flex items-center justify-between gap-2">
-          <span className="font-bold text-gray-900">✓ 거래 완료</span>
-          <span className="text-gray-500">양쪽 확인 완료</span>
+          <div>
+            <p className="font-bold text-gray-900">✓ 거래 완료</p>
+            <p className="text-gray-500 mt-0.5">상대방에 대한 리뷰를 30일 이내 작성해 주세요.</p>
+          </div>
+          <a
+            href={reviewHref}
+            className="shrink-0 rounded border border-gray-950 bg-gray-950 px-3 py-1.5 text-xs font-bold text-white hover:bg-gray-700"
+          >
+            리뷰 작성 →
+          </a>
         </div>
       ) : mine ? (
         <div className="flex items-center justify-between gap-2">
