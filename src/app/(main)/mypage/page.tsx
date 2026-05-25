@@ -12,6 +12,7 @@ import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
 import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
 import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
+import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
 
 export const dynamic = 'force-dynamic';
 
@@ -216,6 +217,9 @@ export default async function MyPage() {
 
       {/* Onboarding */}
       <OnboardingChecklist profile={profile} portfolioCount={portfolioCount} jobCount={jobs.length} />
+
+      {/* Recommended Jobs */}
+      <RecommendedJobs profile={profile} />
 
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

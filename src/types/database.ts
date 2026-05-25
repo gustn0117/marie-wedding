@@ -54,11 +54,24 @@ export interface Job {
   deadline: string | null;
   image: string | null;
   view_count: number;
+  hidden_by_admin: boolean;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   // joined
   author?: Profile;
+}
+
+export type SavedSearchScope = 'jobs' | 'directory';
+
+export interface SavedSearch {
+  id: string;
+  profile_id: string;
+  name: string;
+  scope: SavedSearchScope;
+  query: Record<string, unknown>;
+  last_checked_at: string | null;
+  created_at: string;
 }
 
 export interface Post {
