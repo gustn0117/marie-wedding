@@ -80,11 +80,34 @@ export interface Job {
   is_promoted: boolean;
   promoted_until: string | null;
   status: JobStatus;
+  salary_min: number | null;
+  salary_max: number | null;
+  salary_unit: 'monthly' | 'yearly' | 'daily' | 'hourly';
+  experience_min: number | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
   // joined
   author?: Profile;
+}
+
+export type PaymentProductType = 'job_promotion' | 'premium_tier' | 'event_listing' | 'directory_boost';
+export type PaymentStatus = 'pending' | 'completed' | 'refunded' | 'failed' | 'cancelled';
+
+export interface Payment {
+  id: string;
+  profile_id: string | null;
+  amount: number;
+  currency: string;
+  product_type: PaymentProductType;
+  product_id: string | null;
+  status: PaymentStatus;
+  gateway: string | null;
+  gateway_transaction_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  completed_at: string | null;
+  refunded_at: string | null;
 }
 
 export type SavedSearchScope = 'jobs' | 'directory';
