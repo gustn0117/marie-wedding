@@ -158,4 +158,19 @@ export const jobService = {
       throw new Error(`채용 공고 삭제에 실패했습니다: ${error.message}`);
     }
   },
+
+  /**
+   * Update job status (open/closed/filled/hidden). RLS restricts to author/admin.
+   */
+  async updateStatus(id: string, status: 'open' | 'closed' | 'filled' | 'hidden'): Promise<Job> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('jobs')
+      .update({ status })
+      .eq('id', id)
+      .select('*')
+      .single();
+    if (error) throw new Error(`상태 변경 실패: ${error.message}`);
+    return data as Job;
+  },
 };

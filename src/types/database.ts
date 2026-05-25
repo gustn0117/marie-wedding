@@ -136,6 +136,7 @@ export interface Post {
   title: string;
   content: string;
   category: PostCategory;
+  region: string | null;
   view_count: number;
   like_count: number;
   adopted_comment_id: string | null;

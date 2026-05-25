@@ -11,6 +11,8 @@ import {
 } from '@/shared/utils/format';
 import type { Application, ApplicationStatus, Job, Post } from '@/types/database';
 import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
+import JobStatusMenu from '@/features/jobs/components/JobStatusMenu';
+import { JOB_STATUS_LABELS } from '@/shared/constants';
 
 type AppFilter = 'all' | 'active' | 'completed' | ApplicationStatus;
 
@@ -32,8 +34,9 @@ interface MyPageTabsProps {
   receivedApplications: Application[];
 }
 
-export default function MyPageTabs({ jobs, posts, sentApplications, receivedApplications }: MyPageTabsProps) {
+export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications, receivedApplications }: MyPageTabsProps) {
   const [activeTab, setActiveTab] = useState<'jobs' | 'posts' | 'applications'>('jobs');
+  const [jobs, setJobs] = useState(initialJobs);
   const applicationCount = sentApplications.length + receivedApplications.length;
 
   return (
@@ -82,13 +85,19 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
               {jobs.map((job) => {
                 const receivedForThis = receivedApplications.filter((a) => a.job_id === job.id);
                 const pendingCount = receivedForThis.filter((a) => a.status === 'pending' || a.status === 'reviewing').length;
-                const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
                 return (
-                  <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="platform-data-row group block rounded px-3 py-3.5">
+                  <div key={job.id} className="platform-data-row group block rounded px-3 py-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {isExpired && <span className="badge-attr">마감</span>}
+                      <Link href={ROUTES.JOBS_DETAIL(job.id)} className="min-w-0 flex-1 block">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          {(job.status === 'closed' || job.status === 'filled' || job.status === 'hidden') && (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded ${
+                              job.status === 'filled' ? 'bg-gray-950 text-white'
+                                : job.status === 'hidden' ? 'bg-gray-200 text-gray-600'
+                                : 'bg-gray-100 text-gray-500'
+                            }`}>{JOB_STATUS_LABELS[job.status]}</span>
+                          )}
+                          {job.status === 'urgent' && <span className="badge-urgent">마감임박</span>}
                           <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{job.title}</h3>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
@@ -102,11 +111,16 @@ export default function MyPageTabs({ jobs, posts, sentApplications, receivedAppl
                               <span className="font-bold text-gray-700">지원 {receivedForThis.length}{pendingCount > 0 ? ` (검토 ${pendingCount})` : ''}</span>
                             </>
                           )}
+                          <span>·</span>
+                          <span>{formatRelativeTime(job.created_at)}</span>
                         </div>
-                      </div>
-                      <span className="text-xs text-gray-400 shrink-0">{formatRelativeTime(job.created_at)}</span>
+                      </Link>
+                      <JobStatusMenu
+                        job={job}
+                        onChange={(updated) => setJobs((prev) => prev.map((j) => (j.id === updated.id ? { ...j, ...updated } : j)))}
+                      />
                     </div>
-                  </Link>
+                  </div>
                 );
               })}
             </div>
