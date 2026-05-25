@@ -54,9 +54,16 @@ export async function updateSession(request: NextRequest) {
         );
         const { data: profile } = await serviceClient
           .from('profiles')
-          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed')
+          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason')
           .eq('user_id', user.id)
           .single();
+
+        // 제재된 사용자 — /banned 외 모든 페이지 접근 차단
+        if (profile?.banned_at && !request.nextUrl.pathname.startsWith('/banned') && !request.nextUrl.pathname.startsWith('/auth/callback') && !request.nextUrl.pathname.startsWith('/api')) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/banned';
+          return NextResponse.redirect(url);
+        }
 
         if (profile) {
           const cookieValue = JSON.stringify(profile);
