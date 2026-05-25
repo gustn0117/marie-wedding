@@ -1,0 +1,150 @@
+import Link from 'next/link';
+import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export const metadata = {
+  title: '플랫폼 통계 | Marié',
+  description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 공공 통계.',
+};
+
+async function loadStats() {
+  const supabase = createServerQueryClient();
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [
+    totalProfilesRes,
+    verifiedProfilesRes,
+    listedProfilesRes,
+    totalJobsRes,
+    recentJobsRes,
+    totalPostsRes,
+  ] = await Promise.all([
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified').is('deleted_at', null),
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_directory_listed', true).is('deleted_at', null),
+    supabase.from('jobs').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('hidden_by_admin', false),
+    supabase.from('jobs').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('hidden_by_admin', false).gte('created_at', monthAgo),
+    supabase.from('posts').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+  ]);
+
+  const { data: regionRows } = await supabase
+    .from('profiles')
+    .select('region')
+    .eq('is_directory_listed', true)
+    .is('deleted_at', null)
+    .limit(5000);
+
+  const regionMap = new Map<string, number>();
+  (regionRows ?? []).forEach((r: { region: string | null }) => {
+    if (!r.region) return;
+    r.region.split(',').filter(Boolean).forEach((reg: string) => {
+      const k = reg.trim();
+      regionMap.set(k, (regionMap.get(k) ?? 0) + 1);
+    });
+  });
+
+  const { data: bizRows } = await supabase
+    .from('profiles')
+    .select('business_type')
+    .eq('is_directory_listed', true)
+    .is('deleted_at', null)
+    .limit(5000);
+
+  const bizMap = new Map<string, number>();
+  (bizRows ?? []).forEach((r: { business_type: string | null }) => {
+    if (!r.business_type) return;
+    r.business_type.split(',').filter(Boolean).forEach((b: string) => {
+      const k = b.trim();
+      bizMap.set(k, (bizMap.get(k) ?? 0) + 1);
+    });
+  });
+
+  return {
+    totalProfiles: totalProfilesRes.count ?? 0,
+    verifiedProfiles: verifiedProfilesRes.count ?? 0,
+    listedProfiles: listedProfilesRes.count ?? 0,
+    totalJobs: totalJobsRes.count ?? 0,
+    recentJobs: recentJobsRes.count ?? 0,
+    totalPosts: totalPostsRes.count ?? 0,
+    regionCounts: Array.from(regionMap.entries()).sort((a, b) => b[1] - a[1]),
+    bizCounts: Array.from(bizMap.entries()).sort((a, b) => b[1] - a[1]),
+  };
+}
+
+export default async function StatsPage() {
+  const s = await loadStats();
+  const regionLabel = Object.fromEntries(REGIONS.map((r) => [r.value, r.label]));
+  const bizLabel = Object.fromEntries(BUSINESS_TYPES.map((b) => [b.value, b.label]));
+
+  return (
+    <main className="mx-auto max-w-[1200px] space-y-4">
+      <nav className="text-sm text-gray-500">
+        <Link href={ROUTES.HOME} className="hover:text-primary">홈</Link>
+        <span className="mx-2 text-gray-300">›</span>
+        <span className="text-gray-900 font-medium">플랫폼 통계</span>
+      </nav>
+
+      <header className="platform-panel p-6">
+        <p className="platform-eyebrow">Stats</p>
+        <h1 className="text-2xl font-bold text-gray-900 mt-1">플랫폼 통계</h1>
+        <p className="mt-2 text-sm text-gray-600">
+          마리에에 누적된 업체·공고·콘텐츠 수치. 매 페이지 로드 시 실시간으로 집계됩니다.
+        </p>
+      </header>
+
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <StatTile label="누적 회원" value={s.totalProfiles} />
+        <StatTile label="인증 업체" value={s.verifiedProfiles} />
+        <StatTile label="공개 디렉토리" value={s.listedProfiles} />
+        <StatTile label="누적 공고" value={s.totalJobs} />
+        <StatTile label="최근 30일 공고" value={s.recentJobs} highlight />
+        <StatTile label="커뮤니티 게시글" value={s.totalPosts} />
+      </section>
+
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="platform-panel p-5">
+          <h2 className="text-sm font-bold text-gray-900 mb-3">지역별 활성 업체</h2>
+          {s.regionCounts.length === 0 ? (
+            <p className="text-sm text-gray-500">데이터가 없습니다.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {s.regionCounts.slice(0, 10).map(([key, n]) => (
+                <li key={key} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700">{regionLabel[key] || key}</span>
+                  <span className="font-bold text-gray-900 tabular-nums">{n}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="platform-panel p-5">
+          <h2 className="text-sm font-bold text-gray-900 mb-3">업종별 활성 업체</h2>
+          {s.bizCounts.length === 0 ? (
+            <p className="text-sm text-gray-500">데이터가 없습니다.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {s.bizCounts.slice(0, 10).map(([key, n]) => (
+                <li key={key} className="flex items-center justify-between text-sm">
+                  <span className="text-gray-700">{bizLabel[key] || key}</span>
+                  <span className="font-bold text-gray-900 tabular-nums">{n}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function StatTile({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+  return (
+    <div className={`metric-tile p-5 ${highlight ? 'border-primary' : ''}`}>
+      <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
+      <p className="text-3xl font-bold text-gray-950 tabular-nums">{value.toLocaleString('ko-KR')}</p>
+    </div>
+  );
+}

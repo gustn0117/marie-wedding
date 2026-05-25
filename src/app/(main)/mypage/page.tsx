@@ -200,11 +200,14 @@ export default async function MyPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="mt-4 pt-4 border-t border-gray-100 grid gap-2 sm:grid-cols-5">
+        <div className="mt-4 pt-4 border-t border-gray-100 grid gap-2 sm:grid-cols-4">
           <Link href={ROUTES.MYPAGE_EDIT} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">프로필 수정</Link>
           <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">포트폴리오</Link>
-          <Link href={ROUTES.MYPAGE_PASSWORD} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">비밀번호 변경</Link>
+          <Link href={ROUTES.MYPAGE_AVAILABILITY} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">가용 일정</Link>
+          <Link href={ROUTES.MYPAGE_MESSAGES} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">메시지</Link>
+          <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">저장한 검색</Link>
           <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">알림</Link>
+          <Link href={ROUTES.MYPAGE_PASSWORD} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors">비밀번호</Link>
           <Link href={ROUTES.DIRECTORY_REGISTER} className="rounded border border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary transition-colors flex items-center gap-1">
             디렉토리 등록
             {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
