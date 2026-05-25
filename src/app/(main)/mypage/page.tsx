@@ -11,13 +11,14 @@ import {
 import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
 import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
+import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
 
 export const dynamic = 'force-dynamic';
 
 async function getMyData(profileId: string) {
   const supabase = createServerQueryClient();
 
-  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes] = await Promise.all([
+  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes, portfoliosRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', profileId).single(),
     supabase
       .from('jobs')
@@ -47,6 +48,11 @@ async function getMyData(profileId: string) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
+    supabase
+      .from('portfolios')
+      .select('id')
+      .eq('profile_id', profileId)
+      .is('deleted_at', null),
   ]);
 
   const profile = profileRes.data as Profile | null;
@@ -63,6 +69,7 @@ async function getMyData(profileId: string) {
     posts,
     sentApplications: (sentApplicationsRes.data ?? []) as Application[],
     receivedApplications: (receivedApplicationsRes.data ?? []) as Application[],
+    portfolioCount: (portfoliosRes.data ?? []).length,
   };
 }
 
@@ -83,9 +90,11 @@ export default async function MyPage() {
 
   if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
 
-  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(cookieProfile.id);
+  const { profile, jobs, posts, sentApplications, receivedApplications, portfolioCount } = await getMyData(cookieProfile.id);
 
   if (!profile) redirect(ROUTES.LOGIN);
+
+  const totalJobViews = jobs.reduce((sum: number, j) => sum + (j.view_count || 0), 0);
 
   const imageUrl = profile.profile_image
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
@@ -205,12 +214,29 @@ export default async function MyPage() {
       {/* Trust Status */}
       <VerificationStatusPanel profile={profile} />
 
+      {/* Onboarding */}
+      <OnboardingChecklist profile={profile} portfolioCount={portfolioCount} jobCount={jobs.length} />
+
       {/* Stats Summary */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <WorkspaceMetric label="등록한 공고" value={jobs.length} />
+        <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
+        <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
+        <WorkspaceMetric
+          label="응답률"
+          value={Math.round(profile.response_rate ?? 0)}
+          unit="%"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <WorkspaceMetric label="작성한 게시글" value={posts.length} />
         <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
-        <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
+        <WorkspaceMetric label="거래 완료" value={profile.completed_deals_count} />
+        <WorkspaceMetric
+          label="평균 응답"
+          value={profile.avg_response_minutes ?? 0}
+          unit={profile.avg_response_minutes ? (profile.avg_response_minutes < 60 ? '분' : profile.avg_response_minutes < 1440 ? '분' : '분') : '-'}
+        />
       </div>
 
       {/* Tabs */}
@@ -219,13 +245,13 @@ export default async function MyPage() {
   );
 }
 
-function WorkspaceMetric({ label, value }: { label: string; value: number }) {
+function WorkspaceMetric({ label, value, unit = '건' }: { label: string; value: number; unit?: string }) {
   return (
     <div className="metric-tile p-5">
       <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
       <p className="text-2xl font-bold text-gray-950">
         {value}
-        <span className="text-sm font-normal text-gray-400 ml-1">건</span>
+        <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>
       </p>
     </div>
   );

@@ -31,6 +31,10 @@ async function getJob(id: string): Promise<Job | null> {
     .eq('id', id)
     .is('deleted_at', null)
     .single();
+  if (data) {
+    // fire-and-forget; service_role bypasses RLS
+    supabase.rpc('increment_job_view_count', { p_job_id: id }).then(() => {}, () => {});
+  }
   return data as Job | null;
 }
 

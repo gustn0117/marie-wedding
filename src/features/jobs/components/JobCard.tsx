@@ -75,12 +75,15 @@ export default function JobCard({ job }: JobCardProps) {
 
         <div className="mt-auto pt-3 border-t border-border flex items-center justify-between text-micro text-text-muted">
           <time dateTime={job.created_at}>{formatRelativeTime(job.created_at)}</time>
-          {dDay && (
-            <span className={`font-semibold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
-              {dDay}
-            </span>
-          )}
-          {!dDay && <span className="font-semibold text-gray-500">상시채용</span>}
+          <div className="flex items-center gap-2">
+            {job.view_count > 0 && <span className="text-gray-400">조회 {job.view_count}</span>}
+            {dDay && (
+              <span className={`font-semibold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>
+                {dDay}
+              </span>
+            )}
+            {!dDay && <span className="font-semibold text-gray-500">상시채용</span>}
+          </div>
         </div>
       </article>
     </Link>
