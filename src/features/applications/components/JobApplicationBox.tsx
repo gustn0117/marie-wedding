@@ -197,6 +197,10 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
                         onMark={() => markCompleted(item.id, 'received')}
                       />
                     )}
+                    <AuthorNoteEditor
+                      application={item}
+                      onChange={(updated) => setReceived((prev) => prev.map((x) => (x.id === item.id ? updated : x)))}
+                    />
                   </div>
                 </div>
               </article>
@@ -269,6 +273,70 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
         </div>
       </div>
     </section>
+  );
+}
+
+function AuthorNoteEditor({
+  application,
+  onChange,
+}: {
+  application: Application;
+  onChange: (next: Application) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(application.author_note ?? '');
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    try {
+      const updated = await applicationService.setAuthorNote(application.id, draft.trim());
+      onChange(updated);
+      setEditing(false);
+      toast('메모를 저장했습니다.', 'success');
+    } catch {
+      toast('메모 저장에 실패했습니다.', 'error');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <div className="mt-3 rounded border border-dashed border-gray-200 p-3 text-xs">
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <p className="font-bold text-gray-700">내 메모 <span className="text-gray-400">(비공개)</span></p>
+          <button type="button" onClick={() => { setDraft(application.author_note ?? ''); setEditing(true); }} className="text-primary font-bold hover:underline">
+            {application.author_note ? '수정' : '+ 추가'}
+          </button>
+        </div>
+        {application.author_note ? (
+          <p className="whitespace-pre-wrap text-gray-700">{application.author_note}</p>
+        ) : (
+          <p className="text-gray-400">지원자에 대한 비공개 메모를 남겨두면 나중에 참고하기 좋아요.</p>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 rounded border border-gray-300 p-3">
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={3}
+        placeholder="이 지원자에 대한 비공개 메모 (다른 사용자에게는 보이지 않습니다)"
+        className="w-full border border-gray-200 px-2 py-1.5 text-xs focus:border-primary focus:outline-none resize-none"
+      />
+      <div className="mt-2 flex justify-end gap-2">
+        <button type="button" onClick={() => setEditing(false)} disabled={saving} className="text-xs text-gray-500 hover:text-gray-700">
+          취소
+        </button>
+        <button type="button" onClick={save} disabled={saving} className="rounded border border-gray-950 bg-gray-950 px-3 py-1 text-xs font-bold text-white disabled:opacity-50">
+          {saving ? '저장 중…' : '저장'}
+        </button>
+      </div>
+    </div>
   );
 }
 

@@ -1,4 +1,4 @@
-import type { VerificationStatus } from '@/types/database';
+import type { VerificationStatus, JobStatus } from '@/types/database';
 
 export const ACCOUNT_TYPES = [
   { value: 'individual', label: '개인 회원' },
@@ -118,3 +118,11 @@ export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
 
 export const VERIFICATION_BADGE_LABEL = '인증';
 export const PHONE_VERIFIED_BADGE_LABEL = '실명 확인';
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  open: '모집중',
+  urgent: '마감임박',
+  closed: '마감',
+  filled: '채용완료',
+  hidden: '숨김',
+};

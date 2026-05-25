@@ -3,6 +3,7 @@ import type { AccountType, BusinessType, EmploymentType, Region, PostCategory, P
 export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type ReviewTagCategory = 'positive' | 'attention';
 export type ReviewDirection = 'hiring_to_applicant' | 'applicant_to_hiring';
+export type JobStatus = 'open' | 'urgent' | 'closed' | 'filled' | 'hidden';
 
 export interface Profile {
   id: string;
@@ -40,6 +41,9 @@ export interface Profile {
   completed_deals_count: number;
   premium_tier: 'free' | 'basic' | 'pro';
   premium_until: string | null;
+  banned_at: string | null;
+  banned_reason: string | null;
+  banned_by: string | null;
 }
 
 export type TrustTier = 'unverified' | 'phone_verified' | 'business_verified' | 'deal_proven';
@@ -75,6 +79,7 @@ export interface Job {
   hidden_by_admin: boolean;
   is_promoted: boolean;
   promoted_until: string | null;
+  status: JobStatus;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -133,6 +138,7 @@ export interface Post {
   category: PostCategory;
   view_count: number;
   like_count: number;
+  adopted_comment_id: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -182,6 +188,7 @@ export interface Application {
   message: string;
   contact_phone: string | null;
   status: ApplicationStatus;
+  author_note: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

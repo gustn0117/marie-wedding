@@ -10,6 +10,7 @@ import {
 import { getJobTier, isUrgent, isNew, getDDayLabel } from '@/shared/utils/tier';
 import Badge from '@/shared/components/Badge';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import { JOB_STATUS_LABELS } from '@/shared/constants';
 
 interface JobCardProps {
   job: Job;
@@ -48,9 +49,12 @@ export default function JobCard({ job }: JobCardProps) {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1 flex-wrap justify-end min-h-[18px]">
-            {urgent && <Badge kind="urgent">마감임박</Badge>}
-            {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-            {tier === 2 && <Badge kind="promoted">추천</Badge>}
+            {job.status === 'filled' && <Badge kind="promoted">{JOB_STATUS_LABELS.filled}</Badge>}
+            {job.status === 'closed' && <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded">{JOB_STATUS_LABELS.closed}</span>}
+            {(job.status === 'urgent' || (urgent && job.status === 'open')) && <Badge kind="urgent">마감임박</Badge>}
+            {fresh && !urgent && job.status === 'open' && <Badge kind="new">NEW</Badge>}
+            {tier === 2 && job.status === 'open' && <Badge kind="promoted">추천</Badge>}
+            {job.is_promoted && <Badge kind="promoted">PROMO</Badge>}
           </div>
         </div>
 

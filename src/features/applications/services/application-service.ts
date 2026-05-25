@@ -97,4 +97,17 @@ export const applicationService = {
     if (fetchErr) throw fetchErr;
     return data as Application;
   },
+
+  async setAuthorNote(id: string, note: string): Promise<Application> {
+    const supabase = createClient();
+    const { error } = await supabase.rpc('set_author_note', { p_application_id: id, p_note: note });
+    if (error) throw error;
+    const { data, error: fetchErr } = await supabase
+      .from('applications')
+      .select('*, job:jobs(*), applicant:profiles(*)')
+      .eq('id', id)
+      .single();
+    if (fetchErr) throw fetchErr;
+    return data as Application;
+  },
 };
