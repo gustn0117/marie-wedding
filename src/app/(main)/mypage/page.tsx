@@ -15,6 +15,7 @@ import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklis
 import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
 import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
 import RecentJobsSection from '@/features/jobs/components/RecentJobsSection';
+import BookmarkedJobsSection from '@/features/mypage/components/BookmarkedJobsSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -246,6 +247,9 @@ export default async function MyPage() {
 
       {/* Recent Jobs */}
       <RecentJobsSection />
+
+      {/* Bookmarked Jobs */}
+      <BookmarkedJobsSection profileId={profile.id} />
 
       {/* Recommended Jobs */}
       <RecommendedJobs profile={profile} />

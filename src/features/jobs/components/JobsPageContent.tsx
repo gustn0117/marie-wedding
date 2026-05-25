@@ -511,7 +511,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         )}
       </div>
 
-      {/* Trust filter toggles */}
+      {/* Trust + salary + experience filter toggles */}
       <div className="platform-panel-soft flex items-center gap-2 px-4 py-3 flex-wrap">
         <button
           type="button"
@@ -531,10 +531,14 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         >
           거래 이력 있음
         </button>
+
+        <SalaryFilterChip value={searchParams.get('salaryMin') ?? ''} onChange={(v) => updateParams({ salaryMin: v })} />
+        <ExperienceFilterChip value={searchParams.get('expMax') ?? ''} onChange={(v) => updateParams({ expMax: v })} />
+
         {activeFilters.map((f) => (
           <FilterChip key={f.key} label={f.label} onRemove={() => handleRemoveFilter(f.key)} />
         ))}
-        {(activeFilters.length > 0 || verifiedOnly || completedOnly || search.trim()) && (
+        {(activeFilters.length > 0 || verifiedOnly || completedOnly || search.trim() || searchParams.get('salaryMin') || searchParams.get('expMax')) && (
           <button
             onClick={handleResetAll}
             className="ml-auto text-micro text-gray-400 hover:text-gray-600 underline-offset-2 hover:underline"
@@ -635,6 +639,74 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         </div>
       )}
     </div>
+  );
+}
+
+function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const options = [
+    { v: '', label: '급여 무관' },
+    { v: '200', label: '월 200만원~' },
+    { v: '250', label: '월 250만원~' },
+    { v: '300', label: '월 300만원~' },
+    { v: '400', label: '월 400만원~' },
+  ];
+  const active = options.find((o) => o.v === value) ?? options[0];
+  return (
+    <details className="relative">
+      <summary
+        className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border cursor-pointer select-none transition-colors list-none ${
+          value ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+        }`}
+      >
+        급여: {active.label} ▾
+      </summary>
+      <div className="absolute left-0 top-full mt-1 z-20 min-w-[160px] border border-gray-200 bg-white shadow-lg">
+        {options.map((o) => (
+          <button
+            key={o.v || 'any'}
+            type="button"
+            onClick={(e) => { onChange(o.v); (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open'); }}
+            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-gray-950' : 'text-gray-700'}`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const options = [
+    { v: '', label: '경력 무관' },
+    { v: '0', label: '신입 가능' },
+    { v: '1', label: '1년 이하' },
+    { v: '3', label: '3년 이하' },
+    { v: '5', label: '5년 이하' },
+  ];
+  const active = options.find((o) => o.v === value) ?? options[0];
+  return (
+    <details className="relative">
+      <summary
+        className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border cursor-pointer select-none transition-colors list-none ${
+          value ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+        }`}
+      >
+        경력: {active.label} ▾
+      </summary>
+      <div className="absolute left-0 top-full mt-1 z-20 min-w-[140px] border border-gray-200 bg-white shadow-lg">
+        {options.map((o) => (
+          <button
+            key={o.v || 'any'}
+            type="button"
+            onClick={(e) => { onChange(o.v); (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open'); }}
+            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-gray-950' : 'text-gray-700'}`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }
 

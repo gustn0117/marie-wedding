@@ -5,6 +5,7 @@ import { formatDate } from '@/shared/utils/format';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface Props {
   job: Job;
@@ -15,18 +16,19 @@ export default function JobDetailSidebar({ job }: Props) {
   const daysLeft = job.deadline
     ? Math.ceil((new Date(job.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
-  const isVerified = job.author?.verification_status === 'verified';
   const deals = job.author?.completed_deals_count ?? 0;
   const responseRate = Math.round(job.author?.response_rate ?? 0);
+  const trustTier = job.author ? computeTrustTier(job.author) : 'unverified';
+  const trustEmphasis = trustTier === 'deal_proven' || trustTier === 'business_verified';
 
   return (
     <aside className="lg:sticky lg:top-20 space-y-3">
       {/* Trust card */}
-      <section className={`border ${isVerified ? 'border-gray-950' : 'border-gray-200'} bg-white p-4`}>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">업체 신뢰</p>
+      <section className={`border ${trustEmphasis ? 'border-gray-950' : 'border-gray-200'} bg-white p-4`}>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">업체 신뢰 등급</p>
         <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-          <p className="text-sm font-bold text-gray-900">
-            {isVerified ? '인증 업체' : job.author?.phone_verified ? '실명 확인' : '미인증'}
+          <p className={`text-sm font-bold ${trustEmphasis ? 'text-gray-950' : 'text-gray-700'}`}>
+            {TRUST_TIER_LABELS[trustTier]}
           </p>
           <VerificationBadge
             verificationStatus={job.author?.verification_status}
