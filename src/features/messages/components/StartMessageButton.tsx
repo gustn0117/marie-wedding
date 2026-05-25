@@ -1,0 +1,42 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/shared/hooks/useAuth';
+import { messageService } from '@/features/messages/services/messageService';
+
+interface Props {
+  targetProfileId: string;
+  variant?: 'primary' | 'secondary';
+}
+
+export default function StartMessageButton({ targetProfileId, variant = 'primary' }: Props) {
+  const { profile } = useAuth();
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  if (profile?.id === targetProfileId) return null;
+
+  async function onClick() {
+    if (!profile) { window.alert('로그인이 필요합니다.'); return; }
+    setBusy(true);
+    try {
+      const conv = await messageService.startConversation(targetProfileId);
+      router.push(`/mypage/messages/${conv.id}`);
+    } catch {
+      window.alert('대화 시작에 실패했습니다.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const baseClass = variant === 'primary'
+    ? 'btn-primary px-4'
+    : 'rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary hover:text-primary transition-colors';
+
+  return (
+    <button type="button" onClick={onClick} disabled={busy} className={`${baseClass} disabled:opacity-50`}>
+      {busy ? '시작 중…' : '메시지 보내기'}
+    </button>
+  );
+}

@@ -74,6 +74,37 @@ export interface SavedSearch {
   created_at: string;
 }
 
+export type AvailabilityStatus = 'available' | 'busy';
+
+export interface AvailabilitySlot {
+  id: string;
+  profile_id: string;
+  date: string;
+  status: AvailabilityStatus;
+  note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Conversation {
+  id: string;
+  participant_a: string;
+  participant_b: string;
+  last_message_at: string;
+  created_at: string;
+  partner?: Pick<Profile, 'id' | 'company_name' | 'contact_name' | 'profile_image'>;
+  unread_count?: number;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  read_at: string | null;
+  created_at: string;
+}
+
 export interface Post {
   id: string;
   author_id: string;
