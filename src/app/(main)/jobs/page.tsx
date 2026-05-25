@@ -24,7 +24,8 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   let query = supabase
     .from('jobs')
     .select('*, author:profiles!author_id(*)', { count: 'exact' })
-    .is('deleted_at', null);
+    .is('deleted_at', null)
+    .eq('hidden_by_admin', false);
 
   if (searchParams.type) {
     query = query.eq('posting_type', searchParams.type);
@@ -42,6 +43,13 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
   if (searchParams.search) {
     query = query.ilike('title', `%${searchParams.search}%`);
+  }
+  if (searchParams.verified === '1') {
+    query = query.eq('author.verification_status', 'verified');
+  }
+  if (searchParams.completed === '1') {
+    // 거래 완료 1건 이상 있는 업체만
+    query = query.gt('author.completed_deals_count', 0);
   }
 
   query = query

@@ -15,6 +15,7 @@ import FilterChip from '@/shared/components/FilterChip';
 import ViewToggle, { type ViewMode } from '@/shared/components/ViewToggle';
 import JobListRow from './JobListRow';
 import JobCard from './JobCard';
+import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
 
 const PAGE_SIZE = 20;
 
@@ -43,6 +44,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     return sub ? sub.split(',') : [];
   });
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const verifiedOnly = searchParams.get('verified') === '1';
+  const completedOnly = searchParams.get('completed') === '1';
 
   const jobs = initialJobs ?? [];
   const totalCount = initialCount ?? 0;
@@ -167,6 +170,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     setSelectedSubRegions([]);
     router.push('/jobs', { scroll: false });
   };
+
 
   const browsingRegionDetails = browsingRegion ? REGION_DETAILS[browsingRegion] : null;
   const pageTitle = postingType === 'matching' ? '파트너 섭외' : '채용정보';
@@ -507,20 +511,38 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         )}
       </div>
 
-      {/* Active Filters */}
-      {activeFilters.length > 0 && (
-        <div className="platform-panel-soft flex items-center gap-1.5 px-4 py-3 flex-wrap">
-          {activeFilters.map((f) => (
-            <FilterChip key={f.key} label={f.label} onRemove={() => handleRemoveFilter(f.key)} />
-          ))}
+      {/* Trust filter toggles */}
+      <div className="platform-panel-soft flex items-center gap-2 px-4 py-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() => updateParams({ verified: verifiedOnly ? '' : '1' })}
+          className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
+            verifiedOnly ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+          }`}
+        >
+          ✓ 인증 업체만
+        </button>
+        <button
+          type="button"
+          onClick={() => updateParams({ completed: completedOnly ? '' : '1' })}
+          className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
+            completedOnly ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+          }`}
+        >
+          거래 이력 있음
+        </button>
+        {activeFilters.map((f) => (
+          <FilterChip key={f.key} label={f.label} onRemove={() => handleRemoveFilter(f.key)} />
+        ))}
+        {(activeFilters.length > 0 || verifiedOnly || completedOnly || search.trim()) && (
           <button
             onClick={handleResetAll}
-            className="text-micro text-gray-400 hover:text-gray-600 ml-1 underline-offset-2 hover:underline"
+            className="ml-auto text-micro text-gray-400 hover:text-gray-600 underline-offset-2 hover:underline"
           >
-            초기화
+            전체 초기화
           </button>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Results Info + View Toggle */}
       <div className="platform-toolbar">
@@ -528,7 +550,21 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
           <span className="ml-2 text-xs font-medium text-gray-400">최신 등록순</span>
         </p>
-        <ViewToggle value={viewMode} onChange={setViewMode} />
+        <div className="flex items-center gap-3">
+          <SaveSearchButton
+            scope="jobs"
+            query={{
+              search,
+              region: selectedRegion,
+              businessType: selectedBusinessTypes.join(','),
+              employmentType: selectedEmploymentType,
+              subRegion: selectedSubRegions.join(','),
+              type: postingType,
+            }}
+            defaultName={search || getRegionFilterLabel() || (postingType === 'matching' ? '업체 섭외' : '공고 검색')}
+          />
+          <ViewToggle value={viewMode} onChange={setViewMode} />
+        </div>
       </div>
 
       {/* Results */}
