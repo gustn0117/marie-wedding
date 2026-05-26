@@ -166,39 +166,37 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
             </div>
 
             {mySidebar ?? (
-            <aside className="rounded border border-gray-900 bg-gray-950 p-4 text-white">
-              <div className="flex items-start justify-between gap-3">
+            <aside className="rounded border border-gray-200 bg-white">
+              <div className="px-4 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[12px] font-bold uppercase text-primary-300">Live Board</p>
-                  <h2 className="mt-1 text-xl font-bold">운영 현황</h2>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Live Board</p>
+                  <h2 className="mt-1 text-base font-bold text-gray-900">운영 현황</h2>
                 </div>
-                <Link href="/stats" className="rounded border border-white/15 px-2 py-1 text-[11px] font-bold text-gray-200 transition-colors hover:border-white/40 hover:text-white">
+                <Link href="/stats" className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 transition-colors hover:border-primary hover:text-primary">
                   통계
                 </Link>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <DarkMetric label="인증 업체" value={counts.verified} />
-                <DarkMetric label="30일 공고" value={counts.recentJobs} />
-                <DarkMetric label="누적 공고" value={metricJobs} />
-                <DarkMetric label="등록 업체" value={metricProfiles} />
+              <div className="grid grid-cols-2 divide-x divide-y divide-gray-100">
+                <LightMetric label="인증 업체" value={counts.verified} />
+                <LightMetric label="30일 공고" value={counts.recentJobs} />
+                <LightMetric label="누적 공고" value={metricJobs} />
+                <LightMetric label="등록 업체" value={metricProfiles} />
               </div>
 
-              <div className="mt-4 grid gap-2">
-                <Link href={ROUTES.JOBS_NEW} className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded bg-white px-4 py-2 text-sm font-bold text-gray-950 transition-colors hover:bg-primary-50">
-                  <Icon name="briefcase" className="h-4 w-4" />
-                  채용공고 등록
+              <div className="p-3 border-t border-gray-100 grid gap-2">
+                <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[42px]">
+                  + 채용공고 등록
                 </Link>
-                <Link href={ROUTES.DIRECTORY_REGISTER} className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded border border-white/15 px-4 py-2 text-sm font-bold text-white transition-colors hover:border-white/40">
-                  <Icon name="building" className="h-4 w-4" />
+                <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary min-h-[42px]">
                   업체 프로필 등록
                 </Link>
               </div>
 
-              <div className="mt-4 divide-y divide-white/10 rounded border border-white/10">
-                <BoardLink href={`${ROUTES.JOBS}?type=hiring`} title="채용 중인 포지션" value={metricJobs} inverse />
-                <BoardLink href={ROUTES.DIRECTORY} title="등록 파트너" value={metricProfiles} inverse />
-                <BoardLink href={ROUTES.COMMUNITY} title="커뮤니티 업데이트" value={metricPosts} inverse />
+              <div className="border-t border-gray-100 divide-y divide-gray-100">
+                <BoardLink href={`${ROUTES.JOBS}?type=hiring`} title="채용 중인 포지션" value={metricJobs} />
+                <BoardLink href={ROUTES.DIRECTORY} title="등록 파트너" value={metricProfiles} />
+                <BoardLink href={ROUTES.COMMUNITY} title="커뮤니티 업데이트" value={metricPosts} />
               </div>
             </aside>
             )}
@@ -262,7 +260,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <h3 className="truncate text-[16px] font-bold text-gray-950 transition-colors group-hover:text-primary">{job.title}</h3>
+                    <h3 className="truncate text-[16px] font-bold text-primary transition-colors group-hover:text-primary">{job.title}</h3>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <Badge kind="category">{job.type}</Badge>
                       <Badge kind="attr">{job.pay}</Badge>
@@ -297,7 +295,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                     )}
                   </span>
                   <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold text-gray-950 transition-colors group-hover:text-primary">{company.name}</span>
+                    <span className="block truncate text-sm font-bold text-primary transition-colors group-hover:text-primary">{company.name}</span>
                     <span className="mt-1 block text-xs font-semibold text-gray-500">{company.type} · {company.region}</span>
                     <span className="mt-1 block line-clamp-2 text-xs leading-relaxed text-gray-500">{company.desc}</span>
                   </span>
@@ -317,7 +315,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                     <Badge kind="category">{getCategoryLabel(post.category)}</Badge>
                     <time className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</time>
                   </div>
-                  <p className="line-clamp-1 text-sm font-bold text-gray-950 transition-colors group-hover:text-primary">{post.title}</p>
+                  <p className="line-clamp-1 text-sm font-bold text-primary transition-colors group-hover:text-primary">{post.title}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
                     <span>조회 {post.view_count.toLocaleString()}</span>
                     <span>댓글 {post.comment_count ?? 0}</span>
@@ -369,27 +367,27 @@ function QuickAction({
         <Icon name={icon} className="h-4 w-4" />
       </span>
       <span className="min-w-0">
-        <span className="block text-sm font-bold text-gray-950 group-hover:text-primary">{title}</span>
+        <span className="block text-sm font-bold text-primary group-hover:text-primary">{title}</span>
         <span className="mt-1 block text-xs font-semibold text-gray-500">{description}</span>
       </span>
     </Link>
   );
 }
 
-function DarkMetric({ label, value }: { label: string; value: number }) {
+function LightMetric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded border border-white/10 bg-white/10 px-3 py-3 tabular-nums">
-      <span className="block text-[22px] font-bold leading-none text-white">{value.toLocaleString()}</span>
-      <span className="mt-1 block text-[11px] font-semibold text-gray-300">{label}</span>
+    <div className="px-3 py-3 tabular-nums">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{label}</span>
+      <span className="mt-1 block text-xl font-bold text-gray-900">{value.toLocaleString()}</span>
     </div>
   );
 }
 
-function BoardLink({ href, title, value, inverse = false }: { href: string; title: string; value: number; inverse?: boolean }) {
+function BoardLink({ href, title, value }: { href: string; title: string; value: number }) {
   return (
-    <Link href={href} className={`flex items-center justify-between px-3 py-3 text-sm transition-colors ${inverse ? 'hover:bg-white/10' : 'hover:bg-primary-50/50'}`}>
-      <span className={`font-semibold ${inverse ? 'text-gray-200' : 'text-gray-700'}`}>{title}</span>
-      <span className={`font-bold ${inverse ? 'text-primary-300' : 'text-primary'}`}>{value.toLocaleString()}</span>
+    <Link href={href} className="flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-secondary-50">
+      <span className="font-semibold text-gray-700">{title}</span>
+      <span className="font-bold text-gray-900 tabular-nums">{value.toLocaleString()}</span>
     </Link>
   );
 }
@@ -409,7 +407,7 @@ function SectionHeader({ title, href, label }: { title: string; href: string; la
 function ServiceLink({ href, title, description }: { href: string; title: string; description: string }) {
   return (
     <Link href={href} className="rounded border border-gray-200 px-3 py-3 transition-colors hover:border-primary-300 hover:bg-primary-50/40">
-      <span className="block text-sm font-bold text-gray-950">{title}</span>
+      <span className="block text-sm font-bold text-primary">{title}</span>
       <span className="mt-1 block text-xs font-semibold text-gray-500">{description}</span>
     </Link>
   );

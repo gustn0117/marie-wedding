@@ -24,10 +24,10 @@ export default function JobDetailSidebar({ job }: Props) {
   return (
     <aside className="lg:sticky lg:top-20 space-y-3">
       {/* Trust card */}
-      <section className={`border ${trustEmphasis ? 'border-gray-950' : 'border-gray-200'} bg-white p-4`}>
+      <section className={`border ${trustEmphasis ? 'border-primary' : 'border-gray-200'} bg-white p-4`}>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">업체 신뢰 등급</p>
         <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-          <p className={`text-sm font-bold ${trustEmphasis ? 'text-gray-950' : 'text-gray-700'}`}>
+          <p className={`text-sm font-bold ${trustEmphasis ? 'text-primary' : 'text-gray-700'}`}>
             {TRUST_TIER_LABELS[trustTier]}
           </p>
           <VerificationBadge

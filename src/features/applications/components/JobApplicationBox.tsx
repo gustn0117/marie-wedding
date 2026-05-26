@@ -175,7 +175,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
                         const tier = computeTrustTier(item.applicant);
                         const emphasis = tier === 'deal_proven' || tier === 'business_verified';
                         return (
-                          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold border ${emphasis ? 'border-gray-950 bg-white text-gray-950' : 'border-gray-300 bg-white text-gray-600'}`}>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold border ${emphasis ? 'border-primary bg-white text-primary' : 'border-gray-300 bg-white text-gray-600'}`}>
                             {TRUST_TIER_LABELS[tier]}
                           </span>
                         );
@@ -342,7 +342,7 @@ function AuthorNoteEditor({
         <button type="button" onClick={() => setEditing(false)} disabled={saving} className="text-xs text-gray-500 hover:text-gray-700">
           취소
         </button>
-        <button type="button" onClick={save} disabled={saving} className="rounded border border-gray-950 bg-gray-950 px-3 py-1 text-xs font-bold text-white disabled:opacity-50">
+        <button type="button" onClick={save} disabled={saving} className="rounded border border-primary bg-primary px-3 py-1 text-xs font-bold text-white disabled:opacity-50">
           {saving ? '저장 중…' : '저장'}
         </button>
       </div>
@@ -375,7 +375,7 @@ function DealCompletionRow({
           </div>
           <a
             href={reviewHref}
-            className="shrink-0 rounded border border-gray-950 bg-gray-950 px-3 py-1.5 text-xs font-bold text-white hover:bg-gray-700"
+            className="shrink-0 rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark"
           >
             리뷰 작성 →
           </a>

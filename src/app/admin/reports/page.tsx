@@ -35,9 +35,9 @@ const TARGET_LABELS: Record<Report['target_type'], string> = {
 
 function StatTile({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
-    <div className={`border bg-white p-4 ${highlight ? 'border-gray-950' : 'border-gray-200'}`}>
+    <div className={`border bg-white p-4 ${highlight ? 'border-primary' : 'border-gray-200'}`}>
       <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums ${highlight ? 'text-gray-950' : 'text-gray-700'}`}>{value.toLocaleString()}</p>
+      <p className={`text-2xl font-bold tabular-nums ${highlight ? 'text-primary' : 'text-gray-700'}`}>{value.toLocaleString()}</p>
     </div>
   );
 }

@@ -93,7 +93,7 @@ export default function ModerationKeywordsManager() {
         <button
           type="submit"
           disabled={pending}
-          className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+          className="rounded border border-primary bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
         >
           추가
         </button>
@@ -116,7 +116,7 @@ export default function ModerationKeywordsManager() {
                   <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-100 text-gray-700 text-[10px] font-bold rounded">
                     {SCOPE_LABELS[r.scope]}
                   </span>
-                  <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-950 text-white text-[10px] font-bold rounded">
+                  <span className="inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded">
                     {ACTION_LABELS[r.action]}
                   </span>
                 </div>

@@ -58,7 +58,7 @@ export default function JobListRow({ job }: Props) {
           {fresh && !urgent && <Badge kind="new">NEW</Badge>}
           {tier === 2 && <Badge kind="promoted">추천</Badge>}
         </div>
-        <h3 className="truncate text-[16px] font-bold text-gray-950 group-hover:text-primary transition-colors">
+        <h3 className="truncate text-[16px] font-bold text-primary group-hover:text-primary transition-colors">
           {job.title}
         </h3>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">

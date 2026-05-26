@@ -91,7 +91,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             role="status"
             className={`pointer-events-auto w-full max-w-sm overflow-hidden rounded border shadow-sm ${
               t.kind === 'success'
-                ? 'border-gray-950 bg-gray-950 text-white'
+                ? 'border-primary bg-primary text-white'
                 : t.kind === 'error'
                   ? 'border-state-urgent bg-white text-state-urgent'
                   : 'border-gray-300 bg-white text-gray-900'
@@ -130,7 +130,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => resolveConfirm(true)}
-                className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700"
+                className="rounded border border-primary bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark"
               >
                 확인
               </button>

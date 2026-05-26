@@ -11,7 +11,7 @@ export default function TrustMetricBar({ label, value, sub, fillPercent, emphasi
   return (
     <div className={`p-3 border ${emphasis ? 'border-black' : 'border-gray-200'}`}>
       <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold leading-none ${emphasis ? 'text-gray-950' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-2xl font-bold leading-none ${emphasis ? 'text-primary' : 'text-gray-900'}`}>{value}</p>
       {safePct !== null && (
         <div className="mt-2 h-1 bg-gray-100 overflow-hidden">
           <div

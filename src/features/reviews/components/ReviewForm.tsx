@@ -127,7 +127,7 @@ function TagChip({
   const baseClass = 'inline-flex items-center px-3 py-1.5 text-xs font-bold border transition-colors disabled:cursor-not-allowed';
   const activeClass = active
     ? tag.category === 'positive'
-      ? 'bg-black text-white border-black'
+      ? 'bg-primary text-white border-black'
       : 'bg-gray-700 text-white border-gray-700'
     : 'bg-white text-gray-700 border-gray-300 hover:border-primary disabled:opacity-40';
 

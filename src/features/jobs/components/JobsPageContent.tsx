@@ -517,7 +517,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           type="button"
           onClick={() => updateParams({ verified: verifiedOnly ? '' : '1' })}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
-            verifiedOnly ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+            verifiedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
           }`}
         >
           ✓ 인증 업체만
@@ -526,7 +526,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           type="button"
           onClick={() => updateParams({ completed: completedOnly ? '' : '1' })}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
-            completedOnly ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+            completedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
           }`}
         >
           거래 이력 있음
@@ -655,7 +655,7 @@ function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: st
     <details className="relative">
       <summary
         className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border cursor-pointer select-none transition-colors list-none ${
-          value ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+          value ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
         }`}
       >
         급여: {active.label} ▾
@@ -666,7 +666,7 @@ function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: st
             key={o.v || 'any'}
             type="button"
             onClick={(e) => { onChange(o.v); (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open'); }}
-            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-gray-950' : 'text-gray-700'}`}
+            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-primary' : 'text-gray-700'}`}
           >
             {o.label}
           </button>
@@ -689,7 +689,7 @@ function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v
     <details className="relative">
       <summary
         className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border cursor-pointer select-none transition-colors list-none ${
-          value ? 'border-gray-950 bg-gray-950 text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
+          value ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
         }`}
       >
         경력: {active.label} ▾
@@ -700,7 +700,7 @@ function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v
             key={o.v || 'any'}
             type="button"
             onClick={(e) => { onChange(o.v); (e.currentTarget.closest('details') as HTMLDetailsElement | null)?.removeAttribute('open'); }}
-            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-gray-950' : 'text-gray-700'}`}
+            className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${o.v === value ? 'font-bold text-primary' : 'text-gray-700'}`}
           >
             {o.label}
           </button>

@@ -31,7 +31,7 @@ export default function JobCard({ job }: JobCardProps) {
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="block group">
       <article
-        className={`platform-panel ${tierClass} relative flex h-full min-h-[270px] flex-col gap-3 p-4 transition-all group-hover:border-primary group-hover:shadow-sm ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}
+        className={`platform-panel ${tierClass} relative flex h-full min-h-[270px] flex-col gap-3 p-4 transition-all group-hover:border-primary group-hover:shadow-sm ${isVerified ? 'border-l-4 border-l-primary' : ''}`}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">

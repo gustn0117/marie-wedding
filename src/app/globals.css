@@ -8,9 +8,9 @@
   body {
     @apply font-sans text-gray-800 bg-background antialiased;
     font-feature-settings: "tnum" 1, "ss01" 1;
-    background-color: #faf7f1;
+    background-color: #ffffff;
     background-image: none;
-    color: #1a1510;
+    color: #13161d;
   }
 
   ::selection {
@@ -18,7 +18,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid #7a1d2e;
+    outline: 2px solid #1e3a8a;
     outline-offset: 2px;
   }
 

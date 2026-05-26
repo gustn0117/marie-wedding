@@ -147,7 +147,7 @@ function StatTile({ label, value, highlight }: { label: string; value: number; h
   return (
     <div className={`metric-tile p-5 ${highlight ? 'border-primary' : ''}`}>
       <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
-      <p className="text-3xl font-bold text-gray-950 tabular-nums">{value.toLocaleString('ko-KR')}</p>
+      <p className="text-3xl font-bold text-primary tabular-nums">{value.toLocaleString('ko-KR')}</p>
     </div>
   );
 }

@@ -59,7 +59,7 @@ export default async function PendingReviewsSection({ profileId }: Props) {
   if (pending.length === 0) return null;
 
   return (
-    <section className="platform-panel p-5 border-l-4 border-l-gray-950">
+    <section className="platform-panel p-5 border-l-4 border-l-primary">
       <div className="flex items-center justify-between mb-3">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Review Queue</p>
@@ -85,7 +85,7 @@ export default async function PendingReviewsSection({ profileId }: Props) {
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">상대: {counterpartName}</p>
                 </div>
-                <span className="shrink-0 rounded border border-gray-950 bg-gray-950 px-3 py-1.5 text-[11px] font-bold text-white">
+                <span className="shrink-0 rounded border border-primary bg-primary px-3 py-1.5 text-[11px] font-bold text-white">
                   리뷰 작성 →
                 </span>
               </Link>

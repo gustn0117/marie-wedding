@@ -92,7 +92,7 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           {(job.status === 'closed' || job.status === 'filled' || job.status === 'hidden') && (
                             <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold rounded ${
-                              job.status === 'filled' ? 'bg-gray-950 text-white'
+                              job.status === 'filled' ? 'bg-primary text-white'
                                 : job.status === 'hidden' ? 'bg-gray-200 text-gray-600'
                                 : 'bg-gray-100 text-gray-500'
                             }`}>{JOB_STATUS_LABELS[job.status]}</span>
@@ -202,7 +202,7 @@ function FilterableApplicationList({
             onClick={() => setFilter(f.value)}
             className={`shrink-0 rounded border px-2.5 py-1 text-xs font-bold transition-colors ${
               filter === f.value
-                ? 'border-gray-950 bg-gray-950 text-white'
+                ? 'border-primary bg-primary text-white'
                 : 'border-gray-200 text-gray-600 hover:border-primary hover:text-primary'
             }`}
           >
@@ -240,7 +240,7 @@ function FilterableApplicationList({
                     <Link
                       href={`/applications/${item.id}/review`}
                       onClick={(e) => e.stopPropagation()}
-                      className="mt-1 block text-[10px] font-bold text-gray-950 underline"
+                      className="mt-1 block text-[10px] font-bold text-primary underline"
                     >
                       ✓ 거래 완료 · 리뷰 작성
                     </Link>

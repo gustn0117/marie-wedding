@@ -169,7 +169,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
               const isAdopted = comment.id === adoptedId;
               const canAdopt = isPostAuthor && comment.author_id !== postAuthorId;
               return (
-                <li key={comment.id} className={`py-4 flex gap-3 ${isAdopted ? '-mx-6 md:-mx-8 px-6 md:px-8 bg-gray-50 border-l-4 border-l-gray-950' : ''}`}>
+                <li key={comment.id} className={`py-4 flex gap-3 ${isAdopted ? '-mx-6 md:-mx-8 px-6 md:px-8 bg-gray-50 border-l-4 border-l-primary' : ''}`}>
                   <ProfileAvatar
                     profileImage={comment.author?.profile_image}
                     name={comment.author?.company_name || comment.author?.contact_name || '?'}
@@ -179,7 +179,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
                     <div className="flex items-center justify-between mb-1 gap-2 flex-wrap">
                       <div className="flex items-center gap-2 flex-wrap">
                         {isAdopted && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 bg-gray-950 text-white text-[10px] font-bold rounded">
+                          <span className="inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded">
                             ✓ 채택
                           </span>
                         )}

@@ -286,7 +286,7 @@ function WorkspaceMetric({ label, value, unit = '건' }: { label: string; value:
   return (
     <div className="metric-tile p-5">
       <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-gray-950">
+      <p className="text-2xl font-bold text-primary">
         {value}
         <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>
       </p>

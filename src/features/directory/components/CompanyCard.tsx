@@ -35,7 +35,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
       href={ROUTES.DIRECTORY_DETAIL(profile.id)}
       className="platform-panel group block transition-all duration-150 hover:border-primary hover:shadow-sm"
     >
-      <div className={`relative flex aspect-[3/2] items-center justify-center overflow-hidden border-b border-gray-100 bg-secondary-50 ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}>
+      <div className={`relative flex aspect-[3/2] items-center justify-center overflow-hidden border-b border-gray-100 bg-secondary-50 ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
@@ -43,18 +43,18 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           <Logo variant="mark" size="lg" className="text-primary-200" />
         )}
         {isVerified && (
-          <span className="absolute top-2 right-2 inline-flex items-center px-1.5 py-0.5 bg-black text-white text-[10px] font-bold">
+          <span className="absolute top-2 right-2 inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold">
             ✓ 인증
           </span>
         )}
         {isPremium && (
-          <span className="absolute top-2 left-2 inline-flex items-center px-1.5 py-0.5 bg-gray-950 text-white text-[10px] font-bold">
+          <span className="absolute top-2 left-2 inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold">
             PREMIUM
           </span>
         )}
       </div>
 
-      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-gray-950' : ''}`}>
+      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
         <div className="flex items-center gap-2 mb-1.5 min-w-0">
           <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
             {displayName}
@@ -119,7 +119,7 @@ function TrustCell({ label, value, fillPercent, emphasis }: { label: string; val
   return (
     <div>
       <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
-      <p className={`text-xs font-bold tabular-nums ${emphasis ? 'text-gray-950' : 'text-gray-900'}`}>{value}</p>
+      <p className={`text-xs font-bold tabular-nums ${emphasis ? 'text-primary' : 'text-gray-900'}`}>{value}</p>
       {typeof fillPercent === 'number' && (
         <div className="mt-1 h-0.5 bg-gray-100">
           <div className="h-full bg-gray-800" style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }} />

@@ -104,7 +104,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
             onClick={() => setFormData(prev => ({ ...prev, region: '' }))}
             className={`rounded px-3 py-1.5 text-xs font-bold border ${
               !formData.region
-                ? 'bg-gray-950 text-white border-gray-950'
+                ? 'bg-primary text-white border-primary'
                 : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
             }`}
           >
@@ -117,7 +117,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
               onClick={() => setFormData(prev => ({ ...prev, region: r.value }))}
               className={`rounded px-3 py-1.5 text-xs font-bold border ${
                 formData.region === r.value
-                  ? 'bg-gray-950 text-white border-gray-950'
+                  ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
               }`}
             >

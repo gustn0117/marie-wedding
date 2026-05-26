@@ -256,7 +256,7 @@ export default function AdminUsersPage() {
                       {user.deleted_at ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-urgent-bg text-state-urgent">삭제됨</span>
                       ) : user.banned_at ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-950 text-white" title={user.banned_reason ?? undefined}>제재됨</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary text-white" title={user.banned_reason ?? undefined}>제재됨</span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>
                       )}
@@ -385,7 +385,7 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={saveNote}
                 disabled={actionLoading === noteModal.user.id}
-                className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700 disabled:opacity-50"
+                className="rounded border border-primary bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-50"
               >
                 저장
               </button>
@@ -420,7 +420,7 @@ export default function AdminUsersPage() {
                 type="button"
                 onClick={confirmBan}
                 disabled={actionLoading === banModal.user.id || !banModal.reason.trim()}
-                className="rounded border border-gray-950 bg-gray-950 px-4 py-2 text-sm font-bold text-white hover:bg-gray-700 disabled:opacity-50"
+                className="rounded border border-primary bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark disabled:opacity-50"
               >
                 제재 적용
               </button>
