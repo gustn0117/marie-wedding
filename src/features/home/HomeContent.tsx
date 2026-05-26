@@ -113,17 +113,12 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
           <div className="platform-hero-grid">
             <div className="platform-hero-copy">
               <div>
-                <div className="mb-4 flex flex-wrap items-center gap-2">
-                  <span className="platform-eyebrow">Marié Platform</span>
-                  <span className="rounded border border-accent-200 bg-accent-50 px-2 py-0.5 text-[12px] font-bold text-accent-600">
-                    Verified Wedding Network
-                  </span>
-                </div>
-                <h1 className="platform-hero-title">
-                  웨딩 채용과 파트너 운영을 한 번에
+                <p className="platform-eyebrow">웨딩 산업 B2B 네트워크</p>
+                <h1 className="platform-hero-title mt-2">
+                  채용·파트너 섭외·커뮤니티를 한 곳에서
                 </h1>
                 <p className="platform-hero-text">
-                  공고 탐색, 업체 프로필, 지원 관리, 커뮤니티 업데이트를 한 화면에서 빠르게 이어갑니다.
+                  공고 탐색부터 지원 관리까지 빠르게 이어갑니다.
                 </p>
               </div>
 
@@ -157,7 +152,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="grid gap-2 grid-cols-2">
                 <QuickAction href={ROUTES.JOBS} title="채용 탐색" description="지역·업종별 공고" icon="briefcase" />
                 <QuickAction href={`${ROUTES.JOBS}?type=matching`} title="파트너 섭외" description="협업 공고 확인" icon="users" />
                 <QuickAction href={ROUTES.DIRECTORY} title="업체 디렉토리" description="검증된 프로필" icon="building" />

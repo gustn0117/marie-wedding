@@ -129,9 +129,9 @@ export default async function HomeMyPanel({ profileId }: Props) {
 
 function MetricCell({ href, label, value, highlight }: { href: string; label: string; value: number; highlight?: boolean }) {
   return (
-    <Link href={href} className={`p-3 transition-colors hover:bg-secondary-50 ${highlight ? 'bg-primary-50/60' : ''}`}>
-      <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{label}</p>
-      <p className={`mt-1 text-xl font-bold tabular-nums ${highlight ? 'text-primary' : 'text-gray-900'}`}>
+    <Link href={href} className={`px-3 py-2.5 transition-colors hover:bg-secondary-50 ${highlight ? 'bg-primary-50/60' : ''}`}>
+      <p className="text-[11px] font-semibold text-gray-500">{label}</p>
+      <p className={`mt-0.5 text-lg font-bold tabular-nums ${highlight ? 'text-primary' : 'text-gray-900'}`}>
         {value.toLocaleString()}
       </p>
     </Link>
