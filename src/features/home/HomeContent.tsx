@@ -25,6 +25,7 @@ interface HomeContentProps {
     verified: number;
     recentJobs: number;
   };
+  mySidebar?: React.ReactNode;
 }
 
 type IconName = 'briefcase' | 'building' | 'users' | 'message' | 'spark' | 'chart';
@@ -45,7 +46,7 @@ const fallbackCompanies = [
 
 const searchTags = ['웨딩플래너', '예식장 매니저', '드레스 피팅', '주말 알바', '스튜디오 보정'];
 
-export default function HomeContent({ posts, jobs, profiles, counts }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -164,6 +165,7 @@ export default function HomeContent({ posts, jobs, profiles, counts }: HomeConte
               </div>
             </div>
 
+            {mySidebar ?? (
             <aside className="rounded border border-gray-900 bg-gray-950 p-4 text-white">
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -199,6 +201,7 @@ export default function HomeContent({ posts, jobs, profiles, counts }: HomeConte
                 <BoardLink href={ROUTES.COMMUNITY} title="커뮤니티 업데이트" value={metricPosts} inverse />
               </div>
             </aside>
+            )}
           </div>
         </div>
       </section>
