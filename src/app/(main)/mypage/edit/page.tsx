@@ -175,8 +175,8 @@ export default function EditProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded border border-gray-200 p-6 md:p-8 space-y-6">
-        {error && <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
-        {success && <div className="p-4 rounded bg-green-50 border border-green-200 text-green-700 text-sm">프로필이 수정되었습니다.</div>}
+        {error && <div className="p-4 rounded bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">{error}</div>}
+        {success && <div className="p-4 rounded bg-state-new-bg border border-green-200 text-state-new text-sm">프로필이 수정되었습니다.</div>}
 
         {/* Profile Image */}
         <div className="flex flex-col items-center gap-4">
@@ -219,7 +219,7 @@ export default function EditProfilePage() {
             {imagePreview && (
               <>
                 <span className="text-gray-300">|</span>
-                <button type="button" onClick={handleRemoveImage} className="text-sm text-red-400 hover:underline">
+                <button type="button" onClick={handleRemoveImage} className="text-sm text-state-urgent hover:underline">
                   삭제
                 </button>
               </>
@@ -233,7 +233,7 @@ export default function EditProfilePage() {
         {/* Name */}
         <div className="space-y-1.5">
           <label htmlFor="contact_name" className="block text-sm font-medium text-gray-800">
-            이름 <span className="text-red-500">*</span>
+            이름 <span className="text-state-urgent">*</span>
           </label>
           <input id="contact_name" name="contact_name" type="text" value={formData.contact_name} onChange={handleChange} className="input-field w-full" />
         </div>
@@ -279,7 +279,7 @@ export default function EditProfilePage() {
         {/* Region - 복수 선택 */}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-800">
-            지역 <span className="text-red-500">*</span> <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span>
+            지역 <span className="text-state-urgent">*</span> <span className="text-xs text-gray-400 font-normal">(복수 선택 가능)</span>
           </label>
           <div className="flex flex-wrap gap-2">
             {REGIONS.map((r) => {

@@ -231,7 +231,7 @@ export default async function MyPage() {
           <Link href={ROUTES.MYPAGE_PASSWORD} className="platform-link-tile text-sm font-bold text-gray-700">비밀번호</Link>
           <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1 text-sm font-bold text-gray-700">
             디렉토리 등록
-            {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+            {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-state-new-bg0" />}
           </Link>
         </div>
       </div>

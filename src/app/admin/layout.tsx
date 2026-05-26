@@ -83,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   className="input-field"
                   autoFocus
                 />
-                {loginError && <p className="text-sm text-red-500 mt-1">{loginError}</p>}
+                {loginError && <p className="text-sm text-state-urgent mt-1">{loginError}</p>}
               </div>
               <button type="submit" className="btn-primary w-full">로그인</button>
             </div>
@@ -160,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <button
             onClick={handleLogout}
-            className="mt-2 flex items-center justify-center gap-2 w-full rounded bg-red-50 px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-100 transition-colors"
+            className="mt-2 flex items-center justify-center gap-2 w-full rounded bg-state-urgent-bg px-3 py-2 text-sm font-semibold text-state-urgent hover:bg-state-urgent-bg transition-colors"
           >
             로그아웃
           </button>

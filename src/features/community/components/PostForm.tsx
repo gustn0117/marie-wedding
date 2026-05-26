@@ -67,14 +67,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 bg-red-50 border-l-4 border-red-500 text-sm text-red-700">
+        <div className="p-3 bg-state-urgent-bg border-l-4 border-state-urgent text-sm text-state-urgent">
           {error}
         </div>
       )}
 
       {/* Category */}
       <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
-        <label className="block text-sm font-semibold text-gray-800">카테고리 <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-gray-800">카테고리 <span className="text-state-urgent">*</span></label>
         <div className="flex flex-wrap gap-2">
           {POST_CATEGORIES.map((cat) => (
             <button
@@ -130,7 +130,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       {/* Title */}
       <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-gray-800">제목 <span className="text-red-500">*</span></label>
+          <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
           <span className="text-xs text-gray-400">{formData.title.length}/100</span>
         </div>
         <input
@@ -146,7 +146,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
 
       {/* Content */}
       <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
-        <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
           onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}

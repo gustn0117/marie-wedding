@@ -82,10 +82,10 @@ export default function AdminDashboard() {
   }
 
   const statCards = [
-    { label: '전체 회원', value: stats?.users ?? 0, change: `+${stats?.recentUsers ?? 0} 이번 주`, href: ROUTES.ADMIN_USERS, color: 'text-blue-600 bg-blue-50' },
-    { label: '채용 공고', value: stats?.jobs ?? 0, change: `+${stats?.recentJobs ?? 0} 이번 주`, href: ROUTES.ADMIN_JOBS, color: 'text-green-600 bg-green-50' },
-    { label: '게시글', value: stats?.posts ?? 0, change: '', href: ROUTES.ADMIN_POSTS, color: 'text-purple-600 bg-purple-50' },
-    { label: '미처리 신고', value: stats?.reports ?? 0, change: '', href: ROUTES.ADMIN_REPORTS, color: 'text-red-600 bg-red-50' },
+    { label: '전체 회원', value: stats?.users ?? 0, change: `+${stats?.recentUsers ?? 0} 이번 주`, href: ROUTES.ADMIN_USERS, color: 'text-primary-600 bg-primary-50' },
+    { label: '채용 공고', value: stats?.jobs ?? 0, change: `+${stats?.recentJobs ?? 0} 이번 주`, href: ROUTES.ADMIN_JOBS, color: 'text-state-new bg-state-new-bg' },
+    { label: '게시글', value: stats?.posts ?? 0, change: '', href: ROUTES.ADMIN_POSTS, color: 'text-accent bg-accent-50' },
+    { label: '미처리 신고', value: stats?.reports ?? 0, change: '', href: ROUTES.ADMIN_REPORTS, color: 'text-state-urgent bg-state-urgent-bg' },
   ];
 
   return (
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-gray-500">{card.label}</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{card.value.toLocaleString()}</p>
             {card.change && (
-              <p className="text-xs text-green-600 mt-1">{card.change}</p>
+              <p className="text-xs text-state-new mt-1">{card.change}</p>
             )}
           </Link>
         ))}
@@ -168,7 +168,7 @@ export default function AdminDashboard() {
               recentJobs.map((job) => (
                 <div key={job.id} className="px-5 py-3 flex items-center gap-3">
                   <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-bold ${
-                    job.posting_type === 'hiring' ? 'bg-blue-50 text-blue-600' : 'bg-purple-50 text-purple-600'
+                    job.posting_type === 'hiring' ? 'bg-primary-50 text-primary-600' : 'bg-accent-50 text-accent'
                   }`}>
                     {job.posting_type === 'hiring' ? '채용' : '섭외'}
                   </div>

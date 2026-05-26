@@ -128,11 +128,11 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </div>
 
       {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 flex items-start gap-3">
-          <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="p-4 bg-state-urgent-bg border-l-4 border-state-urgent flex items-start gap-3">
+          <svg className="w-5 h-5 text-state-urgent shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-state-urgent">{error}</p>
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-semibold text-gray-800">제목 <span className="text-red-500">*</span></label>
+              <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
               <span className="text-xs text-gray-400">{formData.title.length}/100</span>
             </div>
             <input
@@ -196,7 +196,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
                 <div className="absolute top-2 right-2 flex gap-1.5">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-gray-700 text-xs font-bold hover:bg-white">변경</button>
-                  <button type="button" onClick={handleRemoveImage} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-red-500 text-xs font-bold hover:bg-white">삭제</button>
+                  <button type="button" onClick={handleRemoveImage} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-state-urgent text-xs font-bold hover:bg-white">삭제</button>
                 </div>
               </div>
             ) : (
@@ -221,7 +221,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       <Section step={3} title="상세 내용을 작성하세요" description="글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요.">
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-red-500">*</span></label>
+            <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
           </div>
           <RichTextEditor
             value={formData.description}
@@ -374,7 +374,7 @@ function FieldRow({ label, required, hint, children }: { label: string; required
       <div className="mb-1.5">
         <label className="text-sm font-semibold text-gray-800">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-state-urgent ml-0.5">*</span>}
         </label>
         {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
       </div>

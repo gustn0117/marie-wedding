@@ -134,7 +134,7 @@ export default function AdminCommentsPage() {
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   const post = (comment as any).post as { id: string; title: string } | null;
                   return (
-                    <tr key={comment.id} className={comment.deleted_at ? 'bg-red-50/50 opacity-60' : 'hover:bg-gray-50'}>
+                    <tr key={comment.id} className={comment.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'}>
                       <td className="px-5 py-3">
                         <p className="text-gray-800 truncate max-w-[350px]">{comment.content}</p>
                       </td>
@@ -151,9 +151,9 @@ export default function AdminCommentsPage() {
                       <td className="px-5 py-3 text-gray-500">{formatDate(comment.created_at)}</td>
                       <td className="px-5 py-3">
                         {comment.deleted_at ? (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">삭제됨</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-urgent-bg text-state-urgent">삭제됨</span>
                         ) : (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-50 text-green-600">활성</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>
                         )}
                       </td>
                       <td className="px-5 py-3 text-right">
@@ -161,7 +161,7 @@ export default function AdminCommentsPage() {
                           <button
                             onClick={() => handleRestore(comment)}
                             disabled={actionLoading === comment.id}
-                            className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
+                            className="px-2 py-1 text-xs text-primary-600 hover:bg-primary-50 rounded transition-colors disabled:opacity-50"
                           >
                             복원
                           </button>
@@ -169,7 +169,7 @@ export default function AdminCommentsPage() {
                           <button
                             onClick={() => handleDelete(comment)}
                             disabled={actionLoading === comment.id}
-                            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                            className="px-2 py-1 text-xs text-state-urgent hover:bg-state-urgent-bg rounded transition-colors disabled:opacity-50"
                           >
                             삭제
                           </button>

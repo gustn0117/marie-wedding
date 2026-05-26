@@ -66,7 +66,7 @@ export default async function EventDetailPage({ params }: PageProps) {
               {getTypeLabel(event.type)}
             </span>
             {event.is_pinned && (
-              <span className="inline-flex items-center px-2.5 py-1 bg-red-50 text-red-500 text-xs font-bold">고정</span>
+              <span className="inline-flex items-center px-2.5 py-1 bg-state-urgent-bg text-state-urgent text-xs font-bold">고정</span>
             )}
           </div>
 

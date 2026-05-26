@@ -81,12 +81,12 @@ export default function ChangePasswordPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="card p-6 md:p-8 space-y-6">
-        {error && <div className="p-4 rounded bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
-        {success && <div className="p-4 rounded bg-green-50 border border-green-200 text-green-700 text-sm">비밀번호가 변경되었습니다.</div>}
+        {error && <div className="p-4 rounded bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">{error}</div>}
+        {success && <div className="p-4 rounded bg-state-new-bg border border-green-200 text-state-new text-sm">비밀번호가 변경되었습니다.</div>}
 
         <div className="space-y-1.5">
           <label htmlFor="newPassword" className="block text-sm font-medium text-text-primary">
-            새 비밀번호 <span className="text-red-500">*</span>
+            새 비밀번호 <span className="text-state-urgent">*</span>
           </label>
           <input
             id="newPassword"
@@ -101,7 +101,7 @@ export default function ChangePasswordPage() {
 
         <div className="space-y-1.5">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-primary">
-            새 비밀번호 확인 <span className="text-red-500">*</span>
+            새 비밀번호 확인 <span className="text-state-urgent">*</span>
           </label>
           <input
             id="confirmPassword"

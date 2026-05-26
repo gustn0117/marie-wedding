@@ -40,7 +40,7 @@ export default function JobDetailActions({ jobId, authorId }: JobDetailActionsPr
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="px-5 py-2.5 text-sm font-bold text-red-600 border border-red-200 rounded hover:bg-red-50 transition-colors disabled:opacity-50"
+          className="px-5 py-2.5 text-sm font-bold text-state-urgent border border-red-200 rounded hover:bg-state-urgent-bg transition-colors disabled:opacity-50"
         >
           {deleting ? '삭제 중...' : '삭제하기'}
         </button>

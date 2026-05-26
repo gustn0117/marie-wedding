@@ -42,7 +42,7 @@ function getTypeLabel(type: string): string {
 
 function getTypeColor(type: string): string {
   if (type === 'event') return 'bg-primary text-white';
-  if (type === 'news') return 'bg-blue-500 text-white';
+  if (type === 'news') return 'bg-primary-500 text-white';
   return 'bg-gray-700 text-white';
 }
 

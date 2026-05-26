@@ -121,7 +121,7 @@ export default function AdminEventsPage() {
                         <button
                           onClick={() => handleDelete(event.id)}
                           disabled={deleting === event.id}
-                          className="px-3 py-1 text-xs text-red-500 border border-red-200 hover:bg-red-50 disabled:opacity-50"
+                          className="px-3 py-1 text-xs text-state-urgent border border-red-200 hover:bg-state-urgent-bg disabled:opacity-50"
                         >
                           {deleting === event.id ? '삭제 중' : '삭제'}
                         </button>

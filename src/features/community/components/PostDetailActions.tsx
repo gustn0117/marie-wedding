@@ -42,7 +42,7 @@ export default function PostDetailActions({ postId, authorId }: PostDetailAction
       <button
         onClick={handleDelete}
         disabled={deleting}
-        className="text-xs text-gray-400 hover:text-red-500 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50 disabled:opacity-50"
+        className="text-xs text-gray-400 hover:text-state-urgent transition-colors px-3 py-1.5 rounded-lg hover:bg-state-urgent-bg disabled:opacity-50"
       >
         {deleting ? '삭제 중...' : '삭제'}
       </button>

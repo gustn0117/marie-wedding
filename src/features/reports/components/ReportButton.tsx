@@ -50,7 +50,7 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-500 hover:border-red-200 hover:bg-red-50 hover:text-red-500 transition-colors"
+        className="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-500 hover:border-red-200 hover:bg-state-urgent-bg hover:text-state-urgent transition-colors"
       >
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM3.4 19.5h17.2c1.54 0 2.5-1.667 1.73-3L13.73 2.25c-.77-1.333-2.69-1.333-3.46 0L1.67 16.5c-.77 1.333.192 3 1.73 3z" />

@@ -105,7 +105,7 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
           {/* Week days */}
           <div className="grid grid-cols-7 mb-1">
             {weekDays.map((d, i) => (
-              <div key={d} className={`text-center text-[11px] font-medium py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+              <div key={d} className={`text-center text-[11px] font-medium py-1 ${i === 0 ? 'text-state-urgent' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
                 {d}
               </div>
             ))}
@@ -137,9 +137,9 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
                         : isToday
                           ? 'bg-primary/10 text-primary font-semibold hover:bg-primary/20'
                           : dayOfWeek === 0
-                            ? 'text-red-500 hover:bg-gray-100'
+                            ? 'text-state-urgent hover:bg-gray-100'
                             : dayOfWeek === 6
-                              ? 'text-blue-500 hover:bg-gray-100'
+                              ? 'text-primary hover:bg-gray-100'
                               : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >

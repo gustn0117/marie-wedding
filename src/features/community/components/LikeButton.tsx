@@ -50,8 +50,8 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
       disabled={loading}
       className={`inline-flex items-center gap-2 px-6 py-3 border-2 transition-all ${
         liked
-          ? 'bg-red-50 border-red-300 text-red-500'
-          : 'bg-white border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500'
+          ? 'bg-state-urgent-bg border-red-300 text-state-urgent'
+          : 'bg-white border-gray-300 text-gray-600 hover:border-red-300 hover:text-state-urgent'
       } disabled:opacity-60`}
     >
       <svg

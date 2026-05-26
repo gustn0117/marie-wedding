@@ -35,7 +35,7 @@ export default function DirectoryToggle({ profileId, initialListed, missingInfo 
   if (listed) {
     return (
       <>
-      {error && <div className="mb-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm">{error}</div>}
+      {error && <div className="mb-3 p-3 rounded-lg bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">{error}</div>}
       <div className="space-y-3">
         <Link href={ROUTES.DIRECTORY_DETAIL(profileId)} className="block text-center px-5 py-2.5 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
           내 디렉토리 페이지 보기
@@ -43,7 +43,7 @@ export default function DirectoryToggle({ profileId, initialListed, missingInfo 
         <button
           onClick={handleToggle}
           disabled={submitting}
-          className="w-full px-5 py-2.5 text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="w-full px-5 py-2.5 text-sm text-gray-500 hover:text-state-urgent hover:bg-state-urgent-bg rounded-lg transition-colors"
         >
           {submitting ? '처리 중...' : '디렉토리에서 내리기'}
         </button>

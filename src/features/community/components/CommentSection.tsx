@@ -211,7 +211,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
                           <button
                             onClick={() => handleDelete(comment.id)}
                             disabled={deletingId === comment.id}
-                            className="text-xs text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                            className="text-xs text-gray-400 hover:text-state-urgent transition-colors disabled:opacity-50"
                           >
                             {deletingId === comment.id ? '삭제 중...' : '삭제'}
                           </button>

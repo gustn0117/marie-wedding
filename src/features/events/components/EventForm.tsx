@@ -101,12 +101,12 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 bg-red-50 border-l-4 border-red-500 text-sm text-red-700">{error}</div>
+        <div className="p-3 bg-state-urgent-bg border-l-4 border-state-urgent text-sm text-state-urgent">{error}</div>
       )}
 
       {/* Type */}
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-800">구분 <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-gray-800">구분 <span className="text-state-urgent">*</span></label>
         <div className="flex gap-2">
           {EVENT_TYPES.map((t) => (
             <button
@@ -128,7 +128,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       {/* Title */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-semibold text-gray-800">제목 <span className="text-red-500">*</span></label>
+          <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
           <span className="text-xs text-gray-400">{formData.title.length}/200</span>
         </div>
         <input
@@ -150,7 +150,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
             <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
             <div className="absolute top-2 right-2 flex gap-1.5">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-xs font-medium">변경</button>
-              <button type="button" onClick={handleRemoveImage} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-red-500 text-xs font-medium">삭제</button>
+              <button type="button" onClick={handleRemoveImage} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-state-urgent text-xs font-medium">삭제</button>
             </div>
           </div>
         ) : (
@@ -170,7 +170,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
       {/* Content */}
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-800">상세 내용 <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-semibold text-gray-800">상세 내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
           onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}

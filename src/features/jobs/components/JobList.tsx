@@ -83,7 +83,7 @@ export default function JobList() {
   if (error) {
     return (
       <div className="card p-8 text-center">
-        <p className="text-red-600 mb-4">{error}</p>
+        <p className="text-state-urgent mb-4">{error}</p>
         <button onClick={fetchJobs} className="btn-outline text-sm">
           다시 시도
         </button>

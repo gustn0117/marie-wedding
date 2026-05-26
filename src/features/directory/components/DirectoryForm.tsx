@@ -177,26 +177,26 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   return (
     <div className="space-y-5">
       {error && (
-        <div className="p-4 bg-red-50 border-l-4 border-red-500 flex items-start gap-3">
-          <svg className="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="p-4 bg-state-urgent-bg border-l-4 border-state-urgent flex items-start gap-3">
+          <svg className="w-5 h-5 text-state-urgent shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-state-urgent">{error}</p>
         </div>
       )}
       {success && (
-        <div className="p-4 bg-green-50 border-l-4 border-green-500 flex items-start gap-3">
-          <svg className="w-5 h-5 text-green-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <div className="p-4 bg-state-new-bg border-l-4 border-green-500 flex items-start gap-3">
+          <svg className="w-5 h-5 text-state-new shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-sm text-green-700">저장되었습니다. 페이지 이동 중...</p>
+          <p className="text-sm text-state-new">저장되었습니다. 페이지 이동 중...</p>
         </div>
       )}
 
       {/* Status Card */}
-      <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-green-50/30' : 'border-gray-200 bg-gray-50'}`}>
+      <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-state-new-bg/30' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded flex items-center justify-center ${listed ? 'bg-green-500' : 'bg-gray-300'}`}>
+          <div className={`w-10 h-10 rounded flex items-center justify-center ${listed ? 'bg-state-new-bg0' : 'bg-gray-300'}`}>
             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               {listed ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -250,7 +250,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               {imagePreview && (
                 <>
                   <span className="text-gray-300">|</span>
-                  <button type="button" onClick={handleRemoveImage} className="text-red-400 hover:underline">삭제</button>
+                  <button type="button" onClick={handleRemoveImage} className="text-state-urgent hover:underline">삭제</button>
                 </>
               )}
             </div>
@@ -440,7 +440,7 @@ function FieldRow({ label, required, hint, children }: { label: string; required
       <div className="mb-1.5">
         <label className="text-sm font-semibold text-gray-800">
           {label}
-          {required && <span className="text-red-500 ml-0.5">*</span>}
+          {required && <span className="text-state-urgent ml-0.5">*</span>}
         </label>
         {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
       </div>

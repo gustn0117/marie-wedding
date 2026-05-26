@@ -189,7 +189,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                     <div className="border-t border-gray-100 p-2">
                       <button
                         onClick={signOut}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 rounded hover:bg-red-50 hover:text-red-600 transition-colors"
+                        className="w-full text-left px-3 py-2 text-sm text-gray-600 rounded hover:bg-state-urgent-bg hover:text-state-urgent transition-colors"
                       >
                         로그아웃
                       </button>

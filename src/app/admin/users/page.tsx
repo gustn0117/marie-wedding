@@ -225,7 +225,7 @@ export default function AdminUsersPage() {
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className={user.deleted_at ? 'bg-red-50/50 opacity-60' : 'hover:bg-gray-50'}>
+                  <tr key={user.id} className={user.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'}>
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary text-xs font-bold shrink-0">
@@ -237,7 +237,7 @@ export default function AdminUsersPage() {
                     <td className="px-5 py-3 text-gray-600">{user.company_name || '-'}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        user.account_type === 'business' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-600'
+                        user.account_type === 'business' ? 'bg-primary-50 text-primary-600' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {user.account_type === 'business' ? '업체' : '개인'}
                       </span>
@@ -246,7 +246,7 @@ export default function AdminUsersPage() {
                     <td className="px-5 py-3 text-gray-600">{getRegionLabel(user.region)}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        user.role === 'admin' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'
+                        user.role === 'admin' ? 'bg-state-urgent-bg text-state-urgent' : 'bg-gray-100 text-gray-500'
                       }`}>
                         {user.role === 'admin' ? '관리자' : '일반'}
                       </span>
@@ -254,11 +254,11 @@ export default function AdminUsersPage() {
                     <td className="px-5 py-3 text-gray-500">{formatDate(user.created_at)}</td>
                     <td className="px-5 py-3">
                       {user.deleted_at ? (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">삭제됨</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-urgent-bg text-state-urgent">삭제됨</span>
                       ) : user.banned_at ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-950 text-white" title={user.banned_reason ?? undefined}>제재됨</span>
                       ) : (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-50 text-green-600">활성</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>
                       )}
                     </td>
                     <td className="px-5 py-3 text-right">
@@ -267,7 +267,7 @@ export default function AdminUsersPage() {
                           <button
                             onClick={() => handleRestore(user)}
                             disabled={actionLoading === user.id}
-                            className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
+                            className="px-2 py-1 text-xs text-primary-600 hover:bg-primary-50 rounded transition-colors disabled:opacity-50"
                           >
                             복원
                           </button>
@@ -308,7 +308,7 @@ export default function AdminUsersPage() {
                             <button
                               onClick={() => handleDelete(user)}
                               disabled={actionLoading === user.id}
-                              className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                              className="px-2 py-1 text-xs text-state-urgent hover:bg-state-urgent-bg rounded transition-colors disabled:opacity-50"
                             >
                               삭제
                             </button>
