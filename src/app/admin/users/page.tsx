@@ -58,13 +58,17 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = async (user: Profile) => {
-    if (!confirm(`${user.contact_name}님을 삭제하시겠습니까?`)) return;
+    const ok = await toastConfirm(`${user.contact_name}님과 작성한 공고·게시글·댓글·지원·리뷰·포트폴리오를 모두 삭제하시겠습니까? 알림·메시지·북마크는 영구 삭제됩니다.`);
+    if (!ok) return;
     setActionLoading(user.id);
     try {
-      await adminService.softDeleteUser(user.id);
+      const sb = createClient();
+      const { error } = await sb.rpc('purge_profile_cascade', { p_profile_id: user.id });
+      if (error) throw error;
+      toast('회원과 관련 데이터를 모두 삭제했습니다.', 'success');
       await load();
     } catch (err) {
-      alert('삭제에 실패했습니다.');
+      toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -72,9 +76,13 @@ export default function AdminUsersPage() {
   };
 
   const handleRestore = async (user: Profile) => {
+    const restoreContent = await toastConfirm(`${user.contact_name}님을 복원합니다. 작성했던 공고·게시글·댓글·지원·리뷰·포트폴리오도 함께 복원하시겠습니까? (취소: 회원 계정만 복원)`);
     setActionLoading(user.id);
     try {
-      await adminService.restoreUser(user.id);
+      const sb = createClient();
+      const { error } = await sb.rpc('restore_profile_cascade', { p_profile_id: user.id, p_restore_content: restoreContent });
+      if (error) throw error;
+      toast(restoreContent ? '회원과 콘텐츠를 모두 복원했습니다.' : '회원 계정만 복원했습니다.', 'success');
       await load();
     } catch (err) {
       toast('복원에 실패했습니다.', 'error');
