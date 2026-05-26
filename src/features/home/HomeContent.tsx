@@ -158,6 +158,29 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                 <QuickAction href={ROUTES.DIRECTORY} title="업체 디렉토리" description="검증된 프로필" icon="building" />
                 <QuickAction href={ROUTES.COMMUNITY} title="커뮤니티" description="현장 노하우 공유" icon="message" />
               </div>
+
+              {/* 라이브 메트릭 */}
+              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
+                <HeroStat label="인증 업체" value={counts.verified} suffix="곳" />
+                <HeroStat label="30일 신규" value={counts.recentJobs} suffix="건" />
+                <HeroStat label="활성 파트너" value={counts.profiles} suffix="곳" />
+              </div>
+
+              {/* 빠른 직무 진입 */}
+              <div>
+                <p className="text-[11px] font-semibold text-gray-500 mb-2">빠른 직무 진입</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {BUSINESS_TYPES.slice(0, 8).map((bt) => (
+                    <Link
+                      key={bt.value}
+                      href={`${ROUTES.JOBS}?businessType=${bt.value}`}
+                      className="rounded border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {bt.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {mySidebar ?? (
@@ -366,6 +389,18 @@ function QuickAction({
         <span className="mt-1 block text-xs font-semibold text-gray-500">{description}</span>
       </span>
     </Link>
+  );
+}
+
+function HeroStat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold text-gray-500">{label}</p>
+      <p className="mt-1 text-xl font-bold text-gray-900 tabular-nums">
+        {value.toLocaleString()}
+        {suffix && <span className="text-sm font-semibold text-gray-500 ml-0.5">{suffix}</span>}
+      </p>
+    </div>
   );
 }
 
