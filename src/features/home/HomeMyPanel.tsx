@@ -75,63 +75,65 @@ export default async function HomeMyPanel({ profileId }: Props) {
     : null;
 
   return (
-    <aside className="rounded border border-gray-200 bg-white">
-      {/* Profile header */}
-      <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-12 h-12 rounded overflow-hidden bg-secondary-100 flex items-center justify-center shrink-0">
-          {imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={imageUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <span className="text-base font-bold text-primary">{displayName.charAt(0)}</span>
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <Link href={ROUTES.MYPAGE} className="block text-sm font-bold text-gray-900 hover:text-primary truncate">
-            {displayName}
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-card overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+        {/* Left: profile summary */}
+        <div className="p-5 sm:p-6 border-b lg:border-b-0 lg:border-r border-gray-100 flex items-center gap-4 lg:flex-col lg:items-start lg:justify-between">
+          <div className="flex items-center gap-3 lg:flex-col lg:items-start lg:gap-3 min-w-0 flex-1">
+            <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-full overflow-hidden bg-secondary-100 flex items-center justify-center shrink-0">
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xl font-bold text-primary">{displayName.charAt(0)}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <Link href={ROUTES.MYPAGE} className="block text-[15px] font-bold text-gray-900 hover:text-primary truncate">
+                {displayName}
+              </Link>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                {profile.account_type === 'business' ? '업체 회원' : '개인 회원'} · {TRUST_TIER_LABELS[trustTier]}
+              </p>
+            </div>
+          </div>
+          <Link href={ROUTES.MYPAGE} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-[12px] font-semibold text-gray-700 hover:border-gray-400 transition-colors whitespace-nowrap lg:w-full lg:text-center">
+            마이페이지
           </Link>
-          <p className="text-xs text-gray-500 mt-0.5">
-            {profile.account_type === 'business' ? '업체 회원' : '개인 회원'} · {TRUST_TIER_LABELS[trustTier]}
-          </p>
         </div>
-        <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 bg-white px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary shrink-0">
-          마이페이지
-        </Link>
+
+        {/* Right: metrics + actions */}
+        <div className="flex flex-col">
+          <div className="grid grid-cols-4 divide-x divide-gray-100">
+            <MetricCell href={ROUTES.MYPAGE_NOTIFICATIONS} label="미확인 알림" value={m.unreadNotifications} highlight={m.unreadNotifications > 0} />
+            <MetricCell href={ROUTES.MYPAGE_MESSAGES} label="새 메시지" value={m.unreadMessages} highlight={m.unreadMessages > 0} />
+            <MetricCell href={ROUTES.MYPAGE} label="검토 대기" value={m.pendingReceived} />
+            <MetricCell href={ROUTES.MYPAGE} label="리뷰 대기" value={m.pendingReviews} highlight={m.pendingReviews > 0} />
+          </div>
+          <div className="grid grid-cols-2 gap-2 p-4 border-t border-gray-100">
+            <Link href={ROUTES.JOBS_NEW} className="btn-primary text-[14px]">+ 공고 등록</Link>
+            <Link href={ROUTES.MYPAGE_VERIFICATION} className="btn-outline text-[14px]">
+              {profile.verification_status === 'verified' ? '인증 정보' : '업체 인증'}
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-2 divide-x divide-y divide-gray-100">
-        <MetricCell href={ROUTES.MYPAGE_NOTIFICATIONS} label="미확인 알림" value={m.unreadNotifications} highlight={m.unreadNotifications > 0} />
-        <MetricCell href={ROUTES.MYPAGE_MESSAGES} label="새 메시지" value={m.unreadMessages} highlight={m.unreadMessages > 0} />
-        <MetricCell href={ROUTES.MYPAGE} label="검토 대기" value={m.pendingReceived} />
-        <MetricCell href={ROUTES.MYPAGE} label="리뷰 대기" value={m.pendingReviews} highlight={m.pendingReviews > 0} />
-      </div>
-
-      {/* Actions */}
-      <div className="p-3 border-t border-gray-100 grid gap-2">
-        <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[42px]">
-          + 공고 등록
-        </Link>
-        <Link href={ROUTES.MYPAGE_VERIFICATION} className="btn-secondary min-h-[42px]">
-          {profile.verification_status === 'verified' ? '인증 정보 보기' : '업체 인증하기'}
-        </Link>
-      </div>
-
-      {/* Sub links */}
-      <div className="border-t border-gray-100 divide-y divide-gray-100">
-        <SubLink href={ROUTES.MYPAGE} label="내가 등록한 공고" value={m.myJobs} />
-        <SubLink href={ROUTES.MYPAGE_PORTFOLIOS} label="포트폴리오 관리" />
+      {/* Bottom: sub link row */}
+      <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100">
+        <SubLink href={ROUTES.MYPAGE} label="내 공고" value={m.myJobs} />
+        <SubLink href={ROUTES.MYPAGE_PORTFOLIOS} label="포트폴리오" />
         <SubLink href={ROUTES.MYPAGE_SAVED_SEARCHES} label="저장한 검색" />
       </div>
-    </aside>
+    </div>
   );
 }
 
 function MetricCell({ href, label, value, highlight }: { href: string; label: string; value: number; highlight?: boolean }) {
   return (
-    <Link href={href} className={`px-3 py-2.5 transition-colors hover:bg-secondary-50 ${highlight ? 'bg-primary-50/60' : ''}`}>
-      <p className="text-[11px] font-semibold text-gray-500">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold tabular-nums ${highlight ? 'text-primary' : 'text-gray-900'}`}>
+    <Link href={href} className={`p-4 transition-colors hover:bg-gray-50 ${highlight ? 'bg-primary-50/40' : ''}`}>
+      <p className="text-[12px] font-medium text-gray-500">{label}</p>
+      <p className={`mt-1 text-[20px] font-bold tabular-nums ${highlight ? 'text-primary' : 'text-gray-900'}`}>
         {value.toLocaleString()}
       </p>
     </Link>
@@ -140,11 +142,11 @@ function MetricCell({ href, label, value, highlight }: { href: string; label: st
 
 function SubLink({ href, label, value }: { href: string; label: string; value?: number }) {
   return (
-    <Link href={href} className="flex items-center justify-between px-3 py-2.5 text-sm text-gray-700 hover:bg-secondary-50 transition-colors">
+    <Link href={href} className="flex items-center justify-between px-4 py-3 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors">
       <span className="font-semibold">{label}</span>
       {typeof value === 'number'
         ? <span className="font-bold text-gray-900 tabular-nums">{value.toLocaleString()}</span>
-        : <span className="text-xs text-gray-400">→</span>}
+        : <span className="text-gray-400">→</span>}
     </Link>
   );
 }

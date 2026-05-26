@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
+import { ROUTES, BUSINESS_TYPES } from '@/shared/constants';
 import {
   formatRelativeTime,
   getBusinessTypeLabel,
@@ -28,73 +28,18 @@ interface HomeContentProps {
   mySidebar?: React.ReactNode;
 }
 
-type IconName = 'briefcase' | 'building' | 'users' | 'message' | 'spark' | 'chart';
+const SEARCH_TAGS = ['웨딩플래너', '예식장 매니저', '드레스 피팅', '주말 알바', '스튜디오 보정'];
 
-const fallbackJobs = [
-  { company: '그랜드 웨딩홀', title: '예식장 매니저 정규직 채용', type: '예식장', region: '서울 강남', pay: '연 3,400만원' },
-  { company: '로즈드레스 청담', title: '드레스 피팅 전문가 경력직 모집', type: '드레스샵', region: '서울 청담', pay: '면접 후 결정' },
-  { company: '루미에르 스튜디오', title: '웨딩 포토그래퍼 및 보정 담당자', type: '스튜디오', region: '서울 마포', pay: '월 280만원' },
-  { company: '블룸 메이크업', title: '브라이덜 메이크업 아티스트', type: '메이크업', region: '경기 성남', pay: '협의' },
+const QUICK_ACTIONS = [
+  { href: ROUTES.JOBS, title: '채용 탐색', description: '지역·업종별 공고를 한눈에', emoji: '🔍' },
+  { href: `${ROUTES.JOBS}?type=matching`, title: '파트너 섭외', description: '협업 가능한 업체 찾기', emoji: '🤝' },
+  { href: ROUTES.DIRECTORY, title: '업체 디렉토리', description: '검증된 프로필 모음', emoji: '🏢' },
+  { href: ROUTES.COMMUNITY, title: '커뮤니티', description: '현장 노하우 공유', emoji: '💬' },
 ] as const;
-
-const fallbackCompanies = [
-  { name: '그랜드 웨딩홀', desc: '대형 연회장 운영 및 신입 교육 체계 보유', type: '예식장', region: '서울' },
-  { name: '로즈드레스 청담', desc: '수입 드레스 편집숍, 주말 피팅팀 상시 모집', type: '드레스샵', region: '서울' },
-  { name: '루미에르 스튜디오', desc: '촬영, 보정, 앨범 제작을 함께 운영하는 스튜디오', type: '스튜디오', region: '서울' },
-  { name: '블룸 메이크업', desc: '브라이덜 헤어·메이크업 전문 파트너', type: '메이크업', region: '경기' },
-] as const;
-
-const searchTags = ['웨딩플래너', '예식장 매니저', '드레스 피팅', '주말 알바', '스튜디오 보정'];
 
 export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
-
-  const jobItems = useMemo(() => {
-    if (jobs.length > 0) {
-      return jobs.map((job) => ({
-        href: ROUTES.JOBS_DETAIL(job.id),
-        company: job.author?.company_name || job.author?.contact_name || '업체명 미등록',
-        title: job.title,
-        type: getBusinessTypeLabel(job.business_type),
-        region: getRegionLabel(job.region || job.author?.region || ''),
-        pay: job.salary_info || getEmploymentTypeLabel(job.employment_type),
-        meta: formatRelativeTime(job.created_at),
-      }));
-    }
-
-    return fallbackJobs.map((job) => ({
-      href: ROUTES.JOBS,
-      ...job,
-      meta: '추천 공고',
-    }));
-  }, [jobs]);
-
-  const companyItems = useMemo(() => {
-    if (profiles.length > 0) {
-      return profiles.slice(0, 4).map((profile) => {
-        const bio = profile.bio ? profile.bio.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : '';
-        const imageUrl = profile.profile_image
-          ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
-          : null;
-
-        return {
-          href: ROUTES.DIRECTORY_DETAIL(profile.id),
-          name: profile.company_name || profile.contact_name,
-          desc: bio || '웨딩업계 파트너 프로필',
-          type: profile.business_type ? getBusinessTypeLabel(profile.business_type) : '파트너',
-          region: getRegionLabel(profile.region),
-          imageUrl,
-        };
-      });
-    }
-
-    return fallbackCompanies.map((company) => ({
-      href: ROUTES.DIRECTORY,
-      ...company,
-      imageUrl: null as string | null,
-    }));
-  }, [profiles]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,394 +47,261 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
     router.push(q ? `${ROUTES.JOBS}?search=${encodeURIComponent(q)}` : ROUTES.JOBS);
   };
 
-  const metricJobs = counts.jobs || jobs.length;
-  const metricProfiles = counts.profiles || profiles.length;
-  const metricPosts = counts.posts || posts.length;
+  const featuredJobs = useMemo(() => jobs.slice(0, 6), [jobs]);
+  const featuredProfiles = useMemo(() => profiles.slice(0, 4), [profiles]);
+  const featuredPosts = useMemo(() => posts.slice(0, 4), [posts]);
 
   return (
-    <div className="pb-8">
-      <section className="mx-auto max-w-[1440px] px-3 pt-5 sm:px-5 lg:px-6 xl:px-8">
-        <div className="platform-hero">
-          <div className="platform-hero-grid">
-            <div className="platform-hero-copy">
-              <div>
-                <p className="platform-eyebrow">웨딩 산업 B2B 네트워크</p>
-                <h1 className="platform-hero-title mt-2">
-                  채용·파트너 섭외·커뮤니티를 한 곳에서
-                </h1>
-                <p className="platform-hero-text">
-                  공고 탐색부터 지원 관리까지 빠르게 이어갑니다.
-                </p>
-              </div>
+    <div className="pb-16">
+      {/* HERO — search-centered */}
+      <section className="bg-gradient-to-b from-secondary-50 to-white pt-16 pb-12 sm:pt-20 sm:pb-16">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+          <div className="platform-hero-copy">
+            <span className="platform-eyebrow">웨딩 산업 B2B 네트워크</span>
+            <h1 className="platform-hero-title">
+              웨딩 업계 채용과<br />파트너 연결의 가장 빠른 길
+            </h1>
+            <p className="platform-hero-text">
+              공고 탐색부터 지원 관리, 업체 디렉토리, 현장 커뮤니티까지
+              <br className="hidden sm:block" />
+              한 화면에서 매끄럽게 이어갑니다.
+            </p>
 
-              <div>
-                <form onSubmit={handleSearch} className="platform-search-box">
-                  <div className="flex items-center pl-5 text-primary">
-                    <Icon name="spark" className="h-5 w-5" />
-                  </div>
-                  <input
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="직무, 업체명, 지역을 검색하세요"
-                    className="min-w-0 flex-1 px-4 text-[16px] font-semibold outline-none placeholder:text-gray-400"
-                  />
-                  <button type="submit" className="bg-primary px-6 text-sm font-bold text-white transition-colors hover:bg-primary-dark sm:px-8">
-                    검색
-                  </button>
-                </form>
-
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
-                  <span className="font-bold text-gray-800">인기 검색</span>
-                  {searchTags.map((tag) => (
-                    <Link
-                      key={tag}
-                      href={`${ROUTES.JOBS}?search=${encodeURIComponent(tag)}`}
-                      className="rounded border border-gray-200 bg-white px-3 py-1 text-gray-600 transition-colors hover:border-primary hover:text-primary"
-                    >
-                      {tag}
-                    </Link>
-                  ))}
-                </div>
+            <form onSubmit={handleSearch} className="platform-search-box mt-2">
+              <div className="flex items-center pl-5 sm:pl-6 text-gray-400">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
               </div>
+              <input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="직무, 업체명, 지역으로 검색"
+                className="min-w-0 flex-1 px-4 text-[15px] sm:text-[16px] font-medium outline-none placeholder:text-gray-400"
+              />
+              <button type="submit" className="bg-primary px-6 sm:px-8 text-sm sm:text-base font-semibold text-white transition-colors hover:bg-primary-dark">
+                검색
+              </button>
+            </form>
 
-              <div className="grid gap-2 grid-cols-2">
-                <QuickAction href={ROUTES.JOBS} title="채용 탐색" description="지역·업종별 공고" icon="briefcase" />
-                <QuickAction href={`${ROUTES.JOBS}?type=matching`} title="파트너 섭외" description="협업 공고 확인" icon="users" />
-                <QuickAction href={ROUTES.DIRECTORY} title="업체 디렉토리" description="검증된 프로필" icon="building" />
-                <QuickAction href={ROUTES.COMMUNITY} title="커뮤니티" description="현장 노하우 공유" icon="message" />
-              </div>
-
-              {/* 라이브 메트릭 */}
-              <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-100">
-                <HeroStat label="인증 업체" value={counts.verified} suffix="곳" />
-                <HeroStat label="30일 신규" value={counts.recentJobs} suffix="건" />
-                <HeroStat label="활성 파트너" value={counts.profiles} suffix="곳" />
-              </div>
-
-              {/* 빠른 직무 진입 */}
-              <div>
-                <p className="text-[11px] font-semibold text-gray-500 mb-2">빠른 직무 진입</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {BUSINESS_TYPES.slice(0, 8).map((bt) => (
-                    <Link
-                      key={bt.value}
-                      href={`${ROUTES.JOBS}?businessType=${bt.value}`}
-                      className="rounded border border-gray-200 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:border-primary hover:text-primary transition-colors"
-                    >
-                      {bt.label}
-                    </Link>
-                  ))}
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center justify-center gap-1.5 text-sm">
+              <span className="text-gray-500 mr-1">인기</span>
+              {SEARCH_TAGS.map((tag) => (
+                <Link
+                  key={tag}
+                  href={`${ROUTES.JOBS}?search=${encodeURIComponent(tag)}`}
+                  className="rounded-full bg-white border border-gray-200 px-3 py-1.5 text-gray-700 text-[13px] hover:border-gray-400 hover:text-gray-900 transition-colors"
+                >
+                  {tag}
+                </Link>
+              ))}
             </div>
+          </div>
 
-            {mySidebar ?? (
-            <aside className="rounded border border-gray-200 bg-white">
-              <div className="px-4 py-4 border-b border-gray-100 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Live Board</p>
-                  <h2 className="mt-1 text-base font-bold text-gray-900">운영 현황</h2>
-                </div>
-                <Link href="/stats" className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 transition-colors hover:border-primary hover:text-primary">
-                  통계
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-2 divide-x divide-y divide-gray-100">
-                <LightMetric label="인증 업체" value={counts.verified} />
-                <LightMetric label="30일 공고" value={counts.recentJobs} />
-                <LightMetric label="누적 공고" value={metricJobs} />
-                <LightMetric label="등록 업체" value={metricProfiles} />
-              </div>
-
-              <div className="p-3 border-t border-gray-100 grid gap-2">
-                <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[42px]">
-                  + 채용공고 등록
-                </Link>
-                <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary min-h-[42px]">
-                  업체 프로필 등록
-                </Link>
-              </div>
-
-              <div className="border-t border-gray-100 divide-y divide-gray-100">
-                <BoardLink href={`${ROUTES.JOBS}?type=hiring`} title="채용 중인 포지션" value={metricJobs} />
-                <BoardLink href={ROUTES.DIRECTORY} title="등록 파트너" value={metricProfiles} />
-                <BoardLink href={ROUTES.COMMUNITY} title="커뮤니티 업데이트" value={metricPosts} />
-              </div>
-            </aside>
-            )}
+          {/* Live metrics — full-width pills */}
+          <div className="mt-12 grid grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto text-center">
+            <MetricPill label="인증 업체" value={counts.verified} suffix="곳" />
+            <MetricPill label="최근 30일 신규 공고" value={counts.recentJobs} suffix="건" />
+            <MetricPill label="활성 파트너" value={counts.profiles} suffix="곳" />
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1440px] space-y-5 px-3 py-5 sm:px-5 lg:px-6 xl:px-8">
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <div className="platform-panel">
-            <SectionHeader title="직무별 채용" href={ROUTES.JOBS} />
-            <div className="grid grid-cols-2 sm:grid-cols-5">
-              {BUSINESS_TYPES.map((type) => (
-                <Link
-                  key={type.value}
-                  href={`${ROUTES.JOBS}?businessType=${type.value}`}
-                  className="group flex min-h-[84px] flex-col justify-center border-b border-r border-gray-100 px-4 py-3 transition-colors hover:bg-primary-50/45"
-                >
-                  <span className="mb-2 flex h-8 w-8 items-center justify-center rounded border border-gray-200 bg-white text-sm font-bold text-gray-700 transition-colors group-hover:border-primary group-hover:text-primary">
-                    {type.label.charAt(0)}
-                  </span>
-                  <span className="text-sm font-bold text-gray-800 group-hover:text-primary">{type.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+      <div className="mx-auto max-w-[1200px] px-4 sm:px-6 space-y-12 sm:space-y-16 pt-4">
 
-          <div className="platform-panel">
-            <SectionHeader title="지역별 채용" href={ROUTES.JOBS} />
-            <div className="grid grid-cols-3 gap-1.5 p-4">
-              {REGIONS.slice(0, 15).map((region) => (
-                <Link
-                  key={region.value}
-                  href={`${ROUTES.JOBS}?region=${region.value}`}
-                  className="rounded border border-gray-200 px-2 py-2 text-center text-sm font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
-                >
-                  {region.label}
-                </Link>
-              ))}
-            </div>
+        {/* My workspace row (로그인 시만) */}
+        {mySidebar && (
+          <section className="-mt-8 sm:-mt-10">
+            {mySidebar}
+          </section>
+        )}
+
+        {/* Quick actions — 4 big cards */}
+        <section>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {QUICK_ACTIONS.map((a) => (
+              <Link key={a.title} href={a.href} className="action-tile group">
+                <span className="text-3xl">{a.emoji}</span>
+                <div>
+                  <p className="text-[16px] font-bold text-gray-900 group-hover:text-primary transition-colors">{a.title}</p>
+                  <p className="mt-1 text-[13px] text-gray-500 leading-relaxed">{a.description}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,0.6fr)]">
-          <div className="platform-panel">
-            <SectionHeader title="최신 채용·섭외 공고" href={ROUTES.JOBS} label="실시간" />
-            <div className="divide-y divide-gray-100">
-              {jobItems.slice(0, 6).map((job) => (
-                <Link
-                  key={`${job.company}-${job.title}`}
-                  href={job.href}
-                  className="platform-data-row group grid gap-3 px-4 py-4 md:grid-cols-[210px_1fr_140px] md:items-center"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="company-mark">
-                      {job.company.charAt(0)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-gray-900">{job.company}</p>
-                      <p className="mt-0.5 text-xs text-gray-500">{job.region}</p>
-                    </div>
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="truncate text-[16px] font-bold text-primary transition-colors group-hover:text-primary">{job.title}</h3>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      <Badge kind="category">{job.type}</Badge>
-                      <Badge kind="attr">{job.pay}</Badge>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 md:justify-end">
-                    <span className="text-xs font-semibold text-gray-500">{job.meta}</span>
-                    <span className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-700 transition-colors group-hover:border-primary group-hover:text-primary">
-                      상세
-                    </span>
-                  </div>
-                </Link>
-              ))}
+        {/* Featured jobs */}
+        <section>
+          <SectionHeader title="최신 채용·섭외 공고" subtitle="최근 등록된 공고를 만나보세요" href={ROUTES.JOBS} />
+          {featuredJobs.length === 0 ? (
+            <EmptyHint message="아직 등록된 공고가 없습니다. 첫 번째 공고를 등록해 보세요." href={ROUTES.JOBS_NEW} cta="공고 등록" />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featuredJobs.map((job) => <FeaturedJobCard key={job.id} job={job} />)}
             </div>
-          </div>
+          )}
+        </section>
 
-          <div className="platform-panel">
-            <SectionHeader title="파트너 네트워크" href={ROUTES.DIRECTORY} />
-            <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-1">
-              {companyItems.map((company) => (
-                <Link
-                  key={company.name}
-                  href={company.href}
-                  className="platform-data-row group flex gap-3 border-b border-gray-100 p-4 sm:border-r xl:border-r-0"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded border border-gray-200 bg-white text-lg font-bold text-gray-700 transition-colors group-hover:border-primary group-hover:text-primary">
-                    {company.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={company.imageUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      company.name.charAt(0)
-                    )}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-bold text-primary transition-colors group-hover:text-primary">{company.name}</span>
-                    <span className="mt-1 block text-xs font-semibold text-gray-500">{company.type} · {company.region}</span>
-                    <span className="mt-1 block line-clamp-2 text-xs leading-relaxed text-gray-500">{company.desc}</span>
-                  </span>
-                </Link>
-              ))}
+        {/* Featured directory */}
+        <section>
+          <SectionHeader title="추천 파트너 업체" subtitle="검증된 업체 프로필을 확인하세요" href={ROUTES.DIRECTORY} />
+          {featuredProfiles.length === 0 ? (
+            <EmptyHint message="아직 등록된 업체가 없습니다." href={ROUTES.DIRECTORY_REGISTER} cta="업체 등록" />
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredProfiles.map((p) => <DirectoryCardLite key={p.id} profile={p} />)}
             </div>
+          )}
+        </section>
+
+        {/* Browse by category */}
+        <section>
+          <SectionHeader title="직무로 빠르게 찾기" subtitle="" href={ROUTES.JOBS} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+            {BUSINESS_TYPES.map((bt) => (
+              <Link
+                key={bt.value}
+                href={`${ROUTES.JOBS}?businessType=${bt.value}`}
+                className="rounded-xl border border-gray-200 bg-white px-4 py-4 text-center transition-all hover:border-primary hover:shadow-card hover:-translate-y-0.5"
+              >
+                <p className="text-[15px] font-semibold text-gray-900">{bt.label}</p>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="platform-panel">
-            <SectionHeader title="커뮤니티 업데이트" href={ROUTES.COMMUNITY} />
-            <div className="divide-y divide-gray-100">
-              {posts.length > 0 ? posts.map((post) => (
-                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group block px-4 py-3">
-                  <div className="mb-1 flex items-center gap-2">
+        {/* Community */}
+        {featuredPosts.length > 0 && (
+          <section>
+            <SectionHeader title="커뮤니티 업데이트" subtitle="현장에서 나누는 노하우" href={ROUTES.COMMUNITY} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {featuredPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={ROUTES.COMMUNITY_DETAIL(post.id)}
+                  className="group rounded-xl border border-gray-200 bg-white p-4 transition-all hover:shadow-card hover:-translate-y-0.5"
+                >
+                  <div className="flex items-center gap-2 mb-2">
                     <Badge kind="category">{getCategoryLabel(post.category)}</Badge>
                     <time className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</time>
                   </div>
-                  <p className="line-clamp-1 text-sm font-bold text-primary transition-colors group-hover:text-primary">{post.title}</p>
-                  <div className="mt-1 flex items-center gap-2 text-xs text-gray-400">
+                  <p className="text-[15px] font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 mb-1">{post.title}</p>
+                  <div className="flex items-center gap-3 text-xs text-gray-500">
                     <span>조회 {post.view_count.toLocaleString()}</span>
+                    <span>·</span>
                     <span>댓글 {post.comment_count ?? 0}</span>
+                    <span>·</span>
                     <span>좋아요 {post.like_count.toLocaleString()}</span>
                   </div>
                 </Link>
-              )) : (
-                <div className="px-4 py-10 text-center text-sm text-gray-400">아직 커뮤니티 글이 없습니다.</div>
-              )}
+              ))}
             </div>
-          </div>
-
-          <div className="platform-panel p-4">
-            <div className="flex items-center gap-3">
-              <span className="icon-box">
-                <Icon name="chart" className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="platform-eyebrow">Operations</p>
-                <h2 className="platform-section-title mt-0.5">빠른 운영 메뉴</h2>
-              </div>
-            </div>
-            <div className="mt-4 grid gap-2">
-              <ServiceLink href={ROUTES.MYPAGE} title="마이페이지" description="내 공고, 지원, 북마크 관리" />
-              <ServiceLink href={ROUTES.MYPAGE_NOTIFICATIONS} title="알림센터" description="지원 및 커뮤니티 알림 확인" />
-              <ServiceLink href="/contact" title="고객센터" description="문의와 제휴 요청 접수" />
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
       </div>
     </div>
   );
 }
 
-function QuickAction({
-  href,
-  title,
-  description,
-  icon,
-}: {
-  href: string;
-  title: string;
-  description: string;
-  icon: IconName;
-}) {
-  return (
-    <Link href={href} className="action-tile group">
-      <span className="icon-box transition-colors group-hover:border-primary-300 group-hover:bg-white">
-        <Icon name={icon} className="h-4 w-4" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-bold text-primary group-hover:text-primary">{title}</span>
-        <span className="mt-1 block text-xs font-semibold text-gray-500">{description}</span>
-      </span>
-    </Link>
-  );
-}
-
-function HeroStat({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
+function MetricPill({ label, value, suffix }: { label: string; value: number; suffix?: string }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold text-gray-500">{label}</p>
-      <p className="mt-1 text-xl font-bold text-gray-900 tabular-nums">
+      <p className="text-[12px] sm:text-[13px] text-gray-500 mb-1">{label}</p>
+      <p className="text-[24px] sm:text-[28px] font-bold text-gray-900 tabular-nums tracking-tight">
         {value.toLocaleString()}
-        {suffix && <span className="text-sm font-semibold text-gray-500 ml-0.5">{suffix}</span>}
+        {suffix && <span className="text-[14px] sm:text-[16px] font-semibold text-gray-500 ml-1">{suffix}</span>}
       </p>
     </div>
   );
 }
 
-function LightMetric({ label, value }: { label: string; value: number }) {
+function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
   return (
-    <div className="px-3 py-3 tabular-nums">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{label}</span>
-      <span className="mt-1 block text-xl font-bold text-gray-900">{value.toLocaleString()}</span>
-    </div>
-  );
-}
-
-function BoardLink({ href, title, value }: { href: string; title: string; value: number }) {
-  return (
-    <Link href={href} className="flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-secondary-50">
-      <span className="font-semibold text-gray-700">{title}</span>
-      <span className="font-bold text-gray-900 tabular-nums">{value.toLocaleString()}</span>
-    </Link>
-  );
-}
-
-function SectionHeader({ title, href, label }: { title: string; href: string; label?: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-      <div className="flex items-center gap-2">
-        <h2 className="platform-section-title">{title}</h2>
-        {label && <span className="rounded border border-accent-200 bg-accent-50 px-1.5 py-0.5 text-[10px] font-bold text-accent-600">{label}</span>}
+    <div className="flex items-end justify-between mb-5 sm:mb-6">
+      <div>
+        <h2 className="text-[20px] sm:text-[24px] font-bold text-gray-900 tracking-tight">{title}</h2>
+        {subtitle && <p className="mt-1 text-[14px] text-gray-500">{subtitle}</p>}
       </div>
-      <Link href={href} className="text-xs font-bold text-gray-500 transition-colors hover:text-primary">전체보기</Link>
+      <Link href={href} className="text-[13px] font-semibold text-gray-500 hover:text-primary transition-colors shrink-0">
+        전체보기 →
+      </Link>
     </div>
   );
 }
 
-function ServiceLink({ href, title, description }: { href: string; title: string; description: string }) {
+function EmptyHint({ message, href, cta }: { message: string; href: string; cta: string }) {
   return (
-    <Link href={href} className="rounded border border-gray-200 px-3 py-3 transition-colors hover:border-primary-300 hover:bg-primary-50/40">
-      <span className="block text-sm font-bold text-primary">{title}</span>
-      <span className="mt-1 block text-xs font-semibold text-gray-500">{description}</span>
+    <div className="rounded-xl border-2 border-dashed border-gray-200 bg-white p-10 text-center">
+      <p className="text-sm text-gray-500 mb-4">{message}</p>
+      <Link href={href} className="btn-primary inline-flex">{cta}</Link>
+    </div>
+  );
+}
+
+function FeaturedJobCard({ job }: { job: Job }) {
+  const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
+  const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
+  return (
+    <Link
+      href={ROUTES.JOBS_DETAIL(job.id)}
+      className="group rounded-xl border border-gray-200 bg-white p-5 transition-all hover:shadow-card hover:-translate-y-0.5 flex flex-col gap-3"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-gray-500 truncate">{company}</p>
+        </div>
+        {isExpired && <span className="rounded-full bg-gray-100 text-gray-500 text-[11px] font-semibold px-2 py-0.5 shrink-0">마감</span>}
+        {!isExpired && job.is_promoted && <span className="rounded-full bg-primary-50 text-primary text-[11px] font-semibold px-2 py-0.5 shrink-0">추천</span>}
+      </div>
+      <h3 className="text-[16px] sm:text-[17px] font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-primary transition-colors min-h-[44px]">
+        {job.title}
+      </h3>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-gray-600">
+        <span className="font-medium">{getRegionLabel(job.region)}</span>
+        <span className="text-gray-300">·</span>
+        <span>{getEmploymentTypeLabel(job.employment_type)}</span>
+        <span className="text-gray-300">·</span>
+        <span>{getBusinessTypeLabel(job.business_type)}</span>
+      </div>
+      {job.salary_info && (
+        <p className="text-[13px] text-gray-700">
+          <span className="text-gray-400 mr-1">급여</span>
+          <span className="font-semibold">{job.salary_info}</span>
+        </p>
+      )}
+      <div className="pt-2 mt-auto border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
+        <span>{formatRelativeTime(job.created_at)}</span>
+        {job.view_count > 0 && <span>조회 {job.view_count.toLocaleString()}</span>}
+      </div>
     </Link>
   );
 }
 
-function Icon({ name, className }: { name: IconName; className?: string }) {
-  const common = { className, fill: 'none', viewBox: '0 0 24 24', strokeWidth: 1.8, stroke: 'currentColor' };
-
-  if (name === 'building') {
-    return (
-      <svg {...common}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 21V5.25A2.25 2.25 0 016.75 3h6a2.25 2.25 0 012.25 2.25V21m4.5 0V8.25A2.25 2.25 0 0017.25 6H15M8.25 7.5h3m-3 3h3m-3 3h3M8.25 21v-3.375c0-.621.504-1.125 1.125-1.125h1.5c.621 0 1.125.504 1.125 1.125V21" />
-      </svg>
-    );
-  }
-
-  if (name === 'users') {
-    return (
-      <svg {...common}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-      </svg>
-    );
-  }
-
-  if (name === 'message') {
-    return (
-      <svg {...common}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm3.75 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12c0 4.142-4.03 7.5-9 7.5a10.69 10.69 0 01-3.17-.47L3 21l1.97-4.09A6.874 6.874 0 013 12c0-4.142 4.03-7.5 9-7.5s9 3.358 9 7.5z" />
-      </svg>
-    );
-  }
-
-  if (name === 'spark') {
-    return (
-      <svg {...common}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-      </svg>
-    );
-  }
-
-  if (name === 'chart') {
-    return (
-      <svg {...common}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125h3.75V21H3v-7.875zM9.375 9h3.75v12h-3.75V9zM15.75 3h3.75v18h-3.75V3z" />
-      </svg>
-    );
-  }
-
+function DirectoryCardLite({ profile }: { profile: Profile }) {
+  const imageUrl = profile.profile_image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
+    : null;
+  const name = profile.company_name || profile.contact_name;
   return (
-    <svg {...common}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25A2.25 2.25 0 0118 20.65H6a2.25 2.25 0 01-2.25-2.25v-4.25m16.5 0A2.18 2.18 0 0021 12.489V8.706c0-1.081-.768-2.015-1.837-2.175A48.111 48.111 0 0015.75 6.15V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.9c-1.153.08-2.292.207-3.413.381C3.768 6.691 3 7.625 3 8.706v3.783c0 .636.28 1.241.75 1.661m16.5 0A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.5-1.22a2.016 2.016 0 01-.75-.38m12-8.006a48.667 48.667 0 00-7.5 0" />
-    </svg>
+    <Link
+      href={ROUTES.DIRECTORY_DETAIL(profile.id)}
+      className="group rounded-xl border border-gray-200 bg-white overflow-hidden transition-all hover:shadow-card hover:-translate-y-0.5"
+    >
+      <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center overflow-hidden">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={name} className="w-full h-full object-contain p-4" />
+        ) : (
+          <span className="text-3xl font-bold text-gray-300">{name.charAt(0)}</span>
+        )}
+      </div>
+      <div className="p-4">
+        <p className="text-[15px] font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{name}</p>
+        <p className="text-[12px] text-gray-500 mt-1 line-clamp-1">
+          {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
+        </p>
+      </div>
+    </Link>
   );
 }
