@@ -99,7 +99,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             <Logo variant="full" size="md" />
           </Link>
 
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-[640px]">
+          <div className="hidden md:block flex-1" aria-hidden />
+
+          <form onSubmit={handleSearch} className="hidden md:flex w-full max-w-[640px] shrink-0">
             <div className="flex h-12 w-full items-center overflow-hidden rounded border-2 border-primary bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary-100">
               <div className="pl-4 text-primary">
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
@@ -119,7 +121,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             </div>
           </form>
 
-          <div className="hidden lg:flex items-center gap-2 ml-auto">
+          <div className="hidden md:block flex-1" aria-hidden />
+
+          <div className="hidden lg:flex items-center gap-2">
             <Link href={ROUTES.JOBS_NEW} className="btn-outline px-3.5 py-2 text-xs">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25A2.25 2.25 0 0118 20.65H6a2.25 2.25 0 01-2.25-2.25v-4.25M8.25 6.15V5.25A2.25 2.25 0 0110.5 3h3a2.25 2.25 0 012.25 2.25v.9" />
