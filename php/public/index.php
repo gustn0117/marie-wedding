@@ -15,6 +15,7 @@ require __DIR__ . '/../src/controllers/JobsController.php';
 require __DIR__ . '/../src/controllers/DirectoryController.php';
 require __DIR__ . '/../src/controllers/SearchController.php';
 require __DIR__ . '/../src/controllers/CommunityController.php';
+require __DIR__ . '/../src/controllers/MypageController.php';
 
 // 라우트 정의
 $r = new Router();
@@ -41,6 +42,13 @@ $r->post('/community/write', fn() => CommunityController::writeSubmit());
 $r->get('/community/{id}', fn($p) => CommunityController::detail($p));
 $r->post('/community/{id}/comment', fn($p) => CommunityController::commentSubmit($p));
 $r->post('/community/{id}/like', fn($p) => CommunityController::like($p));
+
+$r->get('/mypage', fn() => MypageController::index());
+$r->get('/mypage/profile', fn() => MypageController::profileForm());
+$r->post('/mypage/profile', fn() => MypageController::profileSubmit());
+$r->get('/mypage/jobs', fn() => MypageController::jobs());
+$r->get('/mypage/posts', fn() => MypageController::posts());
+$r->get('/mypage/applications', fn() => MypageController::applications());
 
 // 정적 페이지 (추후)
 $r->get('/contact', fn() => View::render('static/contact', ['pageTitle' => '고객센터 | Marié']));
