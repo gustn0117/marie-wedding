@@ -1,0 +1,28 @@
+RewriteEngine On
+
+# Block direct access to dotfiles
+RewriteRule (^|/)\.(?!well-known) - [F,L]
+
+# Pass JS/CSS/img through as-is
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Everything else → index.php
+RewriteRule ^ index.php [L]
+
+# Security headers
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# Cache static assets
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|css|js|woff|woff2)$">
+  Header set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# PHP defaults
+php_value upload_max_filesize 8M
+php_value post_max_size 10M
