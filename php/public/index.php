@@ -12,6 +12,8 @@ require __DIR__ . '/../src/core/View.php';
 require __DIR__ . '/../src/controllers/HomeController.php';
 require __DIR__ . '/../src/controllers/AuthController.php';
 require __DIR__ . '/../src/controllers/JobsController.php';
+require __DIR__ . '/../src/controllers/DirectoryController.php';
+require __DIR__ . '/../src/controllers/SearchController.php';
 
 // 라우트 정의
 $r = new Router();
@@ -25,11 +27,12 @@ $r->get('/logout', fn() => AuthController::logout());
 $r->get('/jobs', fn() => JobsController::index());
 $r->get('/jobs/{id}', fn($p) => JobsController::detail($p));
 
-// 검색 (단순 jobs 리스트로 리다이렉트)
-$r->get('/search', function() {
-    $q = $_GET['q'] ?? '';
-    View::redirect('/jobs' . ($q ? '?search=' . urlencode($q) : ''));
-});
+$r->get('/directory', fn() => DirectoryController::index());
+$r->get('/directory/{id}', fn($p) => DirectoryController::detail($p));
+$r->get('/mypage/directory', fn() => DirectoryController::registerForm());
+$r->post('/mypage/directory', fn() => DirectoryController::registerSubmit());
+
+$r->get('/search', fn() => SearchController::index());
 
 // 정적 페이지 (추후)
 $r->get('/contact', fn() => View::render('static/contact', ['pageTitle' => '고객센터 | Marié']));
