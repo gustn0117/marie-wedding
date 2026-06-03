@@ -27,7 +27,10 @@ $r->post('/signup', fn() => AuthController::signupSubmit());
 $r->get('/logout', fn() => AuthController::logout());
 
 $r->get('/jobs', fn() => JobsController::index());
+$r->get('/jobs/new', fn() => JobsController::createForm());
+$r->post('/jobs/new', fn() => JobsController::createSubmit());
 $r->get('/jobs/{id}', fn($p) => JobsController::detail($p));
+$r->post('/jobs/{id}/apply', fn($p) => JobsController::apply($p));
 
 $r->get('/directory', fn() => DirectoryController::index());
 $r->get('/directory/{id}', fn($p) => DirectoryController::detail($p));

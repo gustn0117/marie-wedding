@@ -90,12 +90,15 @@ $author = $job['author'] ?? [];
           <?= $job['deadline']?format_date($job['deadline']):'상시 채용' ?>
           <?= !$isExpired && $daysLeft !== null ? " · D-{$daysLeft}" : '' ?>
         </p>
-        <?php if (Auth::check()): ?>
-          <button class="btn-primary w-full justify-center py-3 <?= $isExpired?'opacity-50 pointer-events-none':'' ?>" onclick="alert('지원 기능은 별도 페이지로 이어집니다');">
+        <?php $me = Auth::profile(); $isOwnerJob = $me && $me['id'] === ($job['author_id'] ?? null); ?>
+        <?php if (!Auth::check()): ?>
+          <a href="/login" class="btn-primary w-full justify-center py-3">로그인 후 지원</a>
+        <?php elseif ($isOwnerJob): ?>
+          <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 text-center">본인 공고입니다.</div>
+        <?php else: ?>
+          <button type="button" onclick="document.getElementById('apply-modal').hidden=false" class="btn-primary w-full justify-center py-3 <?= $isExpired?'opacity-50 pointer-events-none':'' ?>" <?= $isExpired ? 'disabled' : '' ?>>
             <?= ($job['posting_type']??'')==='matching'?'섭외 문의':'지원하기' ?>
           </button>
-        <?php else: ?>
-          <a href="/login" class="btn-primary w-full justify-center py-3">로그인 후 지원</a>
         <?php endif; ?>
       </section>
 
@@ -111,3 +114,20 @@ $author = $job['author'] ?? [];
     </aside>
   </div>
 </div>
+
+<?php if (Auth::check() && !$isOwnerJob && !$isExpired): ?>
+<div id="apply-modal" hidden class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.hidden=true">
+  <div class="bg-white rounded-2xl max-w-md w-full p-6">
+    <h3 class="text-lg font-bold text-gray-900 mb-4"><?= ($job['posting_type']??'')==='matching'?'섭외 문의':'지원하기' ?></h3>
+    <form action="/jobs/<?= View::e($job['id']) ?>/apply" method="POST">
+      <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+      <label class="block text-sm font-semibold text-gray-800 mb-1.5">메시지 (선택)</label>
+      <textarea name="message" rows="5" maxlength="2000" placeholder="자기 소개·문의 사항을 자유롭게 작성하세요" class="input resize-none mb-4"></textarea>
+      <div class="flex justify-end gap-2">
+        <button type="button" onclick="document.getElementById('apply-modal').hidden=true" class="btn-outline">취소</button>
+        <button type="submit" class="btn-primary">전송</button>
+      </div>
+    </form>
+  </div>
+</div>
+<?php endif; ?>
