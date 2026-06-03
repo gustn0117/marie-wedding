@@ -14,6 +14,7 @@ require __DIR__ . '/../src/controllers/AuthController.php';
 require __DIR__ . '/../src/controllers/JobsController.php';
 require __DIR__ . '/../src/controllers/DirectoryController.php';
 require __DIR__ . '/../src/controllers/SearchController.php';
+require __DIR__ . '/../src/controllers/CommunityController.php';
 
 // 라우트 정의
 $r = new Router();
@@ -33,6 +34,13 @@ $r->get('/mypage/directory', fn() => DirectoryController::registerForm());
 $r->post('/mypage/directory', fn() => DirectoryController::registerSubmit());
 
 $r->get('/search', fn() => SearchController::index());
+
+$r->get('/community', fn() => CommunityController::index());
+$r->get('/community/write', fn() => CommunityController::writeForm());
+$r->post('/community/write', fn() => CommunityController::writeSubmit());
+$r->get('/community/{id}', fn($p) => CommunityController::detail($p));
+$r->post('/community/{id}/comment', fn($p) => CommunityController::commentSubmit($p));
+$r->post('/community/{id}/like', fn($p) => CommunityController::like($p));
 
 // 정적 페이지 (추후)
 $r->get('/contact', fn() => View::render('static/contact', ['pageTitle' => '고객센터 | Marié']));
