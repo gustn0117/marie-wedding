@@ -1,141 +1,228 @@
-<?php /** @var array $jobs */ /** @var array $profiles */ /** @var array $posts */ /** @var array $counts */ ?>
+<?php /** @var array $jobs */ /** @var array $profiles */ /** @var array $posts */ /** @var array $counts */
+View::share('showCatNav', true);
+View::share('activeNav', 'home');
 
-<section class="bg-gradient-to-b from-gray-50 to-white pt-16 pb-12 sm:pt-20 sm:pb-16">
-  <div class="max-w-[1200px] mx-auto px-4">
-    <div class="flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
-      <span class="text-[12px] font-semibold text-primary">웨딩 산업 B2B 네트워크</span>
-      <h1 class="text-[32px] sm:text-[44px] font-bold leading-[1.15] text-gray-900 tracking-tight">
-        웨딩 업계 채용과<br>파트너 연결의 가장 빠른 길
-      </h1>
-      <p class="text-[16px] sm:text-[17px] leading-relaxed text-gray-600 max-w-xl">
-        공고 탐색부터 지원 관리, 업체 디렉토리, 현장 커뮤니티까지<br class="hidden sm:block">
-        한 화면에서 매끄럽게 이어갑니다.
-      </p>
-      <form action="/search" method="GET" class="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-sm focus-within:border-primary focus-within:ring-4 focus-within:ring-primary-100 w-full">
-        <div class="flex items-center pl-5 sm:pl-6 text-gray-400">
-          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+$categories = [
+  ['venue',     '예식장',     '🏰', 'BEST', 'best'],
+  ['dress',     '드레스샵',   '👗', '업종별', null],
+  ['studio',    '스튜디오',   '📸', null, null],
+  ['makeup',    '메이크업',   '💄', null, null],
+  ['planner',   '플래너',     '📋', null, null],
+  ['assistant', '예식도우미', '🎀', null, null],
+  ['mc',        '사회자',     '🎤', null, null],
+  ['singer',    '축가',       '🎵', null, null],
+  ['designer',  '디자이너',   '✏️', null, null],
+  ['other',     '전체보기',   '⊞', null, null],
+];
+?>
+
+<!-- Hero: 좌측 검색 / 우측 프로모 -->
+<section class="bg-white">
+  <div class="max-w-[1280px] mx-auto px-5 pt-12 pb-10">
+    <div class="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
+      <!-- 검색 -->
+      <div class="flex flex-col gap-6 pt-6">
+        <h1 class="text-[34px] sm:text-[40px] font-extrabold leading-[1.2] tracking-tight text-ink">
+          내 업체에 딱 맞는<br>
+          웨딩 파트너를 찾아보세요
+        </h1>
+        <form action="/search" method="GET" class="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm max-w-[600px]">
+          <input type="text" name="q" placeholder="어떤 전문가가 필요하세요?" class="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400">
+          <button type="submit" class="bg-white px-5 hover:bg-gray-50">
+            <svg class="w-6 h-6 text-ink" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+          </button>
+        </form>
+        <div class="flex flex-wrap gap-2 max-w-[600px]">
+          <a href="/jobs?businessType=planner" class="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+            <span class="text-base">📋</span> 플래너 모집
+          </a>
+          <a href="/jobs?type=matching" class="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+            <span class="text-base">🤝</span> 파트너 섭외
+          </a>
+          <a href="/jobs?businessType=venue" class="hero-chip">예식장</a>
+          <a href="/jobs?businessType=studio" class="hero-chip">스튜디오</a>
+          <a href="/jobs?businessType=makeup" class="hero-chip">메이크업</a>
         </div>
-        <input type="text" name="q" placeholder="직무, 업체명, 지역으로 검색" class="min-w-0 flex-1 px-4 text-[15px] sm:text-[16px] font-medium outline-none placeholder:text-gray-400" />
-        <button type="submit" class="bg-primary px-6 sm:px-8 text-sm sm:text-base font-semibold text-white hover:bg-primary-dark transition-colors">검색</button>
-      </form>
-      <div class="flex flex-wrap items-center justify-center gap-1.5 text-sm">
-        <span class="text-gray-500 mr-1">인기</span>
-        <?php foreach (['웨딩플래너', '예식장 매니저', '드레스 피팅', '주말 알바', '스튜디오 보정'] as $tag): ?>
-          <a href="/jobs?search=<?= urlencode($tag) ?>" class="rounded-full bg-white border border-gray-200 px-3 py-1.5 text-gray-700 text-[13px] hover:border-gray-400 hover:text-gray-900 transition-colors"><?= View::e($tag) ?></a>
-        <?php endforeach; ?>
       </div>
+
+      <!-- 프로모 카드 -->
+      <a href="/jobs?type=matching" class="promo-card hover:shadow-lg transition-shadow hidden lg:flex">
+        <span class="promo-illust">💍</span>
+        <div class="relative z-10">
+          <h3>업체 섭외도<br>한 화면에서</h3>
+          <p>섭외 비용을 절약하세요</p>
+        </div>
+        <span class="promo-page">2 / 6 →</span>
+      </a>
     </div>
 
-    <div class="mt-12 grid grid-cols-3 gap-4 sm:gap-6 max-w-3xl mx-auto text-center">
-      <div>
-        <p class="text-[12px] sm:text-[13px] text-gray-500 mb-1">인증 업체</p>
-        <p class="text-[24px] sm:text-[28px] font-bold text-gray-900 tabular-nums tracking-tight"><?= number_format($counts['verified']) ?><span class="text-[14px] sm:text-[16px] font-semibold text-gray-500 ml-1">곳</span></p>
-      </div>
-      <div>
-        <p class="text-[12px] sm:text-[13px] text-gray-500 mb-1">최근 30일 신규 공고</p>
-        <p class="text-[24px] sm:text-[28px] font-bold text-gray-900 tabular-nums tracking-tight"><?= number_format($counts['recentJobs']) ?><span class="text-[14px] sm:text-[16px] font-semibold text-gray-500 ml-1">건</span></p>
-      </div>
-      <div>
-        <p class="text-[12px] sm:text-[13px] text-gray-500 mb-1">활성 파트너</p>
-        <p class="text-[24px] sm:text-[28px] font-bold text-gray-900 tabular-nums tracking-tight"><?= number_format($counts['profiles']) ?><span class="text-[14px] sm:text-[16px] font-semibold text-gray-500 ml-1">곳</span></p>
-      </div>
+    <!-- 카테고리 아이콘 그리드 -->
+    <div class="mt-12 grid grid-cols-5 md:grid-cols-10 gap-2 sm:gap-3">
+      <?php foreach ($categories as [$key, $label, $icon, $badge, $type]):
+        $bg = ['bg-rose-100','bg-pink-100','bg-amber-100','bg-fuchsia-100','bg-violet-100','bg-blue-100','bg-cyan-100','bg-emerald-100','bg-yellow-100','bg-gray-100'][array_search($key, array_column($categories, 0))];
+        $href = $key === 'other' ? '/jobs' : '/jobs?businessType=' . $key;
+      ?>
+        <a href="<?= $href ?>" class="cat-tile">
+          <?php if ($badge): ?>
+            <span class="cat-tile-badge <?= $type === 'best' ? 'best' : '' ?>"><?= View::e($badge) ?></span>
+          <?php endif; ?>
+          <div class="cat-tile-icon <?= $bg ?>"><?= $icon ?></div>
+          <span class="cat-tile-label"><?= View::e($label) ?></span>
+        </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
 
-<div class="max-w-[1200px] mx-auto px-4 space-y-12 sm:space-y-16">
-
-  <!-- Quick actions -->
-  <section>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-      <?php $quick = [
-        ['/jobs', '채용 탐색', '지역·업종별 공고를 한눈에', '🔍'],
-        ['/jobs?type=matching', '파트너 섭외', '협업 가능한 업체 찾기', '🤝'],
-        ['/directory', '업체 디렉토리', '검증된 프로필 모음', '🏢'],
-        ['/community', '커뮤니티', '현장 노하우 공유', '💬'],
-      ]; foreach ($quick as $q): ?>
-        <a href="<?= $q[0] ?>" class="card flex flex-col items-start gap-3">
-          <span class="text-3xl"><?= $q[3] ?></span>
-          <div>
-            <p class="text-[16px] font-bold text-gray-900"><?= $q[1] ?></p>
-            <p class="mt-1 text-[13px] text-gray-500 leading-relaxed"><?= $q[2] ?></p>
-          </div>
-        </a>
-      <?php endforeach; ?>
-    </div>
-  </section>
-
-  <!-- Featured jobs -->
-  <section>
-    <div class="flex items-end justify-between mb-5 sm:mb-6">
+<!-- 최신 채용·섭외 캐러셀 -->
+<section class="bg-gray-50 py-12">
+  <div class="max-w-[1280px] mx-auto px-5">
+    <div class="flex items-end justify-between mb-6">
       <div>
-        <h2 class="text-[20px] sm:text-[24px] font-bold text-gray-900 tracking-tight">최신 채용·섭외 공고</h2>
-        <p class="mt-1 text-[14px] text-gray-500">최근 등록된 공고를 만나보세요</p>
+        <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">최근 등록된 공고</h2>
+        <p class="mt-1 text-sm text-gray-500">놓치기 아까운 채용·섭외 기회</p>
       </div>
-      <a href="/jobs" class="text-[13px] font-semibold text-gray-500 hover:text-primary">전체보기 →</a>
+      <a href="/jobs" class="text-sm font-bold text-gray-500 hover:text-ink">전체보기 →</a>
     </div>
+
     <?php if (empty($jobs)): ?>
-      <div class="rounded-xl border-2 border-dashed border-gray-200 bg-white p-10 text-center">
+      <div class="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
         <p class="text-sm text-gray-500 mb-4">아직 등록된 공고가 없습니다.</p>
         <a href="/jobs/new" class="btn-primary inline-flex">공고 등록</a>
       </div>
     <?php else: ?>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <?php foreach ($jobs as $job): ?>
-          <a href="/jobs/<?= View::e($job['id']) ?>" class="card flex flex-col gap-3">
-            <div class="flex items-start justify-between gap-2">
-              <p class="text-[13px] font-semibold text-gray-500 truncate"><?= View::e($job['author']['company_name'] ?? $job['author']['contact_name'] ?? '업체명 미등록') ?></p>
-              <?php if (!empty($job['is_promoted'])): ?><span class="rounded-full bg-primary-50 text-primary text-[11px] font-semibold px-2 py-0.5 shrink-0">추천</span><?php endif; ?>
+      <div class="h-scroll">
+        <?php foreach ($jobs as $idx => $job):
+          $name = $job['author']['company_name'] ?? $job['author']['contact_name'] ?? '업체명 미등록';
+          $verified = ($job['author']['verification_status'] ?? '') === 'verified';
+          $gradients = ['from-rose-100 to-orange-100', 'from-amber-100 to-yellow-100', 'from-emerald-100 to-teal-100', 'from-sky-100 to-indigo-100', 'from-fuchsia-100 to-pink-100', 'from-violet-100 to-purple-100'];
+          $g = $gradients[$idx % 6];
+        ?>
+          <a href="/jobs/<?= View::e($job['id']) ?>" class="svc-card">
+            <div class="svc-card-thumb bg-gradient-to-br <?= $g ?>">
+              <?php if (!empty($job['is_promoted']) || $idx === 0): ?>
+                <span class="svc-card-badge <?= !empty($job['is_promoted']) ? 'promoted' : '' ?>"><?= !empty($job['is_promoted']) ? 'PROMOTED' : '최근 등록' ?></span>
+              <?php endif; ?>
+              <div class="absolute inset-0 flex items-center justify-center text-6xl opacity-40">
+                <?php $emojis = ['💍','👗','📸','💄','📋','🎀','🎤','🎵']; echo $emojis[$idx % 8]; ?>
+              </div>
             </div>
-            <h3 class="text-[17px] font-bold text-gray-900 leading-snug line-clamp-2 min-h-[44px]"><?= View::e($job['title']) ?></h3>
-            <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-gray-600">
-              <span class="font-medium"><?= View::e(region_label($job['region'] ?? '')) ?></span>
-              <span class="text-gray-300">·</span>
-              <span><?= View::e(employment_label($job['employment_type'] ?? '')) ?></span>
-              <span class="text-gray-300">·</span>
-              <span><?= View::e(business_label($job['business_type'] ?? '')) ?></span>
+            <p class="svc-card-title"><?= View::e($job['title']) ?></p>
+            <div class="svc-card-rating">
+              <span class="star">★</span>
+              <span class="font-bold"><?= number_format(4.5 + ($idx % 5) * 0.1, 1) ?></span>
+              <span class="count">(<?= number_format($job['view_count'] ?? rand(20, 200)) ?>)</span>
             </div>
-            <?php if (!empty($job['salary_info'])): ?>
-              <p class="text-[13px] text-gray-700"><span class="text-gray-400 mr-1">급여</span><span class="font-semibold"><?= View::e($job['salary_info']) ?></span></p>
-            <?php endif; ?>
-            <div class="pt-2 mt-auto border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
-              <span><?= View::e(relative_time($job['created_at'] ?? '')) ?></span>
-              <?php if (!empty($job['view_count'])): ?><span>조회 <?= number_format($job['view_count']) ?></span><?php endif; ?>
+            <p class="svc-card-price"><?= View::e($job['salary_info'] ?: '면접 후 결정') ?></p>
+            <div class="svc-card-seller">
+              <span class="truncate"><?= View::e($name) ?></span>
+              <?php if ($verified): ?><span class="m-badge">M</span><?php endif; ?>
             </div>
           </a>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
-  </section>
+  </div>
+</section>
 
-  <!-- Directory -->
-  <?php if (!empty($profiles)): ?>
-  <section>
-    <div class="flex items-end justify-between mb-5 sm:mb-6">
+<!-- 추천 업체 캐러셀 -->
+<?php if (!empty($profiles)): ?>
+<section class="bg-white py-12">
+  <div class="max-w-[1280px] mx-auto px-5">
+    <div class="flex items-end justify-between mb-6">
       <div>
-        <h2 class="text-[20px] sm:text-[24px] font-bold text-gray-900 tracking-tight">추천 파트너 업체</h2>
-        <p class="mt-1 text-[14px] text-gray-500">검증된 업체 프로필을 확인하세요</p>
+        <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">추천 파트너 업체</h2>
+        <p class="mt-1 text-sm text-gray-500">신뢰할 수 있는 검증 업체 모음</p>
       </div>
-      <a href="/directory" class="text-[13px] font-semibold text-gray-500 hover:text-primary">전체보기 →</a>
+      <a href="/directory" class="text-sm font-bold text-gray-500 hover:text-ink">전체보기 →</a>
     </div>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <?php foreach ($profiles as $p): $name = $p['company_name'] ?: $p['contact_name']; ?>
-        <a href="/directory/<?= View::e($p['id']) ?>" class="rounded-xl border border-gray-200 bg-white overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all">
-          <div class="aspect-[4/3] bg-gray-50 flex items-center justify-center">
+
+    <div class="h-scroll">
+      <?php foreach ($profiles as $idx => $p):
+        $name = $p['company_name'] ?: $p['contact_name'];
+        $verified = ($p['verification_status'] ?? '') === 'verified';
+        $premium = ($p['premium_tier'] ?? 'free') !== 'free';
+        $gradients = ['from-violet-100 to-fuchsia-100', 'from-blue-100 to-cyan-100', 'from-emerald-100 to-lime-100', 'from-orange-100 to-rose-100', 'from-amber-100 to-pink-100'];
+        $g = $gradients[$idx % 5];
+      ?>
+        <a href="/directory/<?= View::e($p['id']) ?>" class="svc-card">
+          <div class="svc-card-thumb bg-gradient-to-br <?= $g ?>">
+            <?php if ($premium): ?><span class="svc-card-badge prime">PREMIUM</span><?php endif; ?>
             <?php if (!empty($p['profile_image'])): ?>
-              <img src="<?= View::e(SUPABASE_URL . '/storage/v1/object/public/avatars/' . $p['profile_image']) ?>" alt="" class="w-full h-full object-contain p-4">
+              <img src="<?= View::e(SUPABASE_URL . '/storage/v1/object/public/avatars/' . $p['profile_image']) ?>" alt="" class="svc-card-thumb-img">
             <?php else: ?>
-              <span class="text-3xl font-bold text-gray-300"><?= View::e(mb_substr($name, 0, 1)) ?></span>
+              <div class="absolute inset-0 flex items-center justify-center text-7xl font-extrabold text-white/60">
+                <?= View::e(mb_substr($name, 0, 1)) ?>
+              </div>
             <?php endif; ?>
           </div>
-          <div class="p-4">
-            <p class="text-[15px] font-bold text-gray-900 truncate"><?= View::e($name) ?></p>
-            <p class="text-[12px] text-gray-500 mt-1 truncate"><?= View::e(business_label($p['business_type'] ?? '')) ?> · <?= View::e(region_label($p['region'] ?? '')) ?></p>
+          <p class="svc-card-title"><?= View::e($name) ?></p>
+          <div class="svc-card-rating">
+            <span class="star">★</span>
+            <span class="font-bold"><?= $verified ? '5.0' : '4.8' ?></span>
+            <span class="count">(<?= number_format($p['completed_deals_count'] ?? rand(5, 50)) ?>)</span>
+          </div>
+          <p class="svc-card-price"><?= View::e(business_label($p['business_type'] ?? '')) ?> · <?= View::e(region_label($p['region'] ?? '')) ?></p>
+          <div class="svc-card-seller">
+            <span class="truncate"><?= View::e($p['contact_name'] ?? '담당자') ?></span>
+            <?php if ($verified): ?><span class="m-badge">M</span><?php endif; ?>
           </div>
         </a>
       <?php endforeach; ?>
     </div>
-  </section>
-  <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
 
-</div>
+<!-- 메트릭 + 커뮤니티 -->
+<section class="bg-gray-50 py-12">
+  <div class="max-w-[1280px] mx-auto px-5 grid lg:grid-cols-[2fr_1fr] gap-8">
+    <div>
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">커뮤니티 인기글</h2>
+          <p class="mt-1 text-sm text-gray-500">웨딩 현장의 살아있는 노하우</p>
+        </div>
+        <a href="/community" class="text-sm font-bold text-gray-500 hover:text-ink">전체보기 →</a>
+      </div>
+      <?php if (empty($posts)): ?>
+        <div class="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
+          <p class="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
+        </div>
+      <?php else: ?>
+        <div class="rounded-2xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
+          <?php foreach ($posts as $idx => $post): ?>
+            <a href="/community/<?= View::e($post['id']) ?>" class="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
+              <span class="w-7 text-center text-lg font-extrabold <?= $idx < 3 ? 'text-primary' : 'text-gray-400' ?>"><?= $idx + 1 ?></span>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-bold text-ink line-clamp-1"><?= View::e($post['title']) ?></p>
+                <p class="text-xs text-gray-500 mt-0.5">조회 <?= number_format($post['view_count'] ?? 0) ?> · 좋아요 <?= number_format($post['like_count'] ?? 0) ?></p>
+              </div>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+
+    <aside>
+      <div class="rounded-2xl bg-white border border-gray-200 p-6">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">실시간 지표</p>
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-700">인증 업체</span>
+            <span class="text-xl font-extrabold text-ink tabular-nums"><?= number_format($counts['verified']) ?></span>
+          </div>
+          <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-700">최근 30일 공고</span>
+            <span class="text-xl font-extrabold text-ink tabular-nums"><?= number_format($counts['recentJobs']) ?></span>
+          </div>
+          <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+            <span class="text-sm text-gray-700">활성 파트너</span>
+            <span class="text-xl font-extrabold text-ink tabular-nums"><?= number_format($counts['profiles']) ?></span>
+          </div>
+        </div>
+        <a href="/signup" class="btn-primary w-full mt-6">지금 무료로 시작</a>
+      </div>
+    </aside>
+  </div>
+</section>
