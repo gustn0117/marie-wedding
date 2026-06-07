@@ -7,22 +7,29 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Brand — deep navy
+        // Brand — purple (Kmong-style)
         primary: {
-          DEFAULT: '#1e3a8a',
-          light: '#3b5bb8',
-          dark: '#152a63',
-          50: '#f3f6fc',
-          100: '#e5ecf7',
-          200: '#c8d6ed',
-          300: '#9ab3dd',
-          400: '#6188c8',
-          500: '#3b5bb8',
-          600: '#2546a0',
-          700: '#1e3a8a',
-          800: '#172d6d',
-          900: '#11214f',
-          950: '#0a1532',
+          DEFAULT: '#3617ce',
+          light: '#5d40ea',
+          dark: '#2410a0',
+          50: '#f3f0fd',
+          100: '#e6dffb',
+          200: '#d0c2f7',
+          300: '#a98bef',
+          400: '#7e54e3',
+          500: '#5d40ea',
+          600: '#3617ce',
+          700: '#2410a0',
+          800: '#1c0c78',
+          900: '#140952',
+          950: '#0a0429',
+        },
+        ink: {
+          DEFAULT: '#1a1a1a',
+          50: '#f4f4f5',
+          100: '#e4e4e7',
+          500: '#71717a',
+          900: '#1a1a1a',
         },
         // Cool neutrals
         secondary: {

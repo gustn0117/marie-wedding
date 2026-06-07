@@ -5,23 +5,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
-import Logo from './Logo';
 import type { AuthProfile } from './Header';
 import NotificationBadge from '@/features/notifications/components/NotificationBadge';
 
-const NAV_LINKS = [
-  { href: `${ROUTES.JOBS}?type=hiring`, label: '채용정보' },
+const CAT_NAV = [
+  { href: ROUTES.JOBS, label: '전체', icon: '🗂' },
+  { href: `${ROUTES.JOBS}?businessType=designer`, label: '디자인' },
+  { href: `${ROUTES.COMMUNITY}?category=tip`, label: '노하우' },
+  { href: `${ROUTES.JOBS}?businessType=studio`, label: '스튜디오' },
+  { href: `${ROUTES.JOBS}?businessType=makeup`, label: '메이크업' },
+  { href: `${ROUTES.JOBS}?businessType=planner`, label: '플래너' },
+  { href: `${ROUTES.JOBS}?businessType=mc`, label: '사회·축가' },
   { href: `${ROUTES.JOBS}?type=matching`, label: '파트너 섭외' },
-  { href: ROUTES.DIRECTORY, label: '업체 디렉토리' },
-  { href: ROUTES.EVENTS, label: '이벤트' },
-  { href: ROUTES.COMMUNITY, label: '커뮤니티' },
-] as const;
-
-const QUICK_LINKS = [
-  { href: `${ROUTES.JOBS}?region=seoul`, label: '서울 채용' },
-  { href: `${ROUTES.JOBS}?businessType=venue`, label: '예식장' },
-  { href: `${ROUTES.JOBS}?businessType=planner`, label: '웨딩플래너' },
-  { href: ROUTES.DIRECTORY, label: '업체 찾기' },
 ] as const;
 
 interface HeaderClientProps {
@@ -32,22 +27,17 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<AuthProfile | null>(initialProfile);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAuthenticated = !!profile;
-
-  const isActive = (href: string) => {
-    const path = href.split('?')[0];
-    return pathname === path || pathname.startsWith(`${path}/`);
-  };
+  const isHomeLike = pathname === '/' || pathname.startsWith('/jobs') || pathname.startsWith('/directory') || pathname.startsWith('/community');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-      setMobileMenuOpen(false);
     }
   };
 
@@ -60,246 +50,169 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
     window.location.href = '/';
   }, []);
 
-  return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/95 shadow-[0_2px_12px_rgba(31,41,55,0.06)] backdrop-blur">
-      <div className="hidden md:block bg-secondary-100 border-b border-gray-200">
-        <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 h-9 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-3 text-gray-600">
-            <span className="rounded border border-gray-300 bg-white px-2 py-0.5 font-bold text-gray-800">Marié 운영 네트워크</span>
-            <Link href={ROUTES.JOBS_NEW} className="hover:text-primary transition-colors">공고 등록</Link>
-            <Link href={ROUTES.DIRECTORY_REGISTER} className="hover:text-primary transition-colors">업체 등록</Link>
-            <Link href="/contact" className="hover:text-primary transition-colors">고객센터</Link>
-          </div>
-          <div className="flex items-center gap-3 text-gray-600">
-            {isAuthenticated ? (
-              <>
-                <Link href={ROUTES.MYPAGE} className="hover:text-primary transition-colors">마이페이지</Link>
-                <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="inline-flex items-center hover:text-primary transition-colors">
-                  알림
-                  <NotificationBadge profileId={profile.id} />
-                </Link>
-                {profile.role === 'admin' && (
-                  <Link href={ROUTES.ADMIN} className="hover:text-primary transition-colors">관리자</Link>
-                )}
-              </>
-            ) : (
-              <>
-                <Link href={ROUTES.LOGIN} className="hover:text-primary transition-colors">로그인</Link>
-                <span className="w-px h-3 bg-gray-300" />
-                <Link href={ROUTES.SIGNUP} className="hover:text-primary transition-colors">회원가입</Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+  const displayName = profile?.company_name || profile?.contact_name || '';
+  const initial = displayName.charAt(0) || '?';
 
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8">
-        <div className="h-[72px] flex items-center gap-5">
-          <Link href={ROUTES.HOME} className="shrink-0" aria-label="Marié 홈">
-            <Logo variant="full" size="md" />
+  return (
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
+      {/* 1단: 로고 + Biz토글 + 검색바 + 우측 메뉴 */}
+      <div className="max-w-[1280px] mx-auto px-5 h-[68px] flex items-center gap-5">
+        <Link href={ROUTES.HOME} className="text-2xl font-extrabold tracking-tight text-ink shrink-0">
+          Marié
+        </Link>
+
+        <div className="hidden md:flex items-center gap-2 shrink-0">
+          <span className="text-gray-300">|</span>
+          <Link href={`${ROUTES.JOBS}?type=matching`} className="text-sm font-semibold text-gray-700 hover:text-ink">
+            Marié Biz
+          </Link>
+          <label className="inline-flex items-center cursor-pointer ml-1">
+            <input type="checkbox" className="sr-only peer" />
+            <div className="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors relative">
+              <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-4" />
+            </div>
+          </label>
+        </div>
+
+        <form onSubmit={handleSearch} className="flex-1 max-w-[480px] hidden md:block">
+          <label className="header-search">
+            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="어떤 전문가가 필요하세요?"
+              className="bg-transparent border-none outline-none flex-1 text-[14px] placeholder:text-gray-500 text-ink"
+            />
+          </label>
+        </form>
+
+        <nav className="ml-auto flex items-center gap-1 shrink-0">
+          <Link href={`${ROUTES.JOBS}?type=matching`} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
+            엔터프라이즈 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">기업용</span>
+          </Link>
+          <Link href={ROUTES.MYPAGE} className="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
+            주문 관리
+          </Link>
+          <Link href={ROUTES.COMMUNITY} className="icon-btn" aria-label="커뮤니티">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+            </svg>
+          </Link>
+          {isAuthenticated && (
+            <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="icon-btn relative" aria-label="알림">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              <NotificationBadge profileId={profile.id} />
+            </Link>
+          )}
+          <Link href={ROUTES.DIRECTORY} className="icon-btn" aria-label="저장한 업체">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
           </Link>
 
-          <div className="hidden md:block flex-1" aria-hidden />
-
-          <form onSubmit={handleSearch} className="hidden md:flex w-full max-w-[640px] shrink-0">
-            <div className="flex h-12 w-full items-center overflow-hidden rounded border-2 border-primary bg-white shadow-sm focus-within:ring-2 focus-within:ring-primary-100">
-              <div className="pl-4 text-primary">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
-              </div>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="직무, 업체명, 지역으로 검색"
-                className="min-w-0 flex-1 px-3 text-[15px] outline-none placeholder:text-gray-400"
-              />
-              <button type="submit" className="h-full px-6 bg-primary text-sm font-bold text-white transition-colors hover:bg-primary-dark">
-                검색
-              </button>
-            </div>
-          </form>
-
-          <div className="hidden md:block flex-1" aria-hidden />
-
-          <div className="hidden lg:flex items-center gap-2">
-            <Link href={ROUTES.JOBS_NEW} className="btn-outline px-3.5 py-2 text-xs">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25A2.25 2.25 0 0118 20.65H6a2.25 2.25 0 01-2.25-2.25v-4.25M8.25 6.15V5.25A2.25 2.25 0 0110.5 3h3a2.25 2.25 0 012.25 2.25v.9" />
-              </svg>
-              공고 등록
-            </Link>
-            <Link href={ROUTES.COMMUNITY_NEW} className="btn-primary px-3.5 py-2 text-xs">
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              글쓰기
-            </Link>
-          </div>
-
-          {isAuthenticated && (
-            <div className="hidden md:block relative ml-auto lg:ml-0">
+          {isAuthenticated ? (
+            <div className="relative ml-1">
               <button
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                className="flex items-center gap-2 rounded border border-gray-200 bg-white px-2.5 py-2 hover:border-primary-300 transition-colors"
+                className="flex items-center gap-1"
               >
                 {profile.profile_image ? (
-                  <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt="" className="w-7 h-7 rounded object-cover" />
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt="" className="w-9 h-9 rounded-full object-cover border border-gray-200" />
                 ) : (
-                  <span className="w-7 h-7 rounded bg-primary-50 text-primary flex items-center justify-center text-xs font-bold">
-                    {profile.contact_name?.charAt(0) || '?'}
+                  <span className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-50 to-primary-100 border border-gray-200 flex items-center justify-center text-sm font-bold text-primary">
+                    {initial}
                   </span>
                 )}
-                <span className="max-w-[88px] truncate text-sm font-semibold text-gray-700">{profile.contact_name || '내 정보'}</span>
-                <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                <svg className={`w-3 h-3 text-gray-400 transition-transform ${profileMenuOpen ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </button>
-
               {profileMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-64 bg-white border border-gray-200 shadow-lg z-20 rounded overflow-hidden">
-                    <Link
-                      href={ROUTES.MYPAGE}
-                      onClick={() => setProfileMenuOpen(false)}
-                      className="flex items-center gap-3 px-4 py-4 hover:bg-primary-50/60 transition-colors"
-                    >
-                      {profile.profile_image ? (
-                        <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`} alt="" className="w-10 h-10 rounded object-cover shrink-0" />
-                      ) : (
-                        <span className="w-10 h-10 rounded bg-primary-50 text-primary flex items-center justify-center font-bold shrink-0">
-                          {profile.contact_name?.charAt(0) || '?'}
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-900 truncate">{profile.company_name || profile.contact_name}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
-                      </div>
+                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-20 rounded-xl overflow-hidden">
+                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                      <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
                     </Link>
-                    <div className="border-t border-gray-100 py-1">
-                      <MenuLink href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} label="프로필 관리" />
-                      <MenuLink href={ROUTES.MYPAGE_NOTIFICATIONS} onClick={() => setProfileMenuOpen(false)} label="알림" />
-                      <MenuLink href={ROUTES.MYPAGE_PASSWORD} onClick={() => setProfileMenuOpen(false)} label="비밀번호 변경" />
-                      {profile.role === 'admin' && (
-                        <MenuLink href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} label="관리자 패널" />
-                      )}
-                    </div>
-                    <div className="border-t border-gray-100 p-2">
-                      <button
-                        onClick={signOut}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 rounded hover:bg-state-urgent-bg hover:text-state-urgent transition-colors"
-                      >
-                        로그아웃
-                      </button>
-                    </div>
+                    <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
+                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">주문 관리</Link>
+                    {profile.role === 'admin' && (
+                      <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
+                    )}
+                    <button onClick={signOut} className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 border-t border-gray-100">로그아웃</button>
                   </div>
                 </>
               )}
             </div>
+          ) : (
+            <Link href={ROUTES.LOGIN} className="ml-1 px-4 h-9 inline-flex items-center text-sm font-bold border border-gray-300 hover:border-ink rounded-full">
+              로그인
+            </Link>
           )}
 
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden ml-auto w-10 h-10 flex items-center justify-center rounded border border-gray-200 text-gray-700"
-            aria-label="메뉴 열기"
+            className="md:hidden ml-1 icon-btn"
+            aria-label="메뉴"
           >
-            {mobileMenuOpen ? (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-              </svg>
-            )}
-          </button>
-        </div>
-
-        <nav className="hidden md:flex h-12 items-center gap-1 border-t border-gray-100">
-          <Link href={ROUTES.JOBS} className="mr-2 inline-flex h-8 items-center gap-1.5 rounded bg-primary px-3 text-sm font-bold text-white transition-colors hover:bg-primary">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
-            전체 메뉴
-          </Link>
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.label}
-              href={link.href}
-              className={`relative rounded px-3.5 py-2 text-[14px] font-bold transition-colors ${
-                isActive(link.href) ? 'bg-primary-50 text-primary' : 'text-gray-800 hover:bg-gray-50 hover:text-primary'
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-          <div className="ml-auto flex items-center gap-3 text-xs text-gray-500">
-            {QUICK_LINKS.map((link) => (
-              <Link key={link.label} href={link.href} className="hover:text-primary transition-colors">{link.label}</Link>
-            ))}
-          </div>
+          </button>
         </nav>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
-          <div className="px-4 py-3">
-            <form onSubmit={handleSearch}>
-              <div className="flex h-11 overflow-hidden rounded border-2 border-primary bg-white">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="직무, 업체명, 지역 검색"
-                  className="min-w-0 flex-1 px-3 text-sm outline-none"
-                />
-                <button type="submit" className="px-4 bg-primary text-white font-bold text-sm">검색</button>
-              </div>
-            </form>
-          </div>
-          <nav className="grid grid-cols-2 gap-1 px-4 pb-4">
-            {NAV_LINKS.map((link) => (
+      {/* 2단: 카테고리 nav */}
+      {isHomeLike && (
+        <div className="border-t border-gray-100 hidden md:block">
+          <div className="max-w-[1280px] mx-auto px-5 flex items-center gap-1 overflow-x-auto">
+            <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
+              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-green-500 text-white text-[10px]">🌿</span>
+              업종별
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+              </svg>
+            </Link>
+            {CAT_NAV.map((c) => (
               <Link
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`px-3 py-3 rounded border text-sm font-bold ${
-                  isActive(link.href) ? 'border-primary bg-primary-50 text-primary' : 'border-gray-200 text-gray-700'
-                }`}
+                key={c.label}
+                href={c.href}
+                className={`cat-nav-link ${pathname.startsWith(c.href.split('?')[0]) && c.href !== ROUTES.JOBS ? 'cat-nav-link-active' : ''}`}
               >
-                {link.label}
+                {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
               </Link>
             ))}
-          </nav>
-          <div className="border-t border-gray-100 px-4 py-3">
-            {isAuthenticated ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Link href={ROUTES.MYPAGE} onClick={() => setMobileMenuOpen(false)} className="btn-secondary text-sm">마이페이지</Link>
-                <button onClick={signOut} className="btn-outline text-sm">로그아웃</button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link href={ROUTES.LOGIN} onClick={() => setMobileMenuOpen(false)} className="btn-secondary text-sm">로그인</Link>
-                <Link href={ROUTES.SIGNUP} onClick={() => setMobileMenuOpen(false)} className="btn-primary text-sm">회원가입</Link>
-              </div>
-            )}
+            <Link href={ROUTES.DIRECTORY} className={`cat-nav-link ml-auto ${pathname.startsWith('/directory') ? 'cat-nav-link-active' : ''}`}>디렉토리</Link>
+            <Link href={ROUTES.COMMUNITY} className={`cat-nav-link ${pathname.startsWith('/community') ? 'cat-nav-link-active' : ''}`}>커뮤니티</Link>
+            <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">Marié Biz</Link>
           </div>
         </div>
       )}
-    </header>
-  );
-}
 
-function MenuLink({ href, label, onClick }: { href: string; label: string; onClick: () => void }) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-primary-50/70 hover:text-primary transition-colors"
-    >
-      {label}
-    </Link>
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white">
+          <div className="px-4 py-3">
+            <form onSubmit={handleSearch}>
+              <label className="header-search">
+                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="검색" className="bg-transparent outline-none flex-1 text-sm" />
+              </label>
+            </form>
+          </div>
+          <nav className="grid grid-cols-2 gap-1 px-4 pb-4">
+            {CAT_NAV.map((c) => (
+              <Link key={c.label} href={c.href} onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded border border-gray-200 text-sm font-bold text-gray-700">{c.label}</Link>
+            ))}
+          </nav>
+        </div>
+      )}
+    </header>
   );
 }

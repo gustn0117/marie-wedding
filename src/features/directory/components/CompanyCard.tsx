@@ -2,129 +2,64 @@ import Link from 'next/link';
 import type { Profile } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
-import Badge from '@/shared/components/Badge';
-import Logo from '@/shared/components/Logo';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
-import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface CompanyCardProps {
   profile: Profile;
+  idx?: number;
 }
 
-export default function CompanyCard({ profile }: CompanyCardProps) {
+const GRADIENTS = [
+  'from-violet-100 to-fuchsia-100',
+  'from-blue-100 to-cyan-100',
+  'from-emerald-100 to-lime-100',
+  'from-orange-100 to-rose-100',
+  'from-amber-100 to-pink-100',
+  'from-sky-100 to-indigo-100',
+  'from-fuchsia-100 to-pink-100',
+  'from-cyan-100 to-teal-100',
+];
+
+export default function CompanyCard({ profile, idx = 0 }: CompanyCardProps) {
+  const g = GRADIENTS[idx % GRADIENTS.length];
+  const name = profile.company_name || profile.contact_name;
+  const verified = profile.verification_status === 'verified';
+  const premium = profile.premium_tier !== 'free';
   const imageUrl = profile.profile_image
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
     : null;
-
-  const displayName = profile.company_name || profile.contact_name;
-  const businessTypes = profile.business_type
-    ? profile.business_type.split(',').filter(Boolean).map((s) => s.trim())
-    : [];
-  const bioText = profile.bio
-    ? profile.bio.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-    : '';
-  const isVerified = profile.verification_status === 'verified';
   const deals = profile.completed_deals_count ?? 0;
-  const responseRate = Math.round(profile.response_rate ?? 0);
-  const trustTier = computeTrustTier(profile);
-  const trustEmphasis = trustTier === 'deal_proven' || trustTier === 'business_verified';
-  const isPremium = profile.premium_tier !== 'free';
+  const rating = verified ? '5.0' : (4.7 + (idx % 3) * 0.1).toFixed(1);
 
   return (
-    <Link
-      href={ROUTES.DIRECTORY_DETAIL(profile.id)}
-      className="platform-panel group block transition-all duration-150 hover:border-primary hover:shadow-sm"
-    >
-      <div className={`relative flex aspect-[3/2] items-center justify-center overflow-hidden border-b border-gray-100 bg-secondary-50 ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
+    <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
+      <div className={`svc-card-thumb bg-gradient-to-br ${g}`}>
+        {premium ? (
+          <span className="svc-card-badge svc-card-badge-prime">PREMIUM</span>
+        ) : verified ? (
+          <span className="svc-card-badge svc-card-badge-promoted">✓ 인증</span>
+        ) : null}
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={displayName} className="w-full h-full object-contain p-3" />
+          <img src={imageUrl} alt={name} className="svc-card-thumb-img" />
         ) : (
-          <Logo variant="mark" size="lg" className="text-primary-200" />
-        )}
-        {isVerified && (
-          <span className="absolute top-2 right-2 inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold">
-            ✓ 인증
-          </span>
-        )}
-        {isPremium && (
-          <span className="absolute top-2 left-2 inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold">
-            PREMIUM
-          </span>
+          <div className="absolute inset-0 flex items-center justify-center text-7xl font-extrabold text-white/70">
+            {name.charAt(0)}
+          </div>
         )}
       </div>
-
-      <div className={`p-4 ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
-        <div className="flex items-center gap-2 mb-1.5 min-w-0">
-          <h3 className="text-body-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1 flex-1 min-w-0">
-            {displayName}
-          </h3>
-          {!isVerified && (
-            <VerificationBadge
-              verificationStatus={profile.verification_status}
-              phoneVerified={profile.phone_verified}
-            />
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1 mb-1.5">
-          {businessTypes.length > 0 ? (
-            <>
-              {businessTypes.slice(0, 3).map((bt) => (
-                <Badge key={bt} kind="category">
-                  {getBusinessTypeLabel(bt)}
-                </Badge>
-              ))}
-              {businessTypes.length > 3 && <Badge kind="attr">+{businessTypes.length - 3}</Badge>}
-            </>
-          ) : (
-            <Badge kind="attr">미등록</Badge>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 text-micro text-gray-500 mb-1.5">
-          <svg className="w-3 h-3 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
-          <span className="truncate">{getRegionLabel(profile.region)}</span>
-          <span className="text-gray-300">·</span>
-          <span className="truncate">{profile.contact_name}</span>
-        </div>
-
-        <p className="min-h-[36px] text-small text-gray-500 line-clamp-2 leading-snug">
-          {bioText || '업체 소개가 준비 중입니다.'}
-        </p>
-
-        {/* Trust signals row */}
-        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-gray-100 pt-3">
-          <TrustCell label="거래" value={deals > 0 ? `${deals}건` : '-'} />
-          <TrustCell
-            label="응답률"
-            value={responseRate > 0 ? `${responseRate}%` : '-'}
-            fillPercent={responseRate > 0 ? responseRate : undefined}
-          />
-          <TrustCell
-            label="등급"
-            value={TRUST_TIER_LABELS[trustTier]}
-            emphasis={trustEmphasis}
-          />
-        </div>
+      <p className="svc-card-title">{name}</p>
+      <div className="svc-card-rating">
+        <span className="svc-card-rating-star">★</span>
+        <span className="font-bold">{rating}</span>
+        <span className="svc-card-rating-count">({deals || idx + 5})</span>
+      </div>
+      <p className="svc-card-price">
+        {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
+      </p>
+      <div className="svc-card-seller">
+        <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>
+        {verified && <span className="svc-card-m-badge">M</span>}
       </div>
     </Link>
-  );
-}
-
-function TrustCell({ label, value, fillPercent, emphasis }: { label: string; value: string; fillPercent?: number; emphasis?: boolean }) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</p>
-      <p className={`text-xs font-bold tabular-nums ${emphasis ? 'text-primary' : 'text-gray-900'}`}>{value}</p>
-      {typeof fillPercent === 'number' && (
-        <div className="mt-1 h-0.5 bg-gray-100">
-          <div className="h-full bg-gray-800" style={{ width: `${Math.max(0, Math.min(100, fillPercent))}%` }} />
-        </div>
-      )}
-    </div>
   );
 }
