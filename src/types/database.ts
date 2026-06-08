@@ -478,6 +478,9 @@ export interface Settlement {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  // joined (settlement-service의 SETTLEMENT_WITH_RELATIONS 쿼리에서 채워짐)
+  contract?: Pick<Contract, 'id' | 'title' | 'event_date' | 'party_a_org_name' | 'party_b_org_name' | 'party_a_profile_id' | 'party_b_profile_id'>;
+  payee?: Profile;
 }
 
 export interface AuditLog {
