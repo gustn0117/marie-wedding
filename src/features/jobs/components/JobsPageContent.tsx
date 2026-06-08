@@ -18,6 +18,7 @@ import JobCard from './JobCard';
 import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import EmptyState from '@/shared/components/EmptyState';
+import PageHeader from '@/shared/components/PageHeader';
 
 const PAGE_SIZE = 20;
 
@@ -187,53 +188,17 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   return (
     <div className="space-y-4">
-      <section className="platform-hero">
-        <div className="platform-hero-grid">
-          <div className="platform-hero-copy">
-            <div>
-            <p className="platform-eyebrow">채용 정보</p>
-            <h1 className="platform-hero-title">{pageTitle}</h1>
-            <p className="platform-hero-text">
-              웨딩 업계 직무, 지역, 고용형태별 공고를 한 화면에서 비교하고 지원 흐름까지 이어갑니다.
-            </p>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
-              <HeaderMetric label="전체 결과" value={`${totalCount.toLocaleString()}건`} />
-              <HeaderMetric label="선택 조건" value={`${selectedFilterCount.toLocaleString()}개`} />
-              <HeaderMetric label="보기 방식" value={viewMode === 'list' ? '리스트' : '카드'} />
-            </div>
-          </div>
-          <div className="platform-panel-soft grid content-start gap-2 p-3">
-            <div className="grid grid-cols-2 gap-2">
-            <Link
-              href={`${ROUTES.JOBS}?type=hiring`}
-              className={`rounded border px-4 py-3 text-center text-sm font-bold transition-colors ${
-                postingType === 'hiring' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
-              }`}
-            >
-              채용정보
-            </Link>
-            <Link
-              href={`${ROUTES.JOBS}?type=matching`}
-              className={`rounded border px-4 py-3 text-center text-sm font-bold transition-colors ${
-                postingType === 'matching' ? 'border-primary bg-primary text-white' : 'border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary'
-              }`}
-            >
-              파트너 섭외
-            </Link>
-            </div>
-            <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[46px]">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              공고 등록
-            </Link>
-          </div>
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="채용 정보"
+        title={pageTitle}
+        description={`전체 ${totalCount.toLocaleString()}건 · 선택 조건 ${selectedFilterCount}개`}
+        actions={
+          <Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>
+        }
+      />
 
       {/* Filter Section */}
-      <div className="platform-filter-dock" ref={filterDockRef}>
+      <div className="surface overflow-hidden" ref={filterDockRef}>
         {/* Filter Controls Bar */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-white">
           {/* Region Dropdown */}
@@ -774,14 +739,5 @@ function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v
         ))}
       </div>
     </details>
-  );
-}
-
-function HeaderMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="platform-stat-card min-h-[74px]">
-      <span className="platform-stat-label">{label}</span>
-      <span className="platform-stat-value">{value}</span>
-    </div>
   );
 }

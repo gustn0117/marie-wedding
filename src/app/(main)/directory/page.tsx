@@ -7,6 +7,7 @@ import CompanyFilters from '@/features/directory/components/CompanyFilters';
 import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,59 +75,29 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <section className="platform-hero">
-        <div className="platform-hero-grid">
-          <div className="platform-hero-copy">
-            <div>
-            <p className="platform-eyebrow">업체 디렉토리</p>
-            <h1 className="platform-hero-title">업체 디렉토리</h1>
-            <p className="platform-hero-text">
-              웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 업종과 지역별로 탐색하세요.
-            </p>
-            </div>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <div className="platform-stat-card">
-                <span className="platform-stat-label">등록 업체</span>
-                <span className="platform-stat-value">{count.toLocaleString()}개</span>
-              </div>
-              <div className="platform-stat-card">
-                <span className="platform-stat-label">선택 조건</span>
-                <span className="platform-stat-value">{activeFilterCount.toLocaleString()}개</span>
-              </div>
-            </div>
-          </div>
-          <div className="platform-panel-soft p-3">
-            <p className="text-[12px] font-bold text-gray-500">파트너 운영</p>
-            <div className="mt-3 grid gap-2">
-              <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary w-full">
-                업체 등록
-              </Link>
-              <Link href={`${ROUTES.JOBS}?type=matching`} className="btn-secondary w-full">
-                섭외 공고 보기
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="업체 디렉토리"
+        title="업체 디렉토리"
+        description={`웨딩홀·드레스·스튜디오·메이크업 등 협업 파트너 탐색 · 등록 업체 ${count.toLocaleString()}개 · 선택 조건 ${activeFilterCount}개`}
+        actions={
+          <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm">+ 업체 등록</Link>
+        }
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[240px_1fr]">
-        <Suspense
-          fallback={<div className="hidden lg:block h-[400px] bg-gray-100 rounded-sm animate-pulse" />}
-        >
-          <CompanyFilters />
-        </Suspense>
-        <Suspense
-          fallback={
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="card animate-pulse h-48" />
-              ))}
-            </div>
-          }
-        >
-          <CompanyList initialProfiles={profiles} initialCount={count} />
-        </Suspense>
-      </div>
+      <Suspense fallback={<div className="surface h-16 animate-pulse" />}>
+        <CompanyFilters />
+      </Suspense>
+      <Suspense
+        fallback={
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="surface animate-pulse h-48" />
+            ))}
+          </div>
+        }
+      >
+        <CompanyList initialProfiles={profiles} initialCount={count} />
+      </Suspense>
     </div>
   );
 }

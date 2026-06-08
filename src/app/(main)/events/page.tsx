@@ -4,6 +4,7 @@ import { formatDate, formatRelativeTime } from '@/shared/utils/format';
 import { EVENT_TYPES } from '@/features/events/types';
 import Logo from '@/shared/components/Logo';
 import type { Event } from '@/types/database';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -56,24 +57,14 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <section className="platform-panel p-5">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
-          <div>
-            <p className="platform-eyebrow">이벤트</p>
-            <h1 className="mt-1 text-[28px] font-bold leading-tight text-primary">이벤트 & 소식</h1>
-            <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
-              Marié의 새로운 이벤트, 공지, 웨딩 업계 소식을 확인하세요.
-            </p>
-          </div>
-          <div className="metric-tile">
-            <span className="block text-[12px] font-bold text-gray-500">등록 소식</span>
-            <span className="mt-1 block text-[20px] font-bold text-primary">{count.toLocaleString()}건</span>
-          </div>
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="이벤트"
+        title="이벤트 & 소식"
+        description={`Marié의 새로운 이벤트·공지·웨딩 업계 소식 · 등록 소식 ${count.toLocaleString()}건`}
+      />
 
-      {/* Filter Tabs */}
-      <div className="platform-panel flex overflow-x-auto">
+      {/* Filter Tabs (rail이 모바일 칩 처리하지만 디테일 분류는 본문 유지) */}
+      <div className="surface flex overflow-x-auto">
         <Link
           href="/events"
           className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
@@ -97,7 +88,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
 
       {/* Events List */}
       {events.length === 0 ? (
-        <div className="platform-panel py-16 text-center">
+        <div className="surface py-16 text-center">
           <svg className="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
           </svg>
