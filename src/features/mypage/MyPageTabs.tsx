@@ -216,40 +216,44 @@ function FilterableApplicationList({
         </div>
       ) : (
         <div className="divide-y divide-gray-100">
-          {filtered.map((item) => (
-            <Link
-              key={item.id}
-              href={item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS}
-              className="platform-data-row block px-4 py-3"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-bold text-gray-900">
-                    {item.job?.title ?? '공고'}
-                  </p>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {mode === 'received'
-                      ? item.applicant?.company_name || item.applicant?.contact_name || '지원자'
-                      : item.job?.author?.company_name || item.job?.author?.contact_name || '작성자'}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-gray-400">{item.message}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
-                  {item.hiring_completed_at && item.applicant_completed_at && (
-                    <Link
-                      href={`/applications/${item.id}/review`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="mt-1 block text-[10px] font-bold text-primary underline"
-                    >
-                      ✓ 거래 완료 · 리뷰 작성
-                    </Link>
-                  )}
-                  <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
+          {filtered.map((item) => {
+            // Link 안에 Link 중첩은 HTML 스펙(§13.2.6.4.7) 위반.
+            // 브라우저 파서가 outer anchor를 강제 종료하면서 클릭 핸들러가 두 곳 부착되어
+            // 1클릭에 다중 네비게이션이 발생함. outer 카드는 div + 단일 내부 Link로 구성.
+            const cardHref = item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS;
+            const showReviewLink = item.hiring_completed_at && item.applicant_completed_at;
+            return (
+              <div key={item.id} className="platform-data-row relative px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    {/* 카드 전체 클릭 영역 — pseudo overlay로 안전하게. inner Link보다 낮은 z. */}
+                    <Link href={cardHref} className="absolute inset-0 z-0" aria-label={item.job?.title ?? '공고 보기'} />
+                    <p className="relative z-[1] truncate text-sm font-bold text-gray-900">
+                      {item.job?.title ?? '공고'}
+                    </p>
+                    <p className="relative z-[1] mt-1 text-xs text-gray-500">
+                      {mode === 'received'
+                        ? item.applicant?.company_name || item.applicant?.contact_name || '지원자'
+                        : item.job?.author?.company_name || item.job?.author?.contact_name || '작성자'}
+                    </p>
+                    <p className="relative z-[1] mt-1 line-clamp-2 text-xs text-gray-400">{item.message}</p>
+                  </div>
+                  <div className="relative z-[1] shrink-0 text-right">
+                    <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
+                    {showReviewLink && (
+                      <Link
+                        href={`/applications/${item.id}/review`}
+                        className="mt-1 block text-[10px] font-bold text-primary underline"
+                      >
+                        ✓ 거래 완료 · 리뷰 작성
+                      </Link>
+                    )}
+                    <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
+                  </div>
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

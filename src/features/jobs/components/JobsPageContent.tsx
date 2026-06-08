@@ -16,6 +16,7 @@ import ViewToggle, { type ViewMode } from '@/shared/components/ViewToggle';
 import JobListRow from './JobListRow';
 import JobCard from './JobCard';
 import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
+import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
 const PAGE_SIZE = 20;
 
@@ -118,7 +119,14 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
     setRegionDropdownOpen(false);
     setBusinessTypeDropdownOpen(false);
     setEmploymentTypeDropdownOpen(false);
+    setBrowsingRegion('');
   };
+
+  // 외부 클릭/ESC로 열린 dropdown 닫기.
+  // filter dock 전체를 wrapper로 — 다른 trigger 클릭은 onClick의 closeAllDropdowns로 처리되고,
+  // dock 밖 클릭이면 capture phase에서 가로채 자동 close.
+  const anyDropdownOpen = regionDropdownOpen || businessTypeDropdownOpen || employmentTypeDropdownOpen;
+  const filterDockRef = useOutsideClick<HTMLDivElement>(anyDropdownOpen, closeAllDropdowns);
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -224,7 +232,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       </section>
 
       {/* Filter Section */}
-      <div className="platform-filter-dock">
+      <div className="platform-filter-dock" ref={filterDockRef}>
         {/* Filter Controls Bar */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-white">
           {/* Region Dropdown */}

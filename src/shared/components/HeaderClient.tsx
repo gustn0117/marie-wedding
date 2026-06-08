@@ -2,22 +2,33 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import type { AuthProfile } from './Header';
 import NotificationBadge from '@/features/notifications/components/NotificationBadge';
+import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
+// 주의: '노하우' category=tips (복수) — POST_CATEGORIES 정의와 일치.
+// 이전엔 ?category=tip(단수)이라 커뮤니티 페이지에서 eq('category', 'tip') 매칭이 0건이었음.
 const CAT_NAV = [
   { href: ROUTES.JOBS, label: '전체', icon: '🗂' },
   { href: `${ROUTES.JOBS}?businessType=designer`, label: '디자인' },
-  { href: `${ROUTES.COMMUNITY}?category=tip`, label: '노하우' },
+  { href: `${ROUTES.COMMUNITY}?category=tips`, label: '노하우' },
   { href: `${ROUTES.JOBS}?businessType=studio`, label: '스튜디오' },
   { href: `${ROUTES.JOBS}?businessType=makeup`, label: '메이크업' },
   { href: `${ROUTES.JOBS}?businessType=planner`, label: '플래너' },
   { href: `${ROUTES.JOBS}?businessType=mc`, label: '사회·축가' },
   { href: `${ROUTES.JOBS}?type=matching`, label: '파트너 섭외' },
 ] as const;
+
+// CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
+function parseNavHref(href: string): { path: string; queryKey: string | null; queryValue: string | null } {
+  const [path, search] = href.split('?');
+  if (!search) return { path, queryKey: null, queryValue: null };
+  const [k, v] = search.split('=');
+  return { path, queryKey: k ?? null, queryValue: v ?? null };
+}
 
 interface HeaderClientProps {
   initialProfile: AuthProfile | null;
@@ -26,10 +37,16 @@ interface HeaderClientProps {
 export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<AuthProfile | null>(initialProfile);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // 옛 패턴 (<div className="fixed inset-0 z-10" onClick={close} />)은 본문 첫 클릭을 흡수.
+  // ref-based outside-click으로 본문 카드/링크 클릭을 정상 통과시킴.
+  const closeProfileMenu = useCallback(() => setProfileMenuOpen(false), []);
+  const profileMenuRef = useOutsideClick<HTMLDivElement>(profileMenuOpen, closeProfileMenu);
 
   const isAuthenticated = !!profile;
   const isHomeLike = pathname === '/' || pathname.startsWith('/jobs') || pathname.startsWith('/directory') || pathname.startsWith('/community');
@@ -110,10 +127,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           </Link>
 
           {isAuthenticated ? (
-            <div className="relative ml-1">
+            <div ref={profileMenuRef} className="relative ml-1">
               <button
+                type="button"
                 onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                 className="flex items-center gap-1"
+                aria-haspopup="menu"
+                aria-expanded={profileMenuOpen}
               >
                 {profile.profile_image ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -128,21 +148,18 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                 </svg>
               </button>
               {profileMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setProfileMenuOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-20 rounded-xl overflow-hidden">
-                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
-                      <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
-                    </Link>
-                    <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
-                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원/문의 관리</Link>
-                    {profile.role === 'admin' && (
-                      <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
-                    )}
-                    <button onClick={signOut} className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 border-t border-gray-100">로그아웃</button>
-                  </div>
-                </>
+                <div role="menu" className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 shadow-lg z-20 rounded-xl overflow-hidden">
+                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100">
+                    <p className="text-sm font-bold text-gray-900 truncate">{displayName}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
+                  </Link>
+                  <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
+                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원/문의 관리</Link>
+                  {profile.role === 'admin' && (
+                    <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
+                  )}
+                  <button type="button" onClick={signOut} className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 border-t border-gray-100">로그아웃</button>
+                </div>
               )}
             </div>
           ) : (
@@ -174,15 +191,27 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
               </svg>
             </Link>
-            {CAT_NAV.map((c) => (
-              <Link
-                key={c.label}
-                href={c.href}
-                className={`cat-nav-link ${pathname.startsWith(c.href.split('?')[0]) && c.href !== ROUTES.JOBS ? 'cat-nav-link-active' : ''}`}
-              >
-                {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
-              </Link>
-            ))}
+            {CAT_NAV.map((c) => {
+              // 정확 매칭: pathname이 일치하고 query param도 일치할 때만 active.
+              // 이전: pathname.startsWith로만 비교 → /jobs?businessType=X일 때
+              // 모든 jobs 서브카테고리(디자인·스튜디오·메이크업·플래너·...) 동시 활성화 버그.
+              const { path, queryKey, queryValue } = parseNavHref(c.href);
+              const isActive = pathname === path && (
+                queryKey === null
+                  ? !searchParams.toString() || c.href === ROUTES.JOBS
+                  : searchParams.get(queryKey) === queryValue
+              );
+              return (
+                <Link
+                  key={c.label}
+                  href={c.href}
+                  className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
+                </Link>
+              );
+            })}
             <Link href={ROUTES.DIRECTORY} className={`cat-nav-link ml-auto ${pathname.startsWith('/directory') ? 'cat-nav-link-active' : ''}`}>디렉토리</Link>
             <Link href={ROUTES.COMMUNITY} className={`cat-nav-link ${pathname.startsWith('/community') ? 'cat-nav-link-active' : ''}`}>커뮤니티</Link>
             <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">파트너 섭외</Link>

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { Job, JobStatus } from '@/types/database';
 import { jobService } from '@/features/jobs/services/job-service';
 import { toast } from '@/shared/components/Toast';
+import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
 const ACTIONS: { value: 'open' | 'closed' | 'filled' | 'hidden'; label: string; description: string }[] = [
   { value: 'open', label: '다시 모집', description: '공고를 모집중으로 되돌립니다' },
@@ -15,6 +16,13 @@ const ACTIONS: { value: 'open' | 'closed' | 'filled' | 'hidden'; label: string; 
 export default function JobStatusMenu({ job, onChange }: { job: Job; onChange?: (next: Job) => void }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // 이전 구현: <button className="fixed inset-0 z-10"> 오버레이로 외부 클릭 처리.
+  // 문제: 같은 리스트의 다른 행 트리거가 오버레이에 가려져 1차 클릭이 흡수됨 →
+  // "두 번 클릭해야 한다" 또는 "다른 행 상태 메뉴가 안 열린다" 버그.
+  // 수정: viewport overlay 제거 + useOutsideClick으로 ref 영역 외 클릭만 capture phase로 감지.
+  const close = useCallback(() => setOpen(false), []);
+  const wrapRef = useOutsideClick<HTMLDivElement>(open, close);
 
   async function apply(status: 'open' | 'closed' | 'filled' | 'hidden') {
     if (status === job.status) { setOpen(false); return; }
@@ -38,7 +46,7 @@ export default function JobStatusMenu({ job, onChange }: { job: Job; onChange?: 
   }
 
   return (
-    <div className="relative" onClick={(e) => e.stopPropagation()}>
+    <div ref={wrapRef} className="relative" onClick={(e) => e.stopPropagation()}>
       <button
         type="button"
         onClick={toggle}
@@ -50,28 +58,20 @@ export default function JobStatusMenu({ job, onChange }: { job: Job; onChange?: 
         상태 ▾
       </button>
       {open && (
-        <>
-          <button
-            type="button"
-            aria-hidden
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-10 cursor-default"
-          />
-          <div role="menu" className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
-            {ACTIONS.filter((a) => a.value !== job.status).map((a) => (
-              <button
-                key={a.value}
-                type="button"
-                onClick={() => apply(a.value)}
-                disabled={busy}
-                className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <p className="text-sm font-bold text-gray-900">{a.label}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>
-              </button>
-            ))}
-          </div>
-        </>
+        <div role="menu" className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
+          {ACTIONS.filter((a) => a.value !== job.status).map((a) => (
+            <button
+              key={a.value}
+              type="button"
+              onClick={() => apply(a.value)}
+              disabled={busy}
+              className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              <p className="text-sm font-bold text-gray-900">{a.label}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{a.description}</p>
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
