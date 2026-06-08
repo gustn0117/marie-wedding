@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Job } from '@/types/database';
 import type { JobFormData, JobFilters } from '../types';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 
 const PAGE_SIZE_DEFAULT = 12;
 
@@ -31,7 +33,8 @@ export const jobService = {
     }
 
     if (filters?.businessType) {
-      query = query.eq('business_type', filters.businessType);
+      const types = filters.businessType.split(',').map((t) => t.trim()).filter(Boolean);
+      if (types.length > 0) query = query.in('business_type', types);
     }
 
     if (filters?.employmentType) {
@@ -39,11 +42,13 @@ export const jobService = {
     }
 
     if (filters?.region) {
-      query = query.eq('region', filters.region);
+      const details = REGION_DETAILS[filters.region]?.map((d) => d.value) ?? [];
+      query = query.in('region', [filters.region, ...details]);
     }
 
     if (filters?.search) {
-      query = query.ilike('title', `%${filters.search}%`);
+      const term = normalizeSearchTerm(filters.search);
+      if (term) query = query.ilike('title', `%${term}%`);
     }
 
     if (filters?.authorId) {

@@ -11,6 +11,7 @@ import {
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Job, Post, Profile } from '@/types/database';
 import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,10 +21,6 @@ export const metadata = {
 
 interface PageProps {
   searchParams: Record<string, string | undefined>;
-}
-
-function normalizeSearchTerm(value: string): string {
-  return value.replace(/[,%]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 async function search(q: string) {

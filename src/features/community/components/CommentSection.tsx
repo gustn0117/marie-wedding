@@ -33,12 +33,21 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     setAdoptingId(commentId ?? 'reset');
     try {
       const sb = createClient();
-      const { error } = await sb.from('posts').update({ adopted_comment_id: commentId }).eq('id', postId);
+      const { error } = await sb.rpc('set_adopted_comment', {
+        p_post_id: postId,
+        p_comment_id: commentId,
+      });
       if (error) throw error;
       setAdoptedId(commentId);
       toast(commentId ? '댓글을 채택했습니다.' : '채택을 취소했습니다.', 'success');
-    } catch {
-      toast('채택 처리에 실패했습니다.', 'error');
+    } catch (err) {
+      const msg = (err as { message?: string })?.message ?? '';
+      let userMsg = '채택 처리에 실패했습니다.';
+      if (msg.includes('cannot_adopt_own_comment')) userMsg = '자신의 댓글은 채택할 수 없습니다.';
+      else if (msg.includes('comment_post_mismatch')) userMsg = '다른 글의 댓글은 채택할 수 없습니다.';
+      else if (msg.includes('post_not_found_or_not_author')) userMsg = '권한이 없습니다.';
+      else if (msg.includes('comment_not_found')) userMsg = '댓글을 찾을 수 없습니다.';
+      toast(userMsg, 'error');
     } finally {
       setAdoptingId(null);
     }

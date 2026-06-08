@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Post, Comment } from '@/types/database';
 import type { PostFormData, PostFilters } from '../types';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -37,9 +38,10 @@ export const communityService = {
     }
 
     if (filters?.search) {
-      query = query.or(
-        `title.ilike.%${filters.search}%,content.ilike.%${filters.search}%`,
-      );
+      const term = normalizeSearchTerm(filters.search);
+      if (term) {
+        query = query.or(`title.ilike.%${term}%,content.ilike.%${term}%`);
+      }
     }
 
     if (filters?.authorId) {

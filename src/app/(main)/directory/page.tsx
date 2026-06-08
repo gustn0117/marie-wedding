@@ -2,9 +2,11 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 import CompanyFilters from '@/features/directory/components/CompanyFilters';
 import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,13 +33,27 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     .eq('is_directory_listed', true);
 
   if (searchParams.businessType) {
-    query = query.ilike('business_type', `%${searchParams.businessType}%`);
+    const types = searchParams.businessType.split(',').map((t) => t.trim()).filter(Boolean);
+    if (types.length > 0) {
+      const orPart = types
+        .map((t) => `business_type.ilike.%${normalizeSearchTerm(t)}%`)
+        .filter((s) => !s.includes('ilike.%%'))
+        .join(',');
+      if (orPart) query = query.or(orPart);
+    }
   }
-  if (searchParams.region) {
-    query = query.ilike('region', `%${searchParams.region}%`);
+  if (searchParams.subRegion) {
+    const subs = searchParams.subRegion.split(',').map((r) => r.trim()).filter(Boolean);
+    if (subs.length > 0) query = query.in('region', subs);
+  } else if (searchParams.region) {
+    const details = REGION_DETAILS[searchParams.region]?.map((d) => d.value) ?? [];
+    query = query.in('region', [searchParams.region, ...details]);
   }
   if (searchParams.search) {
-    query = query.or(`company_name.ilike.%${searchParams.search}%,contact_name.ilike.%${searchParams.search}%`);
+    const term = normalizeSearchTerm(searchParams.search);
+    if (term) {
+      query = query.or(`company_name.ilike.%${term}%,contact_name.ilike.%${term}%`);
+    }
   }
 
   // 정렬: 프리미엄 → 거래 검증 → 인증 업체 → 가나다순

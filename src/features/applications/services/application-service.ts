@@ -9,6 +9,17 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   cancelled: '취소',
 };
 
+export function translateApplicationStatusError(msg: string): string {
+  if (msg.includes('status_not_allowed_for_author')) return '공고 작성자는 이 상태로 변경할 수 없습니다.';
+  if (msg.includes('status_not_allowed_for_applicant')) return '지원자는 취소만 가능합니다.';
+  if (msg.includes('cannot_cancel_final_status')) return '이미 처리된 신청은 취소할 수 없습니다.';
+  if (msg.includes('not_party_to_application')) return '권한이 없습니다.';
+  if (msg.includes('application_not_found')) return '신청 정보를 찾을 수 없습니다.';
+  if (msg.includes('job_not_found')) return '공고를 찾을 수 없습니다.';
+  if (msg.includes('unauthorized')) return '로그인이 필요합니다.';
+  return '상태 변경에 실패했습니다.';
+}
+
 export const applicationService = {
   async getApplicationForJob(jobId: string, applicantId: string): Promise<Application | null> {
     const supabase = createClient();
@@ -78,7 +89,7 @@ export const applicationService = {
       p_application_id: id,
       p_status: status,
     });
-    if (rpcError) throw rpcError;
+    if (rpcError) throw new Error(translateApplicationStatusError(rpcError.message));
 
     const { data, error: fetchError } = await supabase
       .from('applications')

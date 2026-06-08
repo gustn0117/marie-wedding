@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Event } from '@/types/database';
 import type { EventFormData } from '../types';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const eventService = {
   async getEvents(
@@ -19,8 +20,10 @@ export const eventService = {
 
     if (filters?.type) query = query.eq('type', filters.type);
     if (filters?.search) {
-      const escaped = filters.search.replace(/[%_]/g, '\\$&');
-      query = query.or(`title.ilike.%${escaped}%,content.ilike.%${escaped}%`);
+      const term = normalizeSearchTerm(filters.search);
+      if (term) {
+        query = query.or(`title.ilike.%${term}%,content.ilike.%${term}%`);
+      }
     }
 
     query = query

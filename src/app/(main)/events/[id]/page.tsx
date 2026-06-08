@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
-import { createServiceClient } from '@/lib/supabase/service';
 import { formatDate, formatRelativeTime } from '@/shared/utils/format';
 import { EVENT_TYPES } from '@/features/events/types';
 import type { Event } from '@/types/database';
@@ -23,9 +22,8 @@ async function getEvent(id: string): Promise<Event | null> {
     .single();
   if (!data) return null;
 
-  // Increment view count (service role)
-  const svc = createServiceClient();
-  await svc.from('events').update({ view_count: (data.view_count || 0) + 1 }).eq('id', id);
+  // Atomic view count via RPC (SECURITY DEFINER)
+  await supabase.rpc('increment_event_view_count', { p_event_id: id });
 
   return data as Event;
 }

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { createServiceClient } from '@/lib/supabase/service';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 function unauthorized() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -58,7 +59,10 @@ export async function POST(request: NextRequest) {
           .range(from, from + pageSize - 1);
 
         if (!showDeleted) query = query.is('deleted_at', null);
-        if (search) query = query.or(`contact_name.ilike.%${search}%,company_name.ilike.%${search}%`);
+        if (search) {
+          const term = normalizeSearchTerm(search);
+          if (term) query = query.or(`contact_name.ilike.%${term}%,company_name.ilike.%${term}%`);
+        }
 
         const { data, count, error } = await query;
         if (error) throw error;
@@ -107,7 +111,10 @@ export async function POST(request: NextRequest) {
           .range(from, from + pageSize - 1);
 
         if (!showDeleted) query = query.is('deleted_at', null);
-        if (search) query = query.ilike('title', `%${search}%`);
+        if (search) {
+          const term = normalizeSearchTerm(search);
+          if (term) query = query.ilike('title', `%${term}%`);
+        }
 
         const { data, count, error } = await query;
         if (error) throw error;
@@ -150,7 +157,10 @@ export async function POST(request: NextRequest) {
           .range(from, from + pageSize - 1);
 
         if (!showDeleted) query = query.is('deleted_at', null);
-        if (search) query = query.ilike('title', `%${search}%`);
+        if (search) {
+          const term = normalizeSearchTerm(search);
+          if (term) query = query.ilike('title', `%${term}%`);
+        }
 
         const { data, count, error } = await query;
         if (error) throw error;
@@ -189,7 +199,10 @@ export async function POST(request: NextRequest) {
           .range(from, from + pageSize - 1);
 
         if (!showDeleted) query = query.is('deleted_at', null);
-        if (search) query = query.ilike('content', `%${search}%`);
+        if (search) {
+          const term = normalizeSearchTerm(search);
+          if (term) query = query.ilike('content', `%${term}%`);
+        }
 
         const { data, count, error } = await query;
         if (error) throw error;
@@ -253,7 +266,10 @@ export async function POST(request: NextRequest) {
 
         if (!showDeleted) query = query.is('deleted_at', null);
         if (type) query = query.eq('type', type);
-        if (search) query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%`);
+        if (search) {
+          const term = normalizeSearchTerm(search);
+          if (term) query = query.or(`title.ilike.%${term}%,content.ilike.%${term}%`);
+        }
 
         const { data, count, error } = await query;
         if (error) throw error;

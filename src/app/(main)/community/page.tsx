@@ -7,6 +7,7 @@ import PostList from '@/features/community/components/PostList';
 import HotPostsSection from '@/features/community/components/HotPostsSection';
 import type { Post } from '@/types/database';
 import { REGIONS } from '@/shared/constants';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,8 +40,10 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
     query = query.eq('region', searchParams.region);
   }
   if (searchParams.search) {
-    const escaped = searchParams.search.replace(/[%_]/g, '\\$&');
-    query = query.or(`title.ilike.%${escaped}%,content.ilike.%${escaped}%`);
+    const term = normalizeSearchTerm(searchParams.search);
+    if (term) {
+      query = query.or(`title.ilike.%${term}%,content.ilike.%${term}%`);
+    }
   }
 
   // 정렬 옵션

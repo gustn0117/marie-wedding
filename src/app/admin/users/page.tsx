@@ -9,7 +9,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 
 export default function AdminUsersPage() {
-  const { profile: me } = useAuth();
+  useAuth(); // session auth (RPC가 서버 측 권한 검증)
   const [users, setUsers] = useState<Profile[]>([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
@@ -99,11 +99,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.from('profiles').update({
-        banned_at: new Date().toISOString(),
-        banned_reason: reason.trim(),
-        banned_by: me?.id ?? null,
-      }).eq('id', user.id);
+      const { error } = await sb.rpc('ban_user', { p_id: user.id, p_reason: reason.trim() });
       if (error) throw error;
       toast(`${user.contact_name}님을 제재했습니다.`, 'success');
       setBanModal(null);
@@ -122,7 +118,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.from('profiles').update({ admin_note: note.trim() || null }).eq('id', user.id);
+      const { error } = await sb.rpc('set_admin_note', { p_id: user.id, p_note: note.trim() || null });
       if (error) throw error;
       toast('관리자 메모를 저장했습니다.', 'success');
       setNoteModal(null);
@@ -140,11 +136,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.from('profiles').update({
-        banned_at: null,
-        banned_reason: null,
-        banned_by: null,
-      }).eq('id', user.id);
+      const { error } = await sb.rpc('unban_user', { p_id: user.id });
       if (error) throw error;
       toast('제재가 해제되었습니다.', 'success');
       await load();

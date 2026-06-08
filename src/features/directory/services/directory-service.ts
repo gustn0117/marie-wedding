@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/database';
 import type { DirectoryFilters } from '../types';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -20,17 +22,27 @@ export const directoryService = {
       .order('company_name', { ascending: true });
 
     if (filters?.businessType) {
-      query = query.eq('business_type', filters.businessType);
+      const types = filters.businessType.split(',').map((t) => t.trim()).filter(Boolean);
+      if (types.length > 0) {
+        // CSV 컬럼이라 정확 매칭은 어렵고 ILIKE %type% 로 부분일치
+        const orPart = types
+          .map((t) => `business_type.ilike.%${normalizeSearchTerm(t)}%`)
+          .filter((s) => !s.includes('ilike.%%'))
+          .join(',');
+        if (orPart) query = query.or(orPart);
+      }
     }
 
     if (filters?.region) {
-      query = query.eq('region', filters.region);
+      const details = REGION_DETAILS[filters.region]?.map((d) => d.value) ?? [];
+      query = query.in('region', [filters.region, ...details]);
     }
 
     if (filters?.search) {
-      query = query.or(
-        `company_name.ilike.%${filters.search}%,contact_name.ilike.%${filters.search}%`,
-      );
+      const term = normalizeSearchTerm(filters.search);
+      if (term) {
+        query = query.or(`company_name.ilike.%${term}%,contact_name.ilike.%${term}%`);
+      }
     }
 
     const from = (page - 1) * pageSize;
