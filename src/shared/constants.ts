@@ -99,6 +99,7 @@ export const ROUTES = {
   ADMIN_EVENTS_EDIT: (id: string) => `/admin/events/${id}/edit`,
   ADMIN_VERIFICATIONS: '/admin/verifications',
   ADMIN_SETTLEMENTS: '/admin/settlements',
+  ADMIN_AUDIT_LOG: '/admin/audit-log',
   ADMIN_MODERATION_KEYWORDS: '/admin/moderation-keywords',
   MYPAGE_VERIFICATION: '/mypage/verification',
   MYPAGE_PORTFOLIOS: '/mypage/portfolios',
