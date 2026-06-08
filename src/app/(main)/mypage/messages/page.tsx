@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,22 +83,14 @@ export default async function MessagesPage() {
   const conversations = await loadConversations(me.id);
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4">
-      <nav className="text-sm text-gray-500">
-        <Link href={ROUTES.MYPAGE} className="hover:text-primary">마이페이지</Link>
-        <span className="mx-2 text-gray-300">›</span>
-        <span className="text-gray-900 font-medium">메시지</span>
-      </nav>
+    <main className="space-y-4">
+      <PageHeader
+        eyebrow="메시지"
+        title="메시지"
+        description="업체·프리랜서와 1:1로 대화할 수 있습니다. 채용·섭외와 별개로 사용 가능."
+      />
 
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">메시지</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">메시지</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          업체·프리랜서와 1:1로 대화할 수 있습니다. 채용·섭외와 별개로 사용 가능.
-        </p>
-      </header>
-
-      <section className="platform-panel">
+      <section className="surface">
         {conversations.length === 0 ? (
           <p className="p-10 text-center text-sm text-gray-500">아직 대화가 없습니다. 디렉토리 상세에서 &quot;메시지 보내기&quot;로 시작해 보세요.</p>
         ) : (

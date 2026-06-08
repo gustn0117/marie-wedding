@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import VerificationForm from '@/features/verification/components/VerificationForm';
+import PageHeader from '@/shared/components/PageHeader';
 import { VERIFICATION_STATUS_LABELS, ROUTES } from '@/shared/constants';
 import type { VerificationStatus } from '@/types/database';
 
@@ -49,20 +50,12 @@ export default async function VerificationPage() {
   const showForm = status === 'unverified' || status === 'rejected';
 
   return (
-    <main className="mx-auto max-w-3xl space-y-4">
-      <nav className="text-sm text-gray-500">
-        <Link href={ROUTES.MYPAGE} className="hover:text-primary">마이페이지</Link>
-        <span className="mx-2 text-gray-300">›</span>
-        <span className="text-gray-900 font-medium">업체 인증</span>
-      </nav>
-
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">신뢰</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">업체 인증</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          사업자등록증을 제출하면 관리자 검토 후 프로필·카드에 &quot;인증&quot; 배지가 노출됩니다.
-        </p>
-      </header>
+    <main className="space-y-4">
+      <PageHeader
+        eyebrow="신뢰"
+        title="업체 인증"
+        description='사업자등록증을 제출하면 관리자 검토 후 프로필·카드에 "인증" 배지가 노출됩니다.'
+      />
 
       <section className="platform-panel p-5 text-sm">
         <p className="font-bold text-gray-900 mb-2">현재 상태: {VERIFICATION_STATUS_LABELS[status]}</p>

@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import SavedSearchTable from '@/features/saved-searches/components/SavedSearchTable';
+import PageHeader from '@/shared/components/PageHeader';
 import type { SavedSearch } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -25,20 +25,12 @@ export default async function SavedSearchesPage() {
     .order('created_at', { ascending: false });
 
   return (
-    <main className="mx-auto max-w-[1000px] space-y-4">
-      <nav className="text-sm text-gray-500">
-        <Link href={ROUTES.MYPAGE} className="hover:text-primary">마이페이지</Link>
-        <span className="mx-2 text-gray-300">›</span>
-        <span className="text-gray-900 font-medium">저장한 검색</span>
-      </nav>
-
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">저장된 검색</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">저장한 검색</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          자주 쓰는 조건을 저장해 한 번에 다시 보기. 검색 결과 페이지 우상단에서 저장할 수 있습니다.
-        </p>
-      </header>
+    <main className="space-y-4">
+      <PageHeader
+        eyebrow="저장된 검색"
+        title="저장한 검색"
+        description="자주 쓰는 조건을 저장해 한 번에 다시 보기. 검색 결과 페이지 우상단에서 저장할 수 있습니다."
+      />
 
       <section className="platform-panel p-5">
         <SavedSearchTable items={(data ?? []) as SavedSearch[]} />
