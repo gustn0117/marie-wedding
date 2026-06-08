@@ -79,7 +79,7 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
               <ul className={`space-y-2 mb-6 text-sm ${p.highlight ? 'text-white/90' : 'text-gray-700'}`}>
                 {p.features.map((feat) => (
                   <li key={feat} className="flex gap-2">
-                    <span className={p.highlight ? 'text-primary-100' : 'text-emerald-600'}>✓</span>
+                    <svg className={`w-4 h-4 shrink-0 mt-0.5 ${p.highlight ? 'text-primary-100' : 'text-emerald-600'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
                     <span>{feat}</span>
                   </li>
                 ))}

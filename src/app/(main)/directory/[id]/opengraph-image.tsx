@@ -45,7 +45,7 @@ export default async function Image({ params }: Props) {
               <span style={{
                 fontSize: 22, fontWeight: 800, padding: '6px 14px',
                 border: '3px solid #0b1f3a', borderRadius: 6,
-              }}>✓ 인증</span>
+              }}>[인증]</span>
             )}
           </div>
           <div style={{ fontSize: 26, color: '#6b7280' }}>

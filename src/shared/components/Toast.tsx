@@ -99,7 +99,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           >
             <div className="flex items-start gap-3 px-4 py-3">
               <span aria-hidden className="text-sm font-bold">
-                {t.kind === 'success' ? '✓' : t.kind === 'error' ? '!' : 'ⓘ'}
+                {t.kind === 'success' ? (<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>) : t.kind === 'error' ? (<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>) : (<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>)}
               </span>
               <p className="flex-1 text-sm font-semibold leading-snug">{t.message}</p>
               <button

@@ -189,7 +189,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
                       <div className="flex items-center gap-2 flex-wrap">
                         {isAdopted && (
                           <span className="inline-flex items-center px-1.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded">
-                            ✓ 채택
+                            <span className="inline-flex items-center gap-1"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>채택</span>
                           </span>
                         )}
                         <span className="text-sm font-semibold text-gray-900">

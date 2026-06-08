@@ -35,7 +35,7 @@ export default function SaveSearchButton({ scope, query, defaultName }: Props) {
   }
 
   if (done) {
-    return <span className="text-xs text-primary font-bold">✓ 저장됨</span>;
+    return <span className="text-xs text-primary font-bold inline-flex items-center gap-0.5"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 저장됨</span>;
   }
 
   return (

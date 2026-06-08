@@ -245,7 +245,7 @@ function FilterableApplicationList({
                         href={`/applications/${item.id}/review`}
                         className="mt-1 block text-[10px] font-bold text-primary underline"
                       >
-                        ✓ 거래 완료 · 리뷰 작성
+                        <svg className="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>거래 완료 · 리뷰 작성
                       </Link>
                     )}
                     <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>

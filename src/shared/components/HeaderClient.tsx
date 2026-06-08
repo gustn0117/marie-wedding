@@ -12,7 +12,7 @@ import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 // 주의: '노하우' category=tips (복수) — POST_CATEGORIES 정의와 일치.
 // 이전엔 ?category=tip(단수)이라 커뮤니티 페이지에서 eq('category', 'tip') 매칭이 0건이었음.
 const CAT_NAV = [
-  { href: ROUTES.JOBS, label: '전체', icon: '🗂' },
+  { href: ROUTES.JOBS, label: '전체' },
   { href: `${ROUTES.JOBS}?businessType=designer`, label: '디자인' },
   { href: `${ROUTES.COMMUNITY}?category=tips`, label: '노하우' },
   { href: `${ROUTES.JOBS}?businessType=studio`, label: '스튜디오' },
@@ -180,7 +180,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       <div className="border-t border-gray-100 hidden md:block">
           <div className="shell-wide flex items-center gap-1 overflow-x-auto">
             <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
-              {/* 옛 패턴: bg-green-500 🌿 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
+              {/* 옛 패턴: bg-green-500 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
                   단순 ink 텍스트로 통일. */}
               업종별
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -246,7 +246,7 @@ function CatNavLinks({ pathname }: { pathname: string }) {
             className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
             aria-current={isActive ? 'page' : undefined}
           >
-            {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
+            {c.label}
           </Link>
         );
       })}
@@ -263,7 +263,7 @@ function CatNavLinksFallback() {
     <>
       {CAT_NAV.map((c) => (
         <Link key={c.label} href={c.href} className="cat-nav-link">
-          {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
+          {c.label}
         </Link>
       ))}
     </>

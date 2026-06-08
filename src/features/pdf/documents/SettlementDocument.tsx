@@ -122,12 +122,12 @@ export function SettlementDocument({ settlement }: { settlement: Settlement }) {
           )}
           {settlement.paid_at && (
             <Text style={[styles.paragraph, { color: COLORS.emerald, fontWeight: 700 }]}>
-              ✓ 송금 완료: {formatDateTime(settlement.paid_at)}
+              [완료] 송금 완료: {formatDateTime(settlement.paid_at)}
             </Text>
           )}
           {settlement.failed_at && (
             <Text style={[styles.paragraph, { color: COLORS.rose, fontWeight: 700 }]}>
-              ✗ 송금 실패: {formatDateTime(settlement.failed_at)}
+              [실패] 송금 실패: {formatDateTime(settlement.failed_at)}
               {settlement.failure_reason && ` — ${settlement.failure_reason}`}
             </Text>
           )}

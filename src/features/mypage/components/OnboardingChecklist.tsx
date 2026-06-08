@@ -87,7 +87,13 @@ export default function OnboardingChecklist({ profile, portfolioCount, jobCount 
                   : 'border-gray-200 text-gray-900 hover:border-primary hover:text-primary'
               }`}
             >
-              <span aria-hidden className={it.done ? 'text-primary' : 'text-gray-300'}>{it.done ? '✓' : '○'}</span>
+              <span aria-hidden className={it.done ? 'text-primary' : 'text-gray-300'}>
+                {it.done ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><circle cx="12" cy="12" r="9" /></svg>
+                )}
+              </span>
               <span className="flex-1">{it.label}</span>
               {!it.done && <span className="text-xs text-gray-400">→</span>}
             </Link>

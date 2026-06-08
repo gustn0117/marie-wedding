@@ -506,7 +506,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             verifiedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
           }`}
         >
-          ✓ 인증 업체만
+          <span className="inline-flex items-center gap-1"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>인증 업체만</span>
         </button>
         <button
           type="button"

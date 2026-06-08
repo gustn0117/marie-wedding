@@ -12,6 +12,7 @@ import {
 } from '@/shared/utils/format';
 import type { Job, Post, Profile } from '@/types/database';
 import EmptyState from '@/shared/components/EmptyState';
+import BusinessTypeIcon, { CheckIcon, HandRaisedIcon, SparklesIcon } from '@/shared/components/icons/BusinessTypeIcon';
 
 interface HomeContentProps {
   posts: Post[];
@@ -27,19 +28,18 @@ interface HomeContentProps {
   mySidebar?: React.ReactNode;
 }
 
-// 카테고리 그리드 — 이전엔 planner만 bg-primary-50로 의미 없는 강조.
-// 전부 무채색 + 마지막 '전체보기'만 약간 진한 톤으로 분리.
-const CATEGORIES: { key: string; label: string; icon: string; bg: string }[] = [
-  { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-gray-50' },
-  { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-gray-50' },
-  { key: 'studio',    label: '스튜디오',   icon: '📸', bg: 'bg-gray-50' },
-  { key: 'makeup',    label: '메이크업',   icon: '💄', bg: 'bg-gray-50' },
-  { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-gray-50' },
-  { key: 'assistant', label: '예식도우미', icon: '🎀', bg: 'bg-gray-50' },
-  { key: 'mc',        label: '사회자',     icon: '🎤', bg: 'bg-gray-50' },
-  { key: 'singer',    label: '축가',       icon: '🎵', bg: 'bg-gray-50' },
-  { key: 'designer',  label: '디자이너',   icon: '✏️', bg: 'bg-gray-50' },
-  { key: '',          label: '전체보기',   icon: '⊞', bg: 'bg-gray-100' },
+// 카테고리 그리드 — SVG 아이콘 (이모지 사용 금지, 미니멀 무채색 팔레트 준수).
+const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] = [
+  { key: 'venue',     label: '예식장',     iconKey: 'venue',     bg: 'bg-gray-50' },
+  { key: 'dress',     label: '드레스샵',   iconKey: 'dress',     bg: 'bg-gray-50' },
+  { key: 'studio',    label: '스튜디오',   iconKey: 'studio',    bg: 'bg-gray-50' },
+  { key: 'makeup',    label: '메이크업',   iconKey: 'makeup',    bg: 'bg-gray-50' },
+  { key: 'planner',   label: '플래너',     iconKey: 'planner',   bg: 'bg-gray-50' },
+  { key: 'assistant', label: '예식도우미', iconKey: 'assistant', bg: 'bg-gray-50' },
+  { key: 'mc',        label: '사회자',     iconKey: 'mc',        bg: 'bg-gray-50' },
+  { key: 'singer',    label: '축가',       iconKey: 'singer',    bg: 'bg-gray-50' },
+  { key: 'designer',  label: '디자이너',   iconKey: 'designer',  bg: 'bg-gray-50' },
+  { key: '',          label: '전체보기',   iconKey: 'all',       bg: 'bg-gray-100' },
 ];
 
 
@@ -83,10 +83,10 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
               </form>
               <div className="flex flex-wrap gap-2 max-w-[600px]">
                 <Link href={`${ROUTES.JOBS}?businessType=planner`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                  <span className="text-base">📋</span> 플래너 모집
+                  <BusinessTypeIcon type="planner" className="w-4 h-4" /> 플래너 모집
                 </Link>
                 <Link href={`${ROUTES.JOBS}?type=matching`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                  <span className="text-base">🤝</span> 파트너 섭외
+                  <HandRaisedIcon className="w-4 h-4" /> 파트너 섭외
                 </Link>
                 <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
                 <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
@@ -95,7 +95,9 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
             </div>
 
             <Link href={`${ROUTES.JOBS}?type=matching`} className="promo-card hidden lg:flex hover:shadow-lg transition-shadow">
-              <span className="promo-card-illust">💍</span>
+              <span className="promo-card-illust">
+                <SparklesIcon className="w-12 h-12 text-primary" />
+              </span>
               <div className="relative z-10">
                 <h3 className="promo-card-title">업체 섭외도<br />한 화면에서</h3>
                 <p className="promo-card-desc">지역, 일정, 조건을 빠르게 비교하세요</p>
@@ -112,7 +114,9 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                 href={c.key ? `${ROUTES.JOBS}?businessType=${c.key}` : ROUTES.JOBS}
                 className="cat-tile"
               >
-                <div className={`cat-tile-icon ${c.bg}`}>{c.icon}</div>
+                <div className={`cat-tile-icon ${c.bg} text-gray-700`}>
+                  <BusinessTypeIcon type={c.iconKey} className="w-6 h-6 sm:w-7 sm:h-7" />
+                </div>
                 <span className="cat-tile-label">{c.label}</span>
               </Link>
             ))}
@@ -331,7 +335,7 @@ function SvcCompanyCard({ profile }: { profile: Profile }) {
         {premium ? (
           <span className="svc-card-badge svc-card-badge-prime">PREMIUM</span>
         ) : verified ? (
-          <span className="svc-card-badge svc-card-badge-promoted">✓ 인증</span>
+          <span className="svc-card-badge svc-card-badge-promoted inline-flex items-center gap-0.5"><CheckIcon className="w-3 h-3" /> 인증</span>
         ) : null}
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

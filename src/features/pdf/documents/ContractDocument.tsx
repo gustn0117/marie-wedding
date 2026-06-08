@@ -129,7 +129,7 @@ export function ContractDocument({ contract }: { contract: Contract }) {
             <Text style={styles.signatureName}>{contract.party_a_org_name}</Text>
             {partyASignature ? (
               <Text style={styles.signedStamp}>
-                ✓ 전자 서명 완료 {'\n'}
+                [서명] 전자 서명 완료 {'\n'}
                 {formatDateTime(partyASignature.signed_at)}
               </Text>
             ) : (
@@ -141,7 +141,7 @@ export function ContractDocument({ contract }: { contract: Contract }) {
             <Text style={styles.signatureName}>{contract.party_b_org_name}</Text>
             {partyBSignature ? (
               <Text style={styles.signedStamp}>
-                ✓ 전자 서명 완료 {'\n'}
+                [서명] 전자 서명 완료 {'\n'}
                 {formatDateTime(partyBSignature.signed_at)}
               </Text>
             ) : (

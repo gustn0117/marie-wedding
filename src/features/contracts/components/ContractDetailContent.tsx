@@ -336,12 +336,12 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
         {/* 다음 단계 안내 */}
         {contract.status === 'signed' && (
           <p className="mt-3 text-xs text-gray-500">
-            🎉 양방 서명 완료. <strong>&apos;진행 시작&apos;</strong>으로 예식 당일까지 진행 상태로 표시하거나, <strong>&apos;캘린더에 예약 등록&apos;</strong>으로 공급자 일정을 점유하세요.
+            <svg className="w-4 h-4 inline text-emerald-600 mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>양방 서명 완료. <strong>&apos;진행 시작&apos;</strong>으로 예식 당일까지 진행 상태로 표시하거나, <strong>&apos;캘린더에 예약 등록&apos;</strong>으로 공급자 일정을 점유하세요.
           </p>
         )}
         {contract.status === 'completed' && (
           <p className="mt-3 text-xs text-gray-500">
-            ✅ 계약 완료. <strong>정산</strong> 단계는 <Link href={ROUTES.SETTLEMENTS} className="text-primary font-semibold hover:underline">정산 페이지</Link>에서 (Milestone 1.5 예정)
+            <svg className="w-4 h-4 inline text-emerald-600 mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>계약 완료. <strong>정산</strong> 단계는 <Link href={ROUTES.SETTLEMENTS} className="text-primary font-semibold hover:underline">정산 페이지</Link>에서 (Milestone 1.5 예정)
           </p>
         )}
       </div>
@@ -379,7 +379,7 @@ function SignatureSlot({
       <p className="text-sm font-bold text-ink truncate">{orgName}</p>
       {signed ? (
         <p className="text-xs text-emerald-700 mt-1">
-          ✓ 서명 완료 · {signedAt ? new Date(signedAt).toLocaleString('ko-KR') : ''}
+          <svg className="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>서명 완료 · {signedAt ? new Date(signedAt).toLocaleString('ko-KR') : ''}
         </p>
       ) : (
         <p className="text-xs text-gray-500 mt-1">서명 대기</p>

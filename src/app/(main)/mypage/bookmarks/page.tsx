@@ -119,7 +119,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
       {isEmpty ? (
         <EmptyState
           title={`저장한 ${activeMeta.label}이 없습니다`}
-          description="관심 있는 항목 옆 ♥ 버튼을 눌러 저장하면 여기서 모아볼 수 있어요."
+          description="관심 있는 항목 옆 하트 버튼을 눌러 저장하면 여기서 모아볼 수 있어요."
           actionLabel={
             activeMeta.targetType === 'job' ? '공고 둘러보기'
             : activeMeta.targetType === 'profile' ? '업체 디렉토리 보기'
@@ -183,7 +183,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
                     <p className="text-xs text-gray-500 mt-0.5">{getRegionLabel(p.region)}</p>
                   </div>
                   {p.verification_status === 'verified' && (
-                    <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded shrink-0">✓ 인증</span>
+                    <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-0.5"><svg className="w-2.5 h-2.5 inline" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 인증</span>
                   )}
                 </Link>
               </li>

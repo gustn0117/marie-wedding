@@ -295,7 +295,7 @@ export default function AdminUsersPage() {
                               className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
                               title={user.admin_note || '메모 없음'}
                             >
-                              메모{user.admin_note ? ' ✱' : ''}
+                              메모{user.admin_note ? ' *' : ''}
                             </button>
                             <button
                               onClick={() => handleDelete(user)}

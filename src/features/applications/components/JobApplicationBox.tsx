@@ -370,7 +370,7 @@ function DealCompletionRow({
       {bothDone ? (
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="font-bold text-gray-900">✓ 거래 완료</p>
+            <p className="font-bold text-gray-900 inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 거래 완료</p>
             <p className="text-gray-500 mt-0.5">상대방에 대한 리뷰를 30일 이내 작성해 주세요.</p>
           </div>
           <a
@@ -382,7 +382,7 @@ function DealCompletionRow({
         </div>
       ) : mine ? (
         <div className="flex items-center justify-between gap-2">
-          <span className="font-bold text-gray-900">✓ 내 측 완료 표시</span>
+          <span className="font-bold text-gray-900 inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 내 측 완료 표시</span>
           <span className="text-gray-500">상대방 확인 대기 중</span>
         </div>
       ) : (
