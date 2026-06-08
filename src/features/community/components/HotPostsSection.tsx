@@ -37,7 +37,7 @@ export default async function HotPostsSection() {
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Trending</p>
           <h2 className="text-sm font-bold text-gray-900 mt-0.5">최근 {WINDOW_DAYS}일 인기글</h2>
         </div>
-        <Link href={`${ROUTES.COMMUNITY}?sort=popular`} className="text-xs font-bold text-primary hover:underline">
+        <Link href={`${ROUTES.COMMUNITY}?sort=popular`} className="text-xs font-bold text-gray-500 hover:text-ink">
           전체 →
         </Link>
       </div>
@@ -46,17 +46,17 @@ export default async function HotPostsSection() {
           <li key={post.id}>
             <Link
               href={ROUTES.COMMUNITY_DETAIL(post.id)}
-              className="flex items-center gap-3 px-4 py-3 hover:bg-primary-50/40 transition-colors group"
+              className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
             >
-              <span className="shrink-0 w-6 text-center text-base font-bold text-primary tabular-nums">
+              <span className={`shrink-0 w-6 text-center text-base font-extrabold tabular-nums ${i < 3 ? 'text-primary' : 'text-gray-400'}`}>
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] font-bold text-gray-600 bg-gray-100 px-1.5 py-0.5 rounded">
                     {getCategoryLabel(post.category)}
                   </span>
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-primary truncate">
+                  <p className="text-sm font-bold text-ink group-hover:text-primary truncate">
                     {post.title}
                   </p>
                 </div>

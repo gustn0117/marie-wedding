@@ -18,7 +18,7 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">이메일 문의</h3>
-          <p className="text-sm text-text-secondary">support@marie.co.kr</p>
+          <a href="mailto:tlagustn020117@gmail.com" className="text-sm text-text-secondary hover:text-primary">tlagustn020117@gmail.com</a>
           <p className="text-xs text-text-muted mt-1">영업일 기준 24시간 이내 답변</p>
         </div>
 
@@ -28,9 +28,9 @@ export default function ContactPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
             </svg>
           </div>
-          <h3 className="text-base font-bold text-text-primary mb-1">전화 문의</h3>
-          <p className="text-sm text-text-secondary">02-0000-0000</p>
-          <p className="text-xs text-text-muted mt-1">평일 09:00 ~ 18:00</p>
+          <h3 className="text-base font-bold text-text-primary mb-1">운영 시간</h3>
+          <p className="text-sm text-text-secondary">평일 10:00 ~ 18:00</p>
+          <p className="text-xs text-text-muted mt-1">주말·공휴일 휴무</p>
         </div>
       </div>
 

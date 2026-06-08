@@ -46,7 +46,7 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
           <button
             onClick={() => setActiveTab('jobs')}
             className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'jobs' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              activeTab === 'jobs' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             내 공고 ({jobs.length})
@@ -54,7 +54,7 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
           <button
             onClick={() => setActiveTab('posts')}
             className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'posts' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              activeTab === 'posts' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             내 게시글 ({posts.length})
@@ -62,7 +62,7 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
           <button
             onClick={() => setActiveTab('applications')}
             className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'applications' ? 'bg-primary-50 text-primary border-b-2 border-primary' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              activeTab === 'applications' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
             지원/문의 ({applicationCount})

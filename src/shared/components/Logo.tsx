@@ -40,9 +40,9 @@ export default function Logo({ variant = 'full', size = 'md', className = '' }: 
     return <LogoMark className={`${MARK_SIZE[size]} ${className}`} />;
   }
   return (
-    <span className={`inline-flex items-center gap-2 text-primary ${className}`}>
+    <span className={`inline-flex items-center gap-2 text-ink ${className}`}>
       <LogoMark className={MARK_SIZE[size]} />
-      <span className={`${WORD_SIZE[size]} font-bold tracking-tight leading-none`}>
+      <span className={`${WORD_SIZE[size]} font-extrabold tracking-tight leading-none`}>
         Mari<span className="italic font-semibold">é</span>
       </span>
     </span>

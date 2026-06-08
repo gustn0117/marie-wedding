@@ -33,7 +33,7 @@ export default function PostCard({ post }: PostCardProps) {
           </div>
 
           {/* Title */}
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-primary group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
+          <h3 className="text-[16px] sm:text-[17px] font-bold text-ink group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
             {post.title}
             {post.comment_count !== undefined && post.comment_count > 0 && (
               <span className="text-primary font-bold ml-1.5 text-sm">[{post.comment_count}]</span>

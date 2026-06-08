@@ -58,7 +58,7 @@ export default function JobListRow({ job }: Props) {
           {fresh && !urgent && <Badge kind="new">NEW</Badge>}
           {tier === 2 && <Badge kind="promoted">추천</Badge>}
         </div>
-        <h3 className="truncate text-[16px] font-bold text-primary group-hover:text-primary transition-colors">
+        <h3 className="truncate text-[16px] font-bold text-ink group-hover:text-primary transition-colors">
           {job.title}
         </h3>
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">
@@ -77,7 +77,7 @@ export default function JobListRow({ job }: Props) {
         ) : (
           <span className="font-bold text-gray-500">상시채용</span>
         )}
-        <span className="hidden rounded border border-gray-200 bg-white px-3 py-1.5 font-bold text-primary group-hover:border-primary md:inline-flex">
+        <span className="hidden rounded border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 group-hover:border-ink group-hover:text-ink md:inline-flex">
           상세보기
         </span>
       </div>
