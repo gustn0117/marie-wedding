@@ -228,6 +228,7 @@ export default async function MyPage() {
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-2">B2B 거래</p>
             <div className="grid gap-1.5">
+              <Link href={ROUTES.MYPAGE_DASHBOARD} className="platform-link-tile text-sm font-bold text-gray-700">대시보드</Link>
               <Link href={ROUTES.QUOTATIONS} className="platform-link-tile text-sm font-bold text-gray-700">견적</Link>
               <Link href={ROUTES.CONTRACTS} className="platform-link-tile text-sm font-bold text-gray-700">계약</Link>
               <Link href={ROUTES.BOOKINGS} className="platform-link-tile text-sm font-bold text-gray-700">예약·일정</Link>

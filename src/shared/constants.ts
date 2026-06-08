@@ -112,6 +112,7 @@ export const ROUTES = {
   MYPAGE_MESSAGE_DETAIL: (id: string) => `/mypage/messages/${id}`,
   MYPAGE_BOOKMARKS: '/mypage/bookmarks',
   MYPAGE_ORGANIZATION: '/mypage/organization',
+  MYPAGE_DASHBOARD: '/mypage/dashboard',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
   // B2B 거래 — 견적 (Milestone 1.2)

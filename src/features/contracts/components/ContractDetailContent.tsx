@@ -9,6 +9,8 @@ import ContractStatusBadge from './ContractStatusBadge';
 import QuotationItemsTable from '@/features/quotations/components/QuotationItemsTable';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { notify } from '@/features/notifications/lib/dispatch';
+import DealProgress from '@/features/dashboard/components/DealProgress';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ContractDetailContent({ contractId, profileId }: { contractId: string; profileId: string }) {
   const [contract, setContract] = useState<Contract | null>(null);
@@ -17,6 +19,9 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
   const [acting, setActing] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState('');
   const [showCancelInput, setShowCancelInput] = useState(false);
+  const [dealProgress, setDealProgress] = useState<{ hasBooking: boolean; hasSettlement: boolean; settlementPaid: boolean }>({
+    hasBooking: false, hasSettlement: false, settlementPaid: false,
+  });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -25,6 +30,18 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       const data = await contractService.getById(contractId);
       if (!data) { setError('계약을 찾을 수 없습니다.'); return; }
       setContract(data);
+
+      // DealProgress 위한 booking + settlement 존재 여부 조회
+      const supabase = createClient();
+      const [bRes, sRes] = await Promise.all([
+        supabase.from('bookings').select('id').eq('contract_id', contractId).is('deleted_at', null).limit(1),
+        supabase.from('settlements').select('id, status').eq('contract_id', contractId).is('deleted_at', null).limit(1),
+      ]);
+      setDealProgress({
+        hasBooking: (bRes.data?.length ?? 0) > 0,
+        hasSettlement: (sRes.data?.length ?? 0) > 0,
+        settlementPaid: (sRes.data?.[0]?.status === 'paid'),
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : '계약을 불러오지 못했습니다.');
     } finally {
@@ -118,6 +135,15 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
         <span className="mx-2">›</span>
         <span className="text-ink font-medium">{contract.title}</span>
       </nav>
+
+      {/* 거래 진행 시각화 */}
+      <DealProgress
+        quotationStatus="accepted"
+        contractStatus={contract.status}
+        hasBooking={dealProgress.hasBooking}
+        hasSettlement={dealProgress.hasSettlement}
+        settlementPaid={dealProgress.settlementPaid}
+      />
 
       {/* Hero */}
       <div className="rounded-xl border border-gray-200 bg-white p-6">
