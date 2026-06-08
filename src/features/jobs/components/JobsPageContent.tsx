@@ -238,7 +238,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               }}
               className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                 regionDropdownOpen
-                  ? 'border-primary ring-2 ring-primary/20'
+                  ? 'border-ink ring-2 ring-ink/10'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -275,7 +275,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               }}
               className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                 businessTypeDropdownOpen
-                  ? 'border-primary ring-2 ring-primary/20'
+                  ? 'border-ink ring-2 ring-ink/10'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -310,7 +310,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 }}
                 className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
                   employmentTypeDropdownOpen
-                    ? 'border-primary ring-2 ring-primary/20'
+                    ? 'border-ink ring-2 ring-ink/10'
                     : 'border-gray-300 hover:border-gray-400'
                 }`}
               >

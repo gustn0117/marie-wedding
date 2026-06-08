@@ -9,14 +9,10 @@ interface JobCardProps {
 }
 
 const GRADIENTS = [
-  'from-rose-100 to-orange-100',
-  'from-amber-100 to-yellow-100',
-  'from-emerald-100 to-teal-100',
-  'from-sky-100 to-indigo-100',
-  'from-fuchsia-100 to-pink-100',
-  'from-violet-100 to-purple-100',
-  'from-lime-100 to-emerald-100',
-  'from-cyan-100 to-sky-100',
+  'from-gray-50 to-gray-100',
+  'from-gray-100 to-gray-50',
+  'from-primary-50 to-gray-100',
+  'from-gray-50 to-primary-50',
 ];
 const EMOJIS = ['💍', '👗', '📸', '💄', '📋', '🎀', '🎤', '🎵', '✏️'];
 

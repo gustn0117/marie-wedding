@@ -23,7 +23,7 @@ export default function JobDetailHero({ job }: Props) {
   const isVerified = job.author?.verification_status === 'verified';
 
   return (
-    <section className={`bg-white border border-gray-200 ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
+    <section className={`bg-white border border-gray-200 rounded-xl overflow-hidden ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
       {job.image && (
         <div className="border-b border-gray-200 bg-gray-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -38,7 +38,7 @@ export default function JobDetailHero({ job }: Props) {
       <div className="p-5 md:p-7">
         {/* Tag row */}
         <div className="flex items-center gap-1.5 flex-wrap mb-3">
-          <span className="inline-flex items-center px-2 py-0.5 bg-primary text-white text-[11px] font-bold rounded">
+          <span className="inline-flex items-center px-2 py-0.5 bg-ink text-white text-[11px] font-bold rounded">
             {job.posting_type === 'matching' ? '업체 섭외' : '채용'}
           </span>
           {isExpired ? (

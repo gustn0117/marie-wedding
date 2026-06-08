@@ -55,7 +55,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
-      {/* 1단: 로고 + Biz토글 + 검색바 + 우측 메뉴 */}
+      {/* 1단: 로고 + 검색바 + 우측 메뉴 */}
       <div className="max-w-[1280px] mx-auto px-5 h-[68px] flex items-center gap-5">
         <Link href={ROUTES.HOME} className="text-2xl font-extrabold tracking-tight text-ink shrink-0">
           Marié

@@ -61,13 +61,6 @@
     @apply bg-white rounded-xl border border-gray-200 p-5
            hover:shadow-card hover:-translate-y-0.5 transition-all duration-200;
   }
-  .card-tier-1 {
-    @apply border-2 border-primary;
-  }
-  .card-tier-2 {
-    @apply border border-primary;
-  }
-
   /* === BADGES ===
      원칙: 상태 표현은 단일 포인트 색(state-urgent)만 fill로 사용,
      나머지는 무채색 outline 또는 primary outline. */
@@ -302,8 +295,7 @@
   .svc-card-title {
     @apply mt-2.5 text-[14px] font-medium text-gray-900 leading-snug min-h-[40px] line-clamp-2;
   }
-  .svc-card-rating { @apply inline-flex items-center gap-1 text-[13px]; }
-  .svc-card-rating-star { @apply text-amber-400; }
+  .svc-card-rating { @apply inline-flex items-center gap-2 text-[13px]; }
   .svc-card-rating-count { @apply text-gray-500 font-medium; }
   .svc-card-price { @apply mt-1 text-[16px] font-bold text-gray-900; }
   .svc-card-seller {

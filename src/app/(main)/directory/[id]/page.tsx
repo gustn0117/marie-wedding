@@ -114,7 +114,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Card */}
-      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         {/* Avatar + Name + Edit */}
         <div className="flex items-start gap-5 mb-5">
           {/* Logo */}
@@ -165,7 +165,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             {profile.phone && (
               <a
                 href={`tel:${profile.phone}`}
-                className="inline-flex items-center gap-2 rounded bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-primary-dark transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
@@ -206,7 +206,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </div>
 
       {/* Trust Card */}
-      <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <section className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">신뢰 지표</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <TrustMetricBar
@@ -237,21 +237,21 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Bio */}
       {profile.bio && (
-        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">소개</h2>
           <RichTextView html={profile.bio} className="text-[15px] text-gray-700 leading-relaxed" />
         </div>
       )}
 
       {/* Availability Calendar */}
-      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">가용 일정</h2>
         <AvailabilityCalendar profileId={profile.id} editable={isOwner} />
       </div>
 
       {/* Reviews */}
       {reviews.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             받은 리뷰 <span className="text-sm text-gray-400 font-normal ml-1">{reviews.length}</span>
           </h2>
@@ -268,7 +268,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Portfolios */}
       {portfolios.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             포트폴리오 <span className="text-sm text-gray-400 font-normal ml-1">{portfolios.length}</span>
           </h2>
@@ -282,7 +282,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Gallery (deprecated, kept for legacy) */}
       {profile.gallery && profile.gallery.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
           </h2>
@@ -307,7 +307,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       )}
 
       {/* Jobs */}
-      <div className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
           채용 공고 <span className="text-sm text-gray-400 font-normal ml-1">{jobs.length}</span>
         </h2>

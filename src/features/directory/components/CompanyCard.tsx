@@ -9,14 +9,10 @@ interface CompanyCardProps {
 }
 
 const GRADIENTS = [
-  'from-violet-100 to-fuchsia-100',
-  'from-blue-100 to-cyan-100',
-  'from-emerald-100 to-lime-100',
-  'from-orange-100 to-rose-100',
-  'from-amber-100 to-pink-100',
-  'from-sky-100 to-indigo-100',
-  'from-fuchsia-100 to-pink-100',
-  'from-cyan-100 to-teal-100',
+  'from-gray-50 to-gray-100',
+  'from-gray-100 to-gray-50',
+  'from-primary-50 to-gray-100',
+  'from-gray-50 to-primary-50',
 ];
 
 export default function CompanyCard({ profile, idx = 0 }: CompanyCardProps) {

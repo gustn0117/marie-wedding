@@ -26,28 +26,24 @@ interface HomeContentProps {
   mySidebar?: React.ReactNode;
 }
 
-const CATEGORIES: { key: string; label: string; icon: string; bg: string; badge?: string; badgeBest?: boolean }[] = [
-  { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-rose-100' },
-  { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-pink-100' },
-  { key: 'studio',    label: '스튜디오',   icon: '📸', bg: 'bg-amber-100' },
-  { key: 'makeup',    label: '메이크업',   icon: '💄', bg: 'bg-fuchsia-100' },
-  { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-violet-100' },
-  { key: 'assistant', label: '예식도우미', icon: '🎀', bg: 'bg-blue-100' },
-  { key: 'mc',        label: '사회자',     icon: '🎤', bg: 'bg-cyan-100' },
-  { key: 'singer',    label: '축가',       icon: '🎵', bg: 'bg-emerald-100' },
-  { key: 'designer',  label: '디자이너',   icon: '✏️', bg: 'bg-yellow-100' },
+const CATEGORIES: { key: string; label: string; icon: string; bg: string }[] = [
+  { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-gray-50' },
+  { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-gray-50' },
+  { key: 'studio',    label: '스튜디오',   icon: '📸', bg: 'bg-gray-50' },
+  { key: 'makeup',    label: '메이크업',   icon: '💄', bg: 'bg-gray-50' },
+  { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-primary-50' },
+  { key: 'assistant', label: '예식도우미', icon: '🎀', bg: 'bg-gray-50' },
+  { key: 'mc',        label: '사회자',     icon: '🎤', bg: 'bg-gray-50' },
+  { key: 'singer',    label: '축가',       icon: '🎵', bg: 'bg-gray-50' },
+  { key: 'designer',  label: '디자이너',   icon: '✏️', bg: 'bg-gray-50' },
   { key: '',          label: '전체보기',   icon: '⊞', bg: 'bg-gray-100' },
 ];
 
 const GRADIENTS = [
-  'from-rose-100 to-orange-100',
-  'from-amber-100 to-yellow-100',
-  'from-emerald-100 to-teal-100',
-  'from-sky-100 to-indigo-100',
-  'from-fuchsia-100 to-pink-100',
-  'from-violet-100 to-purple-100',
-  'from-lime-100 to-emerald-100',
-  'from-cyan-100 to-sky-100',
+  'from-gray-50 to-gray-100',
+  'from-gray-100 to-gray-50',
+  'from-primary-50 to-gray-100',
+  'from-gray-50 to-primary-50',
 ];
 const EMOJIS = ['💍', '👗', '📸', '💄', '📋', '🎀', '🎤', '🎵'];
 
@@ -120,9 +116,6 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
                 href={c.key ? `${ROUTES.JOBS}?businessType=${c.key}` : ROUTES.JOBS}
                 className="cat-tile"
               >
-                {c.badge && (
-                  <span className={`cat-tile-badge ${c.badgeBest ? 'cat-tile-badge-best' : ''}`}>{c.badge}</span>
-                )}
                 <div className={`cat-tile-icon ${c.bg}`}>{c.icon}</div>
                 <span className="cat-tile-label">{c.label}</span>
               </Link>
