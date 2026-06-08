@@ -45,7 +45,7 @@ export default function AdminEventEditPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="text-2xl font-bold text-gray-900">이벤트 수정</h1>
+        <h1 className="page-title">이벤트 수정</h1>
       </div>
       <div className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
         <EventForm

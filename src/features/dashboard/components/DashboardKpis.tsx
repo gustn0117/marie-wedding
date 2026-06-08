@@ -23,35 +23,46 @@ export default function DashboardKpis({ kpis }: KpiProps) {
 
   return (
     <div className="space-y-6">
-      {/* 매출 — 최상위 강조 */}
-      <section className="rounded-2xl border border-gray-200 bg-white p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">이번 달 매출 (계약 총액)</p>
-            <p className="text-3xl font-extrabold text-ink tabular-nums">{fmt(kpis.revenue.thisMonth)} <span className="text-base font-bold text-gray-500">KRW</span></p>
+      {/* 매출 — 최상위 강조, .surface 토큰 */}
+      <section className="surface p-6">
+        <div className="flex items-start justify-between mb-4 gap-3">
+          <div className="min-w-0">
+            <p className="section-eyebrow !mb-1">이번 달 매출 (계약 총액)</p>
+            <p className="text-[32px] font-extrabold text-ink tabular-nums leading-none tracking-tighter">
+              {fmt(kpis.revenue.thisMonth)}
+              <span className="text-base font-bold text-gray-400 ml-1.5">KRW</span>
+            </p>
             {revenueDiffPercent !== null && (
-              <p className={`text-xs mt-1 font-semibold ${revenueDiff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {revenueDiff >= 0 ? '↑' : '↓'} 전월 대비 {Math.abs(revenueDiffPercent)}% ({fmt(Math.abs(revenueDiff))} KRW)
+              <p className={`mt-1.5 text-[13px] font-semibold ${revenueDiff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                {revenueDiff >= 0 ? '↑' : '↓'} 전월 대비 {Math.abs(revenueDiffPercent)}%
+                <span className="text-gray-400 font-medium ml-1">({fmt(Math.abs(revenueDiff))} KRW)</span>
               </p>
             )}
           </div>
-          <Link href={ROUTES.CONTRACTS} className="text-xs text-gray-500 hover:text-ink font-bold">계약 보기 →</Link>
+          <Link href={ROUTES.CONTRACTS} className="shrink-0 text-xs text-gray-500 hover:text-ink font-bold inline-flex items-center gap-1">
+            계약 보기
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">전월</p>
-            <p className="text-base font-bold text-ink tabular-nums">{fmt(kpis.revenue.lastMonth)} <span className="text-xs text-gray-500">KRW</span></p>
+            <p className="mt-0.5 text-[15px] font-bold text-ink tabular-nums">
+              {fmt(kpis.revenue.lastMonth)} <span className="text-[11px] text-gray-400">KRW</span>
+            </p>
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">누적</p>
-            <p className="text-base font-bold text-ink tabular-nums">{fmt(kpis.revenue.allTime)} <span className="text-xs text-gray-500">KRW</span></p>
+            <p className="mt-0.5 text-[15px] font-bold text-ink tabular-nums">
+              {fmt(kpis.revenue.allTime)} <span className="text-[11px] text-gray-400">KRW</span>
+            </p>
           </div>
         </div>
       </section>
 
-      {/* 거래 4 단계 KPI */}
+      {/* 거래 4 단계 KPI — .stat 토큰 */}
       <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">거래 흐름</p>
+        <p className="section-eyebrow">거래 흐름</p>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <KpiCard
             label="견적 (받은)"
@@ -122,9 +133,9 @@ function KpiCard({
   details: { label: string; value: string; tone?: keyof typeof TONES }[];
 }) {
   return (
-    <Link href={href} className="block rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-400 hover:shadow-sm transition-all group">
-      <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">{label}</p>
-      <p className="text-2xl font-extrabold text-ink tabular-nums mb-1 group-hover:text-primary transition-colors">
+    <Link href={href} className="stat hover:border-gray-300 transition-colors group">
+      <p className="stat-label">{label}</p>
+      <p className="stat-value mb-1 group-hover:text-primary transition-colors">
         {primaryValue.toLocaleString()}
       </p>
       <p className="text-xs text-gray-500 mb-3">{primaryUnit}</p>

@@ -69,7 +69,7 @@ export default function AdminCommentsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">댓글 관리</h1>
+        <h1 className="page-title">댓글 관리</h1>
         <span className="text-sm text-gray-500">{count.toLocaleString()}건</span>
       </div>
 

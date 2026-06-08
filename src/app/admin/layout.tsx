@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile header */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
+      <div className="lg:hidden sticky top-0 z-sidebar bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 -ml-2 text-gray-600" aria-label="메뉴 열기">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -59,13 +59,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setSidebarOpen(false)}>
+        <div className="fixed inset-0 z-overlay lg:hidden" onClick={() => setSidebarOpen(false)}>
           <div className="absolute inset-0 bg-black/30" />
         </div>
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 z-50 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside
+        style={{ width: 'var(--sidebar-w)' }}
+        className={`fixed top-0 left-0 z-sidebar h-full bg-white border-r border-gray-200 transform transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
         <div className="h-14 flex items-center gap-2 px-6 border-b border-gray-100">
           <Link href={ROUTES.ADMIN} aria-label="Marié Admin 홈">
             <Logo variant="full" size="sm" />
@@ -105,7 +108,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main content */}
-      <main className="lg:ml-64">
+      <main className="lg:ml-[var(--sidebar-w)]">
         <div className="p-4 lg:p-8 max-w-[1400px]">
           {children}
         </div>

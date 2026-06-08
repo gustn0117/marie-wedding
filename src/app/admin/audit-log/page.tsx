@@ -96,7 +96,7 @@ export default function AdminAuditLogPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-ink">감사 로그</h1>
+          <h1 className="page-title">감사 로그</h1>
           <p className="text-sm text-gray-500 mt-1">모든 거래 변경 이력을 추적합니다 (견적·계약·예약·정산).</p>
         </div>
       </div>

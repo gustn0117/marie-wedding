@@ -50,7 +50,7 @@ export default function AdminEventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">이벤트 & 소식 관리</h1>
+          <h1 className="page-title">이벤트 & 소식 관리</h1>
           <p className="text-sm text-gray-500 mt-1">총 {events.length}건</p>
         </div>
         <Link href={ROUTES.ADMIN_EVENTS_NEW} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">

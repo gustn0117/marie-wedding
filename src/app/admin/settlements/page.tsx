@@ -93,7 +93,7 @@ export default function AdminSettlementsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ink">정산 관리</h1>
+        <h1 className="page-title">정산 관리</h1>
         <span className="text-sm text-gray-500">{list.length}건</span>
       </div>
 
