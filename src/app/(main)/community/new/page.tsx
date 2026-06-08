@@ -39,7 +39,7 @@ export default async function NewPostPage() {
           </svg>
           목록으로
         </Link>
-        <p className="text-sm font-bold text-primary">Community</p>
+        <p className="text-sm font-bold text-primary">커뮤니티</p>
         <h1 className="text-2xl font-bold text-gray-900">새 글 작성</h1>
       </div>
 

@@ -34,7 +34,7 @@ export default async function HotPostsSection() {
     <section className="platform-panel">
       <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Trending</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">인기</p>
           <h2 className="text-sm font-bold text-gray-900 mt-0.5">최근 {WINDOW_DAYS}일 인기글</h2>
         </div>
         <Link href={`${ROUTES.COMMUNITY}?sort=popular`} className="text-xs font-bold text-gray-500 hover:text-ink">

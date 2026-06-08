@@ -39,7 +39,7 @@ export default async function MyPortfoliosPage() {
 
       <header className="platform-panel p-5 flex items-center justify-between">
         <div>
-          <p className="platform-eyebrow">Portfolio</p>
+          <p className="platform-eyebrow">포트폴리오</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">내 포트폴리오</h1>
           <p className="mt-2 text-sm text-gray-600">작품 단위로 진행 기록·이미지·예식장을 정리해 디렉토리에 노출됩니다.</p>
         </div>

@@ -78,7 +78,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         <div className="platform-hero-grid">
           <div className="platform-hero-copy">
             <div>
-            <p className="platform-eyebrow">Community</p>
+            <p className="platform-eyebrow">커뮤니티</p>
             <h1 className="platform-hero-title">커뮤니티</h1>
             <p className="platform-hero-text">
               현장 노하우, 업계 소식, 구인 경험을 웨딩업계 종사자들과 나누는 실무형 지식 공간입니다.

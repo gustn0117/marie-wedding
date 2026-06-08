@@ -6,7 +6,7 @@ export default function ContactPage() {
   return (
     <div className="max-w-[900px] mx-auto space-y-4">
       <section className="saramin-section p-5">
-        <p className="text-sm font-bold text-primary">Help Center</p>
+        <p className="text-sm font-bold text-primary">고객센터 안내</p>
         <h1 className="text-2xl font-bold text-gray-900">고객센터</h1>
       </section>
 
@@ -42,7 +42,7 @@ export default function ContactPage() {
             { q: '공고 등록은 무료인가요?', a: '현재 모든 공고 등록은 무료로 제공되고 있습니다.' },
             { q: '프로필 정보를 수정하고 싶어요.', a: '로그인 후 우측 상단 프로필 메뉴에서 "마이페이지"를 클릭하신 후 "프로필 수정"에서 변경하실 수 있습니다.' },
             { q: '비밀번호를 잊어버렸어요.', a: '로그인 페이지에서 "비밀번호 찾기"를 통해 가입하신 이메일로 재설정 링크를 받으실 수 있습니다.' },
-            { q: '광고/제휴 문의는 어떻게 하나요?', a: 'support@marie.co.kr로 문의 내용을 보내주시면 담당자가 확인 후 연락드리겠습니다.' },
+            { q: '광고/제휴 문의는 어떻게 하나요?', a: 'tlagustn020117@gmail.com으로 문의 내용을 보내주시면 담당자가 확인 후 연락드리겠습니다.' },
           ].map((faq, idx) => (
             <details key={idx} className="group">
               <summary className="flex items-center justify-between cursor-pointer py-3 border-b border-gray-100 text-sm font-medium text-text-primary hover:text-primary transition-colors">

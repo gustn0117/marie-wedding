@@ -89,7 +89,7 @@ export default async function StatsPage() {
 
       <header className="platform-panel p-6 flex items-start justify-between gap-3">
         <div>
-          <p className="platform-eyebrow">Stats</p>
+          <p className="platform-eyebrow">통계</p>
           <h1 className="text-2xl font-bold text-gray-900 mt-1">플랫폼 통계</h1>
           <p className="mt-2 text-sm text-gray-600">
             마리에에 누적된 업체·공고·콘텐츠 수치. 매 5분 캐싱.

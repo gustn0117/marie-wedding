@@ -182,7 +182,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         <div className="platform-hero-grid">
           <div className="platform-hero-copy">
             <div>
-            <p className="platform-eyebrow">Wedding Recruit</p>
+            <p className="platform-eyebrow">채용 정보</p>
             <h1 className="platform-hero-title">{pageTitle}</h1>
             <p className="platform-hero-text">
               웨딩 업계 직무, 지역, 고용형태별 공고를 한 화면에서 비교하고 지원 흐름까지 이어갑니다.

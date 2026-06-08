@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import {
-  getBusinessTypeLabel,
+  getPrimaryBusinessTypeLabel,
   getRegionLabel,
   getEmploymentTypeLabel,
   formatRelativeTime,
@@ -147,7 +147,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
                   {profile.company_name || profile.contact_name}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-400">
-                  {profile.business_type && <span>{getBusinessTypeLabel(profile.business_type)}</span>}
+                  {profile.business_type && <span>{getPrimaryBusinessTypeLabel(profile.business_type, 1)}</span>}
                   <span>{getRegionLabel(profile.region)}</span>
                 </div>
               </div>

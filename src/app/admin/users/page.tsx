@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
-import { formatDate, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import { formatDate, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -234,7 +234,7 @@ export default function AdminUsersPage() {
                         {user.account_type === 'business' ? '업체' : '개인'}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{user.business_type ? getBusinessTypeLabel(user.business_type) : '-'}</td>
+                    <td className="px-5 py-3 text-gray-600">{user.business_type ? getPrimaryBusinessTypeLabel(user.business_type, 2) : '-'}</td>
                     <td className="px-5 py-3 text-gray-600">{getRegionLabel(user.region)}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${

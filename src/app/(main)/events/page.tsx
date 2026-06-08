@@ -59,7 +59,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
       <section className="platform-panel p-5">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-end">
           <div>
-            <p className="platform-eyebrow">News & Event</p>
+            <p className="platform-eyebrow">이벤트</p>
             <h1 className="mt-1 text-[28px] font-bold leading-tight text-primary">이벤트 & 소식</h1>
             <p className="mt-2 max-w-2xl text-[15px] leading-relaxed text-gray-600">
               Marié의 새로운 이벤트, 공지, 웨딩 업계 소식을 확인하세요.

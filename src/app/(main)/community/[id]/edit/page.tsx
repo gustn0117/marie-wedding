@@ -59,7 +59,7 @@ export default async function EditPostPage({ params }: PageProps) {
           </svg>
           돌아가기
         </Link>
-        <p className="text-sm font-bold text-primary">Community</p>
+        <p className="text-sm font-bold text-primary">커뮤니티</p>
         <h1 className="text-2xl font-bold text-gray-900">글 수정</h1>
       </div>
 

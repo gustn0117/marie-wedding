@@ -57,7 +57,7 @@ export default async function VerificationPage() {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Trust</p>
+        <p className="platform-eyebrow">신뢰</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">업체 인증</h1>
         <p className="mt-2 text-sm text-gray-600">
           사업자등록증을 제출하면 관리자 검토 후 프로필·카드에 &quot;인증&quot; 배지가 노출됩니다.

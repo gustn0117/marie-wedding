@@ -62,7 +62,7 @@ export default async function PendingReviewsSection({ profileId }: Props) {
     <section className="platform-panel p-5 border-l-4 border-l-primary">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Review Queue</p>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">검토 대기</p>
           <h2 className="text-sm font-bold text-gray-900 mt-1">후기 작성 대기 ({pending.length})</h2>
         </div>
       </div>

@@ -63,6 +63,29 @@ export function getBusinessTypeLabel(type: string): string {
 }
 
 /**
+ * CSV로 저장된 다중 업종을 라벨 배열로. 빈 값/중복 제거.
+ */
+export function getBusinessTypeLabels(csv: string | null | undefined): string[] {
+  if (!csv) return [];
+  const seen = new Set<string>();
+  return csv
+    .split(',')
+    .map((t) => t.trim())
+    .filter((t) => t && !seen.has(t) && (seen.add(t) || true))
+    .map((t) => BUSINESS_TYPES.find((item) => item.value === t)?.label ?? t);
+}
+
+/**
+ * CSV의 첫 N개 라벨 + 나머지 "외 K개" 형식. 한 줄 메타 표시에 적합.
+ */
+export function getPrimaryBusinessTypeLabel(csv: string | null | undefined, max: number = 1): string {
+  const labels = getBusinessTypeLabels(csv);
+  if (labels.length === 0) return '';
+  if (labels.length <= max) return labels.join(', ');
+  return `${labels.slice(0, max).join(', ')} 외 ${labels.length - max}`;
+}
+
+/**
  * Convert an employment type enum value to its Korean label.
  */
 export function getEmploymentTypeLabel(type: string): string {

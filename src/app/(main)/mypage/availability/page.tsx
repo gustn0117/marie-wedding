@@ -24,7 +24,7 @@ export default async function MyAvailabilityPage() {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Availability</p>
+        <p className="platform-eyebrow">일정</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">가용 일정 관리</h1>
         <p className="mt-2 text-sm text-gray-600">
           예식 날짜별로 가능/불가를 표시해 두면 디렉토리 상세에서 다른 사용자가 확인할 수 있습니다.

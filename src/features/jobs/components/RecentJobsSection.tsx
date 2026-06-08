@@ -41,8 +41,8 @@ export default function RecentJobsSection() {
     <section className="platform-panel">
       <div className="border-b border-gray-100 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Recently Viewed</p>
-          <h2 className="text-sm font-bold text-gray-900 mt-0.5">최근 본 공고</h2>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">최근 본</p>
+          <h2 className="text-sm font-bold text-ink mt-0.5">최근 본 공고</h2>
         </div>
       </div>
       <ul className="divide-y divide-gray-100">
@@ -50,10 +50,10 @@ export default function RecentJobsSection() {
           <li key={job.id}>
             <Link
               href={ROUTES.JOBS_DETAIL(job.id)}
-              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-primary-50/40 transition-colors group"
+              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-gray-900 group-hover:text-primary truncate">{job.title}</p>
+                <p className="text-sm font-bold text-ink group-hover:text-primary truncate">{job.title}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
                 </p>

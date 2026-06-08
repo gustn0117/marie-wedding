@@ -78,7 +78,7 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         <div className="platform-hero-grid">
           <div className="platform-hero-copy">
             <div>
-            <p className="platform-eyebrow">Company Directory</p>
+            <p className="platform-eyebrow">업체 디렉토리</p>
             <h1 className="platform-hero-title">업체 디렉토리</h1>
             <p className="platform-hero-text">
               웨딩홀, 드레스, 스튜디오, 메이크업 등 협업 가능한 파트너를 업종과 지역별로 탐색하세요.

@@ -6,7 +6,7 @@ export default function AdminModerationKeywordsPage() {
   return (
     <main className="mx-auto max-w-[1000px] space-y-4">
       <header className="platform-panel p-5">
-        <p className="platform-eyebrow">Admin</p>
+        <p className="platform-eyebrow">관리자</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">자동 모더레이션 키워드</h1>
         <p className="mt-2 text-sm text-gray-600">
           여기에 등록된 키워드를 공고/글/댓글 본문에서 발견하면 작성 시점에 자동으로 숨겨집니다.

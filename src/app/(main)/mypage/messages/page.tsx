@@ -90,7 +90,7 @@ export default async function MessagesPage() {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Messages</p>
+        <p className="platform-eyebrow">메시지</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">메시지</h1>
         <p className="mt-2 text-sm text-gray-600">
           업체·프리랜서와 1:1로 대화할 수 있습니다. 채용·섭외와 별개로 사용 가능.

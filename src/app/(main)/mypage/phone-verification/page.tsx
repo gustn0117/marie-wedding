@@ -35,7 +35,7 @@ export default async function PhoneVerificationPage() {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Trust</p>
+        <p className="platform-eyebrow">신뢰</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">휴대폰 본인 확인</h1>
         <p className="mt-2 text-sm text-gray-600">
           본인 확인이 완료되면 카드와 프로필에 &quot;실명 확인&quot; 배지가 노출됩니다.

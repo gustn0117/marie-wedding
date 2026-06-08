@@ -16,7 +16,7 @@ export default async function AdminVerificationsPage() {
   return (
     <main className="mx-auto max-w-[1200px] space-y-4">
       <header className="platform-panel p-5">
-        <p className="platform-eyebrow">Admin</p>
+        <p className="platform-eyebrow">관리자</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">업체 인증 검토</h1>
         <p className="mt-2 text-sm text-gray-600">
           제출된 사업자등록증과 사업자번호를 확인하고 승인/거절을 결정합니다.

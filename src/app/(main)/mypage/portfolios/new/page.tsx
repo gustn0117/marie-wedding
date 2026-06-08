@@ -26,7 +26,7 @@ export default async function NewPortfolioPage() {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Portfolio</p>
+        <p className="platform-eyebrow">포트폴리오</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">새 포트폴리오 등록</h1>
       </header>
 

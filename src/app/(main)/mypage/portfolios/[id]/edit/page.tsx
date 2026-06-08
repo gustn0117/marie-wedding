@@ -44,7 +44,7 @@ export default async function EditPortfolioPage({ params }: Props) {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Portfolio</p>
+        <p className="platform-eyebrow">포트폴리오</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">포트폴리오 수정</h1>
       </header>
 

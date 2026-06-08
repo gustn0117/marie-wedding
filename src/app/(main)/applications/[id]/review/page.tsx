@@ -74,7 +74,7 @@ export default async function ReviewPage({ params }: Props) {
       </nav>
 
       <header className="platform-panel p-6">
-        <p className="platform-eyebrow">Review</p>
+        <p className="platform-eyebrow">검토</p>
         <h1 className="text-2xl font-bold text-gray-900 mt-1">{revieweeName} 리뷰</h1>
         <p className="mt-2 text-sm text-gray-600 truncate">{job.title}</p>
       </header>
