@@ -88,9 +88,14 @@ export default function LoginForm() {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-1.5">
-              비밀번호
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-text-primary">
+                비밀번호
+              </label>
+              <Link href={ROUTES.FORGOT_PASSWORD} className="text-xs font-semibold text-gray-500 hover:text-primary">
+                비밀번호 찾기
+              </Link>
+            </div>
             <input
               id="password"
               name="password"

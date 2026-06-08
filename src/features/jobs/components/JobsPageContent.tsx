@@ -556,13 +556,16 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         )}
       </div>
 
-      {/* Results Info + View Toggle */}
+      {/* Results Info + Sort + View Toggle */}
       <div className="platform-toolbar">
         <p className="text-sm font-semibold text-gray-600" aria-live="polite">
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
-          <span className="ml-2 text-xs font-medium text-gray-400">최신 등록순</span>
         </p>
         <div className="flex items-center gap-3">
+          <SortDropdown
+            value={searchParams.get('sort') ?? 'recent'}
+            onChange={(v) => updateParams({ sort: v === 'recent' ? '' : v })}
+          />
           <SaveSearchButton
             scope="jobs"
             query={{
@@ -644,6 +647,54 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const SORT_OPTIONS = [
+  { v: 'recent', label: '최신 등록순' },
+  { v: 'deadline', label: '마감 임박순' },
+  { v: 'views', label: '조회 많은순' },
+];
+
+function SortDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const close = useCallback(() => setOpen(false), []);
+  const wrapRef = useOutsideClick<HTMLDivElement>(open, close);
+  const currentLabel = SORT_OPTIONS.find((o) => o.v === value)?.label ?? SORT_OPTIONS[0].label;
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:border-ink transition-colors"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span>{currentLabel}</span>
+        <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+        </svg>
+      </button>
+      {open && (
+        <div role="listbox" className="absolute right-0 top-full mt-1 z-30 min-w-[140px] rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.v}
+              type="button"
+              role="option"
+              aria-selected={value === opt.v}
+              onClick={() => { onChange(opt.v); setOpen(false); }}
+              className={`block w-full text-left px-3 py-2 text-xs font-semibold transition-colors ${
+                value === opt.v ? 'bg-gray-50 text-ink' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
         </div>
       )}
     </div>

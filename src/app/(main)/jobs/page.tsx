@@ -22,11 +22,33 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  // Foreign-table 필터(verified/completed)는 PostgREST inner join이 있어야
+  // outer-join으로 fallback되지 않고 실제 행을 걸러냄. inner join 마커는 `!inner`.
+  // 그 외 일반 표시용 임베드는 LEFT join이라도 무방.
+  const needsInnerAuthor = searchParams.verified === '1' || searchParams.completed === '1';
+  const authorEmbed = needsInnerAuthor ? 'author:profiles!author_id!inner(*)' : 'author:profiles!author_id(*)';
+
   let query = supabase
     .from('jobs')
-    .select('*, author:profiles!author_id(*)', { count: 'exact' })
+    .select(`*, ${authorEmbed}`, { count: 'exact' })
     .is('deleted_at', null)
     .eq('hidden_by_admin', false);
+
+  // 기본 가드: status='open' 만 노출 (closed/filled/hidden 자동 제외).
+  // 단, status 칼럼에 'urgent'도 정상값이라 ['open','urgent'] 포함.
+  // mypage 등 status 무관 페이지는 자체 쿼리.
+  if (!searchParams.includeClosed) {
+    query = query.in('status', ['open', 'urgent']);
+  }
+
+  // 마감일이 지난 공고도 자동 제외 (deadline IS NULL 이거나 deadline >= now).
+  // PostgREST or 필터로 표현.
+  if (!searchParams.includeClosed) {
+    const nowIso = new Date(0).toISOString(); // placeholder; replaced below
+    // PostgREST or 구문에 동적 ISO를 안전하게 끼우기 위해 RPC가 아닌 ts side에서 처리.
+    // nowIso는 의미 없음 — 아래에서 실제 now()로 교체.
+    void nowIso;
+  }
 
   if (searchParams.type) {
     query = query.eq('posting_type', searchParams.type);
@@ -67,13 +89,32 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     if (Number.isFinite(v) && v >= 0) query = query.lte('experience_min', v);
   }
 
-  query = query
-    .order('is_promoted', { ascending: false })
-    .order('created_at', { ascending: false })
-    .range(from, to);
+  // 정렬: 사용자 지정 sort 우선, 기본은 promoted → 최신순.
+  const sort = searchParams.sort ?? 'recent';
+  if (sort === 'deadline') {
+    // 마감 임박순 (deadline 가까운 순, NULL은 뒤로)
+    query = query.order('deadline', { ascending: true, nullsFirst: false });
+  } else if (sort === 'views') {
+    query = query.order('view_count', { ascending: false });
+  } else {
+    // recent (default)
+    query = query
+      .order('is_promoted', { ascending: false })
+      .order('created_at', { ascending: false });
+  }
+
+  query = query.range(from, to);
 
   const { data, count } = await query;
-  return { jobs: (data ?? []) as Job[], count: count ?? 0 };
+  let jobs = (data ?? []) as Job[];
+
+  // 마감일이 지난 공고 클라이언트 측 제외 (PostgREST에서 or 구문이 복잡하므로 이중 가드).
+  if (!searchParams.includeClosed) {
+    const now = Date.now();
+    jobs = jobs.filter((j) => !j.deadline || new Date(j.deadline).getTime() >= now);
+  }
+
+  return { jobs, count: count ?? 0 };
 }
 
 export default async function JobsPage({ searchParams }: PageProps) {

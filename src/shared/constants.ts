@@ -108,6 +108,9 @@ export const ROUTES = {
   MYPAGE_AVAILABILITY: '/mypage/availability',
   MYPAGE_MESSAGES: '/mypage/messages',
   MYPAGE_MESSAGE_DETAIL: (id: string) => `/mypage/messages/${id}`,
+  MYPAGE_BOOKMARKS: '/mypage/bookmarks',
+  FORGOT_PASSWORD: '/auth/forgot-password',
+  RESET_PASSWORD: '/auth/reset-password',
 } as const;
 
 export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
