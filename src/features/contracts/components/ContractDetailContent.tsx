@@ -208,6 +208,16 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       <div className="rounded-xl border border-gray-200 bg-white p-5 sticky bottom-4 shadow-md">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">액션</p>
         <div className="flex flex-wrap gap-2">
+          <a
+            href={`/api/pdf/contract/${contract.id}`}
+            target="_blank"
+            rel="noopener"
+            className="btn-outline text-sm inline-flex items-center gap-1.5"
+            title="계약서 PDF 다운로드"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 00-2.25 2.25v9a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25v-9a2.25 2.25 0 00-2.25-2.25H15M9 12l3 3m0 0l3-3m-3 3V2.25" /></svg>
+            PDF
+          </a>
           {canSign && (
             <button
               type="button"

@@ -4,7 +4,12 @@ import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import SettlementStatusBadge from './SettlementStatusBadge';
 
-export default function SettlementCard({ settlement }: { settlement: Settlement }) {
+interface Props {
+  settlement: Settlement;
+  showPdfButton?: boolean;
+}
+
+export default function SettlementCard({ settlement, showPdfButton = true }: Props) {
   const fmt = (n: number) => new Intl.NumberFormat('ko-KR').format(n);
   const counterpartyName =
     settlement.contract?.party_a_profile_id === settlement.payee_profile_id
@@ -12,9 +17,22 @@ export default function SettlementCard({ settlement }: { settlement: Settlement 
       : settlement.contract?.party_a_org_name;
 
   return (
-    <Link
+    <div className="relative rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-400 hover:shadow-sm transition-all group">
+      {showPdfButton && settlement.status === 'paid' && (
+        <a
+          href={`/api/pdf/settlement/${settlement.id}`}
+          target="_blank"
+          rel="noopener"
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-bold text-gray-600 bg-white border border-gray-200 hover:border-ink hover:text-ink"
+          title="정산서 PDF 다운로드"
+        >
+          PDF
+        </a>
+      )}
+      <Link
       href={ROUTES.CONTRACTS_DETAIL(settlement.contract_id)}
-      className="block rounded-xl border border-gray-200 bg-white p-4 hover:border-gray-400 hover:shadow-sm transition-all group"
+      className="block"
     >
       <div className="flex items-start justify-between gap-3 mb-2">
         <div className="min-w-0 flex-1">
@@ -55,6 +73,7 @@ export default function SettlementCard({ settlement }: { settlement: Settlement 
           <p className="text-[10px] text-gray-400 mt-0.5">{formatRelativeTime(settlement.created_at)}</p>
         </div>
       </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
