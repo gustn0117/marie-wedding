@@ -33,7 +33,11 @@ export default function LoginForm() {
     setLoading(true);
     try {
       await authService.signIn(formData.email, formData.password);
-      window.location.href = ROUTES.HOME;
+      // redirect 쿼리 파라미터 처리 — 어드민 접근 시 미들웨어가 추가함
+      const sp = new URLSearchParams(window.location.search);
+      const redirect = sp.get('redirect');
+      const safeRedirect = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : ROUTES.HOME;
+      window.location.href = safeRedirect;
     } catch (err) {
       if (err instanceof Error) {
         if (err.message.includes('Invalid login credentials')) {

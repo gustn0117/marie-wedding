@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import { useAuth } from '@/shared/hooks/useAuth';
 import Logo from '@/shared/components/Logo';
-import { adminService } from '@/features/admin/services/admin-service';
 
 const NAV_ITEMS = [
   { href: ROUTES.ADMIN, label: '대시보드', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -24,76 +23,18 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { profile, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Password fallback for emergency access. Prefer profile.role === 'admin'.
-  const [legacyAuthed, setLegacyAuthed] = useState(false);
-  const [password, setPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-
-  useEffect(() => {
-    if (adminService.hasSavedPassword()) setLegacyAuthed(true);
-  }, []);
-
-  const isAdmin = profile?.role === 'admin';
-  const authed = isAdmin || legacyAuthed;
-
-  const handleLegacyLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await adminService.ping(password);
-      adminService.savePassword(password);
-      setLegacyAuthed(true);
-      setLoginError('');
-    } catch {
-      setLoginError('비밀번호가 틀렸습니다.');
-    }
-  };
-
-  const handleLogout = () => {
-    adminService.clearPassword();
-    setLegacyAuthed(false);
-    setPassword('');
-  };
+  // 인증/권한 가드는 middleware가 담당 (src/lib/supabase/middleware.ts):
+  //   - 비로그인 → /login (redirect param 포함)
+  //   - role !== 'admin' → 홈으로
+  // 여기까지 도달하면 항상 admin 권한이 보장됨.
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
-
-  if (!authed) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <form onSubmit={handleLegacyLogin} className="w-full max-w-sm">
-          <div className="bg-white rounded border border-gray-200 shadow-sm p-8">
-            <div className="flex flex-col items-center text-center mb-8 gap-2">
-              <Logo variant="full" size="md" />
-              <p className="text-sm text-gray-500">관리자 페이지</p>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => { setPassword(e.target.value); setLoginError(''); }}
-                  placeholder="비밀번호를 입력하세요"
-                  className="input-field"
-                  autoFocus
-                />
-                {loginError && <p className="text-sm text-state-urgent mt-1">{loginError}</p>}
-              </div>
-              <button type="submit" className="btn-primary w-full">로그인</button>
-            </div>
-          </div>
-          <p className="text-center mt-4">
-            <Link href={ROUTES.HOME} className="text-sm text-gray-400 hover:text-gray-600">사이트로 돌아가기</Link>
-          </p>
-        </form>
       </div>
     );
   }
@@ -160,12 +101,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </svg>
             사이트로 돌아가기
           </Link>
-          <button
-            onClick={handleLogout}
-            className="mt-2 flex items-center justify-center gap-2 w-full rounded bg-state-urgent-bg px-3 py-2 text-sm font-semibold text-state-urgent hover:bg-state-urgent-bg transition-colors"
-          >
-            로그아웃
-          </button>
         </div>
       </aside>
 

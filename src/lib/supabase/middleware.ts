@@ -36,11 +36,20 @@ export async function updateSession(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
 
     const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
+    const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
 
     // 로그인한 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트
     if (user && isAuthPage) {
       const url = request.nextUrl.clone();
       url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+
+    // /admin/* 가드 — 비로그인 즉시 리다이렉트
+    if (isAdminPath && !user) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      url.searchParams.set('redirect', request.nextUrl.pathname);
       return NextResponse.redirect(url);
     }
 
@@ -62,6 +71,15 @@ export async function updateSession(request: NextRequest) {
         if (profile?.banned_at && !request.nextUrl.pathname.startsWith('/banned') && !request.nextUrl.pathname.startsWith('/auth/callback') && !request.nextUrl.pathname.startsWith('/api')) {
           const url = request.nextUrl.clone();
           url.pathname = '/banned';
+          return NextResponse.redirect(url);
+        }
+
+        // /admin/* 가드 — role !== 'admin' 차단 (B1 갭)
+        // 이전에는 admin/layout.tsx의 클라이언트 비밀번호 모달만으로 가드 — 진짜 권한 분리 부재.
+        // 미들웨어 단에서 차단해야 직접 URL 접근 시도도 차단됨.
+        if (isAdminPath && profile?.role !== 'admin') {
+          const url = request.nextUrl.clone();
+          url.pathname = '/';
           return NextResponse.redirect(url);
         }
 
