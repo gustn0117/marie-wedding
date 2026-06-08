@@ -16,6 +16,7 @@ import RecommendedJobs from '@/features/recommendations/components/RecommendedJo
 import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
 import RecentJobsSection from '@/features/jobs/components/RecentJobsSection';
 import BookmarkedJobsSection from '@/features/mypage/components/BookmarkedJobsSection';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,43 +106,40 @@ export default async function MyPage() {
     : null;
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-4">
-      <section className="platform-hero">
-        <div className="platform-hero-grid">
-          <div className="platform-hero-copy">
-            <div>
-            <p className="platform-eyebrow">내 작업공간</p>
-            <h1 className="platform-hero-title">마이페이지</h1>
-            <p className="platform-hero-text">
-              등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다.
-            </p>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div className="platform-stat-card">
-                <span className="platform-stat-label">등록 공고</span>
-                <span className="platform-stat-value">{jobs.length}건</span>
-              </div>
-              <div className="platform-stat-card">
-                <span className="platform-stat-label">받은 지원</span>
-                <span className="platform-stat-value">{receivedApplications.length}건</span>
-              </div>
-              <div className="platform-stat-card">
-                <span className="platform-stat-label">거래 완료</span>
-                <span className="platform-stat-value">{profile.completed_deals_count}건</span>
-              </div>
-            </div>
-          </div>
-          <div className="platform-panel-soft grid content-start gap-2 p-3">
-            <p className="text-[12px] font-bold text-gray-500">빠른 실행</p>
-            <Link href={ROUTES.JOBS_NEW} className="btn-primary min-h-[44px]">공고 등록</Link>
-            <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-secondary min-h-[44px]">업체 관리</Link>
-            <Link href={ROUTES.MYPAGE_MESSAGES} className="btn-secondary min-h-[44px]">메시지 확인</Link>
-          </div>
+    <div className="space-y-4">
+      <PageHeader
+        eyebrow="내 작업공간"
+        title="마이페이지"
+        description="등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다."
+        actions={
+          <>
+            <Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">공고 등록</Link>
+            <Link href={ROUTES.MYPAGE_DASHBOARD} className="btn-outline text-sm">대시보드</Link>
+          </>
+        }
+      />
+
+      {/* 활동 요약 — 3 stat 카드 */}
+      <section className="grid grid-cols-3 gap-3">
+        <div className="stat">
+          <p className="stat-label">등록 공고</p>
+          <p className="stat-value">{jobs.length}</p>
+          <p className="text-xs text-gray-400 mt-1">건</p>
+        </div>
+        <div className="stat">
+          <p className="stat-label">받은 지원</p>
+          <p className="stat-value">{receivedApplications.length}</p>
+          <p className="text-xs text-gray-400 mt-1">건</p>
+        </div>
+        <div className="stat">
+          <p className="stat-label">거래 완료</p>
+          <p className="stat-value">{profile.completed_deals_count}</p>
+          <p className="text-xs text-gray-400 mt-1">건</p>
         </div>
       </section>
 
       {/* Profile Card */}
-      <div className="platform-panel p-5 sm:p-6">
+      <div className="surface p-5 sm:p-6">
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
             {imageUrl ? (
@@ -220,52 +218,7 @@ export default async function MyPage() {
           </div>
         </div>
 
-        {/* Quick Actions — 그룹화로 평등 나열 해소 (C-17) */}
-        {/* 이전: 8개 platform-link-tile이 모두 같은 모양으로 sm:grid-cols-4 나열 → 정보 노이즈.
-            수정: '프로필 관리' / '활동' / '계정' 3 그룹으로 묶고 그룹 헤더 추가. */}
-        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-4">
-          {/* B2B 거래 — Milestone 1.2 신규 진입점 */}
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-2">B2B 거래</p>
-            <div className="grid gap-1.5">
-              <Link href={ROUTES.MYPAGE_DASHBOARD} className="platform-link-tile text-sm font-bold text-gray-700">대시보드</Link>
-              <Link href={ROUTES.QUOTATIONS} className="platform-link-tile text-sm font-bold text-gray-700">견적</Link>
-              <Link href={ROUTES.CONTRACTS} className="platform-link-tile text-sm font-bold text-gray-700">계약</Link>
-              <Link href={ROUTES.BOOKINGS} className="platform-link-tile text-sm font-bold text-gray-700">예약·일정</Link>
-              <Link href={ROUTES.SETTLEMENTS} className="platform-link-tile text-sm font-bold text-gray-700">정산</Link>
-            </div>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">프로필 관리</p>
-            <div className="grid gap-1.5">
-              <Link href={ROUTES.MYPAGE_EDIT} className="platform-link-tile text-sm font-bold text-gray-700">프로필 수정</Link>
-              <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="platform-link-tile text-sm font-bold text-gray-700">포트폴리오</Link>
-              <Link href={ROUTES.MYPAGE_ORGANIZATION} className="platform-link-tile text-sm font-bold text-gray-700">조직·권한</Link>
-              <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1.5 text-sm font-bold text-gray-700">
-                디렉토리 등록
-                {profile.is_directory_listed && (
-                  <span className="ml-auto text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">공개 중</span>
-                )}
-              </Link>
-            </div>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">활동</p>
-            <div className="grid gap-1.5">
-              <Link href={ROUTES.MYPAGE_AVAILABILITY} className="platform-link-tile text-sm font-bold text-gray-700">가용 일정</Link>
-              <Link href={ROUTES.MYPAGE_MESSAGES} className="platform-link-tile text-sm font-bold text-gray-700">메시지</Link>
-              <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="platform-link-tile text-sm font-bold text-gray-700">저장한 검색</Link>
-              <Link href={ROUTES.MYPAGE_BOOKMARKS} className="platform-link-tile text-sm font-bold text-gray-700">저장한 항목</Link>
-            </div>
-          </div>
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">계정</p>
-            <div className="grid gap-1.5">
-              <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="platform-link-tile text-sm font-bold text-gray-700">알림</Link>
-              <Link href={ROUTES.MYPAGE_PASSWORD} className="platform-link-tile text-sm font-bold text-gray-700">비밀번호 변경</Link>
-            </div>
-          </div>
-        </div>
+        {/* Quick actions는 좌측 rail로 대체됨 → 본문 노이즈 제거. */}
       </div>
 
       {/* Trust Status */}
