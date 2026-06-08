@@ -7,6 +7,7 @@ import { ROUTES } from '@/shared/constants';
 import {
   formatRelativeTime,
   getBusinessTypeLabel,
+  getEmploymentTypeLabel,
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Job, Post, Profile } from '@/types/database';
@@ -26,8 +27,8 @@ interface HomeContentProps {
 }
 
 const CATEGORIES: { key: string; label: string; icon: string; bg: string; badge?: string; badgeBest?: boolean }[] = [
-  { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-rose-100',     badge: 'BEST', badgeBest: true },
-  { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-pink-100',     badge: '업종별' },
+  { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-rose-100' },
+  { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-pink-100' },
   { key: 'studio',    label: '스튜디오',   icon: '📸', bg: 'bg-amber-100' },
   { key: 'makeup',    label: '메이크업',   icon: '💄', bg: 'bg-fuchsia-100' },
   { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-violet-100' },
@@ -72,14 +73,14 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
           <div className="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
             <div className="flex flex-col gap-6 pt-6">
               <h1 className="text-[34px] sm:text-[40px] font-extrabold leading-[1.2] tracking-tight text-ink">
-                내 업체에 딱 맞는<br />
+                일정과 조건에 맞는<br />
                 웨딩 파트너를 찾아보세요
               </h1>
               <form onSubmit={handleSearch} className="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm max-w-[600px]">
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="어떤 전문가가 필요하세요?"
+                  placeholder="업체명, 직무, 지역을 검색하세요"
                   className="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400 text-ink"
                 />
                 <button type="submit" className="bg-white px-5 hover:bg-gray-50 transition-colors">
@@ -105,9 +106,9 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
               <span className="promo-card-illust">💍</span>
               <div className="relative z-10">
                 <h3 className="promo-card-title">업체 섭외도<br />한 화면에서</h3>
-                <p className="promo-card-desc">섭외 비용을 절약하세요</p>
+                <p className="promo-card-desc">지역, 일정, 조건을 빠르게 비교하세요</p>
               </div>
-              <span className="promo-card-page">2 / 6 →</span>
+              <span className="promo-card-page">바로 보기 →</span>
             </Link>
           </div>
 
@@ -240,8 +241,7 @@ function SvcJobCard({ job, idx }: { job: Job; idx: number }) {
   const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
   const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
-  const rating = (4.5 + (idx % 5) * 0.1).toFixed(1);
-  const views = job.view_count || (idx + 1) * 23;
+  const views = job.view_count ?? 0;
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">
@@ -249,22 +249,19 @@ function SvcJobCard({ job, idx }: { job: Job; idx: number }) {
         {isExpired ? (
           <span className="svc-card-badge" style={{ background: '#6b7280' }}>마감</span>
         ) : job.is_promoted ? (
-          <span className="svc-card-badge svc-card-badge-promoted">PROMOTED</span>
-        ) : idx < 2 ? (
-          <span className="svc-card-badge svc-card-badge-prime">prime</span>
+          <span className="svc-card-badge svc-card-badge-promoted">추천</span>
         ) : null}
         <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">{emoji}</div>
       </div>
       <p className="svc-card-title">{job.title}</p>
       <div className="svc-card-rating">
-        <span className="svc-card-rating-star">★</span>
-        <span className="font-bold">{rating}</span>
-        <span className="svc-card-rating-count">({views.toLocaleString()})</span>
+        <span className="font-bold text-gray-900">조회 {views.toLocaleString()}</span>
+        <span className="svc-card-rating-count">{getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}</span>
       </div>
       <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{company}</span>
-        {verified && <span className="svc-card-m-badge">M</span>}
+        {verified && <span className="svc-card-m-badge">인</span>}
       </div>
     </Link>
   );
@@ -279,7 +276,7 @@ function SvcCompanyCard({ profile, idx }: { profile: Profile; idx: number }) {
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
     : null;
   const deals = profile.completed_deals_count ?? 0;
-  const rating = verified ? '5.0' : (4.7 + (idx % 3) * 0.1).toFixed(1);
+  const responseRate = Math.round(profile.response_rate ?? 0);
 
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
@@ -300,16 +297,15 @@ function SvcCompanyCard({ profile, idx }: { profile: Profile; idx: number }) {
       </div>
       <p className="svc-card-title">{name}</p>
       <div className="svc-card-rating">
-        <span className="svc-card-rating-star">★</span>
-        <span className="font-bold">{rating}</span>
-        <span className="svc-card-rating-count">({deals || idx + 5})</span>
+        <span className="font-bold text-gray-900">거래 {deals.toLocaleString()}건</span>
+        {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
       </div>
       <p className="svc-card-price">
         {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
       </p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>
-        {verified && <span className="svc-card-m-badge">M</span>}
+        {verified && <span className="svc-card-m-badge">인</span>}
       </div>
     </Link>
   );

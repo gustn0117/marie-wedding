@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (accountType === 'business') {
-      profileData.business_type = Array.isArray(businessTypes) ? businessTypes[0] : businessTypes;
+      profileData.business_type = Array.isArray(businessTypes) ? businessTypes.join(',') : businessTypes;
       profileData.company_name = companyName;
     }
 

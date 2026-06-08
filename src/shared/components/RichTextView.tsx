@@ -1,20 +1,37 @@
+import sanitizeHtml from 'sanitize-html';
+
 interface RichTextViewProps {
   html: string;
   className?: string;
 }
 
-// 서버/클라이언트 공용 sanitizer (DOMParser 없이 정규식 기반 - 최소한의 보호)
 function sanitizeServer(html: string): string {
   if (!html) return '';
-  // script, iframe, style, on* 이벤트 핸들러 등 제거
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/\son\w+="[^"]*"/gi, '')
-    .replace(/\son\w+='[^']*'/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/<(?!\/?(?:p|br|div|span|strong|b|em|i|u|h2|h3|ul|ol|li|img)\b)[^>]+>/gi, '');
+  return sanitizeHtml(html, {
+    allowedTags: ['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'img'],
+    allowedAttributes: {
+      img: ['src', 'alt', 'class'],
+      p: ['style'],
+      div: ['style'],
+      span: ['style'],
+    },
+    allowedClasses: {
+      img: ['rich-text-image'],
+    },
+    allowedStyles: {
+      '*': {
+        'font-weight': [/^(bold|normal|[1-9]00)$/],
+        'font-style': [/^(italic|normal)$/],
+        'text-decoration': [/^(underline|none)$/],
+        width: [/^\d+(\.\d+)?(px|%)$/],
+        height: [/^\d+(\.\d+)?(px|%)$/],
+        'max-width': [/^\d+(\.\d+)?(px|%)$/],
+      },
+    },
+    allowedSchemes: ['http', 'https'],
+    allowedSchemesAppliedToAttributes: ['src'],
+    disallowedTagsMode: 'discard',
+  });
 }
 
 export default function RichTextView({ html, className = '' }: RichTextViewProps) {

@@ -28,7 +28,7 @@ export default function CompanyCard({ profile, idx = 0 }: CompanyCardProps) {
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
     : null;
   const deals = profile.completed_deals_count ?? 0;
-  const rating = verified ? '5.0' : (4.7 + (idx % 3) * 0.1).toFixed(1);
+  const responseRate = Math.round(profile.response_rate ?? 0);
 
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
@@ -49,16 +49,15 @@ export default function CompanyCard({ profile, idx = 0 }: CompanyCardProps) {
       </div>
       <p className="svc-card-title">{name}</p>
       <div className="svc-card-rating">
-        <span className="svc-card-rating-star">★</span>
-        <span className="font-bold">{rating}</span>
-        <span className="svc-card-rating-count">({deals || idx + 5})</span>
+        <span className="font-bold text-gray-900">거래 {deals.toLocaleString()}건</span>
+        {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
       </div>
       <p className="svc-card-price">
         {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
       </p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>
-        {verified && <span className="svc-card-m-badge">M</span>}
+        {verified && <span className="svc-card-m-badge">인</span>}
       </div>
     </Link>
   );

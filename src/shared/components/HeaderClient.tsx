@@ -64,14 +64,8 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         <div className="hidden md:flex items-center gap-2 shrink-0">
           <span className="text-gray-300">|</span>
           <Link href={`${ROUTES.JOBS}?type=matching`} className="text-sm font-semibold text-gray-700 hover:text-ink">
-            Marié Biz
+            파트너 섭외
           </Link>
-          <label className="inline-flex items-center cursor-pointer ml-1">
-            <input type="checkbox" className="sr-only peer" />
-            <div className="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors relative">
-              <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition-all peer-checked:translate-x-4" />
-            </div>
-          </label>
         </div>
 
         <form onSubmit={handleSearch} className="flex-1 max-w-[480px] hidden md:block">
@@ -83,7 +77,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="어떤 전문가가 필요하세요?"
+              placeholder="업체명, 직무, 지역 검색"
               className="bg-transparent border-none outline-none flex-1 text-[14px] placeholder:text-gray-500 text-ink"
             />
           </label>
@@ -91,10 +85,10 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
         <nav className="ml-auto flex items-center gap-1 shrink-0">
           <Link href={`${ROUTES.JOBS}?type=matching`} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            엔터프라이즈 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">기업용</span>
+            업체 섭외 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">B2B</span>
           </Link>
           <Link href={ROUTES.MYPAGE} className="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            주문 관리
+            업무 관리
           </Link>
           <Link href={ROUTES.COMMUNITY} className="icon-btn" aria-label="커뮤니티">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -142,7 +136,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                       <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
                     </Link>
                     <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
-                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">주문 관리</Link>
+                    <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원/문의 관리</Link>
                     {profile.role === 'admin' && (
                       <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
                     )}
@@ -191,7 +185,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             ))}
             <Link href={ROUTES.DIRECTORY} className={`cat-nav-link ml-auto ${pathname.startsWith('/directory') ? 'cat-nav-link-active' : ''}`}>디렉토리</Link>
             <Link href={ROUTES.COMMUNITY} className={`cat-nav-link ${pathname.startsWith('/community') ? 'cat-nav-link-active' : ''}`}>커뮤니티</Link>
-            <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">Marié Biz</Link>
+            <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">파트너 섭외</Link>
           </div>
         </div>
       )}

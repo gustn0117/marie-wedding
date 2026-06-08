@@ -22,9 +22,14 @@ interface PageProps {
   searchParams: Record<string, string | undefined>;
 }
 
+function normalizeSearchTerm(value: string): string {
+  return value.replace(/[,%]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 async function search(q: string) {
   const supabase = createServerQueryClient();
-  const keyword = `%${q}%`;
+  const term = normalizeSearchTerm(q);
+  const keyword = `%${term}%`;
 
   const [hiringRes, matchingRes, directoryRes, postsRes] = await Promise.all([
     // 채용 공고
@@ -73,7 +78,7 @@ async function search(q: string) {
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const q = searchParams.q?.trim() || '';
+  const q = normalizeSearchTerm(searchParams.q?.trim() || '');
 
   if (!q) {
     return (

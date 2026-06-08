@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import JobsPageContent from '@/features/jobs/components/JobsPageContent';
 import type { Job } from '@/types/database';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,15 +32,18 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     query = query.eq('posting_type', searchParams.type);
   }
   if (searchParams.businessType) {
-    const types = searchParams.businessType.split(',');
-    const orFilter = types.map(t => `business_type.ilike.%${t}%`).join(',');
-    query = query.or(orFilter);
+    const types = searchParams.businessType.split(',').map((t) => t.trim()).filter(Boolean);
+    if (types.length > 0) query = query.in('business_type', types);
   }
   if (searchParams.employmentType) {
     query = query.eq('employment_type', searchParams.employmentType);
   }
-  if (searchParams.region) {
-    query = query.ilike('region', `%${searchParams.region}%`);
+  if (searchParams.subRegion) {
+    const subRegions = searchParams.subRegion.split(',').map((r) => r.trim()).filter(Boolean);
+    if (subRegions.length > 0) query = query.in('region', subRegions);
+  } else if (searchParams.region) {
+    const details = REGION_DETAILS[searchParams.region]?.map((detail) => detail.value) ?? [];
+    query = query.in('region', [searchParams.region, ...details]);
   }
   if (searchParams.search) {
     query = query.ilike('title', `%${searchParams.search}%`);

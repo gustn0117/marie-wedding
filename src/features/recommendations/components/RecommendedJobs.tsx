@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Job, Profile } from '@/types/database';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
+import { REGION_DETAILS } from '@/shared/constants/regions';
 import { getEmploymentTypeLabel, getRegionLabel, formatRelativeTime } from '@/shared/utils/format';
 
 interface Props {
@@ -21,10 +22,13 @@ async function fetchRecommended(profile: Pick<Profile, 'id' | 'business_type' | 
 
   const bizTypes = (profile.business_type ?? '').split(',').filter(Boolean).map((s) => s.trim());
   const regions = (profile.region ?? '').split(',').filter(Boolean).map((s) => s.trim());
+  const expandedRegions = Array.from(new Set(
+    regions.flatMap((region) => [region, ...(REGION_DETAILS[region]?.map((detail) => detail.value) ?? [])]),
+  ));
 
   const orParts = [
     bizTypes.length > 0 ? `business_type.in.(${bizTypes.join(',')})` : '',
-    regions.length > 0 ? `region.in.(${regions.join(',')})` : '',
+    expandedRegions.length > 0 ? `region.in.(${expandedRegions.join(',')})` : '',
   ].filter(Boolean);
 
   const { data: matched } = orParts.length > 0

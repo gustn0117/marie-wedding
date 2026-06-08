@@ -74,14 +74,19 @@ export const applicationService = {
 
   async updateStatus(id: string, status: ApplicationStatus): Promise<Application> {
     const supabase = createClient();
-    const { data, error } = await supabase
+    const { error: rpcError } = await supabase.rpc('set_application_status', {
+      p_application_id: id,
+      p_status: status,
+    });
+    if (rpcError) throw rpcError;
+
+    const { data, error: fetchError } = await supabase
       .from('applications')
-      .update({ status })
-      .eq('id', id)
       .select('*, job:jobs(*), applicant:profiles(*)')
+      .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (fetchError) throw fetchError;
     return data as Application;
   },
 
