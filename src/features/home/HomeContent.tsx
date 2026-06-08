@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
@@ -11,6 +11,7 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Job, Post, Profile } from '@/types/database';
+import EmptyState from '@/shared/components/EmptyState';
 
 interface HomeContentProps {
   posts: Post[];
@@ -126,16 +127,18 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
         </div>
       )}
 
-      {/* 최근 등록된 공고 */}
+      {/* 최근 등록된 공고 — h-scroll 키보드 가이드 + 스크롤 인디케이터 (C-5) */}
       <section className="bg-gray-50 py-12">
         <div className="max-w-[1280px] mx-auto px-5">
           <SectionHeader title="최근 등록된 공고" subtitle="놓치기 아까운 채용·섭외 기회" href={ROUTES.JOBS} />
           {featuredJobs.length === 0 ? (
             <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
           ) : (
-            <div className="h-scroll">
-              {featuredJobs.map((job) => <SvcJobCard key={job.id} job={job} />)}
-            </div>
+            <HScrollRow
+              ariaLabel="최근 등록된 공고"
+              items={featuredJobs}
+              renderItem={(job) => <SvcJobCard key={job.id} job={job} />}
+            />
           )}
         </div>
       </section>
@@ -145,9 +148,11 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
         <section className="bg-white py-12">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="추천 파트너 업체" subtitle="신뢰할 수 있는 검증 업체 모음" href={ROUTES.DIRECTORY} />
-            <div className="h-scroll">
-              {featuredProfiles.map((p) => <SvcCompanyCard key={p.id} profile={p} />)}
-            </div>
+            <HScrollRow
+              ariaLabel="추천 파트너 업체"
+              items={featuredProfiles}
+              renderItem={(p) => <SvcCompanyCard key={p.id} profile={p} />}
+            />
           </div>
         </section>
       )}
@@ -202,6 +207,49 @@ function Metric({ label, value, divider }: { label: string; value: number; divid
   );
 }
 
+/**
+ * 가로 스크롤 캐러셀 — 키보드/마우스/터치 모두 지원.
+ * 이전: 단순 div.h-scroll — 키보드 사용자에겐 스크롤 방법 가이드 없음, 인디케이터 없음.
+ * 수정: aria-label 가진 region role + 좌우 스크롤 버튼.
+ *   터치는 native 스와이프, 키보드는 Tab으로 카드 포커스 후 화살표 키 작동.
+ */
+function HScrollRow<T>({ items, renderItem, ariaLabel }: { items: T[]; renderItem: (item: T) => ReactNode; ariaLabel: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const scroll = (dir: 1 | -1) => {
+    const el = ref.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.85, 800), behavior: 'smooth' });
+  };
+  return (
+    <div className="relative group" role="region" aria-label={ariaLabel}>
+      <div ref={ref} className="h-scroll" tabIndex={0}>
+        {items.map(renderItem)}
+      </div>
+      {/* 데스크탑 좌우 스크롤 버튼 — 호버 시만 노출 */}
+      <button
+        type="button"
+        onClick={() => scroll(-1)}
+        aria-label="이전"
+        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => scroll(1)}
+        aria-label="다음"
+        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
   return (
     <div className="flex items-end justify-between mb-6">
@@ -215,13 +263,10 @@ function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: st
 }
 
 function EmptyHint({ message, href, cta }: { message: string; href: string; cta: string }) {
-  // 인라인 빈상태 — EmptyState 공용 컴포넌트와 톤 일치 유지.
-  // 디자인 토큰: rounded-2xl + 점선 + 회색 일러스트 (EmptyState.tsx와 동일).
+  // C-1/C-10: 공용 EmptyState 컴포넌트로 일관화.
+  // 기존 인라인 구현 제거 — 다른 페이지(bookmarks, jobs 등)와 동일한 톤 보장.
   return (
-    <div className="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
-      <p className="text-sm text-gray-500 mb-4">{message}</p>
-      <Link href={href} className="btn-primary inline-flex">{cta}</Link>
-    </div>
+    <EmptyState title={message} description="" actionLabel={cta} actionHref={href} />
   );
 }
 

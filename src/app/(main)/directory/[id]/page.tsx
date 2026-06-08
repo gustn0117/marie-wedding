@@ -280,24 +280,26 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Gallery (deprecated, kept for legacy) */}
+      {/* 옛 gallery 필드 — Portfolios 컴포넌트로 대체된 deprecated 컬럼.
+          기존 데이터 보존을 위해 표시는 유지하되 key는 이미지 경로로 안정화 (이전: key={i}).
+          신규 등록은 portfolios로 유도. */}
       {profile.gallery && profile.gallery.length > 0 && (
         <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+          <h2 className="text-lg font-bold text-ink mb-4 pb-3 border-b border-gray-200">
             갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {profile.gallery.map((img, i) => (
+            {profile.gallery.map((img) => (
               <a
-                key={i}
+                key={img}
                 href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${img}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="aspect-square overflow-hidden border border-gray-200 group hover:border-primary transition-colors block"
+                className="aspect-square overflow-hidden rounded-lg border border-gray-200 group hover:border-ink transition-colors block"
               >
                 <img
                   src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${img}`}
-                  alt={`갤러리 ${i + 1}`}
+                  alt="갤러리 이미지"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </a>

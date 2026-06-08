@@ -220,19 +220,39 @@ export default async function MyPage() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-4 grid gap-2 border-t border-gray-100 pt-4 sm:grid-cols-4">
-          <Link href={ROUTES.MYPAGE_EDIT} className="platform-link-tile text-sm font-bold text-gray-700">프로필 수정</Link>
-          <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="platform-link-tile text-sm font-bold text-gray-700">포트폴리오</Link>
-          <Link href={ROUTES.MYPAGE_AVAILABILITY} className="platform-link-tile text-sm font-bold text-gray-700">가용 일정</Link>
-          <Link href={ROUTES.MYPAGE_MESSAGES} className="platform-link-tile text-sm font-bold text-gray-700">메시지</Link>
-          <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="platform-link-tile text-sm font-bold text-gray-700">저장한 검색</Link>
-          <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="platform-link-tile text-sm font-bold text-gray-700">알림</Link>
-          <Link href={ROUTES.MYPAGE_PASSWORD} className="platform-link-tile text-sm font-bold text-gray-700">비밀번호</Link>
-          <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1 text-sm font-bold text-gray-700">
-            디렉토리 등록
-            {profile.is_directory_listed && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
-          </Link>
+        {/* Quick Actions — 그룹화로 평등 나열 해소 (C-17) */}
+        {/* 이전: 8개 platform-link-tile이 모두 같은 모양으로 sm:grid-cols-4 나열 → 정보 노이즈.
+            수정: '프로필 관리' / '활동' / '계정' 3 그룹으로 묶고 그룹 헤더 추가. */}
+        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-3">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">프로필 관리</p>
+            <div className="grid gap-1.5">
+              <Link href={ROUTES.MYPAGE_EDIT} className="platform-link-tile text-sm font-bold text-gray-700">프로필 수정</Link>
+              <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="platform-link-tile text-sm font-bold text-gray-700">포트폴리오</Link>
+              <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1.5 text-sm font-bold text-gray-700">
+                디렉토리 등록
+                {profile.is_directory_listed && (
+                  <span className="ml-auto text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">공개 중</span>
+                )}
+              </Link>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">활동</p>
+            <div className="grid gap-1.5">
+              <Link href={ROUTES.MYPAGE_AVAILABILITY} className="platform-link-tile text-sm font-bold text-gray-700">가용 일정</Link>
+              <Link href={ROUTES.MYPAGE_MESSAGES} className="platform-link-tile text-sm font-bold text-gray-700">메시지</Link>
+              <Link href={ROUTES.MYPAGE_SAVED_SEARCHES} className="platform-link-tile text-sm font-bold text-gray-700">저장한 검색</Link>
+              <Link href={ROUTES.MYPAGE_BOOKMARKS} className="platform-link-tile text-sm font-bold text-gray-700">저장한 항목</Link>
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">계정</p>
+            <div className="grid gap-1.5">
+              <Link href={ROUTES.MYPAGE_NOTIFICATIONS} className="platform-link-tile text-sm font-bold text-gray-700">알림</Link>
+              <Link href={ROUTES.MYPAGE_PASSWORD} className="platform-link-tile text-sm font-bold text-gray-700">비밀번호 변경</Link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -254,43 +274,51 @@ export default async function MyPage() {
       {/* Recommended Jobs */}
       <RecommendedJobs profile={profile} />
 
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <WorkspaceMetric label="등록한 공고" value={jobs.length} />
-        <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
-        <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
-        <WorkspaceMetric
-          label="응답률"
-          value={Math.round(profile.response_rate ?? 0)}
-          unit="%"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <WorkspaceMetric label="작성한 게시글" value={posts.length} />
-        <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
-        <WorkspaceMetric label="거래 완료" value={profile.completed_deals_count} />
-        <WorkspaceMetric
-          label="평균 응답"
-          value={
-            profile.avg_response_minutes
-              ? profile.avg_response_minutes < 60
-                ? profile.avg_response_minutes
-                : profile.avg_response_minutes < 1440
-                  ? Math.round(profile.avg_response_minutes / 60)
-                  : Math.round(profile.avg_response_minutes / 1440)
-              : 0
-          }
-          unit={
-            profile.avg_response_minutes
-              ? profile.avg_response_minutes < 60
-                ? '분'
-                : profile.avg_response_minutes < 1440
-                  ? '시간'
-                  : '일'
-              : '-'
-          }
-        />
-      </div>
+      {/* Stats Summary — 묶음 헤더로 정보 위계 부여 (C-8) */}
+      {/* 이전: 8개 동일 모양 metric-tile이 2행 4열로 나열 → 시각 노이즈, 우선순위 모호.
+          수정: '공고 운영' / '커뮤니티·지원' 2 묶음으로 분리, 각 4개씩. */}
+      <section>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <WorkspaceMetric label="등록한 공고" value={jobs.length} />
+          <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
+          <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
+          <WorkspaceMetric
+            label="응답률"
+            value={Math.round(profile.response_rate ?? 0)}
+            unit="%"
+          />
+        </div>
+      </section>
+      <section>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">커뮤니티·지원</p>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <WorkspaceMetric label="작성한 게시글" value={posts.length} />
+          <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
+          <WorkspaceMetric label="거래 완료" value={profile.completed_deals_count} />
+          <WorkspaceMetric
+            label="평균 응답"
+            value={
+              profile.avg_response_minutes
+                ? profile.avg_response_minutes < 60
+                  ? profile.avg_response_minutes
+                  : profile.avg_response_minutes < 1440
+                    ? Math.round(profile.avg_response_minutes / 60)
+                    : Math.round(profile.avg_response_minutes / 1440)
+                : 0
+            }
+            unit={
+              profile.avg_response_minutes
+                ? profile.avg_response_minutes < 60
+                  ? '분'
+                  : profile.avg_response_minutes < 1440
+                    ? '시간'
+                    : '일'
+                : '-'
+            }
+          />
+        </div>
+      </section>
 
       {/* Tabs */}
       <MyPageTabs jobs={jobs} posts={posts} sentApplications={sentApplications} receivedApplications={receivedApplications} />
