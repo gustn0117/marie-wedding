@@ -117,6 +117,28 @@ const config: Config = {
         soft: '0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.02)',
         card: '0 1px 3px rgba(15, 23, 42, 0.06)',
         lift: '0 4px 12px rgba(15, 23, 42, 0.08)',
+        // 플랫폼 표준 elevation 스케일 (Linear/Stripe 참고)
+        e1: '0 1px 2px rgba(15, 23, 42, 0.05)',
+        e2: '0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04)',
+        e3: '0 8px 24px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.04)',
+        focus: '0 0 0 3px rgba(54, 23, 206, 0.15)',
+      },
+      // 컨테이너 폭 토큰 — 3개로만 제한
+      maxWidth: {
+        'shell-narrow': '720px',
+        'shell-default': '1080px',
+        'shell-wide': '1440px',
+      },
+      zIndex: {
+        // 레이어 토큰
+        content: '1',
+        sticky: '10',
+        dropdown: '30',
+        sidebar: '40',
+        header: '50',
+        overlay: '60',
+        modal: '70',
+        toast: '80',
       },
     },
   },

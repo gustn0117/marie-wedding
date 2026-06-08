@@ -15,7 +15,7 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
   const isLoggedIn = !!cookieStore.get('marie_profile')?.value;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="shell space-y-6">
       <PageHeader
         title="프리미엄 플랜"
         description="더 많은 거래·정산·노출 기회를 누리세요. 언제든지 해지 가능합니다."

@@ -74,7 +74,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
       {/* 1단: 로고 + 검색바 + 우측 메뉴 */}
-      <div className="max-w-[1280px] mx-auto px-5 h-[68px] flex items-center gap-5">
+      <div className="shell-wide h-[var(--header-h)] flex items-center gap-5">
         <Link href={ROUTES.HOME} className="text-2xl font-extrabold tracking-tight text-ink shrink-0">
           Marié
         </Link>
@@ -179,7 +179,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       {/* 2단: 카테고리 nav */}
       {isHomeLike && (
         <div className="border-t border-gray-100 hidden md:block">
-          <div className="max-w-[1280px] mx-auto px-5 flex items-center gap-1 overflow-x-auto">
+          <div className="shell-wide flex items-center gap-1 overflow-x-auto">
             <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
               {/* 옛 패턴: bg-green-500 🌿 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
                   단순 ink 텍스트로 통일. */}
