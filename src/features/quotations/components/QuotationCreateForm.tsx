@@ -9,6 +9,7 @@ import QuotationItemsEditor from './QuotationItemsEditor';
 import { ROUTES } from '@/shared/constants';
 import { toast } from '@/shared/components/Toast';
 import { createClient } from '@/lib/supabase/client';
+import { notify } from '@/features/notifications/lib/dispatch';
 
 interface ReceiverOption {
   id: string;
@@ -109,6 +110,7 @@ export default function QuotationCreateForm({
       if (sendNow) {
         // 발송까지 한 번에
         await quotationService.transitionStatus(created.id, 'sent');
+        notify.quotationSent(created.id);
         toast('견적을 작성하고 발송했습니다.', 'success');
       } else {
         toast('견적 초안을 저장했습니다.', 'success');

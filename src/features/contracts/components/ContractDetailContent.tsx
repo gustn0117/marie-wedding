@@ -8,6 +8,7 @@ import { ROUTES } from '@/shared/constants';
 import ContractStatusBadge from './ContractStatusBadge';
 import QuotationItemsTable from '@/features/quotations/components/QuotationItemsTable';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import { notify } from '@/features/notifications/lib/dispatch';
 
 export default function ContractDetailContent({ contractId, profileId }: { contractId: string; profileId: string }) {
   const [contract, setContract] = useState<Contract | null>(null);
@@ -76,6 +77,13 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       setContract((prev) => (prev ? { ...prev, ...updated, signatures: prev.signatures } : updated));
       // 서명·취소 등은 signatures join이 빠진 RPC 결과만 옴 → 다시 로드
       await load();
+      // 알림 — 서명 시 양방 서명 완료 여부로 분기
+      if (key === 'sign') {
+        const updatedSignaturesCount = (updated.signatures?.length ?? 0) || ((contract?.signatures?.length ?? 0) + 1);
+        if (updatedSignaturesCount >= 2 || updated.status === 'signed') {
+          notify.contractSigned(contract!.id);
+        }
+      }
       toast(successMsg, 'success');
       setShowCancelInput(false);
       setCancelReason('');

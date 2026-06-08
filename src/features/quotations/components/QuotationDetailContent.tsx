@@ -10,6 +10,7 @@ import { ROUTES } from '@/shared/constants';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import QuotationItemsTable from './QuotationItemsTable';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import { notify } from '@/features/notifications/lib/dispatch';
 
 export default function QuotationDetailContent({ quotationId, profileId }: { quotationId: string; profileId: string }) {
   const router = useRouter();
@@ -80,6 +81,10 @@ export default function QuotationDetailContent({ quotationId, profileId }: { quo
     try {
       const updated = await quotationService.transitionStatus(quotation.id, next, reason);
       setQuotation((prev) => prev ? { ...prev, ...updated } : prev);
+      // 알림 디스패치 (fire-and-forget) — 메일 발송 실패가 거래 흐름을 막지 않음
+      if (next === 'sent') notify.quotationSent(quotation.id);
+      else if (next === 'accepted') notify.quotationAccepted(quotation.id);
+      else if (next === 'rejected') notify.quotationRejected(quotation.id);
       toast(
         next === 'sent' ? '견적을 발송했습니다.'
         : next === 'accepted' ? '견적을 승인했습니다. 이제 계약으로 전환할 수 있습니다.'

@@ -8,6 +8,7 @@ import type { Settlement, SettlementStatus } from '@/types/database';
 import { SETTLEMENT_STATUS_LABELS } from '@/types/database';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { useAuth } from '@/shared/hooks/useAuth';
+import { notify } from '@/features/notifications/lib/dispatch';
 
 const PIPELINE_STATUSES: SettlementStatus[] = ['pending', 'approved', 'processing', 'paid'];
 
@@ -76,7 +77,12 @@ export default function AdminSettlementsPage() {
 
   const handleMarkPaid = (s: Settlement) =>
     toastConfirm(`'${s.contract?.title}' 송금 완료 처리합니다. 실수령액 ${fmt(s.net_amount)} KRW.`)
-      .then((ok) => { if (ok) act(s.id, () => settlementService.markPaid(s.id), 'paid', '송금 완료 처리되었습니다.'); });
+      .then((ok) => {
+        if (ok) {
+          act(s.id, () => settlementService.markPaid(s.id), 'paid', '송금 완료 처리되었습니다.');
+          notify.settlementPaid(s.id);
+        }
+      });
 
   const handleFail = async (s: Settlement) => {
     const reason = window.prompt('실패 사유를 입력해 주세요:');
