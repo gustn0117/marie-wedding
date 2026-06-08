@@ -24,14 +24,30 @@ export default function JobListRow({ job }: Props) {
   const region = job.author?.region ? getRegionLabel(job.author.region) : getRegionLabel(job.region);
   const responseRate = Math.round(job.author?.response_rate ?? 0);
   const completedDeals = job.author?.completed_deals_count ?? 0;
+  const imageUrl = job.image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
+    : null;
 
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className={`platform-data-row group grid gap-3 border-b border-gray-100 px-4 py-4 md:grid-cols-[230px_minmax(0,1fr)_168px] md:items-center ${
+      className={`platform-data-row group grid gap-3 border-b border-gray-100 px-4 py-4 md:grid-cols-[88px_230px_minmax(0,1fr)_168px] md:items-center ${
         tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/60' : ''
       }`}
     >
+      {/* 이미지 썸네일 (88px) */}
+      <div className="hidden md:block w-[88px] h-[88px] rounded-lg overflow-hidden bg-gray-100 shrink-0">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={job.title} className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.3} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+          </div>
+        )}
+      </div>
       <div className="min-w-0">
         <div className="flex items-center gap-2">
           <span className="company-mark">
