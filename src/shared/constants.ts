@@ -111,6 +111,16 @@ export const ROUTES = {
   MYPAGE_BOOKMARKS: '/mypage/bookmarks',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
+  // B2B 거래 — 견적 (Milestone 1.2)
+  QUOTATIONS: '/mypage/quotations',
+  QUOTATIONS_NEW: '/quotations/new',
+  QUOTATIONS_DETAIL: (id: string) => `/quotations/${id}`,
+  QUOTATIONS_EDIT: (id: string) => `/quotations/${id}/edit`,
+  // B2B 거래 — 계약 / 예약 / 정산 (Milestone 1.3-1.5)
+  CONTRACTS: '/mypage/contracts',
+  CONTRACTS_DETAIL: (id: string) => `/contracts/${id}`,
+  BOOKINGS: '/mypage/bookings',
+  SETTLEMENTS: '/mypage/settlements',
 } as const;
 
 export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {

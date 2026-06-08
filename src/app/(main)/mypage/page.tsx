@@ -223,7 +223,17 @@ export default async function MyPage() {
         {/* Quick Actions — 그룹화로 평등 나열 해소 (C-17) */}
         {/* 이전: 8개 platform-link-tile이 모두 같은 모양으로 sm:grid-cols-4 나열 → 정보 노이즈.
             수정: '프로필 관리' / '활동' / '계정' 3 그룹으로 묶고 그룹 헤더 추가. */}
-        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 border-t border-gray-100 pt-4 sm:grid-cols-4">
+          {/* B2B 거래 — Milestone 1.2 신규 진입점 */}
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-primary mb-2">B2B 거래</p>
+            <div className="grid gap-1.5">
+              <Link href={ROUTES.QUOTATIONS} className="platform-link-tile text-sm font-bold text-gray-700">견적</Link>
+              <Link href={ROUTES.CONTRACTS} className="platform-link-tile text-sm font-bold text-gray-700">계약</Link>
+              <Link href={ROUTES.BOOKINGS} className="platform-link-tile text-sm font-bold text-gray-700">예약·일정</Link>
+              <Link href={ROUTES.SETTLEMENTS} className="platform-link-tile text-sm font-bold text-gray-700">정산</Link>
+            </div>
+          </div>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">프로필 관리</p>
             <div className="grid gap-1.5">
