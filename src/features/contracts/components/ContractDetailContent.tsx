@@ -116,10 +116,8 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
     if (!ok) return;
     setActing('createBooking');
     try {
-      const { booking_id } = await contractService.createBooking(contract.id, { providerSide: 'party_b' });
-      toast('예약이 등록되었습니다.', 'success');
-      // 예약 상세 페이지는 Milestone 1.4 — 일단 contracts로 돌아감
-      console.log('booking_id:', booking_id);
+      await contractService.createBooking(contract.id, { providerSide: 'party_b' });
+      toast('예약이 등록되었습니다. 캘린더에서 확인하세요.', 'success');
       await load();
     } catch (err) {
       toast(err instanceof Error ? err.message : '예약 등록 실패', 'error');

@@ -1,17 +1,13 @@
 import type { Profile, Job, Post, Comment, Event, Report } from '@/types/database';
 
-const STORAGE_KEY = 'marie_admin_password';
-
-function getPassword(): string {
-  if (typeof sessionStorage === 'undefined') return '';
-  return sessionStorage.getItem(STORAGE_KEY) ?? '';
-}
+// Admin API 인증은 isAdminRequest()가 쿠키의 user → profile.role='admin'로 처리.
+// 비밀번호 폴백은 옛 경로 — 미들웨어가 /admin 진입을 role로 가드하므로 더 이상 불필요.
 
 async function adminFetch(action: string, params: Record<string, unknown> = {}) {
   const res = await fetch('/api/admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password: getPassword(), action, ...params }),
+    body: JSON.stringify({ action, ...params }),
   });
   if (!res.ok) {
     const err = await res.json();
@@ -21,11 +17,6 @@ async function adminFetch(action: string, params: Record<string, unknown> = {}) 
 }
 
 export const adminService = {
-  ping: (password?: string) => adminFetch('ping', password ? { password } : {}) as Promise<{ success: true }>,
-  savePassword: (password: string) => sessionStorage.setItem(STORAGE_KEY, password),
-  clearPassword: () => sessionStorage.removeItem(STORAGE_KEY),
-  hasSavedPassword: () => sessionStorage.getItem(STORAGE_KEY) !== null,
-
   // ── Dashboard ──
   getStats: () => adminFetch('getStats') as Promise<{
     users: number; jobs: number; posts: number; comments: number; reports: number;
