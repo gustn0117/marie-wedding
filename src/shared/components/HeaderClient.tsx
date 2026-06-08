@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { Suspense, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -37,7 +37,8 @@ interface HeaderClientProps {
 export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // useSearchParams는 별도 컴포넌트(CatNavLinks)로 분리해서 Suspense 안에서만 호출.
+  // 이전: HeaderClient 본문에서 직접 호출 → prerender(static export) 시 throw → 빌드 실패.
   const [profile, setProfile] = useState<AuthProfile | null>(initialProfile);
   const [searchQuery, setSearchQuery] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -194,27 +195,11 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
               </svg>
             </Link>
-            {CAT_NAV.map((c) => {
-              // 정확 매칭: pathname이 일치하고 query param도 일치할 때만 active.
-              // 이전: pathname.startsWith로만 비교 → /jobs?businessType=X일 때
-              // 모든 jobs 서브카테고리(디자인·스튜디오·메이크업·플래너·...) 동시 활성화 버그.
-              const { path, queryKey, queryValue } = parseNavHref(c.href);
-              const isActive = pathname === path && (
-                queryKey === null
-                  ? !searchParams.toString() || c.href === ROUTES.JOBS
-                  : searchParams.get(queryKey) === queryValue
-              );
-              return (
-                <Link
-                  key={c.label}
-                  href={c.href}
-                  className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
-                </Link>
-              );
-            })}
+            {/* useSearchParams는 prerender 호환을 위해 Suspense 안에서만 호출.
+                fallback은 active 표시 없는 정적 링크 — UX 동일, 단지 active 강조만 hydration 후. */}
+            <Suspense fallback={<CatNavLinksFallback />}>
+              <CatNavLinks pathname={pathname} />
+            </Suspense>
             <Link href={ROUTES.DIRECTORY} className={`cat-nav-link ml-auto ${pathname.startsWith('/directory') ? 'cat-nav-link-active' : ''}`}>디렉토리</Link>
             <Link href={ROUTES.COMMUNITY} className={`cat-nav-link ${pathname.startsWith('/community') ? 'cat-nav-link-active' : ''}`}>커뮤니티</Link>
             <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">파트너 섭외</Link>
@@ -240,5 +225,56 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         </div>
       )}
     </header>
+  );
+}
+
+/**
+ * CAT_NAV active 매칭 컴포넌트 — useSearchParams를 분리.
+ * Next.js 14에서 useSearchParams를 사용하는 컴포넌트는 Suspense 안에 있어야 하며,
+ * 그렇지 않으면 prerender 시 "should be wrapped in a suspense boundary" 에러로 빌드 실패.
+ *
+ * 본 컴포넌트는 HeaderClient에서 <Suspense>로 감싸 호출됨.
+ * Server에서 prerender 시점엔 fallback(CatNavLinksFallback)이 렌더되고,
+ * 클라이언트 hydration 후 실제 active 상태가 반영됨.
+ */
+function CatNavLinks({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+  return (
+    <>
+      {CAT_NAV.map((c) => {
+        const { path, queryKey, queryValue } = parseNavHref(c.href);
+        const isActive = pathname === path && (
+          queryKey === null
+            ? !searchParams.toString() || c.href === ROUTES.JOBS
+            : searchParams.get(queryKey) === queryValue
+        );
+        return (
+          <Link
+            key={c.label}
+            href={c.href}
+            className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
+            aria-current={isActive ? 'page' : undefined}
+          >
+            {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
+/**
+ * Suspense fallback — searchParams 사용 불가한 prerender 시점에 렌더.
+ * 모든 링크를 active 표시 없이 렌더 → hydration 후 진짜 active 상태로 자연스럽게 교체.
+ */
+function CatNavLinksFallback() {
+  return (
+    <>
+      {CAT_NAV.map((c) => (
+        <Link key={c.label} href={c.href} className="cat-nav-link">
+          {'icon' in c && c.icon ? <><span className="mr-1">{c.icon}</span>{c.label}</> : c.label}
+        </Link>
+      ))}
+    </>
   );
 }
