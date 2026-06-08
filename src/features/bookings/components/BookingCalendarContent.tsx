@@ -66,7 +66,7 @@ export default function BookingCalendarContent({ profileId }: { profileId: strin
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
       {/* 캘린더 */}
-      <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <section className="surface overflow-hidden">
         {/* 월 네비게이션 */}
         <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export default function BookingCalendarContent({ profileId }: { profileId: strin
       </section>
 
       {/* 사이드 패널 */}
-      <aside className="rounded-xl border border-gray-200 bg-white p-4 lg:sticky lg:top-20 lg:self-start max-h-[700px] overflow-y-auto">
+      <aside className="surface p-4 lg:sticky lg:top-20 lg:self-start max-h-[700px] overflow-y-auto">
         <header className="mb-4 pb-3 border-b border-gray-100">
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{dDayLabel(selectedDate)}</p>
           <h3 className="text-lg font-bold text-ink">{formatKoreanDate(selectedDate)}</h3>

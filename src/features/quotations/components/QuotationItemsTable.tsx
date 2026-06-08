@@ -57,7 +57,7 @@ export default function QuotationItemsTable({
           </tr>
           <tr className="border-t border-gray-200">
             <td colSpan={4} className="px-4 py-3 text-right text-sm font-bold text-ink">총액 ({currency})</td>
-            <td className="px-4 py-3 text-right text-lg font-extrabold text-primary tabular-nums">{fmt(total)}</td>
+            <td className="px-4 py-3 text-right text-lg font-bold text-primary tabular-nums">{fmt(total)}</td>
           </tr>
         </tfoot>
       </table>

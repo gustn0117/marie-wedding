@@ -61,7 +61,7 @@ export default function DealProgress({
   ];
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5">
+    <div className="surface p-5">
       <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-3">거래 진행</p>
       <ol className="flex items-center justify-between gap-1 relative">
         {steps.map((step, idx) => {
@@ -95,7 +95,7 @@ export default function DealProgress({
 }
 
 function StepCircle({ state, index }: { state: Step['state']; index: number }) {
-  const base = 'w-10 h-10 rounded-full inline-flex items-center justify-center text-sm font-extrabold shrink-0 border-2 transition-colors';
+  const base = 'w-10 h-10 rounded-full inline-flex items-center justify-center text-sm font-bold shrink-0 border-2 transition-colors';
   if (state === 'done') {
     return (
       <span className={`${base} bg-emerald-500 border-emerald-500 text-white`}>

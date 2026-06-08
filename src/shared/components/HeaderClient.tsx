@@ -50,7 +50,6 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const profileMenuRef = useOutsideClick<HTMLDivElement>(profileMenuOpen, closeProfileMenu);
 
   const isAuthenticated = !!profile;
-  const isHomeLike = pathname === '/' || pathname.startsWith('/jobs') || pathname.startsWith('/directory') || pathname.startsWith('/community');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +74,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
       {/* 1단: 로고 + 검색바 + 우측 메뉴 */}
       <div className="shell-wide h-[var(--header-h)] flex items-center gap-5">
-        <Link href={ROUTES.HOME} className="text-2xl font-extrabold tracking-tight text-ink shrink-0">
+        <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink shrink-0">
           Marié
         </Link>
 
@@ -176,9 +175,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         </nav>
       </div>
 
-      {/* 2단: 카테고리 nav */}
-      {isHomeLike && (
-        <div className="border-t border-gray-100 hidden md:block">
+      {/* 2단: 카테고리 nav — 모든 페이지에서 동일 렌더 (CLS 0).
+          이전엔 isHomeLike에서만 렌더 → 페이지 이동 시 헤더 높이 68→116 점프. */}
+      <div className="border-t border-gray-100 hidden md:block">
           <div className="shell-wide flex items-center gap-1 overflow-x-auto">
             <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
               {/* 옛 패턴: bg-green-500 🌿 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
@@ -198,7 +197,6 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">파트너 섭외</Link>
           </div>
         </div>
-      )}
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">

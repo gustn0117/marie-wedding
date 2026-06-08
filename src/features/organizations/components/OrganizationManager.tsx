@@ -183,7 +183,7 @@ export default function OrganizationManager({ profileId }: { profileId: string }
 
           {/* 활성 조직 정보 */}
           {activeOrg && (
-            <section className="rounded-xl border border-gray-200 bg-white p-5">
+            <section className="surface p-5">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-bold text-ink">{activeOrg.name}</h2>
@@ -289,7 +289,7 @@ function CreateOrganizationForm({ onCancel, onCreated }: { onCancel: () => void;
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-5 space-y-3">
+    <form onSubmit={handleSubmit} className="surface p-5 space-y-3">
       <h3 className="text-sm font-bold text-ink mb-1">새 조직 만들기</h3>
       <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="조직(업체) 이름 *" required className="input" />
       <input type="text" value={businessNumber} onChange={(e) => setBusinessNumber(e.target.value)} placeholder="사업자등록번호 (선택)" className="input" />

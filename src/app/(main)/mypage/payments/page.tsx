@@ -101,7 +101,7 @@ export default async function PaymentsHistoryPage({ searchParams }: { searchPara
                   </p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-lg font-extrabold text-ink tabular-nums">
+                  <p className="text-lg font-bold text-ink tabular-nums">
                     {fmt(p.amount)} <span className="text-xs text-gray-500">{p.currency}</span>
                   </p>
                   <p className="text-[10px] text-gray-400">{new Date(p.created_at).toLocaleString('ko-KR')}</p>

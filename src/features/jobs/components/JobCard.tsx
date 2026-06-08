@@ -33,7 +33,7 @@ export default function JobCard({ job }: JobCardProps) {
           // 의미 없는 이모지 대신 회사 이니셜.
           // 이전: idx % EMOJIS.length로 결정되는 8종 이모지 — 같은 위치의 카드는 항상 같은 그림.
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
           </div>
         )}
       </div>

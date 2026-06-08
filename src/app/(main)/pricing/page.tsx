@@ -38,7 +38,7 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
               cycle === 'yearly' ? 'bg-white text-ink shadow-sm' : 'text-gray-500'
             }`}
           >
-            연간 결제 <span className="text-xs text-primary font-extrabold ml-1">-17%</span>
+            연간 결제 <span className="text-xs text-primary font-bold ml-1">-17%</span>
           </Link>
         </div>
       </div>
@@ -61,12 +61,12 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
                     가장 인기
                   </span>
                 )}
-                <h2 className={`text-xl font-extrabold mb-1 ${p.highlight ? 'text-white' : 'text-ink'}`}>{p.name}</h2>
+                <h2 className={`text-xl font-bold mb-1 ${p.highlight ? 'text-white' : 'text-ink'}`}>{p.name}</h2>
                 {isContactSales ? (
                   <p className={`text-sm ${p.highlight ? 'text-white/80' : 'text-gray-500'}`}>별도 협의</p>
                 ) : (
                   <p>
-                    <span className={`text-3xl font-extrabold tabular-nums ${p.highlight ? 'text-white' : 'text-ink'}`}>
+                    <span className={`text-3xl font-bold tabular-nums ${p.highlight ? 'text-white' : 'text-ink'}`}>
                       {new Intl.NumberFormat('ko-KR').format(price)}
                     </span>{' '}
                     <span className={`text-sm font-bold ${p.highlight ? 'text-white/80' : 'text-gray-500'}`}>

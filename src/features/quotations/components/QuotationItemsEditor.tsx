@@ -142,7 +142,7 @@ export default function QuotationItemsEditor({
             </tr>
             <tr className="border-t border-gray-200">
               <td colSpan={4} className="px-3 py-2 text-right text-sm font-bold text-ink">총액 (KRW)</td>
-              <td className="px-3 py-2 text-right text-base font-extrabold text-primary tabular-nums">{fmt(total)}</td>
+              <td className="px-3 py-2 text-right text-base font-bold text-primary tabular-nums">{fmt(total)}</td>
               <td></td>
             </tr>
           </tfoot>

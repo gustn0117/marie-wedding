@@ -34,7 +34,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
           // 이전: text-white/70 큰 이니셜 — 그라데이션 배경에 가려 가독성 낮음.
           // 회색 단색 배경 + gray-300 이니셜로 통일.
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
           </div>
         )}
       </div>

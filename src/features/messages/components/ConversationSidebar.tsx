@@ -78,7 +78,7 @@ export default function ConversationSidebar({ myProfileId, activeId }: { myProfi
     : items;
 
   return (
-    <aside className="rounded-xl border border-gray-200 bg-white overflow-hidden flex flex-col max-h-[700px]">
+    <aside className="surface overflow-hidden flex flex-col max-h-[700px]">
       <header className="p-3 border-b border-gray-100">
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1.5">대화</p>
         <input

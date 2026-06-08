@@ -48,7 +48,7 @@ export default async function HotPostsSection() {
               href={ROUTES.COMMUNITY_DETAIL(post.id)}
               className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors group"
             >
-              <span className={`shrink-0 w-6 text-center text-base font-extrabold tabular-nums ${i < 3 ? 'text-primary' : 'text-gray-400'}`}>
+              <span className={`shrink-0 w-6 text-center text-base font-bold tabular-nums ${i < 3 ? 'text-primary' : 'text-gray-400'}`}>
                 {i + 1}
               </span>
               <div className="min-w-0 flex-1">

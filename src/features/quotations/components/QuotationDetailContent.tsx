@@ -146,7 +146,7 @@ export default function QuotationDetailContent({ quotationId, profileId }: { quo
       </nav>
 
       {/* Hero */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2">
@@ -155,14 +155,14 @@ export default function QuotationDetailContent({ quotationId, profileId }: { quo
                 {isSender ? '내가 발송' : '내가 수신'} · {counterpartyName}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-ink tracking-tight">{quotation.title}</h1>
+            <h1 className="text-2xl font-bold text-ink tracking-tight">{quotation.title}</h1>
             {quotation.description && (
               <p className="text-sm text-gray-600 leading-relaxed mt-2 whitespace-pre-wrap">{quotation.description}</p>
             )}
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-gray-400">총액</p>
-            <p className="text-2xl font-extrabold text-primary tabular-nums">{fmt(quotation.total_amount)} {quotation.currency}</p>
+            <p className="text-2xl font-bold text-primary tabular-nums">{fmt(quotation.total_amount)} {quotation.currency}</p>
           </div>
         </div>
 
@@ -204,7 +204,7 @@ export default function QuotationDetailContent({ quotationId, profileId }: { quo
       )}
 
       {/* 액션 패널 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 sticky bottom-4 shadow-md">
+      <div className="surface p-5 sticky bottom-4 shadow-md">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">액션</p>
         <div className="flex flex-wrap gap-2">
           {/* PDF 다운로드 — draft 외 상태에서 노출 */}

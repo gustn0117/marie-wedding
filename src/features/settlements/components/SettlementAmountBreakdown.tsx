@@ -8,7 +8,7 @@ export default function SettlementAmountBreakdown({ settlement, compact = false 
     return (
       <div className="text-right">
         <p className="text-[10px] text-gray-400">실수령</p>
-        <p className="text-base font-extrabold text-primary tabular-nums">
+        <p className="text-base font-bold text-primary tabular-nums">
           {fmt(settlement.net_amount)} <span className="text-xs font-bold text-gray-500">KRW</span>
         </p>
       </div>
@@ -33,7 +33,7 @@ export default function SettlementAmountBreakdown({ settlement, compact = false 
       )}
       <div className="flex items-center justify-between pt-2 mt-2 border-t border-gray-200">
         <span className="text-sm font-bold text-ink">실수령 (net)</span>
-        <span className="text-lg font-extrabold text-primary tabular-nums">{fmt(settlement.net_amount)} KRW</span>
+        <span className="text-lg font-bold text-primary tabular-nums">{fmt(settlement.net_amount)} KRW</span>
       </div>
     </div>
   );

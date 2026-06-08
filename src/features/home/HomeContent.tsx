@@ -64,7 +64,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
         <div className="max-w-[1280px] mx-auto px-5 pt-12 pb-10">
           <div className="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
             <div className="flex flex-col gap-6 pt-6">
-              <h1 className="text-[34px] sm:text-[40px] font-extrabold leading-[1.2] tracking-tight text-ink">
+              <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
                 일정과 조건에 맞는<br />
                 웨딩 파트너를 찾아보세요
               </h1>
@@ -170,7 +170,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
               <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
                 {featuredPosts.map((post, idx) => (
                   <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
-                    <span className={`w-7 text-center text-lg font-extrabold ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
+                    <span className={`w-7 text-center text-lg font-bold ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-ink line-clamp-1">{post.title}</p>
                       <p className="text-xs text-gray-500 mt-0.5">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
@@ -202,7 +202,7 @@ function Metric({ label, value, divider }: { label: string; value: number; divid
   return (
     <div className={`flex items-center justify-between ${divider ? 'pt-4 border-t border-gray-100' : ''}`}>
       <span className="text-sm text-gray-700">{label}</span>
-      <span className="text-xl font-extrabold text-ink tabular-nums">{value.toLocaleString()}</span>
+      <span className="text-xl font-bold text-ink tabular-nums">{value.toLocaleString()}</span>
     </div>
   );
 }
@@ -254,7 +254,7 @@ function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: st
   return (
     <div className="flex items-end justify-between mb-6">
       <div>
-        <h2 className="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">{title}</h2>
+        <h2 className="text-[22px] sm:text-[26px] font-bold tracking-tight text-ink">{title}</h2>
         {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
       </div>
       <Link href={href} className="text-sm font-bold text-gray-500 hover:text-ink transition-colors">전체보기 →</Link>
@@ -293,7 +293,7 @@ function SvcJobCard({ job }: { job: Job }) {
           <img src={imageUrl} alt={job.title} className="svc-card-thumb-img" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
           </div>
         )}
       </div>
@@ -338,7 +338,7 @@ function SvcCompanyCard({ profile }: { profile: Profile }) {
           <img src={imageUrl} alt={name} className="svc-card-thumb-img" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
           </div>
         )}
       </div>

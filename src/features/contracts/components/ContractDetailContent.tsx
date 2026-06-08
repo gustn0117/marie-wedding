@@ -144,7 +144,7 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       />
 
       {/* Hero */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
+      <div className="surface p-6">
         <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -153,14 +153,14 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
                 갑 {contract.party_a_org_name} · 을 {contract.party_b_org_name}
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold text-ink tracking-tight">{contract.title}</h1>
+            <h1 className="text-2xl font-bold text-ink tracking-tight">{contract.title}</h1>
             {contract.description && (
               <p className="text-sm text-gray-600 leading-relaxed mt-2 whitespace-pre-wrap">{contract.description}</p>
             )}
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-gray-400">계약 금액</p>
-            <p className="text-2xl font-extrabold text-primary tabular-nums">
+            <p className="text-2xl font-bold text-primary tabular-nums">
               {fmt(contract.total_amount)} {contract.currency}
             </p>
           </div>
@@ -176,7 +176,7 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       </div>
 
       {/* 서명 패널 */}
-      <section className="rounded-xl border border-gray-200 bg-white p-5">
+      <section className="surface p-5">
         <h2 className="text-sm font-bold text-ink mb-3">양방 서명</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <SignatureSlot
@@ -213,13 +213,13 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       {/* 결제·취소 조항 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {contract.payment_terms && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="surface p-4">
             <p className="text-xs font-bold uppercase text-gray-500 mb-1">결제 조건</p>
             <p className="text-sm text-ink whitespace-pre-wrap">{contract.payment_terms}</p>
           </div>
         )}
         {contract.cancellation_terms && (
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="surface p-4">
             <p className="text-xs font-bold uppercase text-gray-500 mb-1">취소 정책</p>
             <p className="text-sm text-ink whitespace-pre-wrap">{contract.cancellation_terms}</p>
           </div>
@@ -237,7 +237,7 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
       )}
 
       {/* 액션 패널 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-5 sticky bottom-4 shadow-md">
+      <div className="surface p-5 sticky bottom-4 shadow-md">
         <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">액션</p>
         <div className="flex flex-wrap gap-2">
           <a

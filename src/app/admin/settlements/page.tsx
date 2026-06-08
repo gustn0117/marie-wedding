@@ -122,7 +122,7 @@ export default function AdminSettlementsPage() {
           {list.map((s) => {
             const isActing = (key: string) => acting === `${s.id}:${key}`;
             return (
-              <article key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
+              <article key={s.id} className="surface p-5">
                 <div className="grid lg:grid-cols-[1fr_auto] gap-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">

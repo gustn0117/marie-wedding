@@ -67,7 +67,7 @@ export default function SettlementCard({ settlement, showPdfButton = true }: Pro
         </div>
         <div className="text-right shrink-0">
           <p className="text-[11px] text-gray-400">실수령</p>
-          <p className="text-base font-extrabold text-ink tabular-nums">
+          <p className="text-base font-bold text-ink tabular-nums">
             {fmt(settlement.net_amount)} <span className="text-xs font-bold text-gray-500">KRW</span>
           </p>
           <p className="text-[10px] text-gray-400 mt-0.5">{formatRelativeTime(settlement.created_at)}</p>
