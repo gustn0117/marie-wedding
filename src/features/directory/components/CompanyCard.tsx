@@ -10,9 +10,11 @@ interface CompanyCardProps {
 
 const GRADIENTS = [
   'from-gray-50 to-gray-100',
+  'from-primary-50/60 to-gray-50',
   'from-gray-100 to-gray-50',
-  'from-primary-50 to-gray-100',
-  'from-gray-50 to-primary-50',
+  'from-gray-50 to-primary-50/40',
+  'from-primary-50/40 to-gray-100',
+  'from-gray-100 to-primary-50/60',
 ];
 
 export default function CompanyCard({ profile, idx = 0 }: CompanyCardProps) {

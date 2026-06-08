@@ -9,14 +9,13 @@ interface EmptyStateProps {
 
 export default function EmptyState({ title, description, actionLabel, actionHref }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-      {/* Illustration */}
-      <div className="w-20 h-20 rounded bg-secondary flex items-center justify-center mb-6">
+    <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-white flex flex-col items-center justify-center py-14 px-4 text-center">
+      <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-5">
         <svg
-          className="w-10 h-10 text-text-muted"
+          className="w-8 h-8 text-gray-300"
           fill="none"
           viewBox="0 0 24 24"
-          strokeWidth={1}
+          strokeWidth={1.2}
           stroke="currentColor"
         >
           <path
@@ -27,10 +26,10 @@ export default function EmptyState({ title, description, actionLabel, actionHref
         </svg>
       </div>
 
-      <h3 className="text-lg font-bold text-text-primary mb-2">
+      <h3 className="text-base font-bold text-ink mb-1">
         {title}
       </h3>
-      <p className="text-sm text-text-secondary max-w-sm mb-6">
+      <p className="text-sm text-gray-500 max-w-sm mb-5 leading-relaxed">
         {description}
       </p>
 

@@ -660,7 +660,7 @@ function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: st
       >
         급여: {active.label} ▾
       </summary>
-      <div className="absolute left-0 top-full mt-1 z-20 min-w-[160px] border border-gray-200 bg-white shadow-lg">
+      <div className="absolute left-0 top-full mt-1 z-20 min-w-[160px] rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
         {options.map((o) => (
           <button
             key={o.v || 'any'}
@@ -694,7 +694,7 @@ function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v
       >
         경력: {active.label} ▾
       </summary>
-      <div className="absolute left-0 top-full mt-1 z-20 min-w-[140px] border border-gray-200 bg-white shadow-lg">
+      <div className="absolute left-0 top-full mt-1 z-20 min-w-[140px] rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
         {options.map((o) => (
           <button
             key={o.v || 'any'}

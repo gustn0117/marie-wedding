@@ -24,10 +24,10 @@ export default function JobDetailSidebar({ job }: Props) {
   return (
     <aside className="lg:sticky lg:top-20 space-y-3">
       {/* Trust card */}
-      <section className={`border ${trustEmphasis ? 'border-primary' : 'border-gray-200'} bg-white p-4`}>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">업체 신뢰 등급</p>
+      <section className={`rounded-xl border ${trustEmphasis ? 'border-primary' : 'border-gray-200'} bg-white p-4`}>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">업체 신뢰 등급</p>
         <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-          <p className={`text-sm font-bold ${trustEmphasis ? 'text-primary' : 'text-gray-700'}`}>
+          <p className={`text-sm font-bold ${trustEmphasis ? 'text-primary' : 'text-ink'}`}>
             {TRUST_TIER_LABELS[trustTier]}
           </p>
           <VerificationBadge
@@ -38,12 +38,12 @@ export default function JobDetailSidebar({ job }: Props) {
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">거래 완료</p>
-            <p className="text-base font-bold text-gray-900 tabular-nums">{deals}건</p>
+            <p className="text-base font-bold text-ink tabular-nums">{deals}건</p>
           </div>
           <div>
             <p className="text-[10px] text-gray-400 uppercase tracking-wider">응답률</p>
             <div className="flex items-center gap-1.5">
-              <p className="text-base font-bold text-gray-900 tabular-nums">{responseRate > 0 ? `${responseRate}%` : '-'}</p>
+              <p className="text-base font-bold text-ink tabular-nums">{responseRate > 0 ? `${responseRate}%` : '-'}</p>
             </div>
             {responseRate > 0 && (
               <div className="mt-1 h-1 bg-gray-100">
@@ -55,8 +55,8 @@ export default function JobDetailSidebar({ job }: Props) {
       </section>
 
       {/* Apply CTA */}
-      <section className="border border-gray-200 bg-white p-4">
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">
+      <section className="rounded-xl border border-gray-200 bg-white p-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
           {isExpired ? '마감된 공고' : daysLeft !== null && daysLeft <= 7 ? '마감 임박' : '진행 중'}
         </p>
         {job.deadline ? (
@@ -75,15 +75,15 @@ export default function JobDetailSidebar({ job }: Props) {
       </section>
 
       {/* Quick actions */}
-      <section className="border border-gray-200 bg-white p-4 space-y-2">
+      <section className="rounded-xl border border-gray-200 bg-white p-4 space-y-2">
         <BookmarkButton targetType="job" targetId={job.id} label="공고 저장" />
         <ReportButton targetType="job" targetId={job.id} />
       </section>
 
       {/* Author company short */}
       {job.author && (
-        <section className="border border-gray-200 bg-white p-4">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">업체 정보</p>
+        <section className="rounded-xl border border-gray-200 bg-white p-4">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">업체 정보</p>
           <Link href={ROUTES.DIRECTORY_DETAIL(job.author.id)} className="block group">
             <p className="text-sm font-bold text-gray-900 group-hover:text-primary truncate">
               {job.author.company_name || job.author.contact_name}

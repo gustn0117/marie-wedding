@@ -354,7 +354,7 @@ export default function AdminUsersPage() {
 
       {noteModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div role="dialog" aria-modal="true" className="w-full max-w-md border border-gray-200 bg-white p-5 shadow-xl">
+          <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">관리자 메모</p>
             <h2 className="text-base font-bold text-gray-900 mb-3">{noteModal.user.contact_name}</h2>
             <textarea
@@ -388,7 +388,7 @@ export default function AdminUsersPage() {
 
       {banModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div role="dialog" aria-modal="true" className="w-full max-w-md border border-gray-200 bg-white p-5 shadow-xl">
+          <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">사용자 제재</p>
             <h2 className="text-base font-bold text-gray-900 mb-1">{banModal.user.contact_name}</h2>
             <p className="text-xs text-gray-500 mb-3">{banModal.user.company_name || '개인 회원'}</p>

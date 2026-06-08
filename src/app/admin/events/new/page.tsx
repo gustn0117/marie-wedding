@@ -15,7 +15,7 @@ export default function AdminEventNewPage() {
         </Link>
         <h1 className="text-2xl font-bold text-gray-900">이벤트 등록</h1>
       </div>
-      <div className="bg-white border border-gray-200 p-6 md:p-8">
+      <div className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
         <EventForm />
       </div>
     </div>

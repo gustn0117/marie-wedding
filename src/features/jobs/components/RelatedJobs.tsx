@@ -25,8 +25,8 @@ export default async function RelatedJobs({ authorId, currentJobId }: Props) {
   if (jobs.length === 0) return null;
 
   return (
-    <section className="bg-white border border-gray-200 p-6 md:p-8">
-      <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
+    <section className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
+      <h2 className="text-lg font-bold text-ink mb-4 pb-3 border-b border-gray-200">
         이 업체의 다른 공고
       </h2>
       <ul className="divide-y divide-gray-100">
@@ -36,10 +36,10 @@ export default async function RelatedJobs({ authorId, currentJobId }: Props) {
             <li key={job.id}>
               <Link
                 href={ROUTES.JOBS_DETAIL(job.id)}
-                className="flex items-center justify-between gap-3 py-3 hover:bg-primary-50/40 -mx-3 px-3 transition-colors group"
+                className="flex items-center justify-between gap-3 py-3 hover:bg-gray-50 -mx-3 px-3 rounded-lg transition-colors group"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-gray-900 group-hover:text-primary truncate">
+                  <p className="text-sm font-bold text-ink group-hover:text-primary truncate">
                     {job.title}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">

@@ -61,7 +61,7 @@ export default function AdminEventsPage() {
         </Link>
       </div>
 
-      <div className="bg-white border border-gray-200 overflow-hidden">
+      <div className="rounded-xl bg-white border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="py-12 text-center text-sm text-gray-500">로딩 중...</div>
         ) : events.length === 0 ? (

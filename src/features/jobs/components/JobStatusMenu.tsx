@@ -57,7 +57,7 @@ export default function JobStatusMenu({ job, onChange }: { job: Job; onChange?: 
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-10 cursor-default"
           />
-          <div role="menu" className="absolute right-0 top-full mt-1 z-20 w-56 border border-gray-200 bg-white shadow-lg">
+          <div role="menu" className="absolute right-0 top-full mt-1 z-20 w-56 rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
             {ACTIONS.filter((a) => a.value !== job.status).map((a) => (
               <button
                 key={a.value}

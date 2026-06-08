@@ -57,7 +57,7 @@ export default async function JobDetailPage({ params }: PageProps) {
           <JobDetailHero job={job} />
 
           {/* Description */}
-          <section className="bg-white border border-gray-200 p-6 md:p-8">
+          <section className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
             <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">상세 내용</h2>
             <RichTextView html={job.description} className="text-[15px] text-gray-700 leading-relaxed" />
           </section>
