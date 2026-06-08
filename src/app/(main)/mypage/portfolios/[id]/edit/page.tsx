@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import PortfolioForm from '@/features/portfolios/components/PortfolioForm';
+import PageHeader from '@/shared/components/PageHeader';
 import type { Portfolio } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -43,12 +44,9 @@ export default async function EditPortfolioPage({ params }: Props) {
         <span className="text-gray-900 font-medium">수정</span>
       </nav>
 
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">포트폴리오</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">포트폴리오 수정</h1>
-      </header>
+      <PageHeader eyebrow="포트폴리오" title="포트폴리오 수정" />
 
-      <section className="platform-panel p-6">
+      <section className="surface p-6">
         <PortfolioForm profileId={me.id} initial={portfolio} />
       </section>
     </main>

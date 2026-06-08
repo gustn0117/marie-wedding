@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
 import StatsExportButton from '@/features/stats/components/StatsExportButton';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const revalidate = 300; // 5분 캐싱 — 데이터 증가 시 더 늘릴 것
 
@@ -87,16 +88,12 @@ export default async function StatsPage() {
         <span className="text-gray-900 font-medium">플랫폼 통계</span>
       </nav>
 
-      <header className="platform-panel p-6 flex items-start justify-between gap-3">
-        <div>
-          <p className="platform-eyebrow">통계</p>
-          <h1 className="text-2xl font-bold text-gray-900 mt-1">플랫폼 통계</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            마리에에 누적된 업체·공고·콘텐츠 수치. 매 5분 캐싱.
-          </p>
-        </div>
-        <StatsExportButton stats={s} regionLabel={regionLabel} bizLabel={bizLabel} />
-      </header>
+      <PageHeader
+        eyebrow="통계"
+        title="플랫폼 통계"
+        description="마리에에 누적된 업체·공고·콘텐츠 수치. 매 5분 캐싱."
+        actions={<StatsExportButton stats={s} regionLabel={regionLabel} bizLabel={bizLabel} />}
+      />
 
       <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatTile label="누적 회원" value={s.totalProfiles} />

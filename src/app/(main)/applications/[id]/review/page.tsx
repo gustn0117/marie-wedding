@@ -5,6 +5,7 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 import type { Application, Job, Profile } from '@/types/database';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,13 +74,9 @@ export default async function ReviewPage({ params }: Props) {
         <span className="text-gray-900 font-medium">리뷰 작성</span>
       </nav>
 
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">검토</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">{revieweeName} 리뷰</h1>
-        <p className="mt-2 text-sm text-gray-600 truncate">{job.title}</p>
-      </header>
+      <PageHeader eyebrow="검토" title={`${revieweeName} 리뷰`} description={job.title} />
 
-      <section className="platform-panel p-6">
+      <section className="surface p-6">
         {existing ? (
           <div className="text-sm">
             <p className="font-bold text-gray-900 mb-2">이미 리뷰를 작성하셨습니다.</p>

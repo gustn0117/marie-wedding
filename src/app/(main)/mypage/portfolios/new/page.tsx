@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import PortfolioForm from '@/features/portfolios/components/PortfolioForm';
+import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,12 +26,9 @@ export default async function NewPortfolioPage() {
         <span className="text-gray-900 font-medium">새 작품</span>
       </nav>
 
-      <header className="platform-panel p-6">
-        <p className="platform-eyebrow">포트폴리오</p>
-        <h1 className="text-2xl font-bold text-gray-900 mt-1">새 포트폴리오 등록</h1>
-      </header>
+      <PageHeader eyebrow="포트폴리오" title="새 포트폴리오 등록" />
 
-      <section className="platform-panel p-6">
+      <section className="surface p-6">
         <PortfolioForm profileId={me.id} />
       </section>
     </main>

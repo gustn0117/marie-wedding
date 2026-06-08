@@ -114,7 +114,23 @@
     @apply bg-gray-50 border border-gray-100 rounded-xl;
   }
   .surface-hoverable {
-    @apply surface transition-colors hover:border-gray-300;
+    @apply surface transition-all duration-150 hover:border-gray-300 hover:shadow-e1;
+  }
+
+  /* === Micro interactions ===
+     플랫폼 표준: 100~150ms duration, transform 자제, color/border/shadow만. */
+  .interactive-card {
+    @apply transition-all duration-150 hover:border-gray-300 hover:shadow-e1;
+  }
+  .interactive-row {
+    @apply transition-colors duration-100 hover:bg-gray-50;
+  }
+  .interactive-link {
+    @apply transition-colors duration-150 hover:text-ink;
+  }
+  /* 강한 클릭형 (CTA 카드) — 살짝 들어올림. transform은 mobile에서 비활성. */
+  .interactive-lift {
+    @apply transition-all duration-200 hover:border-gray-300 hover:shadow-e2 motion-safe:hover:-translate-y-px;
   }
 
   /* === Stat (KPI 카드 — 대시보드용) === */
