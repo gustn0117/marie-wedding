@@ -6,9 +6,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 py-5 sm:py-6 lg:py-8">
-        {/* 페이지가 .shell / .shell-narrow / .shell-wide 중 하나를 자체적으로 선택.
-            이전에는 max-w-[1440px] 강제로 좁은 폼 페이지까지 1440 폭 안에 끼어 정렬 어긋남. */}
-        {children}
+        {/* 기본 폭: .shell-wide(1440). 더 좁은 폭이 필요한 페이지는 자체 div에서 .shell-narrow / .shell 사용해 override.
+            mypage는 자체 layout에서 grid를 사용하므로 outer shell이 max-w를 처리. */}
+        <div className="shell-wide">
+          {children}
+        </div>
       </main>
       <Footer />
     </div>

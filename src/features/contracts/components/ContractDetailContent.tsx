@@ -53,7 +53,7 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
 
   if (loading) {
     return (
-      <div className="space-y-4 shell-narrow !max-w-[960px]">
+      <div className="space-y-4 max-w-[960px] mx-auto">
         <div className="h-10 bg-gray-100 rounded animate-pulse" />
         <div className="h-40 bg-gray-100 rounded animate-pulse" />
         <div className="h-60 bg-gray-100 rounded animate-pulse" />
@@ -127,7 +127,7 @@ export default function ContractDetailContent({ contractId, profileId }: { contr
   };
 
   return (
-    <div className="space-y-6 shell-narrow !max-w-[960px]">
+    <div className="space-y-6 max-w-[960px] mx-auto">
       <nav className="text-sm text-gray-500">
         <Link href={ROUTES.CONTRACTS} className="hover:text-ink">계약</Link>
         <span className="mx-2">›</span>

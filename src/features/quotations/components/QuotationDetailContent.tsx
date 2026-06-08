@@ -137,7 +137,7 @@ export default function QuotationDetailContent({ quotationId, profileId }: { quo
   };
 
   return (
-    <div className="space-y-6 shell-narrow !max-w-[960px]">
+    <div className="space-y-6 max-w-[960px] mx-auto">
       {/* 브레드크럼 */}
       <nav className="text-sm text-gray-500">
         <Link href={ROUTES.QUOTATIONS} className="hover:text-ink">견적</Link>
