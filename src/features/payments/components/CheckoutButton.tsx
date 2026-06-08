@@ -1,0 +1,96 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from '@/shared/components/Toast';
+import { ROUTES } from '@/shared/constants';
+
+interface CheckoutInput {
+  productType: 'premium_tier' | 'job_promotion' | 'event_listing' | 'directory_boost';
+  productId?: string;
+  amount: number;
+  orderName: string;
+  metadata?: Record<string, unknown>;
+}
+
+export default function CheckoutButton({
+  input,
+  label,
+  className = 'btn-primary',
+  disabled = false,
+}: {
+  input: CheckoutInput;
+  label: string;
+  className?: string;
+  disabled?: boolean;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setLoading(true);
+    try {
+      // 1. 서버에 결제 세션 생성 요청
+      const res = await fetch('/api/payments/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'failed' }));
+        if (err.error === 'unauthorized') {
+          toast('로그인이 필요합니다.', 'error');
+          router.push(ROUTES.LOGIN);
+          return;
+        }
+        throw new Error(err.error || '결제 시작 실패');
+      }
+
+      const { paymentId, storeId, channelKey } = await res.json();
+
+      if (!storeId || !channelKey || storeId.includes('xxxxxxxx')) {
+        toast('결제 GW가 아직 설정되지 않았습니다. 운영팀에 문의해 주세요.', 'error');
+        return;
+      }
+
+      // 2. 포트원 SDK 동적 import + 결제 위젯 호출
+      const PortOne = await import('@portone/browser-sdk/v2');
+      const result = await PortOne.requestPayment({
+        storeId,
+        channelKey,
+        paymentId,
+        orderName: input.orderName,
+        totalAmount: input.amount,
+        currency: 'CURRENCY_KRW',
+        payMethod: 'CARD',
+        customer: undefined, // 추후 프로필 정보 매핑
+        redirectUrl: `${window.location.origin}/mypage/payments?paid=${paymentId}`,
+      });
+
+      if (result?.code) {
+        // 결제 실패
+        toast(result.message || '결제 실패', 'error');
+      } else {
+        // 결제 성공 → webhook이 처리 → /mypage/payments에서 결과 확인
+        toast('결제 요청이 완료되었습니다. 처리에 잠시 걸릴 수 있습니다.', 'success');
+        router.push(`/mypage/payments?paid=${paymentId}`);
+      }
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '결제 처리 중 오류', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCheckout}
+      disabled={disabled || loading}
+      className={`${className} ${loading ? 'opacity-70 cursor-wait' : ''}`}
+    >
+      {loading ? '결제 시작 중...' : label}
+    </button>
+  );
+}
