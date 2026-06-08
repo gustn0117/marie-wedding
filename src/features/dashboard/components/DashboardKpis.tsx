@@ -23,38 +23,37 @@ export default function DashboardKpis({ kpis }: KpiProps) {
 
   return (
     <div className="space-y-6">
-      {/* 매출 — 최상위 강조, .surface 토큰 */}
-      <section className="surface p-6">
-        <div className="flex items-start justify-between mb-4 gap-3">
+      {/* 매출 — Toss 스타일 큰 강조 (ink 배경 + 흰색 텍스트) */}
+      <section className="surface-dark p-8">
+        <div className="flex items-start justify-between mb-6 gap-3">
           <div className="min-w-0">
-            <p className="section-eyebrow !mb-1">이번 달 매출 (계약 총액)</p>
-            <p className="text-[32px] font-extrabold text-ink tabular-nums leading-none tracking-tighter">
+            <p className="text-[13px] font-bold text-primary-200 mb-3">이번 달 매출</p>
+            <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter">
               {fmt(kpis.revenue.thisMonth)}
-              <span className="text-base font-bold text-gray-400 ml-1.5">KRW</span>
+              <span className="text-[20px] font-bold text-white/60 ml-2">원</span>
             </p>
             {revenueDiffPercent !== null && (
-              <p className={`mt-1.5 text-[13px] font-semibold ${revenueDiff >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              <p className={`mt-3 text-[15px] font-bold ${revenueDiff >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
                 {revenueDiff >= 0 ? '↑' : '↓'} 전월 대비 {Math.abs(revenueDiffPercent)}%
-                <span className="text-gray-400 font-medium ml-1">({fmt(Math.abs(revenueDiff))} KRW)</span>
+                <span className="text-white/40 font-semibold ml-2 text-[13px]">{fmt(Math.abs(revenueDiff))}원</span>
               </p>
             )}
           </div>
-          <Link href={ROUTES.CONTRACTS} className="shrink-0 text-xs text-gray-500 hover:text-ink font-bold inline-flex items-center gap-1">
-            계약 보기
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+          <Link href={ROUTES.CONTRACTS} className="shrink-0 text-[13px] text-white/70 hover:text-white font-bold inline-flex items-center gap-1 transition-colors">
+            계약 →
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-2 gap-3 pt-6 border-t border-white/10">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">전월</p>
-            <p className="mt-0.5 text-[15px] font-bold text-ink tabular-nums">
-              {fmt(kpis.revenue.lastMonth)} <span className="text-[11px] text-gray-400">KRW</span>
+            <p className="text-[12px] font-semibold text-white/50">전월</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums">
+              {fmt(kpis.revenue.lastMonth)} <span className="text-[12px] text-white/40 font-semibold">원</span>
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">누적</p>
-            <p className="mt-0.5 text-[15px] font-bold text-ink tabular-nums">
-              {fmt(kpis.revenue.allTime)} <span className="text-[11px] text-gray-400">KRW</span>
+            <p className="text-[12px] font-semibold text-white/50">누적</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums">
+              {fmt(kpis.revenue.allTime)} <span className="text-[12px] text-white/40 font-semibold">원</span>
             </p>
           </div>
         </div>

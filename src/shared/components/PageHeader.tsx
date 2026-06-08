@@ -11,9 +11,8 @@ interface PageHeaderProps {
 }
 
 /**
- * 플랫폼 표준 페이지 헤더 — Linear/Stripe 스타일.
+ * 플랫폼 페이지 헤더 — Toss 친화 큰 타이포.
  * 슬롯: eyebrow / title / description / breadcrumb (위) + actions (우측)
- * .page-title / .page-subtitle / .page-eyebrow 토큰 사용 (globals.css).
  */
 export default function PageHeader({
   title,
@@ -24,21 +23,20 @@ export default function PageHeader({
   size = 'md',
   className = '',
 }: PageHeaderProps) {
-  const titleSize = size === 'lg'
-    ? 'text-[26px] sm:text-[32px]'
+  const titleClass = size === 'lg'
+    ? 'text-[32px] sm:text-[44px] font-extrabold text-ink leading-[1.05] tracking-tighter'
     : size === 'sm'
-    ? 'text-[18px] sm:text-[20px]'
+    ? 'text-[20px] sm:text-[24px] font-bold text-ink leading-tight tracking-tight'
     : 'page-title';
+
   return (
-    <header className={`mb-6 ${className}`}>
-      {breadcrumb && <div className="mb-2">{breadcrumb}</div>}
-      <div className="flex flex-wrap items-end justify-between gap-3 pb-4 border-b border-gray-100">
-        <div className="min-w-0">
-          {eyebrow && <p className="page-eyebrow mb-1">{eyebrow}</p>}
-          <h1 className={size === 'md' ? titleSize : `${titleSize} font-bold text-ink leading-tight tracking-tight`}>
-            {title}
-          </h1>
-          {description && <p className="page-subtitle">{description}</p>}
+    <header className={`mb-8 ${className}`}>
+      {breadcrumb && <div className="mb-3">{breadcrumb}</div>}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          {eyebrow && <p className="page-eyebrow mb-2">{eyebrow}</p>}
+          <h1 className={titleClass}>{title}</h1>
+          {description && <p className="page-subtitle max-w-2xl">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
       </div>
