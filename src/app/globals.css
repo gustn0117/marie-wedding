@@ -316,7 +316,8 @@
 
   .promo-card {
     @apply relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end;
-    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 50%, #f5d0fe 100%);
+    /* 미니멀 팔레트 준수 — 분홍/보라 그라데이션을 회색 + 미세 brand 톤으로 교체. */
+    background: linear-gradient(135deg, #f4f4f5 0%, #e9eaf3 50%, #e6dffb 100%);
   }
   .promo-card-illust { @apply absolute top-1/2 right-6 -translate-y-1/2 text-9xl opacity-80; }
   .promo-card-title { @apply text-2xl font-extrabold text-gray-900 leading-tight; }

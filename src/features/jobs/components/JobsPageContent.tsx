@@ -17,6 +17,7 @@ import JobListRow from './JobListRow';
 import JobCard from './JobCard';
 import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
+import EmptyState from '@/shared/components/EmptyState';
 
 const PAGE_SIZE = 20;
 
@@ -238,13 +239,17 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           {/* Region Dropdown */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => {
                 const opening = !regionDropdownOpen;
                 closeAllDropdowns();
                 setRegionDropdownOpen(opening);
                 if (opening) setBrowsingRegion(selectedRegion);
               }}
-              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
+              aria-haspopup="listbox"
+              aria-expanded={regionDropdownOpen}
+              aria-label="지역 선택"
+              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 ${
                 regionDropdownOpen
                   ? 'border-ink ring-2 ring-ink/10'
                   : 'border-gray-300 hover:border-gray-400'
@@ -276,12 +281,16 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           {/* Business Type Dropdown */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => {
                 const opening = !businessTypeDropdownOpen;
                 closeAllDropdowns();
                 setBusinessTypeDropdownOpen(opening);
               }}
-              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
+              aria-haspopup="listbox"
+              aria-expanded={businessTypeDropdownOpen}
+              aria-label="업종 선택"
+              className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 ${
                 businessTypeDropdownOpen
                   ? 'border-ink ring-2 ring-ink/10'
                   : 'border-gray-300 hover:border-gray-400'
@@ -311,12 +320,16 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           {postingType === 'hiring' && (
             <div className="relative">
               <button
+                type="button"
                 onClick={() => {
                   const opening = !employmentTypeDropdownOpen;
                   closeAllDropdowns();
                   setEmploymentTypeDropdownOpen(opening);
                 }}
-                className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors ${
+                aria-haspopup="listbox"
+                aria-expanded={employmentTypeDropdownOpen}
+                aria-label="고용형태 선택"
+                className={`flex items-center gap-2 px-3 py-2 bg-white border rounded text-small font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 ${
                   employmentTypeDropdownOpen
                     ? 'border-ink ring-2 ring-ink/10'
                     : 'border-gray-300 hover:border-gray-400'
@@ -583,19 +596,14 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       </div>
 
       {/* Results */}
+      {/* 인라인 빈 상태 → 공용 EmptyState로 일관화 (C-1, C-10). */}
       {jobs.length === 0 ? (
-        <div className="platform-panel p-10 text-center">
-          <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0" />
-            </svg>
-          </div>
-          <h3 className="text-h4 font-semibold text-gray-900 mb-1">등록된 채용 공고가 없습니다</h3>
-          <p className="text-small text-gray-500 mb-4">조건에 맞는 채용 공고가 없습니다.</p>
-          <Link href={ROUTES.JOBS_NEW} className="btn-primary inline-block">
-            공고 등록하기
-          </Link>
-        </div>
+        <EmptyState
+          title="조건에 맞는 공고가 없습니다"
+          description={selectedFilterCount > 0 ? '필터를 풀거나 다른 조건으로 검색해 보세요.' : `${postingType === 'matching' ? '섭외 공고' : '채용 공고'}가 아직 등록되지 않았습니다.`}
+          actionLabel={postingType === 'matching' ? '섭외 공고 올리기' : '공고 등록하기'}
+          actionHref={ROUTES.JOBS_NEW}
+        />
       ) : viewMode === 'list' ? (
         <div className="platform-data-table">
           {jobs.map((job) => (

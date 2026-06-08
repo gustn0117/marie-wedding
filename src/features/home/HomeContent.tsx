@@ -26,12 +26,14 @@ interface HomeContentProps {
   mySidebar?: React.ReactNode;
 }
 
+// 카테고리 그리드 — 이전엔 planner만 bg-primary-50로 의미 없는 강조.
+// 전부 무채색 + 마지막 '전체보기'만 약간 진한 톤으로 분리.
 const CATEGORIES: { key: string; label: string; icon: string; bg: string }[] = [
   { key: 'venue',     label: '예식장',     icon: '🏰', bg: 'bg-gray-50' },
   { key: 'dress',     label: '드레스샵',   icon: '👗', bg: 'bg-gray-50' },
   { key: 'studio',    label: '스튜디오',   icon: '📸', bg: 'bg-gray-50' },
   { key: 'makeup',    label: '메이크업',   icon: '💄', bg: 'bg-gray-50' },
-  { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-primary-50' },
+  { key: 'planner',   label: '플래너',     icon: '📋', bg: 'bg-gray-50' },
   { key: 'assistant', label: '예식도우미', icon: '🎀', bg: 'bg-gray-50' },
   { key: 'mc',        label: '사회자',     icon: '🎤', bg: 'bg-gray-50' },
   { key: 'singer',    label: '축가',       icon: '🎵', bg: 'bg-gray-50' },
@@ -39,15 +41,6 @@ const CATEGORIES: { key: string; label: string; icon: string; bg: string }[] = [
   { key: '',          label: '전체보기',   icon: '⊞', bg: 'bg-gray-100' },
 ];
 
-const GRADIENTS = [
-  'from-gray-50 to-gray-100',
-  'from-primary-50/60 to-gray-50',
-  'from-gray-100 to-gray-50',
-  'from-gray-50 to-primary-50/40',
-  'from-primary-50/40 to-gray-100',
-  'from-gray-100 to-primary-50/60',
-];
-const EMOJIS = ['💍', '👗', '📸', '💄', '📋', '🎀', '🎤', '🎵'];
 
 export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }: HomeContentProps) {
   const router = useRouter();
@@ -141,7 +134,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
             <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
           ) : (
             <div className="h-scroll">
-              {featuredJobs.map((job, idx) => <SvcJobCard key={job.id} job={job} idx={idx} />)}
+              {featuredJobs.map((job) => <SvcJobCard key={job.id} job={job} />)}
             </div>
           )}
         </div>
@@ -153,7 +146,7 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="추천 파트너 업체" subtitle="신뢰할 수 있는 검증 업체 모음" href={ROUTES.DIRECTORY} />
             <div className="h-scroll">
-              {featuredProfiles.map((p, idx) => <SvcCompanyCard key={p.id} profile={p} idx={idx} />)}
+              {featuredProfiles.map((p) => <SvcCompanyCard key={p.id} profile={p} />)}
             </div>
           </div>
         </section>
@@ -222,6 +215,8 @@ function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: st
 }
 
 function EmptyHint({ message, href, cta }: { message: string; href: string; cta: string }) {
+  // 인라인 빈상태 — EmptyState 공용 컴포넌트와 톤 일치 유지.
+  // 디자인 토큰: rounded-2xl + 점선 + 회색 일러스트 (EmptyState.tsx와 동일).
   return (
     <div className="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
       <p className="text-sm text-gray-500 mb-4">{message}</p>
@@ -230,41 +225,52 @@ function EmptyHint({ message, href, cta }: { message: string; href: string; cta:
   );
 }
 
-function SvcJobCard({ job, idx }: { job: Job; idx: number }) {
-  const g = GRADIENTS[idx % GRADIENTS.length];
-  const emoji = EMOJIS[idx % EMOJIS.length];
+function SvcJobCard({ job }: { job: Job }) {
   const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
+  const initial = company.charAt(0).toUpperCase();
   const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const views = job.view_count ?? 0;
+  const imageUrl = job.image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
+    : null;
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">
-      <div className={`svc-card-thumb bg-gradient-to-br ${g}`}>
+      <div className="svc-card-thumb bg-gray-50">
         {isExpired ? (
           <span className="svc-card-badge" style={{ background: '#6b7280' }}>마감</span>
         ) : job.is_promoted ? (
           <span className="svc-card-badge svc-card-badge-promoted">추천</span>
         ) : null}
-        <div className="absolute inset-0 flex items-center justify-center text-6xl opacity-40">{emoji}</div>
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={job.title} className="svc-card-thumb-img" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+          </div>
+        )}
       </div>
       <p className="svc-card-title">{job.title}</p>
       <div className="svc-card-rating">
-        <span className="font-bold text-gray-900">조회 {views.toLocaleString()}</span>
-        <span className="svc-card-rating-count">{getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}</span>
+        <span className="svc-card-rating-count">
+          {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
+        </span>
       </div>
       <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{company}</span>
-        {verified && <span className="svc-card-m-badge">인</span>}
+        {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
+        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
       </div>
     </Link>
   );
 }
 
-function SvcCompanyCard({ profile, idx }: { profile: Profile; idx: number }) {
-  const g = GRADIENTS[(idx + 3) % GRADIENTS.length];
+function SvcCompanyCard({ profile }: { profile: Profile }) {
   const name = profile.company_name || profile.contact_name;
+  const initial = name.charAt(0).toUpperCase();
   const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
   const imageUrl = profile.profile_image
@@ -272,10 +278,11 @@ function SvcCompanyCard({ profile, idx }: { profile: Profile; idx: number }) {
     : null;
   const deals = profile.completed_deals_count ?? 0;
   const responseRate = Math.round(profile.response_rate ?? 0);
+  const isNewBiz = deals === 0;
 
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
-      <div className={`svc-card-thumb bg-gradient-to-br ${g}`}>
+      <div className="svc-card-thumb bg-gray-50">
         {premium ? (
           <span className="svc-card-badge svc-card-badge-prime">PREMIUM</span>
         ) : verified ? (
@@ -285,22 +292,28 @@ function SvcCompanyCard({ profile, idx }: { profile: Profile; idx: number }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={name} className="svc-card-thumb-img" />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-7xl font-extrabold text-white/70">
-            {name.charAt(0)}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
           </div>
         )}
       </div>
       <p className="svc-card-title">{name}</p>
       <div className="svc-card-rating">
-        <span className="font-bold text-gray-900">거래 {deals.toLocaleString()}건</span>
-        {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
+        {isNewBiz && responseRate === 0 ? (
+          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-50 text-primary text-[10px] font-bold">NEW</span>
+        ) : (
+          <>
+            {deals > 0 && <span className="font-bold text-gray-900">거래 {deals.toLocaleString()}건</span>}
+            {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
+          </>
+        )}
       </div>
       <p className="svc-card-price">
         {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
       </p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>
-        {verified && <span className="svc-card-m-badge">인</span>}
+        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
       </div>
     </Link>
   );

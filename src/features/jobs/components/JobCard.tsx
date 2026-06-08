@@ -5,46 +5,49 @@ import { getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
 
 interface JobCardProps {
   job: Job;
-  idx?: number;
 }
 
-const GRADIENTS = [
-  'from-gray-50 to-gray-100',
-  'from-primary-50/60 to-gray-50',
-  'from-gray-100 to-gray-50',
-  'from-gray-50 to-primary-50/40',
-  'from-primary-50/40 to-gray-100',
-  'from-gray-100 to-primary-50/60',
-];
-const EMOJIS = ['💍', '👗', '📸', '💄', '📋', '🎀', '🎤', '🎵', '✏️'];
-
-export default function JobCard({ job, idx = 0 }: JobCardProps) {
-  const g = GRADIENTS[idx % GRADIENTS.length];
-  const emoji = EMOJIS[idx % EMOJIS.length];
+export default function JobCard({ job }: JobCardProps) {
   const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
+  const initial = company.charAt(0).toUpperCase();
   const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const views = job.view_count ?? 0;
+  const imageUrl = job.image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
+    : null;
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">
-      <div className={`svc-card-thumb bg-gradient-to-br ${g}`}>
+      <div className="svc-card-thumb bg-gray-50">
+        {/* 배지: 마감 > 추천 > prime 슬롯 통일. 빈 공간 배지 슬롯 보존을 위해 항상 영역 차지 */}
         {isExpired ? (
           <span className="svc-card-badge" style={{ background: '#6b7280' }}>마감</span>
         ) : job.is_promoted ? (
           <span className="svc-card-badge svc-card-badge-promoted">추천</span>
         ) : null}
-        <div className="absolute inset-0 flex items-center justify-center text-7xl opacity-30">{emoji}</div>
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={job.title} className="svc-card-thumb-img" />
+        ) : (
+          // 의미 없는 이모지 대신 회사 이니셜.
+          // 이전: idx % EMOJIS.length로 결정되는 8종 이모지 — 같은 위치의 카드는 항상 같은 그림.
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-5xl font-extrabold text-gray-300 select-none">{initial}</span>
+          </div>
+        )}
       </div>
       <p className="svc-card-title">{job.title}</p>
       <div className="svc-card-rating">
-        <span className="font-bold text-gray-900">조회 {views.toLocaleString()}</span>
-        <span className="svc-card-rating-count">{getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}</span>
+        <span className="svc-card-rating-count">
+          {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
+        </span>
       </div>
       <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{company}</span>
-        {verified && <span className="svc-card-m-badge">인</span>}
+        {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
+        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
       </div>
     </Link>
   );

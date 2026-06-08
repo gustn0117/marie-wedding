@@ -61,13 +61,26 @@ export default function JobListRow({ job }: Props) {
         <h3 className="truncate text-[16px] font-bold text-ink group-hover:text-primary transition-colors">
           {job.title}
         </h3>
+        {/* 메타 라인 — 정보 위계 회복 */}
+        {/* 이전: 5-6개 배지가 같은 굵기로 나열 → 정보가 평등하게 보여 우선순위 모호.
+            수정: 핵심(고용형태·업종)은 배지, 보조(급여)는 강조 텍스트, 신뢰지표(거래/응답)는 별도 라인 + 미세 톤. */}
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">
           <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
           <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
-          {job.salary_info && <span className="font-semibold text-gray-700">{job.salary_info}</span>}
-          {completedDeals > 0 && <span className="trust-pill">거래 {completedDeals}건</span>}
-          {responseRate > 0 && <span className="trust-pill">응답률 {responseRate}%</span>}
+          {job.salary_info && (
+            <>
+              <span className="text-gray-300" aria-hidden>·</span>
+              <span className="font-semibold text-ink">{job.salary_info}</span>
+            </>
+          )}
         </div>
+        {(completedDeals > 0 || responseRate > 0) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
+            {completedDeals > 0 && <span>거래 <span className="font-bold text-gray-700 tabular-nums">{completedDeals}</span>건</span>}
+            {completedDeals > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}
+            {responseRate > 0 && <span>응답률 <span className="font-bold text-gray-700 tabular-nums">{responseRate}%</span></span>}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-3 text-xs md:flex-col md:items-end">

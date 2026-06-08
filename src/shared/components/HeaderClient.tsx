@@ -187,7 +187,8 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         <div className="border-t border-gray-100 hidden md:block">
           <div className="max-w-[1280px] mx-auto px-5 flex items-center gap-1 overflow-x-auto">
             <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
-              <span className="inline-flex items-center justify-center w-5 h-5 rounded bg-green-500 text-white text-[10px]">🌿</span>
+              {/* 옛 패턴: bg-green-500 🌿 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
+                  단순 ink 텍스트로 통일. */}
               업종별
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />

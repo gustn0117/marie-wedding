@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { reportService } from '@/features/reports/services/report-service';
 import type { ReportTargetType } from '@/types/database';
+import { toast } from '@/shared/components/Toast';
 
 const REASONS = [
   '허위 정보',
@@ -37,9 +38,11 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
       });
       setOpen(false);
       setDetails('');
-      alert('신고가 접수되었습니다.');
+      // 옛 패턴 (alert/confirm)은 Toast 인프라와 톤 불일치.
+      // 시스템 다이얼로그는 브라우저 native UI라 디자인 토큰을 따르지 않음.
+      toast('신고가 접수되었습니다. 검토 후 처리됩니다.', 'success');
     } catch {
-      alert('신고 접수에 실패했습니다.');
+      toast('신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.', 'error');
     } finally {
       setSubmitting(false);
     }
@@ -59,8 +62,8 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded border border-gray-200 bg-white shadow-xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl">
             <div className="border-b border-gray-100 px-5 py-4">
               <h2 className="text-base font-bold text-gray-900">신고하기</h2>
               <p className="mt-1 text-xs text-gray-500">검토에 필요한 최소 정보만 입력해주세요.</p>
