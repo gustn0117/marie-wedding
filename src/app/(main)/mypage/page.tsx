@@ -239,6 +239,7 @@ export default async function MyPage() {
             <div className="grid gap-1.5">
               <Link href={ROUTES.MYPAGE_EDIT} className="platform-link-tile text-sm font-bold text-gray-700">프로필 수정</Link>
               <Link href={ROUTES.MYPAGE_PORTFOLIOS} className="platform-link-tile text-sm font-bold text-gray-700">포트폴리오</Link>
+              <Link href={ROUTES.MYPAGE_ORGANIZATION} className="platform-link-tile text-sm font-bold text-gray-700">조직·권한</Link>
               <Link href={ROUTES.DIRECTORY_REGISTER} className="platform-link-tile flex items-center gap-1.5 text-sm font-bold text-gray-700">
                 디렉토리 등록
                 {profile.is_directory_listed && (
