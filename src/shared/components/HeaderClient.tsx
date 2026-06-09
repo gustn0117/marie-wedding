@@ -2,34 +2,24 @@
 
 import { Suspense, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
-// 주의: '노하우' category=tips (복수) — POST_CATEGORIES 정의와 일치.
-// 이전엔 ?category=tip(단수)이라 커뮤니티 페이지에서 eq('category', 'tip') 매칭이 0건이었음.
+// 헤더 2단 nav — 사이트 주요 섹션 단일 줄 (중복 제거: 직군 잡탕 + 파트너 섭외 2회 등장).
+// rail이 페이지 내부에서 직군/카테고리를 제공하므로 헤더는 'WHERE'만 담당.
 const CAT_NAV = [
-  { href: ROUTES.JOBS, label: '전체' },
-  { href: `${ROUTES.JOBS}?businessType=designer`, label: '디자인' },
-  { href: `${ROUTES.COMMUNITY}?category=tips`, label: '노하우' },
-  { href: `${ROUTES.JOBS}?businessType=studio`, label: '스튜디오' },
-  { href: `${ROUTES.JOBS}?businessType=makeup`, label: '메이크업' },
-  { href: `${ROUTES.JOBS}?businessType=planner`, label: '플래너' },
-  { href: `${ROUTES.JOBS}?businessType=mc`, label: '사회·축가' },
-  { href: `${ROUTES.JOBS}?type=matching`, label: '파트너 섭외' },
+  { href: ROUTES.JOBS, label: '채용정보' },
+  { href: ROUTES.DIRECTORY, label: '업체 디렉토리' },
+  { href: ROUTES.COMMUNITY, label: '커뮤니티' },
+  { href: ROUTES.EVENTS, label: '이벤트·소식' },
+  { href: '/pricing', label: '프리미엄 플랜' },
 ] as const;
 
 // CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
-function parseNavHref(href: string): { path: string; queryKey: string | null; queryValue: string | null } {
-  const [path, search] = href.split('?');
-  if (!search) return { path, queryKey: null, queryValue: null };
-  const [k, v] = search.split('=');
-  return { path, queryKey: k ?? null, queryValue: v ?? null };
-}
-
 interface HeaderClientProps {
   initialProfile: AuthProfile | null;
 }
@@ -180,25 +170,15 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       {/* 2단: 카테고리 nav — 모든 페이지에서 동일 렌더 (CLS 0).
           이전엔 isHomeLike에서만 렌더 → 페이지 이동 시 헤더 높이 68→116 점프. */}
       <div className="border-t border-gray-100 hidden md:block">
-          <div className="shell-wide flex items-center gap-1 overflow-x-auto">
-            <Link href={ROUTES.HOME} className={`cat-nav-link flex items-center gap-1.5 ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
-              {/* 옛 패턴: bg-green-500 — 미니멀 팔레트(흰/검/회색+브랜드) 위반.
-                  단순 ink 텍스트로 통일. */}
-              업종별
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.06l3.71-3.83a.75.75 0 111.08 1.04l-4.25 4.39a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-              </svg>
-            </Link>
-            {/* useSearchParams는 prerender 호환을 위해 Suspense 안에서만 호출.
-                fallback은 active 표시 없는 정적 링크 — UX 동일, 단지 active 강조만 hydration 후. */}
-            <Suspense fallback={<CatNavLinksFallback />}>
-              <CatNavLinks pathname={pathname} />
-            </Suspense>
-            <Link href={ROUTES.DIRECTORY} className={`cat-nav-link ml-auto ${pathname.startsWith('/directory') ? 'cat-nav-link-active' : ''}`}>디렉토리</Link>
-            <Link href={ROUTES.COMMUNITY} className={`cat-nav-link ${pathname.startsWith('/community') ? 'cat-nav-link-active' : ''}`}>커뮤니티</Link>
-            <Link href={`${ROUTES.JOBS}?type=matching`} className="cat-nav-link">파트너 섭외</Link>
-          </div>
+        <div className="shell-wide flex items-center gap-1">
+          <Link href={ROUTES.HOME} className={`cat-nav-link ${pathname === '/' ? 'cat-nav-link-active' : ''}`}>
+            홈
+          </Link>
+          <Suspense fallback={<CatNavLinksFallback />}>
+            <CatNavLinks pathname={pathname} />
+          </Suspense>
         </div>
+      </div>
 
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-gray-100 bg-white">
@@ -231,16 +211,11 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
  * 클라이언트 hydration 후 실제 active 상태가 반영됨.
  */
 function CatNavLinks({ pathname }: { pathname: string }) {
-  const searchParams = useSearchParams();
+  // CAT_NAV는 query 없는 단순 경로만 사용 — searchParams 의존 제거.
   return (
     <>
       {CAT_NAV.map((c) => {
-        const { path, queryKey, queryValue } = parseNavHref(c.href);
-        const isActive = pathname === path && (
-          queryKey === null
-            ? !searchParams.toString() || c.href === ROUTES.JOBS
-            : searchParams.get(queryKey) === queryValue
-        );
+        const isActive = pathname === c.href || pathname.startsWith(c.href + '/');
         return (
           <Link
             key={c.label}
