@@ -25,7 +25,6 @@ interface HomeContentProps {
     verified: number;
     recentJobs: number;
   };
-  mySidebar?: React.ReactNode;
 }
 
 // 카테고리 그리드 — SVG 아이콘 (이모지 사용 금지, 미니멀 무채색 팔레트 준수).
@@ -43,7 +42,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, profiles, mySidebar }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, profiles }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -124,12 +123,6 @@ export default function HomeContent({ posts, jobs, profiles, mySidebar }: HomeCo
         </div>
       </section>
 
-      {/* 내 패널 (로그인 시) */}
-      {mySidebar && (
-        <div className="max-w-[1280px] mx-auto px-5">
-          {mySidebar}
-        </div>
-      )}
 
       {/* 최근 등록된 공고 — h-scroll 키보드 가이드 + 스크롤 인디케이터 (C-5) */}
       <section className="bg-gray-50 py-12">

@@ -1,10 +1,8 @@
-import { cookies } from 'next/headers';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import type { Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
-import HomeMyPanel from '@/features/home/HomeMyPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,16 +72,6 @@ async function getHomeData() {
 export default async function HomePage() {
   const { posts, jobs, profiles, counts } = await getHomeData();
 
-  let myProfileId: string | null = null;
-  try {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get('marie_profile')?.value;
-    if (raw) {
-      const parsed = JSON.parse(raw) as { id?: string };
-      if (parsed.id) myProfileId = parsed.id;
-    }
-  } catch { /* noop */ }
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -92,7 +80,6 @@ export default async function HomePage() {
         jobs={jobs}
         profiles={profiles}
         counts={counts}
-        mySidebar={myProfileId ? <HomeMyPanel profileId={myProfileId} /> : undefined}
       />
       <Footer />
     </div>
