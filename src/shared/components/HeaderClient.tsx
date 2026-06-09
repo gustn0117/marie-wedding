@@ -72,21 +72,22 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
-      {/* 1단: 로고 + 검색바 + 우측 메뉴 */}
-      <div className="shell-wide h-[var(--header-h)] flex items-center gap-5">
-        <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink shrink-0">
-          Marié
-        </Link>
-
-        <div className="hidden md:flex items-center gap-2 shrink-0">
-          <span className="text-gray-300">|</span>
-          <Link href={`${ROUTES.JOBS}?type=matching`} className="text-sm font-semibold text-gray-700 hover:text-ink">
-            파트너 섭외
+      {/* 1단: 좌(로고+태그라인) / 중(검색바 가운데) / 우(메뉴) — 3-col grid로 검색바 정중앙 정렬 */}
+      <div className="shell-wide h-[var(--header-h)] grid grid-cols-[auto_1fr_auto] items-center gap-4">
+        {/* 좌측: 로고 + 태그라인 */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink">
+            Marié
           </Link>
+          <span className="hidden md:inline text-gray-300">|</span>
+          <span className="hidden md:inline text-sm font-semibold text-gray-700">
+            웨딩 B2B 네트워크
+          </span>
         </div>
 
-        <form onSubmit={handleSearch} className="flex-1 max-w-[480px] hidden md:block">
-          <label className="header-search">
+        {/* 가운데: 검색바 (정중앙) */}
+        <form onSubmit={handleSearch} className="hidden md:flex justify-center">
+          <label className="header-search w-full max-w-[480px]">
             <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
@@ -100,7 +101,8 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           </label>
         </form>
 
-        <nav className="ml-auto flex items-center gap-1 shrink-0">
+        {/* 우측: 메뉴 */}
+        <nav className="flex items-center gap-1 shrink-0">
           <Link href={`${ROUTES.JOBS}?type=matching`} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
             업체 섭외 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">B2B</span>
           </Link>
