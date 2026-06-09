@@ -34,12 +34,10 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     .is('deleted_at', null)
     .eq('hidden_by_admin', false);
 
-  // 기본 가드: status='open' 만 노출 (closed/filled/hidden 자동 제외).
-  // 단, status 칼럼에 'urgent'도 정상값이라 ['open','urgent'] 포함.
-  // mypage 등 status 무관 페이지는 자체 쿼리.
-  if (!searchParams.includeClosed) {
-    query = query.in('status', ['open', 'urgent']);
-  }
+  // 기본 가드: 'hidden'만 제외 (admin이 명시적으로 숨긴 것).
+  // closed/filled는 최근 등록된 공고가 자동 closed로 잡혀도 사용자 인지를 위해 노출.
+  // 카드/리스트에서 "마감" 배지로 시각 구분됨 (getJobTier + isExpired).
+  query = query.neq('status', 'hidden');
 
   // 마감일이 지난 공고도 자동 제외 (deadline IS NULL 이거나 deadline >= now).
   // PostgREST or 필터로 표현.
