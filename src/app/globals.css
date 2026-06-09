@@ -419,40 +419,42 @@
   }
   .cat-tile-badge-best { @apply bg-primary-50 text-primary border-primary-200; }
 
-  /* === Service Card v2 — 구획 명확 + 카드 borders ===
-     사용자 피드백: '줄같은 거 하나 없이 평이' → 위/아래 영역 구분 + 카드 자체 border. */
+  /* === Service Card v3 — 비율 조정 + tight spacing === */
   .svc-card {
     @apply block bg-white rounded-2xl border border-gray-200 overflow-hidden
            transition-all duration-200 hover:border-gray-300 hover:shadow-e2;
   }
   .svc-card-thumb {
     @apply relative overflow-hidden bg-gray-100;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
   }
   .svc-card-thumb-img { @apply w-full h-full object-cover; }
   .svc-card-badge {
-    @apply absolute top-3 left-3 bg-ink/85 text-white rounded-md text-[11px] font-bold px-2 py-0.5 backdrop-blur-sm;
+    @apply absolute top-2.5 left-2.5 bg-ink/85 text-white rounded-md text-[11px] font-bold px-2 py-0.5 backdrop-blur-sm;
   }
   .svc-card-badge-prime { @apply bg-ink; }
   .svc-card-badge-promoted { @apply bg-primary; }
   .svc-card-badge-secondary {
-    @apply absolute top-3 right-3 bg-white/95 text-ink border border-gray-200 rounded-md text-[10px] font-bold px-2 py-0.5 backdrop-blur-sm;
+    @apply absolute top-2.5 right-2.5 bg-white/95 text-ink border border-gray-200 rounded-md text-[10px] font-bold px-2 py-0.5 backdrop-blur-sm;
   }
-  /* 카드 본문 — padding + 위계 */
-  .svc-card-body { @apply p-4; }
+  /* 카드 본문 — tight padding + 명확한 위계 */
+  .svc-card-body { @apply px-4 py-3.5; }
+  .svc-card-meta-row {
+    @apply flex items-center gap-1.5 text-[12px] text-gray-500 mb-1;
+  }
   .svc-card-title {
-    @apply text-[15px] font-bold text-ink leading-snug line-clamp-2 min-h-[44px];
-    letter-spacing: -0.01em;
-  }
-  .svc-card-rating { @apply mt-2 inline-flex items-center gap-1.5 text-[12px] text-gray-500; }
-  .svc-card-rating-count { @apply text-gray-500; }
-  .svc-card-price {
-    @apply mt-3 text-[16px] font-bold text-ink tabular-nums;
+    @apply text-[15px] font-bold text-ink leading-snug line-clamp-2;
     letter-spacing: -0.015em;
   }
-  /* 카드 푸터 — 구분선으로 분리 */
+  .svc-card-rating { @apply mt-2 inline-flex flex-wrap items-center gap-1.5 text-[12px] text-gray-500; }
+  .svc-card-rating-count { @apply text-gray-500; }
+  .svc-card-price {
+    @apply mt-2.5 text-[14px] font-bold text-primary tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  /* 카드 푸터 — 구분선 + tight */
   .svc-card-seller {
-    @apply mt-3 pt-3 border-t border-gray-100 text-[12px] text-gray-500 flex items-center gap-1.5;
+    @apply mt-2.5 pt-2.5 border-t border-gray-100 text-[11px] text-gray-500 flex items-center gap-1.5;
   }
   .svc-card-m-badge {
     @apply inline-flex w-3.5 h-3.5 items-center justify-center rounded-sm bg-primary text-white text-[9px] font-extrabold;

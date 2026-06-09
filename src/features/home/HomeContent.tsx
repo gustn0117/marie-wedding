@@ -290,7 +290,7 @@ function SvcJobCard({ job }: { job: Job }) {
       </div>
       <div className="svc-card-body">
         {/* 회사 + 직군 메타 (한 줄) */}
-        <div className="flex items-center gap-1.5 text-[12px] text-gray-500 mb-1.5">
+        <div className="svc-card-meta-row">
           <span className="truncate">{company}</span>
           {verified && <span className="svc-card-m-badge shrink-0" title="인증 업체">인</span>}
         </div>
