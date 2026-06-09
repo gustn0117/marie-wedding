@@ -31,83 +31,92 @@ export default function JobListRow({ job }: Props) {
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className={`platform-data-row group grid gap-3 border-b border-gray-100 px-4 py-4 md:grid-cols-[88px_230px_minmax(0,1fr)_168px] md:items-center ${
-        tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/60' : ''
+      className={`group flex gap-4 border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50/60 ${
+        tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/40' : ''
       }`}
     >
-      {/* 이미지 썸네일 (88px) */}
-      <div className="hidden md:block w-[88px] h-[88px] rounded-lg overflow-hidden bg-gray-100 shrink-0">
+      {/* 썸네일 — 96x96, 이미지 또는 이니셜 fallback (이미지 마크 중복 제거) */}
+      <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt={job.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.3} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-2xl font-extrabold text-gray-300 tracking-tighter">
+              {companyName.charAt(0)}
+            </span>
           </div>
         )}
       </div>
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="company-mark">
-            {companyName.charAt(0)}
-          </span>
-          <div className="min-w-0">
-            <div className="flex min-w-0 items-center gap-1.5">
-              <p className="truncate text-sm font-bold text-gray-900">{companyName}</p>
-              {job.author && (
-                <VerificationBadge
-                  verificationStatus={job.author.verification_status}
-                  phoneVerified={job.author.phone_verified}
-                />
-              )}
-            </div>
-            <p className="mt-0.5 truncate text-xs font-semibold text-gray-500">{region}</p>
+
+      {/* 본문 — flex 1, 최대 폭 사용 */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between">
+        {/* 상단: 회사 메타 + 배지 */}
+        <div>
+          <div className="flex items-center gap-1.5 text-[12px] text-gray-500 mb-1">
+            <span className="font-semibold truncate">{companyName}</span>
+            {job.author && (
+              <VerificationBadge
+                verificationStatus={job.author.verification_status}
+                phoneVerified={job.author.phone_verified}
+              />
+            )}
+            <span className="text-gray-300" aria-hidden>·</span>
+            <span className="truncate">{region}</span>
+          </div>
+
+          {/* 제목 — 큰 강조 */}
+          <h3 className="text-[17px] sm:text-[18px] font-bold text-ink leading-snug tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
+            {job.title}
+          </h3>
+
+          {/* 배지 행 — 상태 + 직군 + 고용형태 */}
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {urgent && <Badge kind="urgent">마감임박</Badge>}
+            {fresh && !urgent && <Badge kind="new">NEW</Badge>}
+            {tier === 2 && <Badge kind="promoted">추천</Badge>}
+            <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
+            <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
+            {job.salary_info && (
+              <>
+                <span className="text-gray-300" aria-hidden>·</span>
+                <span className="text-[13px] font-bold text-primary">{job.salary_info}</span>
+              </>
+            )}
           </div>
         </div>
-      </div>
 
-      <div className="min-w-0">
-        <div className="mb-2 flex min-h-[20px] flex-wrap items-center gap-1.5">
-          {urgent && <Badge kind="urgent">마감임박</Badge>}
-          {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-          {tier === 2 && <Badge kind="promoted">추천</Badge>}
-        </div>
-        <h3 className="truncate text-[16px] font-bold text-ink group-hover:text-primary transition-colors">
-          {job.title}
-        </h3>
-        {/* 메타 라인 — 정보 위계 회복 */}
-        {/* 이전: 5-6개 배지가 같은 굵기로 나열 → 정보가 평등하게 보여 우선순위 모호.
-            수정: 핵심(고용형태·업종)은 배지, 보조(급여)는 강조 텍스트, 신뢰지표(거래/응답)는 별도 라인 + 미세 톤. */}
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 text-small text-gray-500">
-          <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
-          <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
-          {job.salary_info && (
-            <>
-              <span className="text-gray-300" aria-hidden>·</span>
-              <span className="font-semibold text-ink">{job.salary_info}</span>
-            </>
-          )}
-        </div>
+        {/* 하단: 거래/응답률 (있을 때만) */}
         {(completedDeals > 0 || responseRate > 0) && (
-          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-            {completedDeals > 0 && <span>거래 <span className="font-bold text-gray-700 tabular-nums">{completedDeals}</span>건</span>}
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
+            {completedDeals > 0 && (
+              <span>거래 <span className="font-bold text-gray-700 tabular-nums">{completedDeals}</span>건</span>
+            )}
             {completedDeals > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}
-            {responseRate > 0 && <span>응답률 <span className="font-bold text-gray-700 tabular-nums">{responseRate}%</span></span>}
+            {responseRate > 0 && (
+              <span>응답률 <span className="font-bold text-gray-700 tabular-nums">{responseRate}%</span></span>
+            )}
           </div>
         )}
       </div>
 
-      <div className="flex items-center justify-between gap-3 text-xs md:flex-col md:items-end">
-        <time className="font-semibold text-gray-400">{formatRelativeTime(job.created_at)}</time>
+      {/* 우측 메타 — 시각/상태/CTA 세로 정렬 */}
+      <div className="shrink-0 flex flex-col items-end justify-between text-right gap-2 min-w-[88px]">
+        <time className="text-[11px] font-semibold text-gray-400">
+          {formatRelativeTime(job.created_at)}
+        </time>
         {dDay ? (
-          <span className={`font-bold ${urgent ? 'text-state-urgent' : 'text-primary'}`}>{dDay}</span>
+          <span className={`text-[12px] font-bold tabular-nums ${urgent ? 'text-rose-500' : 'text-primary'}`}>
+            {dDay}
+          </span>
         ) : (
-          <span className="font-bold text-gray-500">상시채용</span>
+          <span className="text-[12px] font-bold text-gray-500">상시채용</span>
         )}
-        <span className="hidden rounded border border-gray-200 bg-white px-3 py-1.5 font-bold text-gray-700 group-hover:border-ink group-hover:text-ink md:inline-flex">
+        <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-600 group-hover:bg-ink group-hover:text-white group-hover:border-ink transition-colors">
           상세보기
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
         </span>
       </div>
     </Link>
