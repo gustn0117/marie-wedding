@@ -4,11 +4,11 @@ import CommunityRail from '@/features/community/components/CommunityRail';
 
 export default function CommunityLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="lg:grid lg:grid-cols-[var(--rail-w)_1fr] lg:gap-8">
-      <Suspense fallback={<div className="hidden lg:block" />}>
+    <div>
+      <Suspense fallback={<div className="h-10 mb-4" />}>
         <CommunityRail />
       </Suspense>
-      <div className="min-w-0">{children}</div>
+      {children}
     </div>
   );
 }
