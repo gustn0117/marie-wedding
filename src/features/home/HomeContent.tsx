@@ -194,6 +194,11 @@ export default function HomeContent({ posts, jobs, profiles, mySidebar }: HomeCo
  * 수정: aria-label 가진 region role + 좌우 스크롤 버튼.
  *   터치는 native 스와이프, 키보드는 Tab으로 카드 포커스 후 화살표 키 작동.
  */
+/**
+ * 적응형 카드 그리드.
+ * 모바일/태블릿: 가로 스크롤 (정보 밀도 유지).
+ * 데스크탑(lg+): 4열 정돈된 그리드 — 카드 사이 명확한 구분.
+ */
 function HScrollRow<T>({ items, renderItem, ariaLabel }: { items: T[]; renderItem: (item: T) => ReactNode; ariaLabel: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) => {
@@ -202,43 +207,48 @@ function HScrollRow<T>({ items, renderItem, ariaLabel }: { items: T[]; renderIte
     el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.85, 800), behavior: 'smooth' });
   };
   return (
-    <div className="relative group" role="region" aria-label={ariaLabel}>
-      <div ref={ref} className="h-scroll" tabIndex={0}>
-        {items.map(renderItem)}
+    <div role="region" aria-label={ariaLabel}>
+      {/* 모바일·태블릿 — 가로 스크롤 */}
+      <div className="relative group lg:hidden">
+        <div ref={ref} className="h-scroll" tabIndex={0}>
+          {items.map(renderItem)}
+        </div>
+        <button
+          type="button"
+          onClick={() => scroll(-1)}
+          aria-label="이전"
+          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+        </button>
+        <button
+          type="button"
+          onClick={() => scroll(1)}
+          aria-label="다음"
+          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+        </button>
       </div>
-      {/* 데스크탑 좌우 스크롤 버튼 — 호버 시만 노출 */}
-      <button
-        type="button"
-        onClick={() => scroll(-1)}
-        aria-label="이전"
-        className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        onClick={() => scroll(1)}
-        aria-label="다음"
-        className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-      </button>
+      {/* 데스크탑(lg+) — 4열 그리드 */}
+      <div className="hidden lg:grid lg:grid-cols-4 gap-4">
+        {items.slice(0, 8).map(renderItem)}
+      </div>
     </div>
   );
 }
 
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
   return (
-    <div className="flex items-end justify-between mb-6">
-      <div>
-        <h2 className="text-[22px] sm:text-[26px] font-bold tracking-tight text-ink">{title}</h2>
-        {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+    <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-200">
+      <div className="min-w-0">
+        <h2 className="text-[24px] sm:text-[32px] font-extrabold tracking-tighter text-ink leading-tight">{title}</h2>
+        {subtitle && <p className="mt-1.5 text-[14px] text-gray-500">{subtitle}</p>}
       </div>
-      <Link href={href} className="text-sm font-bold text-gray-500 hover:text-ink transition-colors">전체보기 →</Link>
+      <Link href={href} className="shrink-0 inline-flex items-center gap-1 text-[13px] font-bold text-gray-500 hover:text-ink transition-colors">
+        전체보기
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+      </Link>
     </div>
   );
 }
@@ -278,17 +288,41 @@ function SvcJobCard({ job }: { job: Job }) {
           </div>
         )}
       </div>
-      <p className="svc-card-title">{job.title}</p>
-      <div className="svc-card-rating">
-        <span className="svc-card-rating-count">
-          {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
-        </span>
-      </div>
-      <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
-      <div className="svc-card-seller">
-        <span className="truncate flex-1">{company}</span>
-        {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
-        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
+      <div className="svc-card-body">
+        {/* 회사 + 직군 메타 (한 줄) */}
+        <div className="flex items-center gap-1.5 text-[12px] text-gray-500 mb-1.5">
+          <span className="truncate">{company}</span>
+          {verified && <span className="svc-card-m-badge shrink-0" title="인증 업체">인</span>}
+        </div>
+        {/* 직무 타이틀 */}
+        <p className="svc-card-title">{job.title}</p>
+        {/* 메타 — 고용형태·지역 */}
+        <div className="svc-card-rating">
+          <span className="inline-flex items-center gap-1">
+            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387" /></svg>
+            {getEmploymentTypeLabel(job.employment_type)}
+          </span>
+          <span className="text-gray-300">·</span>
+          <span className="inline-flex items-center gap-1">
+            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+            {getRegionLabel(job.region)}
+          </span>
+        </div>
+        {/* 급여 */}
+        <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
+        {/* 푸터 — 조회수 + 마감 */}
+        {(views > 0 || job.deadline) && (
+          <div className="svc-card-seller justify-between">
+            {views > 0 ? (
+              <span className="tabular-nums">조회 {views.toLocaleString()}</span>
+            ) : <span />}
+            {job.deadline && !isExpired && (
+              <span className="text-[11px] font-bold text-rose-500 tabular-nums">
+                ~ {job.deadline.slice(5, 10).replace('-', '/')}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </Link>
   );
