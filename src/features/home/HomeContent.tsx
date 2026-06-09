@@ -43,7 +43,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, profiles, mySidebar }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -161,52 +161,29 @@ export default function HomeContent({ posts, jobs, profiles, counts, mySidebar }
         </section>
       )}
 
-      {/* 커뮤니티 + 지표 */}
+      {/* 커뮤니티 인기글 */}
       <section className="bg-gray-50 py-12">
-        <div className="max-w-[1280px] mx-auto px-5 grid lg:grid-cols-[2fr_1fr] gap-8">
-          <div>
-            <SectionHeader title="커뮤니티 인기글" subtitle="웨딩 현장의 살아있는 노하우" href={ROUTES.COMMUNITY} />
-            {featuredPosts.length === 0 ? (
-              <div className="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
-                <p className="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
-              </div>
-            ) : (
-              <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
-                {featuredPosts.map((post, idx) => (
-                  <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
-                    <span className={`w-7 text-center text-lg font-bold ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-ink line-clamp-1">{post.title}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <aside>
-            <div className="rounded-2xl bg-white border border-gray-200 p-6">
-              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">실시간 지표</p>
-              <div className="space-y-4">
-                <Metric label="인증 업체" value={counts.verified} />
-                <Metric label="최근 30일 공고" value={counts.recentJobs} divider />
-                <Metric label="활성 파트너" value={counts.profiles} divider />
-              </div>
-              <Link href={ROUTES.SIGNUP} className="btn-primary w-full justify-center mt-6">지금 무료로 시작</Link>
+        <div className="max-w-[1280px] mx-auto px-5">
+          <SectionHeader title="커뮤니티 인기글" subtitle="웨딩 현장의 살아있는 노하우" href={ROUTES.COMMUNITY} />
+          {featuredPosts.length === 0 ? (
+            <div className="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
+              <p className="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
             </div>
-          </aside>
+          ) : (
+            <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
+              {featuredPosts.map((post, idx) => (
+                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
+                  <span className={`w-7 text-center text-lg font-bold ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-ink line-clamp-1">{post.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
-    </div>
-  );
-}
-
-function Metric({ label, value, divider }: { label: string; value: number; divider?: boolean }) {
-  return (
-    <div className={`flex items-center justify-between ${divider ? 'pt-4 border-t border-gray-100' : ''}`}>
-      <span className="text-sm text-gray-700">{label}</span>
-      <span className="text-xl font-bold text-ink tabular-nums">{value.toLocaleString()}</span>
     </div>
   );
 }
