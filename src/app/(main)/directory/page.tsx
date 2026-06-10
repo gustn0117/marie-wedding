@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
-import CompanyFilters from '@/features/directory/components/CompanyFilters';
 import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
@@ -84,9 +83,6 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense fallback={<div className="surface h-16 animate-pulse" />}>
-        <CompanyFilters />
-      </Suspense>
       <Suspense
         fallback={
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
