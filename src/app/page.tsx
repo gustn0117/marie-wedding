@@ -3,6 +3,7 @@ import type { Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
+import HeroBanner from '@/features/home/HeroBanner';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
+      <HeroBanner />
       <HomeContent
         posts={posts}
         jobs={jobs}
