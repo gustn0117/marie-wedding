@@ -25,7 +25,7 @@ export default async function HeroBanner() {
   if (!banner) {
     // Placeholder — 빗금 패턴
     return (
-      <section aria-label="배너 영역" className="bg-gray-50">
+      <section aria-label="배너 영역" className="bg-white">
         <div className="shell-wide py-4">
           <div
             className="w-full rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm font-semibold"
@@ -60,7 +60,7 @@ export default async function HeroBanner() {
   );
 
   return (
-    <section aria-label={banner.title} className="bg-gray-50">
+    <section aria-label={banner.title} className="bg-white">
       <div className="shell-wide py-4">
         {banner.link_url ? (
           <a href={banner.link_url} className="block">
