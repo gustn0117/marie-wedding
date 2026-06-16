@@ -94,7 +94,7 @@ export default function SignupForm() {
           <Link href={ROUTES.HOME} aria-label="Marié 홈">
             <Logo variant="full" size="lg" />
           </Link>
-          <p className="text-sm text-text-secondary">웨딩업계 B2B 플랫폼 회원가입</p>
+          <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼 회원가입</p>
         </div>
 
         {/* Step Indicator */}
@@ -153,7 +153,7 @@ export default function SignupForm() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">업체 회원</h3>
-                      <p className="text-sm text-gray-500 mt-0.5">채용/업체 섭외 공고를 작성하고 관리합니다</p>
+                      <p className="text-sm text-gray-500 mt-0.5">채용 공고를 작성하고 지원자를 관리합니다</p>
                     </div>
                   </div>
                 </button>

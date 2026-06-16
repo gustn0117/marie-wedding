@@ -14,7 +14,7 @@ export default async function Image({ params }: Props) {
   const supabase = createServerQueryClient();
   const { data: job } = await supabase
     .from('jobs')
-    .select('title, business_type, region, posting_type, author:profiles!author_id(company_name, contact_name)')
+    .select('title, business_type, region, author:profiles!author_id(company_name, contact_name)')
     .eq('id', params.id)
     .is('deleted_at', null)
     .single();
@@ -22,7 +22,7 @@ export default async function Image({ params }: Props) {
   const title = job?.title ?? '마리에';
   const authorAny = (job as { author?: { company_name?: string | null; contact_name?: string | null } } | null)?.author ?? null;
   const company = authorAny?.company_name || authorAny?.contact_name || '';
-  const tag = job?.posting_type === 'matching' ? '업체 섭외' : '채용';
+  const tag = '채용';
 
   return new ImageResponse(
     (
@@ -46,7 +46,7 @@ export default async function Image({ params }: Props) {
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 22, color: '#374151' }}>
           <span>marie-wedding.hsweb.pics</span>
-          <span>웨딩업계 B2B 네트워킹 플랫폼</span>
+          <span>웨딩업계 구인구직 플랫폼</span>
         </div>
       </div>
     ),

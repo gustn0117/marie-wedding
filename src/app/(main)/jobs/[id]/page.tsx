@@ -34,7 +34,6 @@ export default async function JobDetailPage({ params }: PageProps) {
   if (!job) notFound();
 
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
-  const applyLabel = job.posting_type === 'matching' ? '섭외 문의' : '지원';
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-4 pb-24 lg:pb-8">
@@ -43,7 +42,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.JOBS} className="text-gray-500 hover:text-primary transition-colors">
-          {job.posting_type === 'matching' ? '업체 섭외' : '채용'}
+          채용
         </Link>
         <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -70,7 +69,7 @@ export default async function JobDetailPage({ params }: PageProps) {
 
           {/* Application box (anchor target) */}
           <div id="apply" className="scroll-mt-20">
-            <JobApplicationBox jobId={job.id} authorId={job.author_id} postingType={job.posting_type} />
+            <JobApplicationBox jobId={job.id} authorId={job.author_id} />
           </div>
         </div>
 
@@ -79,7 +78,7 @@ export default async function JobDetailPage({ params }: PageProps) {
       </div>
 
       {/* Mobile sticky apply bar */}
-      <JobMobileApplyBar label={`${applyLabel}하기`} disabled={isExpired} />
+      <JobMobileApplyBar label="지원하기" disabled={isExpired} />
     </div>
   );
 }

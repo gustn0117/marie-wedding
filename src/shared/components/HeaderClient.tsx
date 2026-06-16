@@ -9,14 +9,13 @@ import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
-// 헤더 2단 nav — 사이트 주요 섹션 단일 줄 (중복 제거: 직군 잡탕 + 파트너 섭외 2회 등장).
-// rail이 페이지 내부에서 직군/카테고리를 제공하므로 헤더는 'WHERE'만 담당.
+// 헤더 2단 nav — 구인구직 중심 정보 구조.
 const CAT_NAV = [
   { href: ROUTES.JOBS, label: '채용정보' },
-  { href: ROUTES.DIRECTORY, label: '업체 디렉토리' },
+  { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
   { href: ROUTES.EVENTS, label: '이벤트·소식' },
-  { href: '/pricing', label: '프리미엄 플랜' },
+  { href: '/pricing', label: '광고 상품' },
 ] as const;
 
 // CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
@@ -71,7 +70,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           </Link>
           <span className="hidden md:inline text-gray-300">|</span>
           <span className="hidden md:inline text-sm font-semibold text-gray-700">
-            웨딩 B2B 네트워크
+            웨딩 구인구직 플랫폼
           </span>
         </div>
 
@@ -93,11 +92,11 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
         {/* 우측: 메뉴 */}
         <nav className="flex items-center gap-1 shrink-0">
-          <Link href={`${ROUTES.JOBS}?type=matching`} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            업체 섭외 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">B2B</span>
+          <Link href={ROUTES.JOBS_NEW} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
+            공고 등록 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">채용</span>
           </Link>
           <Link href={ROUTES.MYPAGE} className="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            업무 관리
+            지원 관리
           </Link>
           <Link href={ROUTES.COMMUNITY} className="icon-btn" aria-label="커뮤니티">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -141,7 +140,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                     <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
                   </Link>
                   <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
-                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원/문의 관리</Link>
+                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원 관리</Link>
                   {profile.role === 'admin' && (
                     <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
                   )}

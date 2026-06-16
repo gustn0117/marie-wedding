@@ -5,7 +5,7 @@
   <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed space-y-6">
     <section>
       <h2 class="text-lg font-bold text-gray-900 mb-2">제1조 (목적)</h2>
-      <p>본 약관은 Marié(이하 "서비스")가 제공하는 웨딩 업계 B2B 네트워킹 서비스의 이용에 관한 권리와 의무를 규정합니다.</p>
+      <p>본 약관은 Marié(이하 "서비스")가 제공하는 웨딩 업계 구인구직 네트워킹 서비스의 이용에 관한 권리와 의무를 규정합니다.</p>
     </section>
     <section>
       <h2 class="text-lg font-bold text-gray-900 mb-2">제2조 (용어 정의)</h2>

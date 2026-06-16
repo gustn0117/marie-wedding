@@ -46,7 +46,7 @@ export default async function ReviewPage({ params }: Props) {
       <main className="mx-auto max-w-2xl space-y-4">
         <header className="platform-panel p-6">
           <h1 className="text-2xl font-bold text-gray-900">리뷰 작성</h1>
-          <p className="mt-2 text-sm text-gray-600">양쪽 모두 거래 완료 표시를 해야 리뷰를 작성할 수 있습니다.</p>
+          <p className="mt-2 text-sm text-gray-600">양쪽 모두 진행 완료 표시를 해야 리뷰를 작성할 수 있습니다.</p>
         </header>
       </main>
     );
@@ -63,7 +63,7 @@ export default async function ReviewPage({ params }: Props) {
     .maybeSingle();
 
   const reviewee = isHiring ? application.applicant : job.author;
-  const revieweeName = reviewee?.company_name || reviewee?.contact_name || '거래 상대';
+  const revieweeName = reviewee?.company_name || reviewee?.contact_name || '진행 상대';
   const appliesTo: 'hiring' | 'applicant' = isHiring ? 'applicant' : 'hiring';
 
   return (

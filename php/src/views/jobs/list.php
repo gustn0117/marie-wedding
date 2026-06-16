@@ -6,7 +6,7 @@ View::share('activeNav', 'jobs');
 <div class="max-w-[1280px] mx-auto px-5 py-8">
   <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div>
-      <h1 class="text-[26px] font-extrabold text-ink tracking-tight"><?= ($filters['type'] ?? '') === 'matching' ? '파트너 섭외' : '채용 정보' ?></h1>
+      <h1 class="text-[26px] font-extrabold text-ink tracking-tight">채용 정보</h1>
       <p class="mt-1 text-sm text-gray-500">총 <span class="font-bold text-ink"><?= count($jobs) ?></span>건</p>
     </div>
     <?php if (Auth::check()): ?>

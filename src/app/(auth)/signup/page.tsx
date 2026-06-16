@@ -2,7 +2,7 @@ import SignupForm from '@/features/auth/components/SignupForm';
 
 export const metadata = {
   title: '회원가입 - Marie',
-  description: '마리에 웨딩 B2B 플랫폼에 가입하세요.',
+  description: '마리에 웨딩 구인구직 플랫폼에 가입하세요.',
 };
 
 export default function SignupPage() {

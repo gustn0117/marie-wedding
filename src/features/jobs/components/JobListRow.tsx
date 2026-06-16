@@ -23,7 +23,7 @@ export default function JobListRow({ job }: Props) {
   const companyName = job.author?.company_name ?? job.author?.contact_name ?? '알 수 없음';
   const region = job.author?.region ? getRegionLabel(job.author.region) : getRegionLabel(job.region);
   const responseRate = Math.round(job.author?.response_rate ?? 0);
-  const completedDeals = job.author?.completed_deals_count ?? 0;
+  const completedProgress = job.author?.completed_deals_count ?? 0;
   const imageUrl = job.image
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
     : null;
@@ -86,13 +86,13 @@ export default function JobListRow({ job }: Props) {
           </div>
         </div>
 
-        {/* 하단: 거래/응답률 (있을 때만) */}
-        {(completedDeals > 0 || responseRate > 0) && (
+        {/* 하단: 진행 이력/응답률 (있을 때만) */}
+        {(completedProgress > 0 || responseRate > 0) && (
           <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
-            {completedDeals > 0 && (
-              <span>거래 <span className="font-bold text-gray-700 tabular-nums">{completedDeals}</span>건</span>
+            {completedProgress > 0 && (
+              <span>진행 <span className="font-bold text-gray-700 tabular-nums">{completedProgress}</span>건</span>
             )}
-            {completedDeals > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}
+            {completedProgress > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}
             {responseRate > 0 && (
               <span>응답률 <span className="font-bold text-gray-700 tabular-nums">{responseRate}%</span></span>
             )}

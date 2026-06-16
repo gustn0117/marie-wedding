@@ -28,22 +28,13 @@ async function search(q: string) {
   const term = normalizeSearchTerm(q);
   const keyword = `%${term}%`;
 
-  const [hiringRes, matchingRes, directoryRes, postsRes] = await Promise.all([
+  const [hiringRes, directoryRes, postsRes] = await Promise.all([
     // 채용 공고
     supabase
       .from('jobs')
       .select('*, author:profiles!author_id(*)')
       .is('deleted_at', null)
       .eq('posting_type', 'hiring')
-      .or(`title.ilike.${keyword},description.ilike.${keyword}`)
-      .order('created_at', { ascending: false })
-      .range(0, 4),
-    // 업체 섭외
-    supabase
-      .from('jobs')
-      .select('*, author:profiles!author_id(*)')
-      .is('deleted_at', null)
-      .eq('posting_type', 'matching')
       .or(`title.ilike.${keyword},description.ilike.${keyword}`)
       .order('created_at', { ascending: false })
       .range(0, 4),
@@ -68,7 +59,6 @@ async function search(q: string) {
 
   return {
     hiring: (hiringRes.data ?? []) as Job[],
-    matching: (matchingRes.data ?? []) as Job[],
     directory: (directoryRes.data ?? []) as Profile[],
     posts: (postsRes.data ?? []) as Post[],
   };
@@ -87,7 +77,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   }
 
   const results = await search(q);
-  const totalCount = results.hiring.length + results.matching.length + results.directory.length + results.posts.length;
+  const totalCount = results.hiring.length + results.directory.length + results.posts.length;
 
   return (
     <div className="space-y-4">
@@ -123,18 +113,9 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </Section>
       )}
 
-      {/* 업체 섭외 */}
-      {results.matching.length > 0 && (
-        <Section title="업체 섭외" count={results.matching.length} moreHref={`${ROUTES.JOBS}?type=matching&search=${encodeURIComponent(q)}`}>
-          {results.matching.map((job) => (
-            <JobItem key={job.id} job={job} />
-          ))}
-        </Section>
-      )}
-
       {/* 디렉토리 */}
       {results.directory.length > 0 && (
-        <Section title="디렉토리" count={results.directory.length} moreHref={`${ROUTES.DIRECTORY}?search=${encodeURIComponent(q)}`}>
+        <Section title="인재·업체 프로필" count={results.directory.length} moreHref={`${ROUTES.DIRECTORY}?search=${encodeURIComponent(q)}`}>
           {results.directory.map((profile) => (
             <Link
               key={profile.id}

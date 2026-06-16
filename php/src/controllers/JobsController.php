@@ -12,12 +12,12 @@ class JobsController
             ->select('*, author:profiles!author_id(id,company_name,contact_name,verification_status)')
             ->is('deleted_at', null)
             ->eq('hidden_by_admin', false)
+            ->eq('posting_type', 'hiring')
             ->order('is_promoted', false)
             ->order('created_at', false)
             ->limit($size)
             ->offset($offset);
 
-        if (!empty($_GET['type'])) $q->eq('posting_type', $_GET['type']);
         if (!empty($_GET['region'])) $q->ilike('region', '%' . $_GET['region'] . '%');
         if (!empty($_GET['businessType'])) $q->ilike('business_type', '%' . $_GET['businessType'] . '%');
         if (!empty($_GET['employmentType'])) $q->eq('employment_type', $_GET['employmentType']);

@@ -17,12 +17,11 @@ import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 interface JobApplicationBoxProps {
   jobId: string;
   authorId: string;
-  postingType: string;
 }
 
 const NEXT_STATUSES: ApplicationStatus[] = ['reviewing', 'accepted', 'rejected'];
 
-export default function JobApplicationBox({ jobId, authorId, postingType }: JobApplicationBoxProps) {
+export default function JobApplicationBox({ jobId, authorId }: JobApplicationBoxProps) {
   const { profile, isLoading } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [received, setReceived] = useState<Application[]>([]);
@@ -32,7 +31,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
   const [submitting, setSubmitting] = useState(false);
 
   const isAuthor = !!profile && profile.id === authorId;
-  const actionLabel = postingType === 'matching' ? '섭외 문의' : '지원';
+  const actionLabel = '지원';
 
   useEffect(() => {
     if (isLoading) return;
@@ -108,7 +107,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
-      toast(msg.includes('not_accepted') ? '승인된 건만 거래 완료 처리할 수 있습니다.' : '거래 완료 처리에 실패했습니다.', 'error');
+      toast(msg.includes('not_accepted') ? '승인된 지원만 완료 처리할 수 있습니다.' : '완료 처리에 실패했습니다.', 'error');
     }
   };
 
@@ -201,10 +200,10 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
                       ))}
                     </div>
                     {item.status === 'accepted' && (
-                      <DealCompletionRow
-                        application={item}
-                        side="hiring"
-                        onMark={() => markCompleted(item.id, 'received')}
+                        <ApplicationCompletionRow
+                          application={item}
+                          side="hiring"
+                          onMark={() => markCompleted(item.id, 'received')}
                       />
                     )}
                     <AuthorNoteEditor
@@ -243,7 +242,7 @@ export default function JobApplicationBox({ jobId, authorId, postingType }: JobA
         </div>
         <p className="whitespace-pre-wrap rounded bg-secondary-50 px-4 py-3 text-sm text-gray-700">{application.message}</p>
         {application.status === 'accepted' && (
-          <DealCompletionRow
+          <ApplicationCompletionRow
             application={application}
             side="applicant"
             onMark={() => markCompleted(application.id, 'applied')}
@@ -350,7 +349,7 @@ function AuthorNoteEditor({
   );
 }
 
-function DealCompletionRow({
+function ApplicationCompletionRow({
   application,
   side,
   onMark,
@@ -370,8 +369,8 @@ function DealCompletionRow({
       {bothDone ? (
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="font-bold text-gray-900 inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 거래 완료</p>
-            <p className="text-gray-500 mt-0.5">상대방에 대한 리뷰를 30일 이내 작성해 주세요.</p>
+            <p className="font-bold text-gray-900 inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 진행 완료</p>
+            <p className="text-gray-500 mt-0.5">함께 진행한 상대에 대한 리뷰를 30일 이내 작성해 주세요.</p>
           </div>
           <a
             href={reviewHref}
@@ -388,8 +387,8 @@ function DealCompletionRow({
       ) : (
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="font-bold text-gray-900">거래 완료 표시</p>
-            <p className="text-gray-500 mt-0.5">{other ? '상대방이 먼저 완료 처리했어요. 확인해 주세요.' : '실제 거래가 마무리되었다면 표시해 주세요.'}</p>
+            <p className="font-bold text-gray-900">진행 완료 표시</p>
+            <p className="text-gray-500 mt-0.5">{other ? '상대방이 먼저 완료 처리했어요. 확인해 주세요.' : '지원 이후 실제 진행이 마무리되었다면 표시해 주세요.'}</p>
           </div>
           <button
             type="button"

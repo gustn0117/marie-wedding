@@ -20,7 +20,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const isNewBiz = deals === 0;
   const bizLabel = profile.business_type
     ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim())
-    : '파트너';
+    : '프로필';
   const region = getRegionLabel(profile.region);
 
   return (
@@ -59,7 +59,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         {/* 업체명 (타이틀) */}
         <p className="svc-card-title">{name}</p>
 
-        {/* 거래 / 응답률 또는 NEW 배지 */}
+        {/* 진행 이력 / 응답률 또는 NEW 배지 */}
         <div className="svc-card-rating">
           {isNewBiz && responseRate === 0 ? (
             <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-50 text-primary text-[10px] font-bold">NEW</span>
@@ -70,7 +70,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
                   <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  거래 <span className="font-bold text-ink tabular-nums">{deals.toLocaleString()}</span>건
+                  진행 <span className="font-bold text-ink tabular-nums">{deals.toLocaleString()}</span>건
                 </span>
               )}
               {deals > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}

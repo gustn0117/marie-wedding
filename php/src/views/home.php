@@ -23,8 +23,8 @@ $categories = [
       <!-- 검색 -->
       <div class="flex flex-col gap-6 pt-6">
         <h1 class="text-[34px] sm:text-[40px] font-extrabold leading-[1.2] tracking-tight text-ink">
-          내 업체에 딱 맞는<br>
-          웨딩 파트너를 찾아보세요
+          조건에 맞는 웨딩 일자리와<br>
+          인재를 찾아보세요
         </h1>
         <form action="/search" method="GET" class="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm max-w-[600px]">
           <input type="text" name="q" placeholder="어떤 전문가가 필요하세요?" class="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400">
@@ -36,8 +36,8 @@ $categories = [
           <a href="/jobs?businessType=planner" class="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
             <span class="text-base">📋</span> 플래너 모집
           </a>
-          <a href="/jobs?type=matching" class="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-            <span class="text-base">🤝</span> 파트너 섭외
+          <a href="/jobs/new" class="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+            <span class="text-base">🤝</span> 공고 등록
           </a>
           <a href="/jobs?businessType=venue" class="hero-chip">예식장</a>
           <a href="/jobs?businessType=studio" class="hero-chip">스튜디오</a>
@@ -46,11 +46,11 @@ $categories = [
       </div>
 
       <!-- 프로모 카드 -->
-      <a href="/jobs?type=matching" class="promo-card hover:shadow-lg transition-shadow hidden lg:flex">
+      <a href="/jobs/new" class="promo-card hover:shadow-lg transition-shadow hidden lg:flex">
         <span class="promo-illust">💍</span>
         <div class="relative z-10">
-          <h3>업체 섭외도<br>한 화면에서</h3>
-          <p>섭외 비용을 절약하세요</p>
+          <h3>채용 공고를<br>더 잘 보이게</h3>
+          <p>광고 지면으로 지원자를 만나세요</p>
         </div>
         <span class="promo-page">2 / 6 →</span>
       </a>
@@ -74,13 +74,13 @@ $categories = [
   </div>
 </section>
 
-<!-- 최신 채용·섭외 캐러셀 -->
+<!-- 최신 채용 캐러셀 -->
 <section class="bg-gray-50 py-12">
   <div class="max-w-[1280px] mx-auto px-5">
     <div class="flex items-end justify-between mb-6">
       <div>
         <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">최근 등록된 공고</h2>
-        <p class="mt-1 text-sm text-gray-500">놓치기 아까운 채용·섭외 기회</p>
+        <p class="mt-1 text-sm text-gray-500">놓치기 아까운 채용 기회</p>
       </div>
       <a href="/jobs" class="text-sm font-bold text-gray-500 hover:text-ink">전체보기 →</a>
     </div>
@@ -131,7 +131,7 @@ $categories = [
   <div class="max-w-[1280px] mx-auto px-5">
     <div class="flex items-end justify-between mb-6">
       <div>
-        <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">추천 파트너 업체</h2>
+        <h2 class="text-[22px] sm:text-[26px] font-extrabold tracking-tight text-ink">추천 인재·업체 프로필</h2>
         <p class="mt-1 text-sm text-gray-500">신뢰할 수 있는 검증 업체 모음</p>
       </div>
       <a href="/directory" class="text-sm font-bold text-gray-500 hover:text-ink">전체보기 →</a>

@@ -136,10 +136,8 @@ export default function AdminJobsPage() {
                 jobs.map((job) => (
                   <tr key={job.id} className={job.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'}>
                     <td className="px-5 py-3">
-                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        job.posting_type === 'hiring' ? 'bg-primary-50 text-primary-600' : 'bg-accent-50 text-accent'
-                      }`}>
-                        {job.posting_type === 'hiring' ? '채용' : '섭외'}
+                      <span className="inline-block text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-50 text-primary-600">
+                        채용
                       </span>
                     </td>
                     <td className="px-5 py-3">

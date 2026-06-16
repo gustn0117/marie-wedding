@@ -21,7 +21,7 @@ interface Stats {
 interface FunnelStats {
   totalApplications: number;
   acceptedApplications: number;
-  completedDeals: number;
+  completedApplications: number;
   reviewsWritten: number;
 }
 
@@ -56,7 +56,7 @@ export default function AdminDashboard() {
         setFunnel({
           totalApplications: appAll.count ?? 0,
           acceptedApplications: appAccepted.count ?? 0,
-          completedDeals: deals.count ?? 0,
+          completedApplications: deals.count ?? 0,
           reviewsWritten: reviews.count ?? 0,
         });
       } catch (err) {
@@ -113,11 +113,11 @@ export default function AdminDashboard() {
       {funnel && (
         <section className="bg-white rounded border border-gray-200 p-5">
           <h2 className="text-base font-bold text-gray-900 mb-1">전환 퍼널</h2>
-          <p className="text-xs text-gray-500 mb-4">지원 → 승인 → 거래 완료 → 리뷰 단계별 누적 수치 (% = 지원 대비)</p>
+          <p className="text-xs text-gray-500 mb-4">지원 → 승인 → 진행 완료 → 리뷰 단계별 누적 수치 (% = 지원 대비)</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <FunnelStep label="지원/문의" value={funnel.totalApplications} base={funnel.totalApplications} highlight />
+            <FunnelStep label="지원" value={funnel.totalApplications} base={funnel.totalApplications} highlight />
             <FunnelStep label="승인" value={funnel.acceptedApplications} base={funnel.totalApplications} />
-            <FunnelStep label="거래 완료" value={funnel.completedDeals} base={funnel.totalApplications} />
+            <FunnelStep label="진행 완료" value={funnel.completedApplications} base={funnel.totalApplications} />
             <FunnelStep label="리뷰 작성" value={funnel.reviewsWritten} base={funnel.totalApplications} />
           </div>
         </section>
@@ -167,10 +167,8 @@ export default function AdminDashboard() {
             ) : (
               recentJobs.map((job) => (
                 <div key={job.id} className="px-5 py-3 flex items-center gap-3">
-                  <div className={`shrink-0 px-2 py-1 rounded text-[10px] font-bold ${
-                    job.posting_type === 'hiring' ? 'bg-primary-50 text-primary-600' : 'bg-accent-50 text-accent'
-                  }`}>
-                    {job.posting_type === 'hiring' ? '채용' : '섭외'}
+                  <div className="shrink-0 px-2 py-1 rounded text-[10px] font-bold bg-primary-50 text-primary-600">
+                    채용
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{job.title}</p>

@@ -17,21 +17,19 @@ interface Notification {
 }
 
 const TYPE_TONES: Record<string, string> = {
+  application: 'bg-blue-50 text-blue-700',
+  job: 'bg-primary-50 text-primary',
+  review: 'bg-amber-50 text-amber-700',
   payment: 'bg-emerald-50 text-emerald-700',
-  quotation: 'bg-blue-50 text-blue-700',
-  contract: 'bg-primary-50 text-primary',
-  booking: 'bg-amber-50 text-amber-700',
-  settlement: 'bg-emerald-50 text-emerald-700',
   message: 'bg-gray-100 text-gray-700',
   system: 'bg-gray-100 text-gray-700',
 };
 
 const TYPE_LABELS: Record<string, string> = {
+  application: '지원',
+  job: '공고',
+  review: '리뷰',
   payment: '결제',
-  quotation: '견적',
-  contract: '계약',
-  booking: '예약',
-  settlement: '정산',
   message: '메시지',
   system: '시스템',
 };

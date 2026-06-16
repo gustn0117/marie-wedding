@@ -6,7 +6,7 @@ $author = $job['author'] ?? [];
 
 <div class="max-w-[1000px] mx-auto px-4 py-8">
   <nav class="mb-4 text-sm text-gray-500">
-    <a href="/jobs<?= ($job['posting_type']??'')==='matching'?'?type=matching':'' ?>" class="hover:text-primary"><?= ($job['posting_type']??'')==='matching'?'파트너 섭외':'채용 정보' ?></a>
+    <a href="/jobs" class="hover:text-primary">채용 정보</a>
     <span class="mx-2">›</span>
     <span class="text-gray-900 font-medium truncate"><?= View::e($job['title']) ?></span>
   </nav>
@@ -15,7 +15,7 @@ $author = $job['author'] ?? [];
     <main class="space-y-6">
       <section class="rounded-xl border border-gray-200 bg-white p-6 md:p-8">
         <div class="flex flex-wrap items-center gap-2 mb-4">
-          <span class="rounded-full bg-primary text-white text-[11px] font-bold px-2 py-1"><?= ($job['posting_type']??'')==='matching'?'업체 섭외':'채용' ?></span>
+          <span class="rounded-full bg-primary text-white text-[11px] font-bold px-2 py-1">채용</span>
           <span class="rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold px-2 py-1"><?= View::e(employment_label($job['employment_type'] ?? '')) ?></span>
           <span class="rounded-full bg-gray-100 text-gray-700 text-[11px] font-bold px-2 py-1"><?= View::e(business_label($job['business_type'] ?? '')) ?></span>
           <?php if ($isExpired): ?>
@@ -97,7 +97,7 @@ $author = $job['author'] ?? [];
           <div class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 text-center">본인 공고입니다.</div>
         <?php else: ?>
           <button type="button" onclick="document.getElementById('apply-modal').hidden=false" class="btn-primary w-full justify-center py-3 <?= $isExpired?'opacity-50 pointer-events-none':'' ?>" <?= $isExpired ? 'disabled' : '' ?>>
-            <?= ($job['posting_type']??'')==='matching'?'섭외 문의':'지원하기' ?>
+            지원하기
           </button>
         <?php endif; ?>
       </section>
@@ -118,7 +118,7 @@ $author = $job['author'] ?? [];
 <?php if (Auth::check() && !$isOwnerJob && !$isExpired): ?>
 <div id="apply-modal" hidden class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onclick="if(event.target===this)this.hidden=true">
   <div class="bg-white rounded-2xl max-w-md w-full p-6">
-    <h3 class="text-lg font-bold text-gray-900 mb-4"><?= ($job['posting_type']??'')==='matching'?'섭외 문의':'지원하기' ?></h3>
+    <h3 class="text-lg font-bold text-gray-900 mb-4">지원하기</h3>
     <form action="/jobs/<?= View::e($job['id']) ?>/apply" method="POST">
       <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
       <label class="block text-sm font-semibold text-gray-800 mb-1.5">메시지 (선택)</label>

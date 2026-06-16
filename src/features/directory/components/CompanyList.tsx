@@ -41,9 +41,9 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
     <div>
       <div className="platform-toolbar mb-3">
         <p className="text-sm font-semibold text-gray-600" aria-live="polite">
-          검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>개 업체
+          검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>개 프로필
         </p>
-        <span className="trust-pill">파트너 프로필</span>
+        <span className="trust-pill">인재·업체 프로필</span>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">

@@ -56,8 +56,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   const currentPage = Number(searchParams.get('page')) || 1;
 
-  const postingType = searchParams.get('type') ?? 'hiring';
-
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
       const params = new URLSearchParams(searchParams.toString());
@@ -183,7 +181,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
 
   const browsingRegionDetails = browsingRegion ? REGION_DETAILS[browsingRegion] : null;
-  const pageTitle = postingType === 'matching' ? '파트너 섭외' : '채용정보';
+  const pageTitle = '채용정보';
   const selectedFilterCount = activeFilters.length + (search.trim() ? 1 : 0);
 
   return (
@@ -282,8 +280,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           </div>
 
           {/* Employment Type Dropdown */}
-          {postingType === 'hiring' && (
-            <div className="relative">
+          <div className="relative">
               <button
                 type="button"
                 onClick={() => {
@@ -318,8 +315,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </button>
-            </div>
-          )}
+          </div>
 
           {/* Search */}
           <div className="relative flex-1 flex gap-2 min-w-[200px]">
@@ -466,7 +462,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         )}
 
         {/* Employment Type Dropdown Panel */}
-        {postingType === 'hiring' && employmentTypeDropdownOpen && (
+        {employmentTypeDropdownOpen && (
           <div className="border-b border-gray-200 bg-white px-4 py-3">
             <div className="flex flex-wrap gap-1.5">
               <button
@@ -515,7 +511,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             completedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
           }`}
         >
-          거래 이력 있음
+          진행 이력 있음
         </button>
 
         <SalaryFilterChip value={searchParams.get('salaryMin') ?? ''} onChange={(v) => updateParams({ salaryMin: v })} />
@@ -552,9 +548,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               businessType: selectedBusinessTypes.join(','),
               employmentType: selectedEmploymentType,
               subRegion: selectedSubRegions.join(','),
-              type: postingType,
             }}
-            defaultName={search || getRegionFilterLabel() || (postingType === 'matching' ? '업체 섭외' : '공고 검색')}
+            defaultName={search || getRegionFilterLabel() || '공고 검색'}
           />
           <ViewToggle value={viewMode} onChange={setViewMode} />
         </div>
@@ -565,8 +560,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       {jobs.length === 0 ? (
         <EmptyState
           title="조건에 맞는 공고가 없습니다"
-          description={selectedFilterCount > 0 ? '필터를 풀거나 다른 조건으로 검색해 보세요.' : `${postingType === 'matching' ? '섭외 공고' : '채용 공고'}가 아직 등록되지 않았습니다.`}
-          actionLabel={postingType === 'matching' ? '섭외 공고 올리기' : '공고 등록하기'}
+          description={selectedFilterCount > 0 ? '필터를 풀거나 다른 조건으로 검색해 보세요.' : '채용 공고가 아직 등록되지 않았습니다.'}
+          actionLabel="공고 등록하기"
           actionHref={ROUTES.JOBS_NEW}
         />
       ) : viewMode === 'list' ? (

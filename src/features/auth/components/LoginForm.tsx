@@ -61,7 +61,7 @@ export default function LoginForm() {
           <Link href={ROUTES.HOME} aria-label="Marié 홈">
             <Logo variant="full" size="lg" />
           </Link>
-          <p className="text-sm text-text-secondary">웨딩업계 B2B 플랫폼</p>
+          <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼</p>
         </div>
 
         {/* Error Message */}

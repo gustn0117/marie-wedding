@@ -216,15 +216,15 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             emphasis={profile.verification_status === 'verified'}
           />
           <TrustMetricBar
-            label="거래 완료"
+            label="진행 완료"
             value={`${profile.completed_deals_count}건`}
-            sub={profile.completed_deals_count > 0 ? '플랫폼 내 처리' : '기록 없음'}
+            sub={profile.completed_deals_count > 0 ? '지원 이후 진행 기록' : '기록 없음'}
             fillPercent={Math.min(100, profile.completed_deals_count * 10)}
           />
           <TrustMetricBar
             label="응답률"
             value={profile.response_rate > 0 ? `${Math.round(profile.response_rate)}%` : '-'}
-            sub="받은 지원·문의 기준"
+            sub="받은 지원 기준"
             fillPercent={profile.response_rate > 0 ? profile.response_rate : undefined}
           />
           <TrustMetricBar

@@ -1,6 +1,6 @@
 <div class="max-w-xl mx-auto px-4 py-16">
   <h1 class="text-3xl font-bold text-gray-900 mb-2 tracking-tight">회원가입</h1>
-  <p class="text-sm text-gray-500 mb-8">웨딩 업계 종사자를 위한 B2B 네트워크에 가입하세요.</p>
+  <p class="text-sm text-gray-500 mb-8">웨딩 업계 종사자를 위한 구인구직 플랫폼에 가입하세요.</p>
 
   <form action="/signup" method="POST" class="space-y-4">
     <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">

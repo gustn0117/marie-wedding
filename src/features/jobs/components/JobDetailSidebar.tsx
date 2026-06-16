@@ -25,7 +25,7 @@ export default function JobDetailSidebar({ job }: Props) {
     <aside className="lg:sticky lg:top-20 space-y-3">
       {/* Trust card */}
       <section className={`rounded-xl border ${trustEmphasis ? 'border-primary' : 'border-gray-200'} bg-white p-4`}>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">업체 신뢰 등급</p>
+        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">프로필 신뢰 등급</p>
         <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
           <p className={`text-sm font-bold ${trustEmphasis ? 'text-primary' : 'text-ink'}`}>
             {TRUST_TIER_LABELS[trustTier]}
@@ -37,7 +37,7 @@ export default function JobDetailSidebar({ job }: Props) {
         </div>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">거래 완료</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wider">채용 성사</p>
             <p className="text-base font-bold text-ink tabular-nums">{deals}건</p>
           </div>
           <div>
@@ -70,7 +70,7 @@ export default function JobDetailSidebar({ job }: Props) {
           href="#apply"
           className={`block w-full text-center btn-primary min-h-[44px] py-3 ${isExpired ? 'pointer-events-none opacity-50' : ''}`}
         >
-          {job.posting_type === 'matching' ? '섭외 문의하기' : '지원하기'}
+          지원하기
         </a>
       </section>
 

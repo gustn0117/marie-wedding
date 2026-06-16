@@ -64,8 +64,8 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
           <div className="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
             <div className="flex flex-col gap-6 pt-6">
               <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
-                일정과 조건에 맞는<br />
-                웨딩 파트너를 찾아보세요
+                조건에 맞는 웨딩 일자리와<br />
+                인재를 찾아보세요
               </h1>
               <form onSubmit={handleSearch} className="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm max-w-[600px]">
                 <input
@@ -84,8 +84,8 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
                 <Link href={`${ROUTES.JOBS}?businessType=planner`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
                   <BusinessTypeIcon type="planner" className="w-4 h-4" /> 플래너 모집
                 </Link>
-                <Link href={`${ROUTES.JOBS}?type=matching`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                  <HandRaisedIcon className="w-4 h-4" /> 파트너 섭외
+                <Link href={ROUTES.JOBS_NEW} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+                  <HandRaisedIcon className="w-4 h-4" /> 공고 등록
                 </Link>
                 <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
                 <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
@@ -93,15 +93,15 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
               </div>
             </div>
 
-            <Link href={`${ROUTES.JOBS}?type=matching`} className="promo-card hidden lg:flex hover:shadow-lg transition-shadow">
+            <Link href="/pricing" className="promo-card hidden lg:flex hover:shadow-lg transition-shadow">
               <span className="promo-card-illust">
                 <SparklesIcon className="w-12 h-12 text-primary" />
               </span>
               <div className="relative z-10">
-                <h3 className="promo-card-title">업체 섭외도<br />한 화면에서</h3>
-                <p className="promo-card-desc">지역, 일정, 조건을 빠르게 비교하세요</p>
+                <h3 className="promo-card-title">채용 공고를<br />더 잘 보이게</h3>
+                <p className="promo-card-desc">직무·지역별 광고 지면으로 지원자를 만나세요</p>
               </div>
-              <span className="promo-card-page">바로 보기 →</span>
+              <span className="promo-card-page">광고 상품 →</span>
             </Link>
           </div>
 
@@ -127,7 +127,7 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
       {/* 최근 등록된 공고 — h-scroll 키보드 가이드 + 스크롤 인디케이터 (C-5) */}
       <section className="bg-gray-50 py-12">
         <div className="max-w-[1280px] mx-auto px-5">
-          <SectionHeader title="최근 등록된 공고" subtitle="놓치기 아까운 채용·섭외 기회" href={ROUTES.JOBS} />
+          <SectionHeader title="최근 등록된 공고" subtitle="웨딩업계 채용 기회를 빠르게 확인하세요" href={ROUTES.JOBS} />
           {featuredJobs.length === 0 ? (
             <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
           ) : (
@@ -140,13 +140,13 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
         </div>
       </section>
 
-      {/* 추천 파트너 업체 */}
+      {/* 추천 인재·업체 프로필 */}
       {featuredProfiles.length > 0 && (
         <section className="bg-white py-12">
           <div className="max-w-[1280px] mx-auto px-5">
-            <SectionHeader title="추천 파트너 업체" subtitle="신뢰할 수 있는 검증 업체 모음" href={ROUTES.DIRECTORY} />
+            <SectionHeader title="추천 인재·업체 프로필" subtitle="채용과 지원 전 확인할 수 있는 신뢰 프로필" href={ROUTES.DIRECTORY} />
             <HScrollRow
-              ariaLabel="추천 파트너 업체"
+              ariaLabel="추천 인재·업체 프로필"
               items={featuredProfiles}
               renderItem={(p) => <SvcCompanyCard key={p.id} profile={p} />}
             />
@@ -356,13 +356,13 @@ function SvcCompanyCard({ profile }: { profile: Profile }) {
           <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-50 text-primary text-[10px] font-bold">NEW</span>
         ) : (
           <>
-            {deals > 0 && <span className="font-bold text-gray-900">거래 {deals.toLocaleString()}건</span>}
+            {deals > 0 && <span className="font-bold text-gray-900">진행 {deals.toLocaleString()}건</span>}
             {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
           </>
         )}
       </div>
       <p className="svc-card-price">
-        {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너'} · {getRegionLabel(profile.region)}
+        {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '프로필'} · {getRegionLabel(profile.region)}
       </p>
       <div className="svc-card-seller">
         <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>

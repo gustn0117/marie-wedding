@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { BUSINESS_TYPES, EMPLOYMENT_TYPES, POSTING_TYPES, REGIONS } from '@/shared/constants';
+import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import RichTextEditor from '@/shared/components/RichTextEditor';
@@ -33,7 +33,7 @@ const EMPTY_FORM: JobFormData = {
 };
 
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
-  const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData });
+  const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -41,7 +41,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}` : null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isMatching = formData.postingType === 'matching';
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -95,7 +94,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       let imagePath = formData.image;
       if (imageFile) imagePath = await uploadImage();
       else if (!imagePreview) imagePath = null;
-      await onSubmit({ ...formData, image: imagePath });
+      await onSubmit({ ...formData, postingType: 'hiring', image: imagePath });
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {
@@ -105,14 +104,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
   // 필수 항목 완성도
   const requiredFilled = [
-    formData.postingType,
     formData.title.trim(),
     formData.description.trim(),
     formData.businessType,
     formData.employmentType,
     formData.region,
   ].filter(Boolean).length;
-  const totalRequired = 6;
+  const totalRequired = 5;
   const progress = Math.round((requiredFilled / totalRequired) * 100);
 
   return (
@@ -138,40 +136,24 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       )}
 
       {/* STEP 1: 기본 정보 */}
-      <Section step={1} title="공고 유형을 선택하세요" description="채용 공고인지, 업체를 찾는 섭외 공고인지 선택해주세요.">
-        <div className="grid grid-cols-2 gap-3">
-          {POSTING_TYPES.map((type) => {
-            const isActive = formData.postingType === type.value;
-            return (
-              <button
-                key={type.value}
-                type="button"
-                onClick={() => setFormData(prev => ({ ...prev, postingType: type.value }))}
-                className={`rounded p-5 border-2 text-left transition-all ${
-                  isActive ? 'border-primary bg-primary-50' : 'border-gray-200 hover:border-gray-400'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-base font-bold ${isActive ? 'text-primary' : 'text-gray-800'}`}>{type.label}</span>
-                  {isActive && (
-                    <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-gray-500">
-                  {type.value === 'hiring' ? '직원을 채용하고 싶어요' : '협력 업체를 찾고 있어요'}
-                </p>
-              </button>
-            );
-          })}
+      <Section step={1} title="채용 공고로 등록됩니다" description="마리에는 웨딩업계 구인구직 중심으로 운영됩니다.">
+        <div className="rounded border-2 border-primary bg-primary-50 p-5">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-base font-bold text-primary">채용 공고</span>
+            <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+            </div>
+          </div>
+          <p className="text-xs text-gray-600">
+            직원, 프리랜서, 단기 스태프 등 웨딩 현장 인력을 찾는 공고만 등록할 수 있습니다.
+          </p>
         </div>
       </Section>
 
       {/* STEP 2: 제목 & 이미지 */}
-      <Section step={2} title="제목과 대표 이미지를 입력하세요" description={isMatching ? '필요한 파트너, 일정, 지역이 드러나도록 간결하게 작성해주세요.' : '구직자/업체의 관심을 끌 수 있도록 간결하고 명확하게 작성해주세요.'}>
+      <Section step={2} title="제목과 대표 이미지를 입력하세요" description="구직자/업체의 관심을 끌 수 있도록 간결하고 명확하게 작성해주세요.">
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -182,7 +164,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               type="text"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder={isMatching ? '예) 6월 본식 사회자 섭외 · 서울 강남' : '예) 강남 예식장 예약 매니저 정규직 채용'}
+              placeholder="예) 강남 예식장 예약 매니저 정규직 채용"
               className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               maxLength={100}
             />
@@ -219,7 +201,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 */}
-      <Section step={3} title="상세 내용을 작성하세요" description={isMatching ? '행사일, 장소, 필요 역할, 예산, 진행 방식을 자세히 적어주세요.' : '글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요.'}>
+      <Section step={3} title="상세 내용을 작성하세요" description="글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요.">
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
@@ -227,19 +209,16 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           <RichTextEditor
             value={formData.description}
             onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
-            placeholder={isMatching
-              ? '- 행사일/시간&#10;- 장소/지역&#10;- 필요한 역할 또는 업체 유형&#10;- 예산/사례비&#10;- 진행 방식과 요청사항'
-              : '- 담당 업무&#10;- 자격 요건&#10;- 우대 사항&#10;- 근무 조건 등을 자세히 작성해주세요.'
-            }
+            placeholder="- 담당 업무&#10;- 자격 요건&#10;- 우대 사항&#10;- 근무 조건 등을 자세히 작성해주세요."
             minHeight={240}
           />
         </div>
       </Section>
 
       {/* STEP 4: 세부 조건 */}
-      <Section step={4} title={isMatching ? '섭외 조건을 선택하세요' : '세부 조건을 선택하세요'} description={isMatching ? '필요한 업종과 진행 지역을 정확히 선택하면 적합한 파트너가 더 빨리 찾습니다.' : '정확한 조건을 선택하면 적합한 지원자를 찾을 수 있어요.'}>
+      <Section step={4} title="세부 조건을 선택하세요" description="정확한 조건을 선택하면 적합한 지원자를 찾을 수 있어요.">
         <div className="space-y-5">
-          <FieldRow label={isMatching ? '필요 업종' : '업종'} required hint={isMatching ? '섭외하려는 파트너 분야를 선택해주세요' : '업체가 속한 분야를 선택해주세요'}>
+          <FieldRow label="업종" required hint="업체가 속한 분야를 선택해주세요">
             <PillGroup
               options={BUSINESS_TYPES}
               value={formData.businessType}
@@ -247,7 +226,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label={isMatching ? '계약/진행형태' : '고용형태'} required hint={isMatching ? '단기 섭외, 계약 진행 등 가장 가까운 형태를 선택해주세요' : '정규직, 계약직, 단기알바 중 선택'}>
+          <FieldRow label="고용형태" required hint="정규직, 계약직, 단기알바 중 선택">
             <PillGroup
               options={EMPLOYMENT_TYPES}
               value={formData.employmentType}
@@ -255,7 +234,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label="지역" required hint={isMatching ? '행사 또는 협업이 진행될 지역을 선택해주세요. 세부 지역(구/군)까지 선택 가능' : '근무 지역을 선택해주세요. 세부 지역(구/군)까지 선택 가능'}>
+          <FieldRow label="지역" required hint="근무 지역을 선택해주세요. 세부 지역(구/군)까지 선택 가능">
             <RegionPicker
               value={formData.region}
               onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
@@ -267,17 +246,17 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       {/* STEP 5: 추가 정보 */}
       <Section step={5} title="추가 정보 (선택)" description="선택 입력이지만, 기재하면 더 많은 관심을 받을 수 있어요.">
         <div className="space-y-5">
-          <FieldRow label={isMatching ? '예산/사례 정보' : '급여 정보'} hint={isMatching ? '예산, 사례비, 협의 가능 여부를 구체적으로 기재하면 좋아요' : '연봉/월급/시급을 구체적으로 기재하면 좋아요'}>
+          <FieldRow label="급여 정보" hint="연봉/월급/시급을 구체적으로 기재하면 좋아요">
             <input
               type="text"
               value={formData.salaryInfo}
               onChange={(e) => setFormData(prev => ({ ...prev, salaryInfo: e.target.value }))}
-              placeholder={isMatching ? '예) 건당 30만원 · 예산 협의 가능 · 교통비 별도' : '예) 월 300만원 이상 · 시급 15,000원 · 면접 후 결정'}
+              placeholder="예) 월 300만원 이상 · 시급 15,000원 · 면접 후 결정"
               className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
             />
           </FieldRow>
 
-          <FieldRow label={isMatching ? '예산 범위' : '급여 범위'} hint="검색 필터에 사용됩니다. 만원 단위로 입력하세요.">
+          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 만원 단위로 입력하세요.">
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-2">
               <input
                 type="number"
@@ -308,7 +287,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             </div>
           </FieldRow>
 
-          <FieldRow label={isMatching ? '희망 경력' : '최소 경력'} hint={isMatching ? '파트너에게 기대하는 경력 기준이 있으면 입력하세요. 미입력 시 무관.' : '신입 가능이면 0을 입력하세요. 미입력 시 무관.'}>
+          <FieldRow label="최소 경력" hint="신입 가능이면 0을 입력하세요. 미입력 시 무관.">
             <div className="flex items-center gap-2 max-w-[200px]">
               <input
                 type="number"
@@ -323,7 +302,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             </div>
           </FieldRow>
 
-          <FieldRow label={isMatching ? '문의 마감일' : '마감일'} hint={isMatching ? '섭외 확정이 필요한 날짜를 설정하면 파트너가 더 빠르게 문의합니다' : '지원 마감일을 설정하면 구직자가 더 빠르게 지원해요'}>
+          <FieldRow label="마감일" hint="지원 마감일을 설정하면 구직자가 더 빠르게 지원해요">
             <DatePicker
               value={formData.deadline}
               onChange={(val) => setFormData(prev => ({ ...prev, deadline: val }))}

@@ -8,6 +8,7 @@ class HomeController
             ->select('*, author:profiles!author_id(id,company_name,contact_name,verification_status)')
             ->is('deleted_at', null)
             ->eq('hidden_by_admin', false)
+            ->eq('posting_type', 'hiring')
             ->order('created_at', false)
             ->limit(6)
             ->get();

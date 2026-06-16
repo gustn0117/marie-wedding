@@ -66,7 +66,7 @@ export default async function PendingReviewsSection({ profileId }: Props) {
           <h2 className="text-sm font-bold text-gray-900 mt-1">후기 작성 대기 ({pending.length})</h2>
         </div>
       </div>
-      <p className="text-xs text-gray-500 mb-3">거래 완료 후 30일 이내 리뷰를 남겨주세요. 누적된 태그가 카드와 프로필에 노출됩니다.</p>
+      <p className="text-xs text-gray-500 mb-3">진행 완료 후 30일 이내 리뷰를 남겨주세요. 누적된 태그가 카드와 프로필에 노출됩니다.</p>
       <ul className="divide-y divide-gray-100">
         {pending.map((item) => {
           const isApplicant = item.applicant_id === profileId;

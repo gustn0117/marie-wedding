@@ -32,7 +32,8 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     .from('jobs')
     .select(`*, ${authorEmbed}`, { count: 'exact' })
     .is('deleted_at', null)
-    .eq('hidden_by_admin', false);
+    .eq('hidden_by_admin', false)
+    .eq('posting_type', 'hiring');
 
   // 기본 가드: 'hidden'만 제외 (admin이 명시적으로 숨긴 것).
   // closed/filled는 최근 등록된 공고가 자동 closed로 잡혀도 사용자 인지를 위해 노출.
@@ -48,9 +49,6 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     void nowIso;
   }
 
-  if (searchParams.type) {
-    query = query.eq('posting_type', searchParams.type);
-  }
   if (searchParams.businessType) {
     const types = searchParams.businessType.split(',').map((t) => t.trim()).filter(Boolean);
     if (types.length > 0) query = query.in('business_type', types);

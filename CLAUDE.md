@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Marié (마리에) — a B2B networking platform for the Korean wedding industry (venues, dress shops, studios, makeup shops, planners, assistants). Korean-language UI.
+Marié (마리에) — a Korean-language jobs, profile, and community platform for the wedding industry (venues, dress shops, studios, makeup shops, planners, assistants).
 
 ## Tech Stack
 

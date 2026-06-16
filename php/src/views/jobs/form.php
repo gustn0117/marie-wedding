@@ -9,28 +9,17 @@ $isEdit = ($mode ?? 'create') === 'edit' && !empty($job);
   </nav>
 
   <h1 class="text-3xl font-bold text-gray-900 mb-2 tracking-tight"><?= $isEdit ? '공고 수정' : '공고 등록' ?></h1>
-  <p class="text-sm text-gray-500 mb-8">채용 또는 파트너 섭외 공고를 등록할 수 있습니다.</p>
+  <p class="text-sm text-gray-500 mb-8">웨딩업계 채용 공고를 등록하고 지원자를 관리합니다.</p>
 
   <form action="<?= $isEdit ? '/jobs/' . View::e($job['id']) . '/edit' : '/jobs/new' ?>" method="POST" class="space-y-5">
     <input type="hidden" name="_csrf" value="<?= csrf_token() ?>">
+    <input type="hidden" name="posting_type" value="hiring">
 
     <div class="rounded-xl border border-gray-200 bg-white p-5 md:p-6">
       <label class="block text-sm font-semibold text-gray-800 mb-2">공고 유형 *</label>
-      <div class="flex gap-3">
-        <label class="flex-1 flex items-center gap-2 px-4 py-3 rounded-lg border cursor-pointer hover:border-primary <?= ($job['posting_type'] ?? 'hiring') === 'hiring' ? 'border-primary bg-primary-50' : 'border-gray-200' ?>">
-          <input type="radio" name="posting_type" value="hiring" <?= ($job['posting_type'] ?? 'hiring') === 'hiring' ? 'checked' : '' ?>>
-          <div>
-            <p class="text-sm font-bold text-gray-900">채용</p>
-            <p class="text-xs text-gray-500">스태프·직원 채용</p>
-          </div>
-        </label>
-        <label class="flex-1 flex items-center gap-2 px-4 py-3 rounded-lg border cursor-pointer hover:border-primary <?= ($job['posting_type'] ?? '') === 'matching' ? 'border-primary bg-primary-50' : 'border-gray-200' ?>">
-          <input type="radio" name="posting_type" value="matching" <?= ($job['posting_type'] ?? '') === 'matching' ? 'checked' : '' ?>>
-          <div>
-            <p class="text-sm font-bold text-gray-900">파트너 섭외</p>
-            <p class="text-xs text-gray-500">업체 협업 제안</p>
-          </div>
-        </label>
+      <div class="rounded-lg border-2 border-primary bg-primary-50 px-4 py-3">
+        <p class="text-sm font-bold text-primary">채용 공고</p>
+        <p class="text-xs text-gray-500 mt-0.5">스태프·직원·프리랜서 채용 공고만 등록할 수 있습니다.</p>
       </div>
     </div>
 

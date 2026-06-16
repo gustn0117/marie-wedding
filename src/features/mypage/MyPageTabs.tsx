@@ -22,7 +22,7 @@ const APP_FILTERS: { value: AppFilter; label: string }[] = [
   { value: 'pending', label: '접수' },
   { value: 'reviewing', label: '검토중' },
   { value: 'accepted', label: '승인' },
-  { value: 'completed', label: '거래완료' },
+  { value: 'completed', label: '진행완료' },
   { value: 'rejected', label: '거절' },
   { value: 'cancelled', label: '취소' },
 ];
@@ -65,7 +65,7 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
               activeTab === 'applications' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
             }`}
           >
-            지원/문의 ({applicationCount})
+            지원 ({applicationCount})
           </button>
         </div>
       </div>
@@ -160,8 +160,8 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
           )
         ) : (
           <div className="grid gap-5 lg:grid-cols-2">
-            <FilterableApplicationList title="받은 지원/문의" empty="내 공고에 접수된 내역이 없습니다." items={receivedApplications} mode="received" />
-            <FilterableApplicationList title="보낸 지원/문의" empty="아직 지원/문의한 공고가 없습니다." items={sentApplications} mode="sent" />
+            <FilterableApplicationList title="받은 지원" empty="내 공고에 접수된 지원이 없습니다." items={receivedApplications} mode="received" />
+            <FilterableApplicationList title="보낸 지원" empty="아직 지원한 공고가 없습니다." items={sentApplications} mode="sent" />
           </div>
         )}
       </div>
@@ -245,7 +245,7 @@ function FilterableApplicationList({
                         href={`/applications/${item.id}/review`}
                         className="mt-1 block text-[10px] font-bold text-primary underline"
                       >
-                        <svg className="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>거래 완료 · 리뷰 작성
+                        <svg className="w-3 h-3 inline mr-1" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>진행 완료 · 리뷰 작성
                       </Link>
                     )}
                     <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>

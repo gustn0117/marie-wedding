@@ -132,7 +132,7 @@ export default async function MyPage() {
           <p className="text-xs text-gray-400 mt-1">건</p>
         </div>
         <div className="stat">
-          <p className="stat-label">거래 완료</p>
+          <p className="stat-label">진행 완료</p>
           <p className="stat-value">{profile.completed_deals_count}</p>
           <p className="text-xs text-gray-400 mt-1">건</p>
         </div>
@@ -260,7 +260,7 @@ export default async function MyPage() {
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <WorkspaceMetric label="작성한 게시글" value={posts.length} />
           <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
-          <WorkspaceMetric label="거래 완료" value={profile.completed_deals_count} />
+          <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} />
           <WorkspaceMetric
             label="평균 응답"
             value={

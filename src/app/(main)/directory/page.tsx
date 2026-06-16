@@ -11,8 +11,8 @@ import PageHeader from '@/shared/components/PageHeader';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '업체 디렉토리 | Marié',
-  description: '웨딩 업계 파트너를 찾아보세요. 업종, 지역별로 검색할 수 있습니다.',
+  title: '인재·업체 프로필 | Marié',
+  description: '웨딩 업계 인재와 업체 프로필을 업종, 지역별로 검색할 수 있습니다.',
 };
 
 interface PageProps {
@@ -56,7 +56,7 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     }
   }
 
-  // 정렬: 프리미엄 → 거래 검증 → 인증 업체 → 가나다순
+  // 정렬: 프리미엄 → 진행 이력 → 인증 업체 → 가나다순
   query = query
     .order('premium_tier', { ascending: false, nullsFirst: false })
     .order('completed_deals_count', { ascending: false })
@@ -75,11 +75,11 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-4">
       <PageHeader
-        eyebrow="업체 디렉토리"
-        title="업체 디렉토리"
-        description={`웨딩홀·드레스·스튜디오·메이크업 등 협업 파트너 탐색 · 등록 업체 ${count.toLocaleString()}개 · 선택 조건 ${activeFilterCount}개`}
+        eyebrow="프로필"
+        title="인재·업체 프로필"
+        description={`웨딩홀·드레스·스튜디오·메이크업 등 채용 전 확인할 프로필 · 등록 프로필 ${count.toLocaleString()}개 · 선택 조건 ${activeFilterCount}개`}
         actions={
-          <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm">+ 업체 등록</Link>
+          <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm">+ 프로필 등록</Link>
         }
       />
 

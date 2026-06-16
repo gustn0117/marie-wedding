@@ -7,7 +7,7 @@ View::share('activeNav', 'directory');
   <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
     <div>
       <h1 class="text-[26px] font-extrabold text-ink tracking-tight">업체 디렉토리</h1>
-      <p class="mt-1 text-sm text-gray-500">웨딩 파트너 업체 <span class="font-bold text-ink"><?= count($profiles) ?></span>곳</p>
+      <p class="mt-1 text-sm text-gray-500">웨딩 일자리와 인재 업체 <span class="font-bold text-ink"><?= count($profiles) ?></span>곳</p>
     </div>
     <?php if (Auth::check()): ?>
       <a href="/mypage/directory" class="btn-outline text-sm">내 업체 등록</a>

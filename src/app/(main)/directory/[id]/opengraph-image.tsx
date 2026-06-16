@@ -49,12 +49,12 @@ export default async function Image({ params }: Props) {
             )}
           </div>
           <div style={{ fontSize: 26, color: '#6b7280' }}>
-            거래 완료 {profile?.completed_deals_count ?? 0}건
+            진행 완료 {profile?.completed_deals_count ?? 0}건
           </div>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 22, color: '#374151' }}>
           <span>marie-wedding.hsweb.pics</span>
-          <span>웨딩업계 B2B 네트워킹 플랫폼</span>
+          <span>웨딩업계 구인구직 플랫폼</span>
         </div>
       </div>
     ),

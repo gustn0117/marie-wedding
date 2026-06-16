@@ -1,6 +1,6 @@
 /**
  * Resend 메일 발송 wrapper (server-only).
- * dev 환경/key 미설정 시 console.log로 폴백 — 거래 흐름 깨지지 않게.
+ * dev 환경/key 미설정 시 console.log로 폴백 — 주요 알림 흐름을 유지.
  */
 import { Resend } from 'resend';
 

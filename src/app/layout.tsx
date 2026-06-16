@@ -5,8 +5,8 @@ import { ToastProvider } from "@/shared/components/Toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Marié - 웨딩 업계 B2B 네트워크",
-  description: "웨딩 업계 종사자를 위한 채용, 네트워킹, 정보 공유 플랫폼",
+  title: "Marié - 웨딩 업계 구인구직 플랫폼",
+  description: "웨딩 업계 종사자를 위한 채용, 프로필, 커뮤니티 플랫폼",
 };
 
 export default function RootLayout({

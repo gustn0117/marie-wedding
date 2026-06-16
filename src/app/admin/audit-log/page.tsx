@@ -21,10 +21,15 @@ interface AuditRow {
 }
 
 const TABLE_LABELS: Record<string, string> = {
-  quotations: '견적',
-  contracts: '계약',
-  bookings: '예약',
-  settlements: '정산',
+  profiles: '회원/프로필',
+  jobs: '공고',
+  applications: '지원',
+  posts: '게시글',
+  comments: '댓글',
+  reviews: '리뷰',
+  reports: '신고',
+  payments: '결제',
+  banners: '배너',
 };
 const TABLE_OPTIONS = [
   { value: '', label: '전체' },
@@ -86,8 +91,9 @@ export default function AdminAuditLogPage() {
 
   const linkForRecord = (table: string, id: string) => {
     switch (table) {
-      case 'quotations': return ROUTES.QUOTATIONS_DETAIL(id);
-      case 'contracts': return ROUTES.CONTRACTS_DETAIL(id);
+      case 'jobs': return ROUTES.JOBS_DETAIL(id);
+      case 'profiles': return ROUTES.DIRECTORY_DETAIL(id);
+      case 'posts': return ROUTES.COMMUNITY_DETAIL(id);
       default: return null;
     }
   };
@@ -97,7 +103,7 @@ export default function AdminAuditLogPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">감사 로그</h1>
-          <p className="text-sm text-gray-500 mt-1">모든 거래 변경 이력을 추적합니다 (견적·계약·예약·정산).</p>
+          <p className="text-sm text-gray-500 mt-1">회원, 공고, 지원, 광고 운영 관련 주요 변경 이력을 추적합니다.</p>
         </div>
       </div>
 

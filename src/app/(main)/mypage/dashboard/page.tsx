@@ -1,110 +1,74 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import PageHeader from '@/shared/components/PageHeader';
-import DashboardKpis from '@/features/dashboard/components/DashboardKpis';
+import { formatRelativeTime, getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import type { Application, Job } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '대시보드 | Marié' };
+export const metadata = { title: '공고 성과 | Marié' };
 
-interface KpiCounts {
-  quotations: { total: number; sent: number; accepted: number; rejected: number; pending: number };
-  contracts: { total: number; awaitingSig: number; signed: number; completed: number; cancelled: number };
-  bookings: { upcoming: number; thisMonth: number; completed: number };
-  settlements: { paid: number; pending: number; netReceived: number; netPending: number };
-  revenue: { thisMonth: number; lastMonth: number; allTime: number };
+interface HiringDashboard {
+  jobs: Job[];
+  receivedApplications: Application[];
+  sentApplications: Application[];
+  activeJobs: number;
+  totalViews: number;
+  totalApplications: number;
+  acceptedApplications: number;
+  reviewingApplications: number;
+  avgApplicationsPerJob: number;
 }
 
-async function loadKpis(profileId: string): Promise<KpiCounts> {
+async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> {
   const supabase = createServerQueryClient();
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
-  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-  const todayIso = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().slice(0, 10);
-
-  // 견적
-  const [qSent, qReceivedAccepted, qReceivedRejected, qReceivedPending] = await Promise.all([
-    supabase.from('quotations').select('id, status', { count: 'exact', head: false })
-      .eq('sender_profile_id', profileId).is('deleted_at', null),
-    supabase.from('quotations').select('id', { count: 'exact', head: true })
-      .eq('receiver_profile_id', profileId).eq('status', 'accepted').is('deleted_at', null),
-    supabase.from('quotations').select('id', { count: 'exact', head: true })
-      .eq('receiver_profile_id', profileId).eq('status', 'rejected').is('deleted_at', null),
-    supabase.from('quotations').select('id', { count: 'exact', head: true })
-      .eq('receiver_profile_id', profileId).in('status', ['sent', 'viewed']).is('deleted_at', null),
+  const [jobsRes, receivedRes, sentRes] = await Promise.all([
+    supabase
+      .from('jobs')
+      .select('*, author:profiles!author_id(*)')
+      .eq('author_id', profileId)
+      .eq('posting_type', 'hiring')
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(0, 49),
+    supabase
+      .from('applications')
+      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      .eq('job.author_id', profileId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(0, 99),
+    supabase
+      .from('applications')
+      .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
+      .eq('applicant_id', profileId)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .range(0, 99),
   ]);
 
-  // 계약 — 양 당사자
-  const [contractRows] = await Promise.all([
-    supabase.from('contracts')
-      .select('id, status, total_amount, completed_at')
-      .or(`party_a_profile_id.eq.${profileId},party_b_profile_id.eq.${profileId}`)
-      .is('deleted_at', null),
-  ]);
-  const contracts = (contractRows.data ?? []) as Array<{ id: string; status: string; total_amount: number; completed_at: string | null }>;
-
-  const contractsByStatus = {
-    total: contracts.length,
-    awaitingSig: contracts.filter((c) => c.status === 'awaiting_signatures').length,
-    signed: contracts.filter((c) => c.status === 'signed' || c.status === 'in_progress').length,
-    completed: contracts.filter((c) => c.status === 'completed').length,
-    cancelled: contracts.filter((c) => c.status === 'cancelled' || c.status === 'disputed').length,
-  };
-
-  // 매출 — completed 계약의 total_amount
-  const revenueThisMonth = contracts
-    .filter((c) => c.completed_at && c.completed_at >= monthStart && c.completed_at < monthEnd)
-    .reduce((s, c) => s + c.total_amount, 0);
-  const revenueLastMonth = contracts
-    .filter((c) => c.completed_at && c.completed_at >= lastMonthStart && c.completed_at < monthStart)
-    .reduce((s, c) => s + c.total_amount, 0);
-  const revenueAllTime = contracts
-    .filter((c) => c.completed_at).reduce((s, c) => s + c.total_amount, 0);
-
-  // 예약 — provider가 본인
-  const [bookingRows] = await Promise.all([
-    supabase.from('bookings')
-      .select('id, event_date, status')
-      .eq('provider_profile_id', profileId)
-      .is('deleted_at', null),
-  ]);
-  const bookings = (bookingRows.data ?? []) as Array<{ id: string; event_date: string; status: string }>;
-  const bookingsKpis = {
-    upcoming: bookings.filter((b) => b.event_date >= todayIso && b.status === 'scheduled').length,
-    thisMonth: bookings.filter((b) => b.event_date >= monthStart.slice(0, 10) && b.event_date < monthEnd.slice(0, 10)).length,
-    completed: bookings.filter((b) => b.status === 'completed').length,
-  };
-
-  // 정산 — 수령자가 본인
-  const [settlementRows] = await Promise.all([
-    supabase.from('settlements')
-      .select('id, status, net_amount, paid_at')
-      .eq('payee_profile_id', profileId)
-      .is('deleted_at', null),
-  ]);
-  const settlements = (settlementRows.data ?? []) as Array<{ id: string; status: string; net_amount: number; paid_at: string | null }>;
-  const settlementsKpis = {
-    paid: settlements.filter((s) => s.status === 'paid').length,
-    pending: settlements.filter((s) => ['pending', 'approved', 'processing'].includes(s.status)).length,
-    netReceived: settlements.filter((s) => s.status === 'paid').reduce((sum, s) => sum + s.net_amount, 0),
-    netPending: settlements.filter((s) => ['pending', 'approved', 'processing'].includes(s.status)).reduce((sum, s) => sum + s.net_amount, 0),
-  };
+  const jobs = (jobsRes.data ?? []) as Job[];
+  const receivedApplications = (receivedRes.data ?? []) as Application[];
+  const sentApplications = (sentRes.data ?? []) as Application[];
+  const activeJobs = jobs.filter((job) => !['closed', 'filled', 'hidden'].includes(job.status)).length;
+  const totalViews = jobs.reduce((sum, job) => sum + (job.view_count ?? 0), 0);
+  const totalApplications = receivedApplications.length;
+  const acceptedApplications = receivedApplications.filter((app) => app.status === 'accepted').length;
+  const reviewingApplications = receivedApplications.filter((app) => app.status === 'pending' || app.status === 'reviewing').length;
 
   return {
-    quotations: {
-      total: qSent.count ?? 0,
-      sent: qSent.count ?? 0,
-      accepted: qReceivedAccepted.count ?? 0,
-      rejected: qReceivedRejected.count ?? 0,
-      pending: qReceivedPending.count ?? 0,
-    },
-    contracts: contractsByStatus,
-    bookings: bookingsKpis,
-    settlements: settlementsKpis,
-    revenue: { thisMonth: revenueThisMonth, lastMonth: revenueLastMonth, allTime: revenueAllTime },
+    jobs,
+    receivedApplications,
+    sentApplications,
+    activeJobs,
+    totalViews,
+    totalApplications,
+    acceptedApplications,
+    reviewingApplications,
+    avgApplicationsPerJob: jobs.length > 0 ? totalApplications / jobs.length : 0,
   };
 }
 
@@ -121,15 +85,115 @@ export default async function DashboardPage() {
     redirect(ROUTES.LOGIN);
   }
 
-  const kpis = await loadKpis(profileId);
+  const dashboard = await loadHiringDashboard(profileId);
+  const topJobs = [...dashboard.jobs]
+    .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
+    .slice(0, 5);
+  const applicationRate = dashboard.totalViews > 0
+    ? Math.round((dashboard.totalApplications / dashboard.totalViews) * 1000) / 10
+    : 0;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="대시보드"
-        description="이번 달 거래 흐름과 누적 매출을 한눈에 확인합니다."
+        title="공고 성과"
+        description="등록한 채용 공고의 조회, 지원, 검토 흐름을 한눈에 확인합니다."
+        actions={<Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>}
       />
-      <DashboardKpis kpis={kpis} />
+
+      <section className="surface-dark p-8">
+        <p className="text-[13px] font-bold text-primary-200 mb-3">전체 공고 조회수</p>
+        <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter">
+          {dashboard.totalViews.toLocaleString()}
+          <span className="text-[20px] font-bold text-white/60 ml-2">회</span>
+        </p>
+        <div className="grid grid-cols-2 gap-3 pt-6 mt-6 border-t border-white/10">
+          <div>
+            <p className="text-[12px] font-semibold text-white/50">지원 전환율</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums">{applicationRate}%</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-semibold text-white/50">공고당 평균 지원</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums">{dashboard.avgApplicationsPerJob.toFixed(1)}건</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <p className="section-eyebrow">지원 퍼널</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard label="등록 공고" value={dashboard.jobs.length} unit="건" href={ROUTES.MYPAGE} />
+          <KpiCard label="진행 중 공고" value={dashboard.activeJobs} unit="건" href={ROUTES.MYPAGE} />
+          <KpiCard label="받은 지원" value={dashboard.totalApplications} unit="건" href={ROUTES.MYPAGE} />
+          <KpiCard label="검토 필요" value={dashboard.reviewingApplications} unit="건" href={ROUTES.MYPAGE} emphasis />
+        </div>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
+        <div className="surface overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-ink">조회 많은 공고</h2>
+            <Link href={ROUTES.JOBS_NEW} className="text-xs font-bold text-primary hover:underline">공고 추가</Link>
+          </div>
+          {topJobs.length === 0 ? (
+            <div className="px-4 py-10 text-center text-sm text-gray-400">아직 등록한 공고가 없습니다.</div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {topJobs.map((job) => (
+                <Link key={job.id} href={ROUTES.JOBS_DETAIL(job.id)} className="platform-data-row flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{job.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)} · {formatRelativeTime(job.created_at)}
+                    </p>
+                  </div>
+                  <span className="text-xs font-bold text-primary tabular-nums">조회 {(job.view_count ?? 0).toLocaleString()}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <aside className="surface p-4">
+          <h2 className="text-sm font-bold text-ink mb-3">최근 받은 지원</h2>
+          {dashboard.receivedApplications.length === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-400">아직 받은 지원이 없습니다.</div>
+          ) : (
+            <ul className="space-y-3">
+              {dashboard.receivedApplications.slice(0, 5).map((app) => (
+                <li key={app.id} className="rounded border border-gray-200 p-3">
+                  <p className="text-sm font-bold text-ink truncate">{app.job?.title ?? '공고'}</p>
+                  <p className="text-xs text-gray-500 mt-1 truncate">
+                    {app.applicant?.company_name || app.applicant?.contact_name || '지원자'} · {formatRelativeTime(app.created_at)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
+      </section>
     </div>
+  );
+}
+
+function KpiCard({
+  label,
+  value,
+  unit,
+  href,
+  emphasis,
+}: {
+  label: string;
+  value: number;
+  unit: string;
+  href: string;
+  emphasis?: boolean;
+}) {
+  return (
+    <Link href={href} className={`stat hover:border-gray-300 transition-colors ${emphasis ? 'border-primary' : ''}`}>
+      <p className="stat-label">{label}</p>
+      <p className={`stat-value mb-1 ${emphasis ? 'text-primary' : ''}`}>{value.toLocaleString()}</p>
+      <p className="text-xs text-gray-500">{unit}</p>
+    </Link>
   );
 }

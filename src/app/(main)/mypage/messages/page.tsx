@@ -87,7 +87,7 @@ export default async function MessagesPage() {
       <PageHeader
         eyebrow="메시지"
         title="메시지"
-        description="업체·프리랜서와 1:1로 대화할 수 있습니다. 채용·섭외와 별개로 사용 가능."
+        description="업체·프리랜서와 1:1로 대화할 수 있습니다. 채용 과정과 별개로도 사용할 수 있습니다."
       />
 
       <section className="surface">

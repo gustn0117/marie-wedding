@@ -57,9 +57,9 @@ export const reviewService = {
 
 export function reviewErrorMessage(err: unknown): string {
   const msg = err instanceof Error ? err.message : '';
-  if (msg.includes('deal_not_completed')) return '양쪽 거래 완료 처리 후에 리뷰를 작성할 수 있습니다.';
+  if (msg.includes('deal_not_completed')) return '양쪽 모두 진행 완료 처리 후에 리뷰를 작성할 수 있습니다.';
   if (msg.includes('review_window_closed')) return '리뷰 작성 기한(30일)이 지났습니다.';
-  if (msg.includes('not_party_to_application')) return '본 거래의 당사자만 리뷰를 작성할 수 있습니다.';
+  if (msg.includes('not_party_to_application')) return '해당 지원의 당사자만 리뷰를 작성할 수 있습니다.';
   if (msg.includes('duplicate key value') || msg.includes('idx_reviews_application_direction')) {
     return '이미 리뷰를 작성하셨습니다.';
   }

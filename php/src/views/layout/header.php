@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title><?= View::e($pageTitle ?? 'Marié — 웨딩 업계 B2B 네트워크') ?></title>
+<title><?= View::e($pageTitle ?? 'Marié — 웨딩 업계 구인구직') ?></title>
 <meta name="description" content="<?= View::e($pageDesc ?? '웨딩 업계 종사자를 위한 채용·디렉토리·커뮤니티 플랫폼') ?>">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -138,7 +138,7 @@
 
     <div class="hidden md:flex items-center gap-1.5 shrink-0">
       <span class="text-gray-300">|</span>
-      <a href="/jobs?type=matching" class="text-sm font-semibold text-gray-700 hover:text-ink px-2">Marié Biz</a>
+      <a href="/jobs/new" class="text-sm font-semibold text-gray-700 hover:text-ink px-2">Marié Biz</a>
       <label class="inline-flex items-center cursor-pointer">
         <input type="checkbox" class="sr-only peer">
         <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-primary transition-colors relative">
@@ -155,7 +155,7 @@
     </form>
 
     <nav class="ml-auto flex items-center gap-1 shrink-0">
-      <a href="/jobs?type=matching" class="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
+      <a href="/jobs/new" class="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
         엔터프라이즈 <span class="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">기업용</span>
       </a>
       <a href="/mypage/applications" class="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">주문 관리</a>
@@ -199,10 +199,10 @@
       <a href="/jobs?businessType=makeup" class="cat-nav-link">메이크업</a>
       <a href="/jobs?businessType=planner" class="cat-nav-link">플래너</a>
       <a href="/jobs?businessType=mc" class="cat-nav-link">사회·축가</a>
-      <a href="/jobs?type=matching" class="cat-nav-link">파트너 섭외</a>
+      <a href="/jobs/new" class="cat-nav-link">공고 등록</a>
       <a href="/directory" class="cat-nav-link ml-auto <?= ($activeNav ?? '') === 'directory' ? 'active' : '' ?>">디렉토리</a>
       <a href="/community" class="cat-nav-link <?= ($activeNav ?? '') === 'community' ? 'active' : '' ?>">커뮤니티</a>
-      <a href="/jobs?type=matching" class="cat-nav-link">Marié Biz</a>
+      <a href="/jobs/new" class="cat-nav-link">Marié Biz</a>
     </div>
   </div>
   <?php endif; ?>

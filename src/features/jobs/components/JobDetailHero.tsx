@@ -39,7 +39,7 @@ export default function JobDetailHero({ job }: Props) {
         {/* Tag row */}
         <div className="flex items-center gap-1.5 flex-wrap mb-3">
           <span className="inline-flex items-center px-2 py-0.5 bg-ink text-white text-[11px] font-bold rounded">
-            {job.posting_type === 'matching' ? '업체 섭외' : '채용'}
+            채용
           </span>
           {isExpired ? (
             <span className="inline-flex items-center px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-bold rounded">마감</span>

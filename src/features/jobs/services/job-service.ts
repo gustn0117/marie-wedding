@@ -25,12 +25,9 @@ export const jobService = {
       .from('jobs')
       .select('*, author:profiles!author_id(*)', { count: 'exact' })
       .is('deleted_at', null)
+      .eq('posting_type', 'hiring')
       .order('created_at', { ascending: false })
       .range(from, to);
-
-    if (filters?.postingType) {
-      query = query.eq('posting_type', filters.postingType);
-    }
 
     if (filters?.businessType) {
       const types = filters.businessType.split(',').map((t) => t.trim()).filter(Boolean);
@@ -98,7 +95,7 @@ export const jobService = {
       .from('jobs')
       .insert({
         author_id: authorId,
-        posting_type: formData.postingType || 'hiring',
+        posting_type: 'hiring',
         title: formData.title,
         description: formData.description,
         business_type: formData.businessType,

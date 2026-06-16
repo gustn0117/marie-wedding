@@ -13,7 +13,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TYPE marie_wedding.account_type AS ENUM ('individual', 'business');
 CREATE TYPE marie_wedding.employment_type AS ENUM ('full_time', 'contract', 'part_time');
-CREATE TYPE marie_wedding.posting_type AS ENUM ('hiring', 'matching');
+CREATE TYPE marie_wedding.posting_type AS ENUM ('hiring');
 CREATE TYPE marie_wedding.post_category AS ENUM ('news', 'tips', 'free');
 CREATE TYPE marie_wedding.user_role AS ENUM ('user', 'admin');
 
@@ -292,8 +292,8 @@ BEGIN
   VALUES (
     v_job.author_id,
     'application_created',
-    '새 지원/문의가 접수되었습니다',
-    COALESCE(v_applicant_name, '사용자') || '님이 "' || v_job.title || '" 공고에 지원/문의를 남겼습니다.',
+    '새 지원이 접수되었습니다',
+    COALESCE(v_applicant_name, '사용자') || '님이 "' || v_job.title || '" 공고에 지원을 남겼습니다.',
     '/jobs/' || NEW.job_id
   );
   RETURN NEW;
@@ -327,7 +327,7 @@ BEGIN
   VALUES (
     NEW.applicant_id,
     'application_status',
-    '지원/문의 상태가 변경되었습니다',
+    '지원 상태가 변경되었습니다',
     '"' || COALESCE(v_job_title, '공고') || '" 상태가 ' || v_status_label || '(으)로 변경되었습니다.',
     '/jobs/' || NEW.job_id
   );

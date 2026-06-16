@@ -79,7 +79,7 @@ export default async function PaymentsHistoryPage({ searchParams }: { searchPara
       {payments.length === 0 ? (
         <EmptyState
           title="결제 내역이 없습니다"
-          description="프리미엄 등급으로 업그레이드하면 더 많은 거래 기회를 누릴 수 있습니다."
+          description="광고 상품을 이용하면 채용 공고와 프로필 노출을 늘릴 수 있습니다."
           actionLabel="프리미엄 플랜 보기"
           actionHref="/pricing"
         />
@@ -108,7 +108,7 @@ export default async function PaymentsHistoryPage({ searchParams }: { searchPara
                 </div>
               </div>
               {p.gateway_transaction_id && (
-                <p className="text-[10px] text-gray-400 mt-1">거래번호: {p.gateway_transaction_id}</p>
+                <p className="text-[10px] text-gray-400 mt-1">결제번호: {p.gateway_transaction_id}</p>
               )}
               {(p.metadata as { receiptUrl?: string })?.receiptUrl && (
                 <a href={(p.metadata as { receiptUrl: string }).receiptUrl} target="_blank" rel="noopener" className="text-[10px] text-primary hover:underline">

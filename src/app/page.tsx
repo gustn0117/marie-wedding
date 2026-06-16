@@ -8,8 +8,8 @@ import HeroBanner from '@/features/home/HeroBanner';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Marié - 웨딩 업계 B2B 네트워크',
-  description: '웨딩 업계 종사자를 위한 채용, 네트워킹, 정보 공유 플랫폼',
+  title: 'Marié - 웨딩 업계 구인구직 플랫폼',
+  description: '웨딩 업계 종사자와 업체를 위한 채용, 프로필, 커뮤니티 플랫폼',
 };
 
 async function getHomeData() {
@@ -28,6 +28,7 @@ async function getHomeData() {
       .select('*, author:profiles!author_id(*)', { count: 'exact' })
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
+      .eq('posting_type', 'hiring')
       .order('created_at', { ascending: false })
       .range(0, 5),
     supabase
@@ -47,6 +48,7 @@ async function getHomeData() {
       .select('id', { count: 'exact', head: true })
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
+      .eq('posting_type', 'hiring')
       .gte('created_at', thirtyDaysAgo),
   ]);
 

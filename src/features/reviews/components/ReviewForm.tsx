@@ -62,7 +62,7 @@ export default function ReviewForm({ applicationId, appliesTo }: Props) {
     <form onSubmit={onSubmit} className="space-y-6">
       <div>
         <p className="text-sm text-gray-600 mb-3">
-          거래 상대에 대한 태그를 <strong>최대 5개</strong>까지 선택해 주세요. 자유 텍스트는 입력하지 않습니다.
+          함께 진행한 상대에 대한 태그를 <strong>최대 5개</strong>까지 선택해 주세요. 자유 텍스트는 입력하지 않습니다.
           작성 후 수정할 수 없으니 신중하게 선택해 주세요.
         </p>
         <p className="text-xs text-gray-500">선택: {selected.size}/5</p>

@@ -7,7 +7,7 @@ import PageHeader from '@/shared/components/PageHeader';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '프리미엄 플랜 | Marié' };
+export const metadata = { title: '광고 상품 | Marié' };
 
 export default async function PricingPage({ searchParams }: { searchParams: { cycle?: string } }) {
   const cycle = searchParams.cycle === 'yearly' ? 'yearly' : 'monthly';
@@ -17,8 +17,8 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
   return (
     <div className="max-w-[1080px] mx-auto space-y-6">
       <PageHeader
-        title="프리미엄 플랜"
-        description="더 많은 거래·정산·노출 기회를 누리세요. 언제든지 해지 가능합니다."
+        title="광고 상품"
+        description="웨딩업계 채용 수요가 모이는 지면에서 공고와 브랜드를 더 잘 보이게 만드세요."
       />
 
       {/* 결제 주기 토글 */}
@@ -109,7 +109,7 @@ export default async function PricingPage({ searchParams }: { searchParams: { cy
                   input={{
                     productType: 'premium_tier',
                     amount: price,
-                    orderName: `Marié ${p.name} (${cycle === 'yearly' ? '연간' : '월간'})`,
+                  orderName: `Marié ${p.name} 광고 (${cycle === 'yearly' ? '연간' : '월간'})`,
                     metadata: { tier: p.tier, cycle },
                   }}
                   label={`${p.name} 결제`}
