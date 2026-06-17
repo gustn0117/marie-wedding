@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 142 40" fill="none">
+  <rect width="40" height="40" rx="9" fill="#1A1A1A"/>
+  <path d="M10 28V12.75L20 22.5l10-9.75V28" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M20 22.5V28" stroke="#F2C879" stroke-width="3.4" stroke-linecap="round"/>
+  <circle cx="29" cy="9.75" r="2.1" fill="#F2C879"/>
+  <text x="52" y="28" fill="#1A1A1A" font-family="Pretendard, Arial, sans-serif" font-size="25" font-weight="700" letter-spacing="0">Mari<tspan font-style="italic" font-weight="600">é</tspan></text>
+</svg>

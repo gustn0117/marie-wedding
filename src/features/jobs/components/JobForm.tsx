@@ -16,10 +16,12 @@ interface JobFormProps {
   submitLabel?: string;
 }
 
+const JOB_DESCRIPTION_TEMPLATE = `<h3>담당 업무</h3><ul><li>예식 당일/상담/예약/고객 응대 등 실제 맡게 될 업무를 적어주세요.</li><li>함께 일할 팀과 현장 분위기를 간단히 알려주세요.</li></ul><h3>지원 자격</h3><ul><li>필요한 경력, 가능한 요일/시간, 필수 역량을 적어주세요.</li><li>신입 가능 여부와 교육 제공 여부를 알려주세요.</li></ul><h3>근무 조건</h3><ul><li>근무 지역, 근무 시간, 급여, 채용 인원, 시작 가능일을 적어주세요.</li><li>정규직/계약직/단기알바 등 고용 형태를 구체화해주세요.</li></ul><h3>지원 시 알려주세요</h3><ul><li>이름, 연락처, 경력, 가능한 일정, 포트폴리오/참고 링크를 함께 남겨달라고 안내해주세요.</li></ul>`;
+
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
   title: '',
-  description: '',
+  description: JOB_DESCRIPTION_TEMPLATE, // 신규 작성 시 템플릿 자동 주입
   businessType: '',
   employmentType: '',
   region: '',
@@ -31,8 +33,6 @@ const EMPTY_FORM: JobFormData = {
   deadline: '',
   image: null,
 };
-
-const JOB_DESCRIPTION_TEMPLATE = `<h3>담당 업무</h3><ul><li>예식 당일/상담/예약/고객 응대 등 실제 맡게 될 업무를 적어주세요.</li><li>함께 일할 팀과 현장 분위기를 간단히 알려주세요.</li></ul><h3>지원 자격</h3><ul><li>필요한 경력, 가능한 요일/시간, 필수 역량을 적어주세요.</li><li>신입 가능 여부와 교육 제공 여부를 알려주세요.</li></ul><h3>근무 조건</h3><ul><li>근무 지역, 근무 시간, 급여, 채용 인원, 시작 가능일을 적어주세요.</li><li>정규직/계약직/단기알바 등 고용 형태를 구체화해주세요.</li></ul><h3>지원 시 알려주세요</h3><ul><li>이름, 연락처, 경력, 가능한 일정, 포트폴리오/참고 링크를 함께 남겨달라고 안내해주세요.</li></ul>`;
 
 function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
@@ -142,12 +142,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     },
   ];
   const qualityCount = qualityItems.filter((item) => item.done).length;
-  const useTemplate = () => {
-    setFormData((prev) => ({
-      ...prev,
-      description: prev.description.trim() ? `${prev.description}<br>${JOB_DESCRIPTION_TEMPLATE}` : JOB_DESCRIPTION_TEMPLATE,
-    }));
-  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -163,18 +157,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </div>
 
       <section className="rounded border border-primary/20 bg-primary-50 p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <p className="text-sm font-bold text-gray-900">공고 품질 체크 {qualityCount}/{qualityItems.length}</p>
-            <p className="mt-1 text-xs text-gray-600">좋은 공고일수록 검색, 추천, 광고 노출에서 클릭과 지원 전환이 좋아집니다.</p>
-          </div>
-          <button
-            type="button"
-            onClick={useTemplate}
-            className="shrink-0 rounded border border-primary bg-white px-3 py-2 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors"
-          >
-            채용공고 템플릿 넣기
-          </button>
+        <div>
+          <p className="text-sm font-bold text-gray-900">공고 품질 체크 {qualityCount}/{qualityItems.length}</p>
+          <p className="mt-1 text-xs text-gray-600">좋은 공고일수록 검색, 추천, 광고 노출에서 클릭과 지원 전환이 좋아집니다.</p>
         </div>
         <div className="mt-3 grid gap-2 sm:grid-cols-2">
           {qualityItems.map((item) => (

@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="8" fill="#1B2A4A"/>
-  <text x="16" y="23" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="20" fill="white">M</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#1A1A1A"/>
+  <path d="M8 22.4V10.2L16 18l8-7.8v12.2" stroke="#fff" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 18v4.4" stroke="#F2C879" stroke-width="2.7" stroke-linecap="round"/>
+  <circle cx="23.2" cy="7.8" r="1.7" fill="#F2C879"/>
 </svg>

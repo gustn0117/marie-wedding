@@ -7,6 +7,14 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Marié - 웨딩 업계 구인구직 플랫폼",
   description: "웨딩 업계 종사자를 위한 채용, 프로필, 커뮤니티 플랫폼",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon", type: "image/png", sizes: "32x32" },
+    ],
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

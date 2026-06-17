@@ -25,12 +25,21 @@ function LogoMark({ className }: { className: string }) {
       aria-label="Marié"
       fill="none"
     >
-      <rect width="32" height="32" rx="4" fill="currentColor" />
+      <rect width="32" height="32" rx="7" fill="currentColor" />
       <path
-        d="M8.4 22.5V9.5h2.6l3 8.5 3-8.5h2.6v13h-1.9v-9.6l-2.7 9.6h-1.4l-2.7-9.6v9.6H8.4z"
-        fill="#fff"
+        d="M8 22.4V10.2L16 18l8-7.8v12.2"
+        stroke="#fff"
+        strokeWidth="2.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="23.6" cy="11.6" r="1.3" fill="#fff" />
+      <path
+        d="M16 18v4.4"
+        stroke="#F2C879"
+        strokeWidth="2.7"
+        strokeLinecap="round"
+      />
+      <circle cx="23.2" cy="7.8" r="1.7" fill="#F2C879" />
     </svg>
   );
 }
@@ -42,7 +51,7 @@ export default function Logo({ variant = 'full', size = 'md', className = '' }: 
   return (
     <span className={`inline-flex items-center gap-2 text-ink ${className}`}>
       <LogoMark className={MARK_SIZE[size]} />
-      <span className={`${WORD_SIZE[size]} font-bold tracking-tight leading-none`}>
+      <span className={`${WORD_SIZE[size]} font-bold tracking-normal leading-none`}>
         Mari<span className="italic font-semibold">é</span>
       </span>
     </span>
