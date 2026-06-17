@@ -65,8 +65,8 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
         <div className="max-w-[1280px] mx-auto px-5 pt-12 pb-10">
           <div className="flex flex-col items-center gap-6 text-center">
             <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
-              조건에 맞는 웨딩 일자리와<br />
-              인재를 찾아보세요
+              조건에 맞는 웨딩 일자리와<br className="lg:hidden" />
+              {' '}인재를 찾아보세요
             </h1>
             <form onSubmit={handleSearch} className="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
               <input
