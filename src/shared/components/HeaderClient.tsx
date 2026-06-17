@@ -9,13 +9,18 @@ import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
-// 헤더 2단 nav — 구인구직 중심 정보 구조.
+// 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 제휴업체
 const CAT_NAV = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
   { href: ROUTES.EVENTS, label: '행사·박람회' },
   { href: '/pricing', label: '광고 상품' },
+] as const;
+
+const PARTNER_NAV = [
+  { href: '/partners/wedding-hall-marketing', label: '웨딩홀 마케팅' },
+  { href: '/partners/wedding-concierge', label: '웨딩 컨시어지' },
 ] as const;
 
 // CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
@@ -177,6 +182,22 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           <Suspense fallback={<CatNavLinksFallback />}>
             <CatNavLinks pathname={pathname} />
           </Suspense>
+          {/* 우측 — 제휴업체 */}
+          <div className="ml-auto flex items-center gap-1 pl-3 border-l border-gray-100">
+            <span className="text-[11px] font-bold text-gray-400 tracking-wider uppercase pr-1">제휴업체</span>
+            {PARTNER_NAV.map((p) => {
+              const isActive = pathname.startsWith(p.href);
+              return (
+                <Link
+                  key={p.href}
+                  href={p.href}
+                  className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
+                >
+                  {p.label}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -193,6 +214,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           <nav className="grid grid-cols-2 gap-1 px-4 pb-4">
             {CAT_NAV.map((c) => (
               <Link key={c.label} href={c.href} onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded border border-gray-200 text-sm font-bold text-gray-700">{c.label}</Link>
+            ))}
+            {PARTNER_NAV.map((p) => (
+              <Link key={p.href} href={p.href} onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded border border-primary-200 bg-primary-50 text-sm font-bold text-primary">{p.label}</Link>
             ))}
           </nav>
         </div>
