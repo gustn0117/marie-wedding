@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { jobService } from '@/features/jobs/services/job-service';
+import { revalidate } from '@/shared/utils/revalidate';
 
 interface JobDetailActionsProps {
   jobId: string;
@@ -25,6 +26,7 @@ export default function JobDetailActions({ jobId, authorId }: JobDetailActionsPr
     setDeleting(true);
     try {
       await jobService.deleteJob(jobId);
+      await revalidate('/', ROUTES.JOBS);
       router.push(ROUTES.JOBS);
       router.refresh();
     } catch (err) {

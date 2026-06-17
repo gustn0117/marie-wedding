@@ -79,7 +79,6 @@ export default async function EventsPage({ searchParams }: PageProps) {
   // 상단 고정 이벤트와 일반 이벤트 분리
   const pinned = events.filter(e => e.is_pinned);
   const regular = events.filter(e => !e.is_pinned);
-  const upcomingCount = events.filter((event) => getEventStatus(event).label !== '종료').length;
 
   return (
     <div className="space-y-4">
@@ -94,31 +93,6 @@ export default async function EventsPage({ searchParams }: PageProps) {
           </>
         }
       />
-
-      <section className="surface-dark p-6 sm:p-7">
-        <div className="grid gap-5 lg:grid-cols-[1fr_320px] lg:items-end">
-          <div>
-            <p className="text-[12px] font-bold text-primary-200 mb-2">웨딩 업계 일정 기반 채용</p>
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-              박람회가 열리는 주말,<br className="hidden sm:block" />
-              필요한 인력을 바로 찾으세요
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/60">
-              부스 운영, 상담 플래너, 드레스 피팅 보조, 촬영·메이크업 어시스턴트처럼 행사와 함께 발생하는 구인 수요를 한 화면에서 연결합니다.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded border border-white/10 bg-white/5 p-3">
-              <p className="text-[11px] font-semibold text-white/45">진행/예정 행사</p>
-              <p className="mt-1 text-2xl font-extrabold text-white tabular-nums">{upcomingCount}</p>
-            </div>
-            <div className="rounded border border-white/10 bg-white/5 p-3">
-              <p className="text-[11px] font-semibold text-white/45">관련 채용 검색</p>
-              <p className="mt-1 text-2xl font-extrabold text-white">연결</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <form action="/events" className="surface flex flex-col gap-2 p-3 sm:flex-row">
         {activeType && <input type="hidden" name="type" value={activeType} />}
