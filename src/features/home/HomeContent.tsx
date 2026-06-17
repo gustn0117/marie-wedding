@@ -10,7 +10,7 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
-import BusinessTypeIcon, { CheckIcon, HandRaisedIcon } from '@/shared/components/icons/BusinessTypeIcon';
+import BusinessTypeIcon, { CheckIcon } from '@/shared/components/icons/BusinessTypeIcon';
 
 interface HomeContentProps {
   posts: Post[];
@@ -80,19 +80,6 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
                 </svg>
               </button>
             </form>
-            {/* 검색바 → 칩: 호흡 */}
-            <div className="mt-5 sm:mt-6 flex flex-wrap justify-center gap-2 max-w-[600px]">
-              <Link href={`${ROUTES.JOBS}?businessType=planner`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                <BusinessTypeIcon type="planner" className="w-4 h-4" /> 플래너 모집
-              </Link>
-              <Link href={ROUTES.JOBS_NEW} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                <HandRaisedIcon className="w-4 h-4" /> 공고 등록
-              </Link>
-              <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
-              <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
-              <Link href={`${ROUTES.JOBS}?businessType=makeup`} className="hero-chip">메이크업</Link>
-              <Link href={ROUTES.EVENTS} className="hero-chip">웨딩박람회 일정</Link>
-            </div>
           </div>
 
           {/* 카테고리 아이콘 그리드 */}
