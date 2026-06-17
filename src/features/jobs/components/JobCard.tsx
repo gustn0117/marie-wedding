@@ -20,11 +20,11 @@ export default function JobCard({ job }: JobCardProps) {
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">
       <div className="svc-card-thumb bg-gray-50">
-        {/* 배지: 마감 > 추천 > prime 슬롯 통일. 빈 공간 배지 슬롯 보존을 위해 항상 영역 차지 */}
+        {/* 배지: 마감 > 스폰서 > prime 슬롯 통일. */}
         {isExpired ? (
           <span className="svc-card-badge" style={{ background: '#6b7280' }}>마감</span>
         ) : job.is_promoted ? (
-          <span className="svc-card-badge svc-card-badge-promoted">추천</span>
+          <span className="svc-card-badge svc-card-badge-promoted">스폰서</span>
         ) : null}
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

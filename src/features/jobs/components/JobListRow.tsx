@@ -74,7 +74,7 @@ export default function JobListRow({ job }: Props) {
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {urgent && <Badge kind="urgent">마감임박</Badge>}
             {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-            {tier === 2 && <Badge kind="promoted">추천</Badge>}
+            {tier === 2 && <Badge kind="promoted">스폰서</Badge>}
             <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
             <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
             {job.salary_info && (

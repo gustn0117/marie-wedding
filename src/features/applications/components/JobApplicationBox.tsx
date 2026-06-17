@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
-import type { Application, ApplicationStatus } from '@/types/database';
+import type { Application, ApplicationStatus, Profile } from '@/types/database';
 import {
   APPLICATION_STATUS_LABELS,
   applicationService,
 } from '@/features/applications/services/application-service';
-import { formatRelativeTime } from '@/shared/utils/format';
+import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
@@ -20,13 +20,32 @@ interface JobApplicationBoxProps {
 }
 
 const NEXT_STATUSES: ApplicationStatus[] = ['reviewing', 'accepted', 'rejected'];
+const APPLICATION_FILTERS: Array<ApplicationStatus | 'all'> = ['all', 'pending', 'reviewing', 'accepted', 'rejected', 'cancelled'];
+
+const FILTER_LABELS: Record<ApplicationStatus | 'all', string> = {
+  all: '전체',
+  pending: '접수',
+  reviewing: '검토 중',
+  accepted: '승인',
+  rejected: '거절',
+  cancelled: '취소',
+};
+
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
 export default function JobApplicationBox({ jobId, authorId }: JobApplicationBoxProps) {
   const { profile, isLoading } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [received, setReceived] = useState<Application[]>([]);
   const [message, setMessage] = useState('');
+  const [careerSummary, setCareerSummary] = useState('');
+  const [availableSchedule, setAvailableSchedule] = useState('');
+  const [portfolioLink, setPortfolioLink] = useState('');
+  const [desiredPay, setDesiredPay] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,6 +69,8 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
           const row = await applicationService.getApplicationForJob(jobId, profile.id);
           setApplication(row);
           setContactPhone(profile.phone ?? '');
+          setCareerSummary((prev) => prev || stripHtml(profile.bio ?? '').slice(0, 180));
+          setPortfolioLink((prev) => prev || (profile.website ?? ''));
         }
       } catch {
         // Keep the job readable even if the interaction layer is unavailable.
@@ -65,19 +86,65 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     () => received.filter((item) => item.status === 'pending' || item.status === 'reviewing').length,
     [received],
   );
+  const pipelineCounts = useMemo(() => {
+    const counts = APPLICATION_FILTERS.reduce(
+      (acc, status) => ({ ...acc, [status]: status === 'all' ? received.length : received.filter((item) => item.status === status).length }),
+      {} as Record<ApplicationStatus | 'all', number>,
+    );
+    return counts;
+  }, [received]);
+  const filteredReceived = useMemo(
+    () => statusFilter === 'all' ? received : received.filter((item) => item.status === statusFilter),
+    [received, statusFilter],
+  );
+  const readinessItems = useMemo(() => {
+    if (!profile) return [];
+    return [
+      { key: 'profile', label: '프로필 소개', done: stripHtml(profile.bio ?? '').length >= 30 },
+      { key: 'phone', label: '연락처', done: !!(contactPhone || profile.phone) },
+      { key: 'career', label: '경력/강점', done: careerSummary.trim().length >= 10 },
+      { key: 'schedule', label: '가능 일정', done: availableSchedule.trim().length >= 5 },
+      { key: 'portfolio', label: '포트폴리오', done: !!portfolioLink.trim() || !!profile.website },
+    ];
+  }, [availableSchedule, careerSummary, contactPhone, portfolioLink, profile]);
+  const readinessCount = readinessItems.filter((item) => item.done).length;
+  const composedMessage = useMemo(() => {
+    if (!profile) return '';
+    const name = profile.company_name || profile.contact_name || '지원자';
+    const field = getPrimaryBusinessTypeLabel(profile.business_type, 2) || '미입력';
+    const region = getRegionLabel(profile.region) || '미입력';
+    return [
+      '[지원 요약]',
+      `- 이름/프로필: ${name}`,
+      `- 활동 분야: ${field}`,
+      `- 활동 지역: ${region}`,
+      `- 경력/강점: ${careerSummary.trim() || '미입력'}`,
+      `- 가능 일정: ${availableSchedule.trim() || '미입력'}`,
+      `- 희망 조건: ${desiredPay.trim() || '협의 가능'}`,
+      `- 포트폴리오/참고 링크: ${portfolioLink.trim() || profile.website || '미입력'}`,
+      '',
+      '[지원 메시지]',
+      message.trim(),
+    ].join('\n');
+  }, [availableSchedule, careerSummary, desiredPay, message, portfolioLink, profile]);
+  const canSubmit = !!profile && message.trim().length >= 10 && careerSummary.trim().length >= 10 && availableSchedule.trim().length >= 5;
 
   const submit = async () => {
-    if (!profile || !message.trim()) return;
+    if (!profile || !canSubmit) return;
     setSubmitting(true);
     try {
       const created = await applicationService.createApplication({
         jobId,
         applicantId: profile.id,
-        message,
+        message: composedMessage,
         contactPhone,
       });
       setApplication(created);
       setMessage('');
+      setCareerSummary('');
+      setAvailableSchedule('');
+      setDesiredPay('');
+      setPortfolioLink('');
     } catch (err) {
       const msg = err instanceof Error && err.message.includes('duplicate')
         ? '이미 접수된 내역이 있습니다.'
@@ -148,16 +215,36 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4 mb-4">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">{actionLabel} 관리</h2>
-            <p className="mt-1 text-sm text-gray-500">총 {received.length}건 · 진행 중 {pendingCount}건</p>
+            <h2 className="text-lg font-bold text-gray-900">지원자 파이프라인</h2>
+            <p className="mt-1 text-sm text-gray-500">총 {received.length}건 · 검토 필요 {pendingCount}건</p>
           </div>
+        </div>
+
+        <div className="mb-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+          {APPLICATION_FILTERS.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => setStatusFilter(status)}
+              className={`rounded border px-2 py-2 text-left transition-colors ${
+                statusFilter === status
+                  ? 'border-primary bg-primary text-white'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary'
+              }`}
+            >
+              <span className="block text-[11px] font-semibold">{FILTER_LABELS[status]}</span>
+              <span className="mt-0.5 block text-lg font-extrabold tabular-nums">{pipelineCounts[status] ?? 0}</span>
+            </button>
+          ))}
         </div>
 
         {received.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-400">아직 접수된 {actionLabel} 내역이 없습니다.</div>
+        ) : filteredReceived.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-400">선택한 상태의 지원자가 없습니다.</div>
         ) : (
           <div className="divide-y divide-gray-100">
-            {received.map((item) => (
+            {filteredReceived.map((item) => (
               <article key={item.id} className="py-4">
                 <div className="flex items-start gap-3">
                   <ProfileAvatar
@@ -182,8 +269,9 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
                       <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
                       <span className="text-xs text-gray-400">{formatRelativeTime(item.created_at)}</span>
                     </div>
+                    {item.applicant && <ApplicantSnapshot applicant={item.applicant} contactPhone={item.contact_phone} />}
                     {item.contact_phone && <p className="mt-1 text-xs text-gray-500">연락처 {item.contact_phone}</p>}
-                    <p className="mt-2 whitespace-pre-wrap break-words rounded bg-secondary-50 px-3 py-2 text-sm text-gray-700">
+                    <p className="mt-2 whitespace-pre-wrap break-words rounded bg-secondary-50 px-3 py-3 text-sm leading-6 text-gray-700">
                       {item.message}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
@@ -200,10 +288,10 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
                       ))}
                     </div>
                     {item.status === 'accepted' && (
-                        <ApplicationCompletionRow
-                          application={item}
-                          side="hiring"
-                          onMark={() => markCompleted(item.id, 'received')}
+                      <ApplicationCompletionRow
+                        application={item}
+                        side="hiring"
+                        onMark={() => markCompleted(item.id, 'received')}
                       />
                     )}
                     <AuthorNoteEditor
@@ -240,7 +328,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
           <span className="badge-primary">{APPLICATION_STATUS_LABELS[application.status]}</span>
           <span className="text-gray-400">{formatRelativeTime(application.created_at)} 접수</span>
         </div>
-        <p className="whitespace-pre-wrap rounded bg-secondary-50 px-4 py-3 text-sm text-gray-700">{application.message}</p>
+        <p className="whitespace-pre-wrap rounded bg-secondary-50 px-4 py-3 text-sm leading-6 text-gray-700">{application.message}</p>
         {application.status === 'accepted' && (
           <ApplicationCompletionRow
             application={application}
@@ -255,14 +343,76 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
   return (
     <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
       <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하기</h2>
-      <p className="text-sm text-gray-500 mb-4">공고 작성자에게 보낼 메시지와 연락 가능한 번호를 남겨주세요.</p>
+      <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 경력, 가능 일정, 연락처를 함께 남겨주세요.</p>
+      <div className="mb-4 rounded border border-primary/20 bg-primary-50 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-bold text-gray-900">지원서 완성도 {readinessCount}/{readinessItems.length}</p>
+            <p className="mt-1 text-xs text-gray-600">프로필과 지원서가 구체적일수록 답변을 받을 확률이 높아집니다.</p>
+          </div>
+          <Link href={ROUTES.MYPAGE_EDIT} className="shrink-0 text-xs font-bold text-primary hover:underline">프로필 보강</Link>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {readinessItems.map((item) => (
+            <span
+              key={item.key}
+              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
+                item.done ? 'border-primary bg-white text-primary' : 'border-gray-200 bg-white text-gray-400'
+              }`}
+            >
+              {item.done ? '완료 ' : '필요 '}
+              {item.label}
+            </span>
+          ))}
+        </div>
+      </div>
       <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-gray-700">경력/강점 <span className="text-state-urgent">*</span></span>
+            <input
+              value={careerSummary}
+              onChange={(e) => setCareerSummary(e.target.value)}
+              className="input-field"
+              placeholder="예) 웨딩플래너 2년, 예식 당일 진행 경험"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-gray-700">가능 일정 <span className="text-state-urgent">*</span></span>
+            <input
+              value={availableSchedule}
+              onChange={(e) => setAvailableSchedule(e.target.value)}
+              className="input-field"
+              placeholder="예) 주말 가능, 7월부터 출근 가능"
+            />
+          </label>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-gray-700">희망 조건</span>
+            <input
+              value={desiredPay}
+              onChange={(e) => setDesiredPay(e.target.value)}
+              className="input-field"
+              placeholder="예) 월 280만원 이상, 협의 가능"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-xs font-bold text-gray-700">포트폴리오/참고 링크</span>
+            <input
+              value={portfolioLink}
+              onChange={(e) => setPortfolioLink(e.target.value)}
+              className="input-field"
+              placeholder="인스타그램, 포트폴리오, 홈페이지"
+            />
+          </label>
+        </div>
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={5}
           className="input-field resize-none"
-          placeholder={`${actionLabel} 메시지를 입력하세요.`}
+          placeholder="왜 이 공고에 지원하는지, 바로 맡을 수 있는 업무, 확인이 필요한 조건을 적어주세요."
         />
         <input
           value={contactPhone}
@@ -274,7 +424,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
           <button
             type="button"
             onClick={submit}
-            disabled={!message.trim() || submitting}
+            disabled={!canSubmit || submitting}
             className="btn-primary"
           >
             {submitting ? '접수 중...' : `${actionLabel} 접수`}
@@ -282,6 +432,30 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
         </div>
       </div>
     </section>
+  );
+}
+
+function ApplicantSnapshot({ applicant, contactPhone }: { applicant: Profile; contactPhone: string | null }) {
+  const details = [
+    getPrimaryBusinessTypeLabel(applicant.business_type, 2),
+    getRegionLabel(applicant.region),
+    applicant.website ? '포트폴리오 있음' : '',
+    contactPhone || applicant.phone ? '연락 가능' : '',
+  ].filter(Boolean);
+
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {details.map((detail) => (
+        <span key={detail} className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-500">
+          {detail}
+        </span>
+      ))}
+      {applicant.response_rate > 0 && (
+        <span className="rounded-full border border-primary/30 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary">
+          응답률 {Math.round(applicant.response_rate)}%
+        </span>
+      )}
+    </div>
   );
 }
 

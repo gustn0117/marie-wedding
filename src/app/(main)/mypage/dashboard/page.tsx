@@ -5,11 +5,21 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import PageHeader from '@/shared/components/PageHeader';
 import { formatRelativeTime, getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
-import type { Application, Job } from '@/types/database';
+import type { Application, ApplicationStatus, Job } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata = { title: '공고 성과 | Marié' };
+
+const DASHBOARD_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  pending: '접수',
+  reviewing: '검토 중',
+  accepted: '승인',
+  rejected: '거절',
+  cancelled: '취소',
+};
+
+const PIPELINE_STATUSES: ApplicationStatus[] = ['pending', 'reviewing', 'accepted', 'rejected', 'cancelled'];
 
 interface HiringDashboard {
   jobs: Job[];
@@ -92,6 +102,15 @@ export default async function DashboardPage() {
   const applicationRate = dashboard.totalViews > 0
     ? Math.round((dashboard.totalApplications / dashboard.totalViews) * 1000) / 10
     : 0;
+  const statusCounts = PIPELINE_STATUSES.map((status) => ({
+    status,
+    label: DASHBOARD_STATUS_LABELS[status],
+    count: dashboard.receivedApplications.filter((app) => app.status === status).length,
+  }));
+  const responseBacklog = dashboard.receivedApplications.filter((app) => app.status === 'pending').length;
+  const acceptedRate = dashboard.totalApplications > 0
+    ? Math.round((dashboard.acceptedApplications / dashboard.totalApplications) * 1000) / 10
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -126,6 +145,36 @@ export default async function DashboardPage() {
           <KpiCard label="진행 중 공고" value={dashboard.activeJobs} unit="건" href={ROUTES.MYPAGE} />
           <KpiCard label="받은 지원" value={dashboard.totalApplications} unit="건" href={ROUTES.MYPAGE} />
           <KpiCard label="검토 필요" value={dashboard.reviewingApplications} unit="건" href={ROUTES.MYPAGE} emphasis />
+        </div>
+      </section>
+
+      <section className="surface p-4 sm:p-5">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="section-eyebrow mb-1">채용 파이프라인</p>
+            <h2 className="text-base font-bold text-ink">지원자가 어디에서 멈춰 있는지 확인하세요</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-right">
+            <div className="rounded border border-gray-200 px-3 py-2">
+              <p className="text-[11px] font-semibold text-gray-400">미응답</p>
+              <p className={`text-lg font-extrabold tabular-nums ${responseBacklog > 0 ? 'text-primary' : 'text-gray-900'}`}>{responseBacklog}</p>
+            </div>
+            <div className="rounded border border-gray-200 px-3 py-2">
+              <p className="text-[11px] font-semibold text-gray-400">승인율</p>
+              <p className="text-lg font-extrabold tabular-nums text-gray-900">{acceptedRate}%</p>
+            </div>
+          </div>
+        </div>
+        <div className="space-y-3">
+          {statusCounts.map((item) => (
+            <PipelineBar
+              key={item.status}
+              label={item.label}
+              count={item.count}
+              total={Math.max(dashboard.totalApplications, 1)}
+              highlight={item.status === 'pending' || item.status === 'reviewing'}
+            />
+          ))}
         </div>
       </section>
 
@@ -172,6 +221,34 @@ export default async function DashboardPage() {
           )}
         </aside>
       </section>
+    </div>
+  );
+}
+
+function PipelineBar({
+  label,
+  count,
+  total,
+  highlight,
+}: {
+  label: string;
+  count: number;
+  total: number;
+  highlight?: boolean;
+}) {
+  const width = Math.round((count / total) * 100);
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="font-bold text-gray-700">{label}</span>
+        <span className="font-semibold text-gray-400">{count.toLocaleString()}건</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-gray-100">
+        <div
+          className={`h-full rounded-full transition-all ${highlight ? 'bg-primary' : 'bg-gray-400'}`}
+          style={{ width: `${width}%` }}
+        />
+      </div>
     </div>
   );
 }

@@ -26,6 +26,7 @@ export const jobService = {
       .select('*, author:profiles!author_id(*)', { count: 'exact' })
       .is('deleted_at', null)
       .eq('posting_type', 'hiring')
+      .order('is_promoted', { ascending: false })
       .order('created_at', { ascending: false })
       .range(from, to);
 

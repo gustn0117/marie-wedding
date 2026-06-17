@@ -32,6 +32,12 @@ const EMPTY_FORM: JobFormData = {
   image: null,
 };
 
+const JOB_DESCRIPTION_TEMPLATE = `<h3>담당 업무</h3><ul><li>예식 당일/상담/예약/고객 응대 등 실제 맡게 될 업무를 적어주세요.</li><li>함께 일할 팀과 현장 분위기를 간단히 알려주세요.</li></ul><h3>지원 자격</h3><ul><li>필요한 경력, 가능한 요일/시간, 필수 역량을 적어주세요.</li><li>신입 가능 여부와 교육 제공 여부를 알려주세요.</li></ul><h3>근무 조건</h3><ul><li>근무 지역, 근무 시간, 급여, 채용 인원, 시작 가능일을 적어주세요.</li><li>정규직/계약직/단기알바 등 고용 형태를 구체화해주세요.</li></ul><h3>지원 시 알려주세요</h3><ul><li>이름, 연락처, 경력, 가능한 일정, 포트폴리오/참고 링크를 함께 남겨달라고 안내해주세요.</li></ul>`;
+
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
   const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   const [loading, setLoading] = useState(false);
@@ -112,6 +118,36 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   ].filter(Boolean).length;
   const totalRequired = 5;
   const progress = Math.round((requiredFilled / totalRequired) * 100);
+  const plainDescription = stripHtml(formData.description);
+  const qualityItems = [
+    {
+      key: 'description',
+      label: '업무/자격/근무조건을 충분히 작성',
+      done: plainDescription.length >= 120,
+    },
+    {
+      key: 'salary',
+      label: '급여 또는 협의 기준 공개',
+      done: !!(formData.salaryInfo ?? '').trim() || formData.salaryMin != null || formData.salaryMax != null,
+    },
+    {
+      key: 'deadline',
+      label: '지원 마감일 설정',
+      done: !!formData.deadline,
+    },
+    {
+      key: 'image',
+      label: '근무지/브랜드 이미지 추가',
+      done: !!imagePreview || !!formData.image,
+    },
+  ];
+  const qualityCount = qualityItems.filter((item) => item.done).length;
+  const useTemplate = () => {
+    setFormData((prev) => ({
+      ...prev,
+      description: prev.description.trim() ? `${prev.description}<br>${JOB_DESCRIPTION_TEMPLATE}` : JOB_DESCRIPTION_TEMPLATE,
+    }));
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -125,6 +161,34 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
       </div>
+
+      <section className="rounded border border-primary/20 bg-primary-50 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-bold text-gray-900">공고 품질 체크 {qualityCount}/{qualityItems.length}</p>
+            <p className="mt-1 text-xs text-gray-600">좋은 공고일수록 검색, 추천, 광고 노출에서 클릭과 지원 전환이 좋아집니다.</p>
+          </div>
+          <button
+            type="button"
+            onClick={useTemplate}
+            className="shrink-0 rounded border border-primary bg-white px-3 py-2 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors"
+          >
+            채용공고 템플릿 넣기
+          </button>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {qualityItems.map((item) => (
+            <div key={item.key} className="flex items-center gap-2 text-xs">
+              <span className={`flex h-4 w-4 items-center justify-center rounded-full border ${item.done ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-300'}`}>
+                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </span>
+              <span className={item.done ? 'font-semibold text-primary' : 'text-gray-600'}>{item.label}</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {error && (
         <div className="p-4 bg-state-urgent-bg border-l-4 border-state-urgent flex items-start gap-3">
@@ -153,7 +217,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 2: 제목 & 이미지 */}
-      <Section step={2} title="제목과 대표 이미지를 입력하세요" description="구직자/업체의 관심을 끌 수 있도록 간결하고 명확하게 작성해주세요.">
+      <Section step={2} title="제목과 대표 이미지를 입력하세요" description="직무, 지역, 고용형태가 한눈에 보이면 검색과 클릭 전환이 좋아집니다.">
         <div className="space-y-4">
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -168,6 +232,18 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               maxLength={100}
             />
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {['서울 웨딩플래너 신입/경력 채용', '주말 예식 진행 스태프 단기알바', '부산 스튜디오 상담 매니저 모집'].map((example) => (
+                <button
+                  key={example}
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, title: example }))}
+                  className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-500 hover:border-primary hover:text-primary"
+                >
+                  {example}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div>
@@ -201,10 +277,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요.">
+      <Section step={3} title="상세 내용을 작성하세요" description="지원자가 판단할 수 있도록 업무, 자격, 근무조건, 지원 시 필요한 정보를 나눠 적어주세요.">
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between gap-3 mb-2">
             <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
+            <span className={`text-xs font-semibold ${plainDescription.length >= 120 ? 'text-primary' : 'text-gray-400'}`}>
+              {plainDescription.length}/120자 권장
+            </span>
           </div>
           <RichTextEditor
             value={formData.description}
@@ -212,6 +291,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             placeholder="- 담당 업무&#10;- 자격 요건&#10;- 우대 사항&#10;- 근무 조건 등을 자세히 작성해주세요."
             minHeight={240}
           />
+          <div className="mt-3 grid gap-2 sm:grid-cols-4">
+            {['담당 업무', '지원 자격', '근무 조건', '지원 시 필요 정보'].map((label) => (
+              <div key={label} className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600">
+                {label}
+              </div>
+            ))}
+          </div>
         </div>
       </Section>
 
@@ -256,7 +342,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 만원 단위로 입력하세요.">
+          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 월급/연봉은 만원 단위, 일급/시급은 원 단위로 입력하세요.">
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-2">
               <input
                 type="number"
