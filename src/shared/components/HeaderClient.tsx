@@ -61,8 +61,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
-      {/* 1단: 좌(로고+태그라인) / 중(검색바 가운데) / 우(메뉴) — 3-col grid로 검색바 정중앙 정렬 */}
-      <div className="shell-wide h-[var(--header-h)] grid grid-cols-[auto_1fr_auto] items-center gap-4">
+      {/* 1단: 모바일 = flex justify-between (로고·메뉴 양 끝 정렬)
+              md+ = 3-col grid (로고 | 검색바 정중앙 | 메뉴) */}
+      <div className="shell-wide h-[var(--header-h)] flex items-center justify-between gap-4 md:grid md:grid-cols-[auto_1fr_auto]">
         {/* 좌측: 로고 + 태그라인 */}
         <div className="flex items-center gap-2 shrink-0">
           <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink">
