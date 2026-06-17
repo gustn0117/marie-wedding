@@ -87,9 +87,11 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       if (isEdit && eventId) {
         await adminService.updateEvent(eventId, payload);
         router.push(`/admin/events`);
+        router.refresh();
       } else {
         await adminService.createEvent(payload);
         router.push(`/admin/events`);
+        router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');

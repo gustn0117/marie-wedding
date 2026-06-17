@@ -26,6 +26,7 @@ export default function PostDetailActions({ postId, authorId }: PostDetailAction
     try {
       await communityService.deletePost(postId);
       router.push(ROUTES.COMMUNITY);
+      router.refresh();
     } catch {
       setDeleting(false);
     }

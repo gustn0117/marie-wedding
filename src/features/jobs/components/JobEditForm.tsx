@@ -17,6 +17,7 @@ export default function JobEditForm({ jobId, initialData }: JobEditFormProps) {
   const handleSubmit = async (data: JobFormData) => {
     await jobService.updateJob(jobId, data);
     router.push(ROUTES.JOBS_DETAIL(jobId));
+    router.refresh(); // 라우터 캐시 무효화 — 수정된 내용 즉시 반영
   };
 
   return <JobForm initialData={initialData} onSubmit={handleSubmit} submitLabel="수정하기" />;

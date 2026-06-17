@@ -16,6 +16,7 @@ export default function JobNewSubmit({ profileId }: JobNewSubmitProps) {
   const handleSubmit = async (data: JobFormData) => {
     await jobService.createJob(data, profileId);
     router.push(ROUTES.JOBS);
+    router.refresh();
   };
 
   return <JobForm onSubmit={handleSubmit} submitLabel="등록하기" />;

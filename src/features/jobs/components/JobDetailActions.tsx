@@ -26,6 +26,7 @@ export default function JobDetailActions({ jobId, authorId }: JobDetailActionsPr
     try {
       await jobService.deleteJob(jobId);
       router.push(ROUTES.JOBS);
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : '삭제에 실패했습니다.');
       setDeleting(false);

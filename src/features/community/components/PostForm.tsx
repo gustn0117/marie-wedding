@@ -52,10 +52,12 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         await communityService.updatePost(postId, formData);
         if (onSubmitSuccess) onSubmitSuccess(postId);
         else router.push(ROUTES.COMMUNITY_DETAIL(postId));
+        router.refresh();
       } else {
         const post = await communityService.createPost(formData, profileId!);
         if (onSubmitSuccess) onSubmitSuccess(post.id);
         else router.push(ROUTES.COMMUNITY_DETAIL(post.id));
+        router.refresh();
       }
     } catch {
       setError(isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.');
