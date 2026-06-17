@@ -16,7 +16,6 @@ import { VERIFICATION_STATUS_LABELS } from '@/shared/constants';
 import PortfolioCard from '@/features/portfolios/components/PortfolioCard';
 import type { Portfolio, Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
-import AvailabilityCalendar from '@/features/availability/components/AvailabilityCalendar';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
 import TrustMetricBar from '@/features/verification/components/TrustMetricBar';
 
@@ -242,12 +241,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           <RichTextView html={profile.bio} className="text-[15px] text-gray-700 leading-relaxed" />
         </div>
       )}
-
-      {/* Availability Calendar */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">가용 일정</h2>
-        <AvailabilityCalendar profileId={profile.id} editable={isOwner} />
-      </div>
 
       {/* Reviews */}
       {reviews.length > 0 && (
