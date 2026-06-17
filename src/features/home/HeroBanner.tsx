@@ -22,25 +22,8 @@ export default async function HeroBanner() {
 
   const banner = (data?.[0] ?? null) as BannerRow | null;
 
-  if (!banner) {
-    // Placeholder — 빗금 패턴
-    return (
-      <section aria-label="배너 영역" className="bg-white">
-        <div className="shell-wide py-4">
-          <div
-            className="w-full rounded-2xl border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 text-sm font-semibold"
-            style={{
-              aspectRatio: '8 / 1',
-              backgroundImage:
-                'repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(0,0,0,0.04) 12px, rgba(0,0,0,0.04) 24px)',
-            }}
-          >
-            배너 영역 (관리자에서 등록 가능)
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // 등록된 배너 없으면 아무것도 렌더 안 함 (placeholder 제거)
+  if (!banner) return null;
 
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const pcUrl = banner.image_path_pc ? `${base}/storage/v1/object/public/banners/${banner.image_path_pc}` : null;
