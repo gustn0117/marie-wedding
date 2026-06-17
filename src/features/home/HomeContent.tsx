@@ -7,7 +7,6 @@ import { ROUTES } from '@/shared/constants';
 import {
   formatRelativeTime,
   getBusinessTypeLabel,
-  getEmploymentTypeLabel,
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
@@ -121,7 +120,7 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
           {featuredJobs.length === 0 ? (
             <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
           ) : (
-            <BoardList>
+            <BoardList header={['공고', '회사', '등록']}>
               {featuredJobs.map((job) => <JobBoardRow key={job.id} job={job} />)}
             </BoardList>
           )}
@@ -133,7 +132,7 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
         <section className="bg-white py-10">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="추천 인재·업체 프로필" subtitle="채용과 지원 전 확인할 수 있는 신뢰 프로필" href={ROUTES.DIRECTORY} />
-            <BoardList>
+            <BoardList header={['업체', '지역', '거래']}>
               {featuredProfiles.map((p) => <CompanyBoardRow key={p.id} profile={p} />)}
             </BoardList>
           </div>
@@ -144,7 +143,7 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
         <section className="bg-white py-10">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="다가오는 행사·박람회" subtitle="웨딩박람회와 채용행사를 보고 관련 공고로 이어가세요" href={ROUTES.EVENTS} />
-            <BoardList>
+            <BoardList header={['행사', '장소', '일정']}>
               {featuredEvents.map((event) => <EventBoardRow key={event.id} event={event} />)}
             </BoardList>
           </div>
@@ -160,14 +159,15 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
               <p className="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
             </div>
           ) : (
-            <BoardList>
+            <BoardList header={['글', '작성', '조회']}>
               {featuredPosts.map((post, idx) => (
                 <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
-                  <span className={`w-6 text-center text-[13px] font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">{post.title}</p>
-                    <p className="text-[12px] text-gray-500 mt-0.5 truncate">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
-                  </div>
+                  <span className={`w-7 text-center font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
+                  <span className="board-row-title group-hover:text-primary transition-colors">{post.title}</span>
+                  <span className="board-row-meta">
+                    <span className="hidden sm:inline tabular-nums">조회 {post.view_count.toLocaleString()}</span>
+                    <span className="tabular-nums">{formatRelativeTime(post.created_at)}</span>
+                  </span>
                 </Link>
               ))}
             </BoardList>
@@ -178,87 +178,65 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
   );
 }
 
-/* === 게시판 리스트 컨테이너 === */
-function BoardList({ children }: { children: ReactNode }) {
+/* === 게시판 리스트 컨테이너 — 네이버 카페 스타일 (헤더 + divide) === */
+function BoardList({ children, header }: { children: ReactNode; header?: string[] }) {
   return (
-    <div className="rounded-xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
-      {children}
+    <div className="rounded-xl bg-white border border-gray-200 overflow-hidden">
+      {header && (
+        <div className="board-head">
+          <span className="flex-1">{header[0] ?? '제목'}</span>
+          {header[1] && <span className="hidden sm:inline w-24 text-right">{header[1]}</span>}
+          {header[2] && <span className="w-16 text-right">{header[2]}</span>}
+        </div>
+      )}
+      <div className="divide-y divide-gray-100">{children}</div>
     </div>
   );
 }
 
-/* === 공고 게시판 행 === */
+/* === 공고 게시판 행 — 한 줄 (카테고리 · 제목 · 회사 · 시각) === */
 function JobBoardRow({ job }: { job: Job }) {
   const company = job.author?.company_name || job.author?.contact_name || '담당자';
-  const region = getRegionLabel(job.region);
-  const employmentType = getEmploymentTypeLabel(job.employment_type);
   const businessType = getBusinessTypeLabel(job.business_type);
-  const imageUrl = job.image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
-    : null;
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="board-row group">
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={job.title} className="w-12 h-12 rounded-lg object-cover shrink-0 bg-gray-100" />
-      ) : (
-        <span className="w-12 h-12 rounded-lg shrink-0 bg-gray-50 border border-gray-200 inline-flex items-center justify-center text-base font-bold text-gray-400">
-          {company.charAt(0)}
-        </span>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">
-          {job.title}
-        </p>
-        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
-          {company} · {businessType} · {region} · {employmentType}
-        </p>
-      </div>
-      <span className="hidden sm:block text-[12px] text-gray-400 shrink-0 tabular-nums">
-        {formatRelativeTime(job.created_at)}
+      <span className="board-cat">{businessType}</span>
+      <span className="board-row-title group-hover:text-primary transition-colors">{job.title}</span>
+      <span className="board-row-meta">
+        <span className="hidden sm:inline truncate max-w-[120px]">{company}</span>
+        <span className="tabular-nums">{formatRelativeTime(job.created_at)}</span>
       </span>
     </Link>
   );
 }
 
-/* === 업체 프로필 게시판 행 === */
+/* === 업체 프로필 게시판 행 — 한 줄 === */
 function CompanyBoardRow({ profile }: { profile: Profile }) {
   const name = profile.company_name || profile.contact_name;
   const verified = profile.verification_status === 'verified';
   const bizLabel = profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너';
   const region = getRegionLabel(profile.region);
   const deals = profile.completed_deals_count ?? 0;
-  const imageUrl = profile.profile_image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
-    : null;
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="board-row group">
-      {imageUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={name} className="w-12 h-12 rounded-lg object-cover shrink-0 bg-gray-100" />
-      ) : (
-        <span className="w-12 h-12 rounded-lg shrink-0 bg-gray-50 border border-gray-200 inline-flex items-center justify-center text-base font-bold text-gray-400">
-          {name.charAt(0)}
-        </span>
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors inline-flex items-center gap-1">
-          {name}
-          {verified && (
-            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary-50 text-primary shrink-0">
-              <CheckIcon className="w-2.5 h-2.5" strokeWidth={3} />
-            </span>
-          )}
-        </p>
-        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
-          {bizLabel} · {region}{deals > 0 ? ` · 거래 ${deals}건` : ''}
-        </p>
-      </div>
+      <span className="board-cat">{bizLabel}</span>
+      <span className="board-row-title group-hover:text-primary transition-colors inline-flex items-center gap-1.5">
+        {name}
+        {verified && (
+          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary-50 text-primary shrink-0">
+            <CheckIcon className="w-2.5 h-2.5" strokeWidth={3} />
+          </span>
+        )}
+      </span>
+      <span className="board-row-meta">
+        <span>{region}</span>
+        {deals > 0 && <span className="tabular-nums">거래 {deals}</span>}
+      </span>
     </Link>
   );
 }
 
-/* === 행사·박람회 게시판 행 === */
+/* === 행사·박람회 게시판 행 — 한 줄 === */
 function EventBoardRow({ event }: { event: Event }) {
   const dateLabel = event.start_date
     ? `${event.start_date.slice(5, 10).replace('-', '/')}${event.end_date ? ` - ${event.end_date.slice(5, 10).replace('-', '/')}` : ''}`
@@ -266,18 +244,12 @@ function EventBoardRow({ event }: { event: Event }) {
   const typeLabel = event.type === 'event' ? '박람회' : event.type === 'news' ? '소식' : event.type === 'notice' ? '공지' : '';
   return (
     <Link href={ROUTES.EVENTS_DETAIL(event.id)} className="board-row group">
-      <span className="w-12 h-12 rounded-lg shrink-0 bg-primary-50 border border-primary-100 inline-flex flex-col items-center justify-center text-[10px] font-bold text-primary leading-tight">
-        <span className="text-[14px] tabular-nums">{event.start_date ? event.start_date.slice(8, 10) : '-'}</span>
-        <span className="text-[9px] text-primary/70">{event.start_date ? `${parseInt(event.start_date.slice(5, 7))}월` : ''}</span>
+      <span className="board-cat">{typeLabel}</span>
+      <span className="board-row-title group-hover:text-primary transition-colors">{event.title}</span>
+      <span className="board-row-meta">
+        {event.location && <span className="hidden sm:inline truncate max-w-[120px]">{event.location}</span>}
+        <span className="tabular-nums">{dateLabel}</span>
       </span>
-      <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">
-          {event.title}
-        </p>
-        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
-          {typeLabel}{event.location ? ` · ${event.location}` : ''} · {dateLabel}
-        </p>
-      </div>
     </Link>
   );
 }

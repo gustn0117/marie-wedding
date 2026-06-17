@@ -469,9 +469,27 @@
   .h-scroll::-webkit-scrollbar { display: none; }
   .h-scroll > * { flex: 0 0 260px; scroll-snap-align: start; }
 
-  /* === 게시판 row (홈 4 섹션 통일) === */
+  /* === 게시판 row — 네이버 카페 스타일 한 줄 === */
   .board-row {
-    @apply flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors;
+    @apply flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-[13.5px];
+  }
+  .board-row-title {
+    @apply flex-1 min-w-0 text-ink font-medium truncate;
+  }
+  .board-row-meta {
+    @apply shrink-0 inline-flex items-center gap-2 text-gray-500;
+  }
+  .board-row-meta > * + *::before {
+    content: '·';
+    @apply text-gray-300 mr-2;
+  }
+  /* 게시판 헤더 (컬럼 라벨) */
+  .board-head {
+    @apply flex items-center gap-3 px-4 py-2 bg-gray-50 border-b border-gray-200 text-[11px] font-bold text-gray-500 uppercase tracking-wider;
+  }
+  /* 좌측 작은 카테고리/유형 라벨 */
+  .board-cat {
+    @apply shrink-0 inline-flex items-center justify-center px-2 h-5 text-[11px] font-semibold text-gray-600 bg-gray-100 rounded;
   }
 
   /* 가로 스크롤 전용 컨테이너에서 스크롤바 숨김 + 세로 패닝 차단 */
