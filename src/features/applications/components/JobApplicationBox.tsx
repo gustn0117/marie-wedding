@@ -127,7 +127,9 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       message.trim(),
     ].join('\n');
   }, [availableSchedule, careerSummary, desiredPay, message, portfolioLink, profile]);
-  const canSubmit = !!profile && message.trim().length >= 10 && careerSummary.trim().length >= 10 && availableSchedule.trim().length >= 5;
+  // 연락처는 필수 — 직접 입력했거나 프로필에 등록되어 있어야 함
+  const phoneAvailable = contactPhone.trim().length >= 9 || (profile?.phone ?? '').trim().length >= 9;
+  const canSubmit = !!profile && message.trim().length >= 10 && careerSummary.trim().length >= 10 && availableSchedule.trim().length >= 5 && phoneAvailable;
 
   const submit = async () => {
     if (!profile || !canSubmit) return;
@@ -414,12 +416,30 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
           className="input-field resize-none"
           placeholder="왜 이 공고에 지원하는지, 바로 맡을 수 있는 업무, 확인이 필요한 조건을 적어주세요."
         />
-        <input
-          value={contactPhone}
-          onChange={(e) => setContactPhone(e.target.value)}
-          className="input-field"
-          placeholder="연락처 (선택)"
-        />
+        <div>
+          <label className="block mb-1 text-xs font-bold text-gray-700">
+            연락처 <span className="text-rose-500">*</span>
+            {profile?.phone && (
+              <span className="ml-1.5 text-[11px] font-semibold text-gray-500">
+                · 프로필 등록: {profile.phone}
+              </span>
+            )}
+          </label>
+          <input
+            type="tel"
+            value={contactPhone}
+            onChange={(e) => setContactPhone(e.target.value)}
+            className="input-field"
+            placeholder={profile?.phone ? '다른 연락처를 받으려면 입력 (선택)' : '예: 010-1234-5678'}
+            required={!profile?.phone}
+            aria-required="true"
+          />
+          {!phoneAvailable && (
+            <p className="mt-1 text-[11px] text-rose-500">
+              지원자와 연락하기 위해 연락처가 필요합니다.
+            </p>
+          )}
+        </div>
         <div className="flex justify-end">
           <button
             type="button"
