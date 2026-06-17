@@ -10,7 +10,6 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
-import EmptyState from '@/shared/components/EmptyState';
 import BusinessTypeIcon, { CheckIcon, HandRaisedIcon } from '@/shared/components/icons/BusinessTypeIcon';
 
 interface HomeContentProps {
@@ -113,23 +112,9 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
       </section>
 
 
-      {/* 최근 등록된 공고 — 게시판 row 리스트 */}
-      <section className="bg-white py-10">
-        <div className="max-w-[1280px] mx-auto px-5">
-          <SectionHeader title="최근 등록된 공고" subtitle="웨딩업계 채용 기회를 빠르게 확인하세요" href={ROUTES.JOBS} />
-          {featuredJobs.length === 0 ? (
-            <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
-          ) : (
-            <BoardList header={['공고', '회사', '등록']}>
-              {featuredJobs.map((job) => <JobBoardRow key={job.id} job={job} />)}
-            </BoardList>
-          )}
-        </div>
-      </section>
-
-      {/* 추천 인재·업체 프로필 */}
+      {/* 추천 인재·업체 프로필 — 전체 폭 */}
       {featuredProfiles.length > 0 && (
-        <section className="bg-white py-10">
+        <section className="bg-white pt-10">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="추천 인재·업체 프로필" subtitle="채용과 지원 전 확인할 수 있는 신뢰 프로필" href={ROUTES.DIRECTORY} />
             <BoardList header={['업체', '지역', '거래']}>
@@ -139,41 +124,75 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
         </section>
       )}
 
-      {featuredEvents.length > 0 && (
-        <section className="bg-white py-10">
-          <div className="max-w-[1280px] mx-auto px-5">
-            <SectionHeader title="다가오는 행사·박람회" subtitle="웨딩박람회와 채용행사를 보고 관련 공고로 이어가세요" href={ROUTES.EVENTS} />
-            <BoardList header={['행사', '장소', '일정']}>
-              {featuredEvents.map((event) => <EventBoardRow key={event.id} event={event} />)}
-            </BoardList>
-          </div>
-        </section>
-      )}
-
-      {/* 커뮤니티 인기글 */}
+      {/* 3컬럼 위젯 — 공고 / 행사 / 인기글 */}
       <section className="bg-white py-10">
-        <div className="max-w-[1280px] mx-auto px-5">
-          <SectionHeader title="커뮤니티 인기글" subtitle="웨딩 현장의 살아있는 노하우" href={ROUTES.COMMUNITY} />
-          {featuredPosts.length === 0 ? (
-            <div className="rounded-2xl bg-white border-2 border-dashed border-gray-200 p-12 text-center">
-              <p className="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
-            </div>
-          ) : (
-            <BoardList header={['글', '작성', '조회']}>
-              {featuredPosts.map((post, idx) => (
-                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
-                  <span className={`w-7 text-center font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
-                  <span className="board-row-title group-hover:text-primary transition-colors">{post.title}</span>
-                  <span className="board-row-meta">
-                    <span className="hidden sm:inline tabular-nums">조회 {post.view_count.toLocaleString()}</span>
-                    <span className="tabular-nums">{formatRelativeTime(post.created_at)}</span>
-                  </span>
-                </Link>
-              ))}
-            </BoardList>
-          )}
+        <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-3">
+          {/* 최근 등록된 공고 */}
+          <BoxWidget title="최근 등록된 공고" href={ROUTES.JOBS}>
+            {featuredJobs.length === 0 ? (
+              <BoxEmpty message="아직 등록된 공고가 없습니다." />
+            ) : (
+              <BoardList header={['공고', '회사']}>
+                {featuredJobs.slice(0, 6).map((job) => <JobBoardRow key={job.id} job={job} compact />)}
+              </BoardList>
+            )}
+          </BoxWidget>
+
+          {/* 다가오는 행사·박람회 */}
+          <BoxWidget title="다가오는 행사·박람회" href={ROUTES.EVENTS}>
+            {featuredEvents.length === 0 ? (
+              <BoxEmpty message="예정된 행사가 없습니다." />
+            ) : (
+              <BoardList header={['행사', '일정']}>
+                {featuredEvents.slice(0, 6).map((event) => <EventBoardRow key={event.id} event={event} compact />)}
+              </BoardList>
+            )}
+          </BoxWidget>
+
+          {/* 커뮤니티 인기글 */}
+          <BoxWidget title="커뮤니티 인기글" href={ROUTES.COMMUNITY}>
+            {featuredPosts.length === 0 ? (
+              <BoxEmpty message="첫 글의 주인공이 되어보세요." />
+            ) : (
+              <BoardList header={['글', '작성']}>
+                {featuredPosts.slice(0, 6).map((post, idx) => (
+                  <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
+                    <span className={`w-5 text-center font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
+                    <span className="board-row-title group-hover:text-primary transition-colors">{post.title}</span>
+                    <span className="board-row-meta">
+                      <span className="tabular-nums">{formatRelativeTime(post.created_at)}</span>
+                    </span>
+                  </Link>
+                ))}
+              </BoardList>
+            )}
+          </BoxWidget>
         </div>
       </section>
+    </div>
+  );
+}
+
+/* === 박스 위젯 (3컬럼 셀) === */
+function BoxWidget({ title, href, children }: { title: string; href: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-end justify-between pb-2 border-b border-gray-200">
+        <h3 className="text-[18px] font-bold tracking-tight text-ink">{title}</h3>
+        <Link href={href} className="text-[12px] font-bold text-gray-500 hover:text-ink inline-flex items-center gap-0.5">
+          더보기
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+        </Link>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function BoxEmpty({ message }: { message: string }) {
+  return (
+    <div className="rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 p-8 text-center">
+      <p className="text-[13px] text-gray-500">{message}</p>
     </div>
   );
 }
@@ -194,8 +213,8 @@ function BoardList({ children, header }: { children: ReactNode; header?: string[
   );
 }
 
-/* === 공고 게시판 행 — 한 줄 (카테고리 · 제목 · 회사 · 시각) === */
-function JobBoardRow({ job }: { job: Job }) {
+/* === 공고 게시판 행 — 한 줄 === */
+function JobBoardRow({ job, compact = false }: { job: Job; compact?: boolean }) {
   const company = job.author?.company_name || job.author?.contact_name || '담당자';
   const businessType = getBusinessTypeLabel(job.business_type);
   return (
@@ -203,8 +222,14 @@ function JobBoardRow({ job }: { job: Job }) {
       <span className="board-cat">{businessType}</span>
       <span className="board-row-title group-hover:text-primary transition-colors">{job.title}</span>
       <span className="board-row-meta">
-        <span className="hidden sm:inline truncate max-w-[120px]">{company}</span>
-        <span className="tabular-nums">{formatRelativeTime(job.created_at)}</span>
+        {compact ? (
+          <span className="truncate max-w-[100px]">{company}</span>
+        ) : (
+          <>
+            <span className="hidden sm:inline truncate max-w-[120px]">{company}</span>
+            <span className="tabular-nums">{formatRelativeTime(job.created_at)}</span>
+          </>
+        )}
       </span>
     </Link>
   );
@@ -237,8 +262,11 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
 }
 
 /* === 행사·박람회 게시판 행 — 한 줄 === */
-function EventBoardRow({ event }: { event: Event }) {
+function EventBoardRow({ event, compact = false }: { event: Event; compact?: boolean }) {
   const dateLabel = event.start_date
+    ? event.start_date.slice(5, 10).replace('-', '/')
+    : '상시';
+  const fullDateLabel = event.start_date
     ? `${event.start_date.slice(5, 10).replace('-', '/')}${event.end_date ? ` - ${event.end_date.slice(5, 10).replace('-', '/')}` : ''}`
     : '상시';
   const typeLabel = event.type === 'event' ? '박람회' : event.type === 'news' ? '소식' : event.type === 'notice' ? '공지' : '';
@@ -247,8 +275,14 @@ function EventBoardRow({ event }: { event: Event }) {
       <span className="board-cat">{typeLabel}</span>
       <span className="board-row-title group-hover:text-primary transition-colors">{event.title}</span>
       <span className="board-row-meta">
-        {event.location && <span className="hidden sm:inline truncate max-w-[120px]">{event.location}</span>}
-        <span className="tabular-nums">{dateLabel}</span>
+        {compact ? (
+          <span className="tabular-nums">{dateLabel}</span>
+        ) : (
+          <>
+            {event.location && <span className="hidden sm:inline truncate max-w-[120px]">{event.location}</span>}
+            <span className="tabular-nums">{fullDateLabel}</span>
+          </>
+        )}
       </span>
     </Link>
   );
@@ -275,11 +309,4 @@ function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: st
   );
 }
 
-function EmptyHint({ message, href, cta }: { message: string; href: string; cta: string }) {
-  // C-1/C-10: 공용 EmptyState 컴포넌트로 일관화.
-  // 기존 인라인 구현 제거 — 다른 페이지(bookmarks, jobs 등)와 동일한 톤 보장.
-  return (
-    <EmptyState title={message} description="" actionLabel={cta} actionHref={href} />
-  );
-}
 
