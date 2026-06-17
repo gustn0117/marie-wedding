@@ -127,19 +127,19 @@
   .rail-icon { @apply w-4 h-4 shrink-0 text-gray-400; }
   .rail-item-active .rail-icon { @apply text-primary; }
 
-  /* === Surface Card (플랫폼 표준 카드) ===
-     이전엔 rounded-xl border border-gray-200 bg-white p-4 패턴이 반복.
-     이제 .surface 하나로 통일. shadow는 e1만(과한 lift 자제). */
+  /* === Surface — 가로 띠 (상하 border만, 갇힘 없음) ===
+     사용자 피드백: '가로 줄은 좋은데 세로 줄이 있는 건 갇힌 느낌'
+     → 좌우 border + rounded 제거, 상하 띠 패턴으로 통일. */
   .surface {
-    @apply bg-white border border-gray-200 rounded-xl;
+    @apply bg-white border-y border-gray-200;
   }
   .surface-soft {
-    @apply bg-gray-50 border border-gray-100 rounded-xl;
+    @apply bg-gray-50 border-y border-gray-100;
   }
   .surface-hoverable {
-    @apply surface transition-all duration-150 hover:border-gray-300 hover:shadow-e1;
+    @apply surface transition-all duration-150 hover:bg-gray-50/40;
   }
-  /* 강조용 dark surface — CTA·매출 카드 (.surface-dark 안의 모든 자식이 흰색 텍스트 상속) */
+  /* 강조용 dark surface — CTA·매출 카드 (4면 박스 유지 — 강조용은 형태 명확) */
   .surface-dark {
     @apply bg-ink rounded-2xl border border-ink;
     color: white;
@@ -147,9 +147,13 @@
   .surface-dark p, .surface-dark h1, .surface-dark h2, .surface-dark h3, .surface-dark span {
     color: inherit;
   }
-  /* brand 강조 surface — primary 옅은 색조 */
+  /* brand 강조 surface */
   .surface-primary {
-    @apply bg-primary-50/60 border border-primary-100 rounded-2xl;
+    @apply bg-primary-50/60 border-y border-primary-100;
+  }
+  /* 4면 박스가 꼭 필요한 곳용 명시 토큰 (모달·드롭다운·강조 카드) */
+  .surface-card {
+    @apply bg-white border border-gray-200 rounded-2xl;
   }
 
   /* === Micro interactions ===
