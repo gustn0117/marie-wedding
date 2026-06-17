@@ -119,6 +119,18 @@
   .surface-hoverable {
     @apply surface transition-all duration-150 hover:border-gray-300 hover:shadow-e1;
   }
+  /* 강조용 dark surface — CTA·매출 카드 (.surface-dark 안의 모든 자식이 흰색 텍스트 상속) */
+  .surface-dark {
+    @apply bg-ink rounded-2xl border border-ink;
+    color: white;
+  }
+  .surface-dark p, .surface-dark h1, .surface-dark h2, .surface-dark h3, .surface-dark span {
+    color: inherit;
+  }
+  /* brand 강조 surface — primary 옅은 색조 */
+  .surface-primary {
+    @apply bg-primary-50/60 border border-primary-100 rounded-2xl;
+  }
 
   /* === Micro interactions ===
      플랫폼 표준: 100~150ms duration, transform 자제, color/border/shadow만. */

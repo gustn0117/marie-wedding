@@ -120,20 +120,20 @@ export default async function DashboardPage() {
         actions={<Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>}
       />
 
-      <section className="surface-dark p-8">
+      <section className="surface-dark text-white p-8">
         <p className="text-[13px] font-bold text-primary-200 mb-3">전체 공고 조회수</p>
-        <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter">
+        <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter text-white">
           {dashboard.totalViews.toLocaleString()}
           <span className="text-[20px] font-bold text-white/60 ml-2">회</span>
         </p>
         <div className="grid grid-cols-2 gap-3 pt-6 mt-6 border-t border-white/10">
           <div>
             <p className="text-[12px] font-semibold text-white/50">지원 전환율</p>
-            <p className="mt-1 text-[18px] font-bold tabular-nums">{applicationRate}%</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{applicationRate}%</p>
           </div>
           <div>
             <p className="text-[12px] font-semibold text-white/50">공고당 평균 지원</p>
-            <p className="mt-1 text-[18px] font-bold tabular-nums">{dashboard.avgApplicationsPerJob.toFixed(1)}건</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{dashboard.avgApplicationsPerJob.toFixed(1)}건</p>
           </div>
         </div>
       </section>
