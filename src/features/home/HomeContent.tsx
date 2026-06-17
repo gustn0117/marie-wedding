@@ -12,7 +12,7 @@ import {
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
 import EmptyState from '@/shared/components/EmptyState';
-import BusinessTypeIcon, { CheckIcon, HandRaisedIcon, SparklesIcon } from '@/shared/components/icons/BusinessTypeIcon';
+import BusinessTypeIcon, { CheckIcon, HandRaisedIcon } from '@/shared/components/icons/BusinessTypeIcon';
 
 interface HomeContentProps {
   posts: Post[];
@@ -60,52 +60,39 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
 
   return (
     <div className="pb-16">
-      {/* Hero — 2단 */}
+      {/* Hero — 가운데 정렬 */}
       <section className="bg-white">
         <div className="max-w-[1280px] mx-auto px-5 pt-12 pb-10">
-          <div className="grid lg:grid-cols-[1fr_440px] gap-8 items-start">
-            <div className="flex flex-col gap-6 pt-6">
-              <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
-                조건에 맞는 웨딩 일자리와<br />
-                인재를 찾아보세요
-              </h1>
-              <form onSubmit={handleSearch} className="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm max-w-[600px]">
-                <input
-                  value={keyword}
-                  onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="업체명, 직무, 지역을 검색하세요"
-                  className="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400 text-ink"
-                />
-                <button type="submit" className="bg-white px-5 hover:bg-gray-50 transition-colors">
-                  <svg className="w-6 h-6 text-ink" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                </button>
-              </form>
-              <div className="flex flex-wrap gap-2 max-w-[600px]">
-                <Link href={`${ROUTES.JOBS}?businessType=planner`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                  <BusinessTypeIcon type="planner" className="w-4 h-4" /> 플래너 모집
-                </Link>
-                <Link href={ROUTES.JOBS_NEW} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
-                  <HandRaisedIcon className="w-4 h-4" /> 공고 등록
-                </Link>
-                <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
-                <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
-                <Link href={`${ROUTES.JOBS}?businessType=makeup`} className="hero-chip">메이크업</Link>
-                <Link href={ROUTES.EVENTS} className="hero-chip">웨딩박람회 일정</Link>
-              </div>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
+              조건에 맞는 웨딩 일자리와<br />
+              인재를 찾아보세요
+            </h1>
+            <form onSubmit={handleSearch} className="flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
+              <input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="업체명, 직무, 지역을 검색하세요"
+                className="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400 text-ink"
+              />
+              <button type="submit" className="bg-white px-5 hover:bg-gray-50 transition-colors">
+                <svg className="w-6 h-6 text-ink" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </button>
+            </form>
+            <div className="flex flex-wrap justify-center gap-2 max-w-[600px]">
+              <Link href={`${ROUTES.JOBS}?businessType=planner`} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+                <BusinessTypeIcon type="planner" className="w-4 h-4" /> 플래너 모집
+              </Link>
+              <Link href={ROUTES.JOBS_NEW} className="hero-chip hero-chip-primary inline-flex items-center gap-1.5">
+                <HandRaisedIcon className="w-4 h-4" /> 공고 등록
+              </Link>
+              <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
+              <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
+              <Link href={`${ROUTES.JOBS}?businessType=makeup`} className="hero-chip">메이크업</Link>
+              <Link href={ROUTES.EVENTS} className="hero-chip">웨딩박람회 일정</Link>
             </div>
-
-            <Link href="/pricing" className="promo-card hidden lg:flex hover:shadow-lg transition-shadow">
-              <span className="promo-card-illust">
-                <SparklesIcon className="w-12 h-12 text-primary" />
-              </span>
-              <div className="relative z-10">
-                <h3 className="promo-card-title">채용 공고를<br />더 잘 보이게</h3>
-                <p className="promo-card-desc">직무·지역별 광고 지면으로 지원자를 만나세요</p>
-              </div>
-              <span className="promo-card-page">광고 상품 →</span>
-            </Link>
           </div>
 
           {/* 카테고리 아이콘 그리드 */}
