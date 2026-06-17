@@ -48,7 +48,7 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
       </header>
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-50">
         {messages.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-10">아직 메시지가 없습니다. 첫 메시지를 보내보세요.</p>
+          <p className="text-center text-sm text-gray-400 py-10">아직 쪽지가 없습니다. 첫 쪽지를 보내보세요.</p>
         ) : (
           messages.map((m) => {
             const mine = m.sender_id === myProfileId;
@@ -71,7 +71,7 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
           type="text"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="메시지를 입력하세요…"
+          placeholder="쪽지를 입력하세요…"
           maxLength={2000}
           disabled={busy}
           className="flex-1 border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none disabled:opacity-50"

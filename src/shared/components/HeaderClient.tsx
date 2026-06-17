@@ -21,7 +21,7 @@ const CAT_NAV = [
 
 const PARTNER_NAV = [
   { href: '/partners/wedding-hall-marketing', label: '웨딩홀 마케팅' },
-  { href: '/partners/wedding-concierge', label: '웨딩 컨시어지' },
+  { href: '/partners/wedding-concierge', label: '웨딩 컨시어지 (예식도우미)' },
 ] as const;
 
 // CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
@@ -99,9 +99,11 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
         {/* 우측: 메뉴 */}
         <nav className="flex items-center gap-1 shrink-0">
-          <Link href={ROUTES.JOBS_NEW} className="hidden lg:inline-flex items-center gap-1.5 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            공고 등록 <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded">채용</span>
-          </Link>
+          {isAuthenticated && profile?.account_type === 'business' && (
+            <Link href={ROUTES.JOBS_NEW} className="hidden lg:inline-flex items-center gap-1 text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
+              공고 등록 <span className="text-sm font-semibold text-gray-700">(채용)</span>
+            </Link>
+          )}
           <Link href={ROUTES.MYPAGE} className="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
             지원 관리
           </Link>

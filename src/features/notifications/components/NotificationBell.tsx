@@ -30,7 +30,7 @@ const TYPE_LABELS: Record<string, string> = {
   job: '공고',
   review: '리뷰',
   payment: '결제',
-  message: '메시지',
+  message: '쪽지',
   system: '시스템',
 };
 

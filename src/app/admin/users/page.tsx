@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
   };
 
   const handleDelete = async (user: Profile) => {
-    const ok = await toastConfirm(`${user.contact_name}님과 작성한 공고·게시글·댓글·지원·리뷰·포트폴리오를 모두 삭제하시겠습니까? 알림·메시지·북마크는 영구 삭제됩니다.`);
+    const ok = await toastConfirm(`${user.contact_name}님과 작성한 공고·게시글·댓글·지원·리뷰·포트폴리오를 모두 삭제하시겠습니까? 알림·쪽지·북마크는 영구 삭제됩니다.`);
     if (!ok) return;
     setActionLoading(user.id);
     try {

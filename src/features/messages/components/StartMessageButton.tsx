@@ -37,7 +37,7 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
 
   return (
     <button type="button" onClick={onClick} disabled={busy} className={`${baseClass} disabled:opacity-50`}>
-      {busy ? '시작 중…' : '메시지 보내기'}
+      {busy ? '시작 중…' : '쪽지 보내기'}
     </button>
   );
 }

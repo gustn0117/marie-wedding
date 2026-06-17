@@ -53,7 +53,7 @@ export default async function MessageDetailPage({ params }: Props) {
       <nav className="text-sm text-gray-500">
         <Link href={ROUTES.MYPAGE} className="hover:text-primary">마이페이지</Link>
         <span className="mx-2 text-gray-300">›</span>
-        <Link href={ROUTES.MYPAGE_MESSAGES} className="hover:text-primary">메시지</Link>
+        <Link href={ROUTES.MYPAGE_MESSAGES} className="hover:text-primary">쪽지</Link>
         <span className="mx-2 text-gray-300">›</span>
         <span className="text-gray-900 font-medium truncate">{partnerName}</span>
       </nav>

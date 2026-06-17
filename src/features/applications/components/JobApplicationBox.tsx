@@ -123,7 +123,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       `- 희망 조건: ${desiredPay.trim() || '협의 가능'}`,
       `- 포트폴리오/참고 링크: ${portfolioLink.trim() || profile.website || '미입력'}`,
       '',
-      '[지원 메시지]',
+      '[지원 쪽지]',
       message.trim(),
     ].join('\n');
   }, [availableSchedule, careerSummary, desiredPay, message, portfolioLink, profile]);

@@ -85,14 +85,14 @@ export default async function MessagesPage() {
   return (
     <main className="space-y-4">
       <PageHeader
-        eyebrow="메시지"
-        title="메시지"
+        eyebrow="쪽지"
+        title="쪽지"
         description="업체·프리랜서와 1:1로 대화할 수 있습니다. 채용 과정과 별개로도 사용할 수 있습니다."
       />
 
       <section className="surface">
         {conversations.length === 0 ? (
-          <p className="p-10 text-center text-sm text-gray-500">아직 대화가 없습니다. 디렉토리 상세에서 &quot;메시지 보내기&quot;로 시작해 보세요.</p>
+          <p className="p-10 text-center text-sm text-gray-500">아직 대화가 없습니다. 디렉토리 상세에서 &quot;쪽지 보내기&quot;로 시작해 보세요.</p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {conversations.map((c) => (
