@@ -469,6 +469,11 @@
   .h-scroll::-webkit-scrollbar { display: none; }
   .h-scroll > * { flex: 0 0 260px; scroll-snap-align: start; }
 
+  /* === 게시판 row (홈 4 섹션 통일) === */
+  .board-row {
+    @apply flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors;
+  }
+
   /* 가로 스크롤 전용 컨테이너에서 스크롤바 숨김 + 세로 패닝 차단 */
   .scrollbar-none {
     scrollbar-width: none;

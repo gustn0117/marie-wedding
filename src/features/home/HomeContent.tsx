@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
@@ -114,51 +114,45 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
       </section>
 
 
-      {/* 최근 등록된 공고 — h-scroll 키보드 가이드 + 스크롤 인디케이터 (C-5) */}
-      <section className="bg-gray-50 py-12">
+      {/* 최근 등록된 공고 — 게시판 row 리스트 */}
+      <section className="bg-white py-10">
         <div className="max-w-[1280px] mx-auto px-5">
           <SectionHeader title="최근 등록된 공고" subtitle="웨딩업계 채용 기회를 빠르게 확인하세요" href={ROUTES.JOBS} />
           {featuredJobs.length === 0 ? (
             <EmptyHint message="아직 등록된 공고가 없습니다." href={ROUTES.JOBS_NEW} cta="공고 등록" />
           ) : (
-            <HScrollRow
-              ariaLabel="최근 등록된 공고"
-              items={featuredJobs}
-              renderItem={(job) => <SvcJobCard key={job.id} job={job} />}
-            />
+            <BoardList>
+              {featuredJobs.map((job) => <JobBoardRow key={job.id} job={job} />)}
+            </BoardList>
           )}
         </div>
       </section>
 
       {/* 추천 인재·업체 프로필 */}
       {featuredProfiles.length > 0 && (
-        <section className="bg-white py-12">
+        <section className="bg-white py-10">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="추천 인재·업체 프로필" subtitle="채용과 지원 전 확인할 수 있는 신뢰 프로필" href={ROUTES.DIRECTORY} />
-            <HScrollRow
-              ariaLabel="추천 인재·업체 프로필"
-              items={featuredProfiles}
-              renderItem={(p) => <SvcCompanyCard key={p.id} profile={p} />}
-            />
+            <BoardList>
+              {featuredProfiles.map((p) => <CompanyBoardRow key={p.id} profile={p} />)}
+            </BoardList>
           </div>
         </section>
       )}
 
       {featuredEvents.length > 0 && (
-        <section className="bg-gray-50 py-12">
+        <section className="bg-white py-10">
           <div className="max-w-[1280px] mx-auto px-5">
             <SectionHeader title="다가오는 행사·박람회" subtitle="웨딩박람회와 채용행사를 보고 관련 공고로 이어가세요" href={ROUTES.EVENTS} />
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {featuredEvents.map((event) => (
-                <HomeEventCard key={event.id} event={event} />
-              ))}
-            </div>
+            <BoardList>
+              {featuredEvents.map((event) => <EventBoardRow key={event.id} event={event} />)}
+            </BoardList>
           </div>
         </section>
       )}
 
       {/* 커뮤니티 인기글 */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-white py-10">
         <div className="max-w-[1280px] mx-auto px-5">
           <SectionHeader title="커뮤니티 인기글" subtitle="웨딩 현장의 살아있는 노하우" href={ROUTES.COMMUNITY} />
           {featuredPosts.length === 0 ? (
@@ -166,17 +160,17 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
               <p className="text-sm text-gray-500">첫 글의 주인공이 되어보세요.</p>
             </div>
           ) : (
-            <div className="rounded-2xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
+            <BoardList>
               {featuredPosts.map((post, idx) => (
-                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50">
-                  <span className={`w-7 text-center text-lg font-bold ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
+                <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
+                  <span className={`w-6 text-center text-[13px] font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-ink line-clamp-1">{post.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
+                    <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">{post.title}</p>
+                    <p className="text-[12px] text-gray-500 mt-0.5 truncate">조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · {formatRelativeTime(post.created_at)}</p>
                   </div>
                 </Link>
               ))}
-            </div>
+            </BoardList>
           )}
         </div>
       </section>
@@ -184,21 +178,106 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
   );
 }
 
-function HomeEventCard({ event }: { event: Event }) {
-  const date = event.start_date
+/* === 게시판 리스트 컨테이너 === */
+function BoardList({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-xl bg-white border border-gray-200 overflow-hidden divide-y divide-gray-100">
+      {children}
+    </div>
+  );
+}
+
+/* === 공고 게시판 행 === */
+function JobBoardRow({ job }: { job: Job }) {
+  const company = job.author?.company_name || job.author?.contact_name || '담당자';
+  const region = getRegionLabel(job.region);
+  const employmentType = getEmploymentTypeLabel(job.employment_type);
+  const businessType = getBusinessTypeLabel(job.business_type);
+  const imageUrl = job.image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
+    : null;
+  return (
+    <Link href={ROUTES.JOBS_DETAIL(job.id)} className="board-row group">
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt={job.title} className="w-12 h-12 rounded-lg object-cover shrink-0 bg-gray-100" />
+      ) : (
+        <span className="w-12 h-12 rounded-lg shrink-0 bg-gray-50 border border-gray-200 inline-flex items-center justify-center text-base font-bold text-gray-400">
+          {company.charAt(0)}
+        </span>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">
+          {job.title}
+        </p>
+        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
+          {company} · {businessType} · {region} · {employmentType}
+        </p>
+      </div>
+      <span className="hidden sm:block text-[12px] text-gray-400 shrink-0 tabular-nums">
+        {formatRelativeTime(job.created_at)}
+      </span>
+    </Link>
+  );
+}
+
+/* === 업체 프로필 게시판 행 === */
+function CompanyBoardRow({ profile }: { profile: Profile }) {
+  const name = profile.company_name || profile.contact_name;
+  const verified = profile.verification_status === 'verified';
+  const bizLabel = profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너';
+  const region = getRegionLabel(profile.region);
+  const deals = profile.completed_deals_count ?? 0;
+  const imageUrl = profile.profile_image
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
+    : null;
+  return (
+    <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="board-row group">
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt={name} className="w-12 h-12 rounded-lg object-cover shrink-0 bg-gray-100" />
+      ) : (
+        <span className="w-12 h-12 rounded-lg shrink-0 bg-gray-50 border border-gray-200 inline-flex items-center justify-center text-base font-bold text-gray-400">
+          {name.charAt(0)}
+        </span>
+      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors inline-flex items-center gap-1">
+          {name}
+          {verified && (
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary-50 text-primary shrink-0">
+              <CheckIcon className="w-2.5 h-2.5" strokeWidth={3} />
+            </span>
+          )}
+        </p>
+        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
+          {bizLabel} · {region}{deals > 0 ? ` · 거래 ${deals}건` : ''}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
+/* === 행사·박람회 게시판 행 === */
+function EventBoardRow({ event }: { event: Event }) {
+  const dateLabel = event.start_date
     ? `${event.start_date.slice(5, 10).replace('-', '/')}${event.end_date ? ` - ${event.end_date.slice(5, 10).replace('-', '/')}` : ''}`
     : '상시';
-  const label = event.type === 'event' ? '웨딩박람회' : event.type === 'news' ? '채용행사' : '업계소식';
-
+  const typeLabel = event.type === 'event' ? '박람회' : event.type === 'news' ? '소식' : event.type === 'notice' ? '공지' : '';
   return (
-    <Link href={ROUTES.EVENTS_DETAIL(event.id)} className="rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-primary">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="badge-primary">{label}</span>
-        <span className="text-xs font-bold text-gray-400">{date}</span>
+    <Link href={ROUTES.EVENTS_DETAIL(event.id)} className="board-row group">
+      <span className="w-12 h-12 rounded-lg shrink-0 bg-primary-50 border border-primary-100 inline-flex flex-col items-center justify-center text-[10px] font-bold text-primary leading-tight">
+        <span className="text-[14px] tabular-nums">{event.start_date ? event.start_date.slice(8, 10) : '-'}</span>
+        <span className="text-[9px] text-primary/70">{event.start_date ? `${parseInt(event.start_date.slice(5, 7))}월` : ''}</span>
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-ink line-clamp-1 group-hover:text-primary transition-colors">
+          {event.title}
+        </p>
+        <p className="text-[12px] text-gray-500 mt-0.5 truncate">
+          {typeLabel}{event.location ? ` · ${event.location}` : ''} · {dateLabel}
+        </p>
       </div>
-      <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{event.title}</p>
-      {event.location && <p className="mt-2 truncate text-xs text-gray-500">{event.location}</p>}
-      <p className="mt-4 text-xs font-bold text-primary">관련 공고 보기 →</p>
     </Link>
   );
 }
@@ -209,50 +288,6 @@ function HomeEventCard({ event }: { event: Event }) {
  * 수정: aria-label 가진 region role + 좌우 스크롤 버튼.
  *   터치는 native 스와이프, 키보드는 Tab으로 카드 포커스 후 화살표 키 작동.
  */
-/**
- * 적응형 카드 그리드.
- * 모바일/태블릿: 가로 스크롤 (정보 밀도 유지).
- * 데스크탑(lg+): 4열 정돈된 그리드 — 카드 사이 명확한 구분.
- */
-function HScrollRow<T>({ items, renderItem, ariaLabel }: { items: T[]; renderItem: (item: T) => ReactNode; ariaLabel: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const scroll = (dir: 1 | -1) => {
-    const el = ref.current;
-    if (!el) return;
-    el.scrollBy({ left: dir * Math.min(el.clientWidth * 0.85, 800), behavior: 'smooth' });
-  };
-  return (
-    <div role="region" aria-label={ariaLabel}>
-      {/* 모바일·태블릿 — 가로 스크롤 */}
-      <div className="relative group lg:hidden">
-        <div ref={ref} className="h-scroll" tabIndex={0}>
-          {items.map(renderItem)}
-        </div>
-        <button
-          type="button"
-          onClick={() => scroll(-1)}
-          aria-label="이전"
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-        </button>
-        <button
-          type="button"
-          onClick={() => scroll(1)}
-          aria-label="다음"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-10 h-10 rounded-full bg-white border border-gray-200 shadow-md items-center justify-center text-ink opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-        </button>
-      </div>
-      {/* 데스크탑(lg+) — 4열 그리드 */}
-      <div className="hidden lg:grid lg:grid-cols-4 gap-4">
-        {items.slice(0, 8).map(renderItem)}
-      </div>
-    </div>
-  );
-}
-
 function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
   return (
     <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-200">
@@ -276,120 +311,3 @@ function EmptyHint({ message, href, cta }: { message: string; href: string; cta:
   );
 }
 
-function SvcJobCard({ job }: { job: Job }) {
-  const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
-  const initial = company.charAt(0).toUpperCase();
-  const verified = job.author?.verification_status === 'verified';
-  const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
-  const views = job.view_count ?? 0;
-  const imageUrl = job.image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
-    : null;
-
-  return (
-    <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">
-      <div className="svc-card-thumb bg-gray-50">
-        {isExpired ? (
-          <span className="svc-card-badge" style={{ background: '#6b7280' }}>마감</span>
-        ) : job.is_promoted ? (
-          <span className="svc-card-badge svc-card-badge-promoted">추천</span>
-        ) : null}
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={job.title} className="svc-card-thumb-img" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
-          </div>
-        )}
-      </div>
-      <div className="svc-card-body">
-        {/* 회사 + 직군 메타 (한 줄) */}
-        <div className="svc-card-meta-row">
-          <span className="truncate">{company}</span>
-          {verified && <span className="svc-card-m-badge shrink-0" title="인증 업체">인</span>}
-        </div>
-        {/* 직무 타이틀 */}
-        <p className="svc-card-title">{job.title}</p>
-        {/* 메타 — 고용형태·지역 */}
-        <div className="svc-card-rating">
-          <span className="inline-flex items-center gap-1">
-            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387" /></svg>
-            {getEmploymentTypeLabel(job.employment_type)}
-          </span>
-          <span className="text-gray-300">·</span>
-          <span className="inline-flex items-center gap-1">
-            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-            {getRegionLabel(job.region)}
-          </span>
-        </div>
-        {/* 급여 */}
-        <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
-        {/* 푸터 — 조회수 + 마감 */}
-        {(views > 0 || job.deadline) && (
-          <div className="svc-card-seller justify-between">
-            {views > 0 ? (
-              <span className="tabular-nums">조회 {views.toLocaleString()}</span>
-            ) : <span />}
-            {job.deadline && !isExpired && (
-              <span className="text-[11px] font-bold text-rose-500 tabular-nums">
-                ~ {job.deadline.slice(5, 10).replace('-', '/')}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </Link>
-  );
-}
-
-function SvcCompanyCard({ profile }: { profile: Profile }) {
-  const name = profile.company_name || profile.contact_name;
-  const initial = name.charAt(0).toUpperCase();
-  const verified = profile.verification_status === 'verified';
-  const premium = profile.premium_tier !== 'free';
-  const imageUrl = profile.profile_image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
-    : null;
-  const deals = profile.completed_deals_count ?? 0;
-  const responseRate = Math.round(profile.response_rate ?? 0);
-  const isNewBiz = deals === 0;
-
-  return (
-    <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
-      <div className="svc-card-thumb bg-gray-50">
-        {premium ? (
-          <span className="svc-card-badge svc-card-badge-prime">PREMIUM</span>
-        ) : verified ? (
-          <span className="svc-card-badge svc-card-badge-promoted inline-flex items-center gap-0.5"><CheckIcon className="w-3 h-3" /> 인증</span>
-        ) : null}
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={name} className="svc-card-thumb-img" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
-          </div>
-        )}
-      </div>
-      <p className="svc-card-title">{name}</p>
-      <div className="svc-card-rating">
-        {isNewBiz && responseRate === 0 ? (
-          <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary-50 text-primary text-[10px] font-bold">NEW</span>
-        ) : (
-          <>
-            {deals > 0 && <span className="font-bold text-gray-900">진행 {deals.toLocaleString()}건</span>}
-            {responseRate > 0 && <span className="svc-card-rating-count">응답률 {responseRate}%</span>}
-          </>
-        )}
-      </div>
-      <p className="svc-card-price">
-        {profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '프로필'} · {getRegionLabel(profile.region)}
-      </p>
-      <div className="svc-card-seller">
-        <span className="truncate flex-1">{profile.contact_name || '담당자'}</span>
-        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
-      </div>
-    </Link>
-  );
-}
