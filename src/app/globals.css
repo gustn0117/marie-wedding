@@ -469,6 +469,13 @@
   .h-scroll::-webkit-scrollbar { display: none; }
   .h-scroll > * { flex: 0 0 260px; scroll-snap-align: start; }
 
+  /* 가로 스크롤 전용 컨테이너에서 스크롤바 숨김 + 세로 패닝 차단 */
+  .scrollbar-none {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
   .promo-card {
     @apply relative overflow-hidden rounded-3xl p-7 min-h-[280px] flex flex-col justify-end;
     /* 미니멀 팔레트 준수 — 분홍/보라 그라데이션을 회색 + 미세 brand 톤으로 교체. */
