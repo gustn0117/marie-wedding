@@ -28,7 +28,7 @@ export function ensureFontsRegistered() {
 // 색상 토큰
 export const COLORS = {
   ink: '#1a1a1a',
-  primary: '#3617ce',
+  primary: '#051049',
   gray50: '#fafafa',
   gray100: '#f4f4f5',
   gray200: '#e4e4e7',

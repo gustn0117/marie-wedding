@@ -93,7 +93,7 @@ export default function NavigationProgress() {
         className="h-full bg-primary transition-all duration-300 ease-out"
         style={{
           width: `${progress}%`,
-          boxShadow: '0 0 12px rgba(54, 23, 206, 0.5), 0 0 4px rgba(54, 23, 206, 0.7)',
+          boxShadow: '0 0 12px rgba(5, 16, 73, 0.5), 0 0 4px rgba(5, 16, 73, 0.7)',
         }}
       />
     </div>
