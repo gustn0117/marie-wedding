@@ -8,6 +8,7 @@ import { ROUTES } from '@/shared/constants';
 import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
+import MobileNavPanel from './MobileNavPanel';
 
 // 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 제휴업체
 const CAT_NAV = [
@@ -160,13 +161,20 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             </Link>
           )}
 
+          {/* 모바일 햄버거 → X morph */}
           <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden ml-1 icon-btn"
-            aria-label="메뉴"
+            className="md:hidden ml-1 icon-btn relative"
+            aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-panel"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <svg className={`w-5 h-5 absolute transition-all duration-200 ${mobileMenuOpen ? 'opacity-0 rotate-90' : 'opacity-100 rotate-0'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+            <svg className={`w-5 h-5 absolute transition-all duration-200 ${mobileMenuOpen ? 'opacity-100 rotate-0' : 'opacity-0 -rotate-90'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </nav>
@@ -201,26 +209,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
         </div>
       </div>
 
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white">
-          <div className="px-4 py-3">
-            <form onSubmit={handleSearch}>
-              <label className="header-search">
-                <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
-                <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="검색" className="bg-transparent outline-none flex-1 text-sm" />
-              </label>
-            </form>
-          </div>
-          <nav className="grid grid-cols-2 gap-1 px-4 pb-4">
-            {CAT_NAV.map((c) => (
-              <Link key={c.label} href={c.href} onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded border border-gray-200 text-sm font-bold text-gray-700">{c.label}</Link>
-            ))}
-            {PARTNER_NAV.map((p) => (
-              <Link key={p.href} href={p.href} onClick={() => setMobileMenuOpen(false)} className="px-3 py-3 rounded border border-primary-200 bg-primary-50 text-sm font-bold text-primary">{p.label}</Link>
-            ))}
-          </nav>
-        </div>
-      )}
+      {/* 모바일 슬라이드 다운 패널 — Workflow 결과 spec 구현 */}
+      <MobileNavPanel
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        profile={profile}
+        onSignOut={signOut}
+      />
     </header>
   );
 }
