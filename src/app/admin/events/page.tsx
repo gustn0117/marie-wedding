@@ -50,14 +50,14 @@ export default function AdminEventsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">이벤트 & 소식 관리</h1>
+          <h1 className="page-title">행사·박람회 관리</h1>
           <p className="text-sm text-gray-500 mt-1">총 {events.length}건</p>
         </div>
         <Link href={ROUTES.ADMIN_EVENTS_NEW} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          새로 등록
+          행사 등록
         </Link>
       </div>
 
@@ -65,7 +65,7 @@ export default function AdminEventsPage() {
         {loading ? (
           <div className="py-12 text-center text-sm text-gray-500">로딩 중...</div>
         ) : events.length === 0 ? (
-          <div className="py-12 text-center text-sm text-gray-500">등록된 이벤트가 없습니다.</div>
+          <div className="py-12 text-center text-sm text-gray-500">등록된 웨딩 행사·박람회가 없습니다.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

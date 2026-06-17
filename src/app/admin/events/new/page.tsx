@@ -13,7 +13,7 @@ export default function AdminEventNewPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </Link>
-        <h1 className="page-title">이벤트 등록</h1>
+        <h1 className="page-title">행사·박람회 등록</h1>
       </div>
       <div className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
         <EventForm />

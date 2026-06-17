@@ -8,7 +8,7 @@ const SERVICE_LINKS = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
-  { href: ROUTES.EVENTS, label: '이벤트' },
+  { href: ROUTES.EVENTS, label: '행사·박람회' },
   { href: '/pricing', label: '광고 상품' },
 ] as const;
 

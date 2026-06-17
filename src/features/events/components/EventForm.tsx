@@ -9,7 +9,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
 import { createClient } from '@/lib/supabase/client';
 import { adminService } from '@/features/admin/services/admin-service';
-import { EVENT_TYPES } from '../types';
+import { EVENT_TYPES, EVENT_TYPE_DESCRIPTIONS } from '../types';
 import type { EventFormData } from '../types';
 
 interface EventFormProps {
@@ -106,20 +106,23 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
       {/* Type */}
       <div className="space-y-2">
-        <label className="block text-sm font-semibold text-gray-800">구분 <span className="text-state-urgent">*</span></label>
-        <div className="flex gap-2">
+        <label className="block text-sm font-semibold text-gray-800">행사 유형 <span className="text-state-urgent">*</span></label>
+        <div className="grid gap-2 sm:grid-cols-3">
           {EVENT_TYPES.map((t) => (
             <button
               key={t.value}
               type="button"
               onClick={() => setFormData(prev => ({ ...prev, type: t.value }))}
-              className={`px-4 py-2 text-sm font-medium border transition-colors ${
+              className={`rounded border px-4 py-3 text-left text-sm transition-colors ${
                 formData.type === t.value
                   ? 'bg-primary text-white border-primary'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
               }`}
             >
-              {t.label}
+              <span className="block font-bold">{t.label}</span>
+              <span className={`mt-1 block text-[11px] leading-snug ${formData.type === t.value ? 'text-white/75' : 'text-gray-400'}`}>
+                {EVENT_TYPE_DESCRIPTIONS[t.value]}
+              </span>
             </button>
           ))}
         </div>
@@ -135,10 +138,22 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
           type="text"
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-          placeholder="제목을 입력하세요"
+          placeholder="예) 코엑스 웨딩박람회 부스 스태프 모집 연계"
           className="w-full px-4 py-3 border border-gray-300 text-base focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           maxLength={200}
         />
+        <div className="flex flex-wrap gap-1.5">
+          {['코엑스 웨딩박람회 일정', 'SETEC 웨딩페어 채용행사', '드레스 브랜드 쇼케이스'].map((example) => (
+            <button
+              key={example}
+              type="button"
+              onClick={() => setFormData(prev => ({ ...prev, title: example }))}
+              className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-500 hover:border-primary hover:text-primary"
+            >
+              {example}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Image */}
@@ -174,7 +189,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
         <RichTextEditor
           value={formData.content}
           onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
-          placeholder="이벤트/소식 내용을 입력하세요."
+          placeholder="- 행사 개요&#10;- 참가 업체/분야&#10;- 필요한 인력 또는 연결될 채용 수요&#10;- 신청 방법과 유의사항"
           minHeight={300}
           imageBucket="event-images"
         />
@@ -182,7 +197,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
       {/* Event details */}
       <div className="bg-gray-50 p-4 space-y-4">
-        <h3 className="text-sm font-semibold text-gray-800">이벤트 정보 (선택)</h3>
+        <h3 className="text-sm font-semibold text-gray-800">행사 일정 정보</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1.5">시작일</label>
@@ -207,17 +222,17 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
             type="text"
             value={formData.location}
             onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-            placeholder="예: 서울 코엑스 A홀"
+            placeholder="예: 서울 코엑스 3층 컨퍼런스룸, SETEC 2전시장"
             className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-primary"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">외부 링크</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">외부 신청/상세 링크</label>
           <input
             type="url"
             value={formData.link_url}
             onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
-            placeholder="https://"
+            placeholder="https:// 행사 상세 또는 사전 신청 링크"
             className="w-full px-3 py-2 border border-gray-300 text-sm focus:outline-none focus:border-primary"
           />
         </div>
@@ -232,7 +247,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
           className="w-4 h-4 accent-primary"
         />
         <span className="text-sm font-medium text-gray-800">상단 고정</span>
-        <span className="text-xs text-gray-400">(목록 최상단에 노출됩니다)</span>
+        <span className="text-xs text-gray-400">(행사·박람회 목록 최상단에 노출됩니다)</span>
       </label>
 
       {/* Actions */}

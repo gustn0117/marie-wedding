@@ -10,7 +10,7 @@ import {
   getEmploymentTypeLabel,
   getRegionLabel,
 } from '@/shared/utils/format';
-import type { Job, Post, Profile } from '@/types/database';
+import type { Event, Job, Post, Profile } from '@/types/database';
 import EmptyState from '@/shared/components/EmptyState';
 import BusinessTypeIcon, { CheckIcon, HandRaisedIcon, SparklesIcon } from '@/shared/components/icons/BusinessTypeIcon';
 
@@ -18,6 +18,7 @@ interface HomeContentProps {
   posts: Post[];
   jobs: Job[];
   profiles: Profile[];
+  events: Event[];
   counts: {
     jobs: number;
     profiles: number;
@@ -42,7 +43,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, profiles }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, profiles, events }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -54,6 +55,7 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
 
   const featuredJobs = useMemo(() => jobs.slice(0, 8), [jobs]);
   const featuredProfiles = useMemo(() => profiles.slice(0, 8), [profiles]);
+  const featuredEvents = useMemo(() => events.slice(0, 4), [events]);
   const featuredPosts = useMemo(() => posts.slice(0, 6), [posts]);
 
   return (
@@ -90,6 +92,7 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
                 <Link href={`${ROUTES.JOBS}?businessType=venue`} className="hero-chip">예식장</Link>
                 <Link href={`${ROUTES.JOBS}?businessType=studio`} className="hero-chip">스튜디오</Link>
                 <Link href={`${ROUTES.JOBS}?businessType=makeup`} className="hero-chip">메이크업</Link>
+                <Link href={ROUTES.EVENTS} className="hero-chip">웨딩박람회 일정</Link>
               </div>
             </div>
 
@@ -154,6 +157,19 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
         </section>
       )}
 
+      {featuredEvents.length > 0 && (
+        <section className="bg-gray-50 py-12">
+          <div className="max-w-[1280px] mx-auto px-5">
+            <SectionHeader title="다가오는 행사·박람회" subtitle="웨딩박람회와 채용행사를 보고 관련 공고로 이어가세요" href={ROUTES.EVENTS} />
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {featuredEvents.map((event) => (
+                <HomeEventCard key={event.id} event={event} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 커뮤니티 인기글 */}
       <section className="bg-gray-50 py-12">
         <div className="max-w-[1280px] mx-auto px-5">
@@ -178,6 +194,25 @@ export default function HomeContent({ posts, jobs, profiles }: HomeContentProps)
         </div>
       </section>
     </div>
+  );
+}
+
+function HomeEventCard({ event }: { event: Event }) {
+  const date = event.start_date
+    ? `${event.start_date.slice(5, 10).replace('-', '/')}${event.end_date ? ` - ${event.end_date.slice(5, 10).replace('-', '/')}` : ''}`
+    : '상시';
+  const label = event.type === 'event' ? '웨딩박람회' : event.type === 'news' ? '채용행사' : '업계소식';
+
+  return (
+    <Link href={ROUTES.EVENTS_DETAIL(event.id)} className="rounded-2xl border border-gray-200 bg-white p-4 transition-colors hover:border-primary">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="badge-primary">{label}</span>
+        <span className="text-xs font-bold text-gray-400">{date}</span>
+      </div>
+      <p className="line-clamp-2 text-sm font-bold leading-snug text-ink">{event.title}</p>
+      {event.location && <p className="mt-2 truncate text-xs text-gray-500">{event.location}</p>}
+      <p className="mt-4 text-xs font-bold text-primary">관련 공고 보기 →</p>
+    </Link>
   );
 }
 

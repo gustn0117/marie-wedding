@@ -13,7 +13,7 @@ export const metadata = { title: '결제 내역 | Marié' };
 const PRODUCT_LABELS: Record<string, string> = {
   premium_tier: '프리미엄 등급',
   job_promotion: '공고 추천 노출',
-  event_listing: '이벤트 등록',
+  event_listing: '행사·박람회 등록',
   directory_boost: '디렉토리 부스트',
 };
 

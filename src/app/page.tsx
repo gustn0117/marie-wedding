@@ -1,5 +1,5 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
-import type { Job, Post, Profile } from '@/types/database';
+import type { Event, Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
@@ -16,7 +16,7 @@ async function getHomeData() {
   const supabase = createServerQueryClient();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [postsRes, jobsRes, profilesRes, verifiedCountRes, recentJobsCountRes] = await Promise.all([
+  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes] = await Promise.all([
     supabase
       .from('posts')
       .select('*, author:profiles!author_id(*), comments:comments(count)', { count: 'exact' })
@@ -38,6 +38,14 @@ async function getHomeData() {
       .eq('is_directory_listed', true)
       .order('company_name', { ascending: true })
       .range(0, 5),
+    supabase
+      .from('events')
+      .select('*', { count: 'exact' })
+      .is('deleted_at', null)
+      .order('is_pinned', { ascending: false })
+      .order('start_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .range(0, 3),
     supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
@@ -62,6 +70,7 @@ async function getHomeData() {
     posts,
     jobs: (jobsRes.data ?? []) as Job[],
     profiles: (profilesRes.data ?? []) as Profile[],
+    events: (eventsRes.data ?? []) as Event[],
     counts: {
       jobs: jobsRes.count ?? 0,
       profiles: profilesRes.count ?? 0,
@@ -73,7 +82,7 @@ async function getHomeData() {
 }
 
 export default async function HomePage() {
-  const { posts, jobs, profiles, counts } = await getHomeData();
+  const { posts, jobs, profiles, events, counts } = await getHomeData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -83,6 +92,7 @@ export default async function HomePage() {
         posts={posts}
         jobs={jobs}
         profiles={profiles}
+        events={events}
         counts={counts}
       />
       <Footer />
