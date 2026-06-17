@@ -193,7 +193,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   if (isLoading || loading) {
     return (
-      <section className="bg-white border border-gray-200 rounded p-6 md:p-8 animate-pulse">
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8 animate-pulse">
         <div className="h-5 w-32 bg-gray-100 rounded mb-4" />
         <div className="h-24 bg-gray-100 rounded" />
       </section>
@@ -202,7 +202,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   if (!profile) {
     return (
-      <section className="bg-white border border-gray-200 rounded p-6 md:p-8 text-center">
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8 text-center">
         <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하려면 로그인이 필요합니다</h2>
         <p className="text-sm text-gray-500 mb-4">마리에 프로필로 로그인한 뒤 공고 작성자에게 바로 연락할 수 있습니다.</p>
         <Link href={ROUTES.LOGIN} className="btn-primary inline-flex">로그인하기</Link>
@@ -212,7 +212,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   if (isAuthor) {
     return (
-      <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-4 mb-4">
           <div>
             <h2 className="text-lg font-bold text-gray-900">지원자 파이프라인</h2>
@@ -311,7 +311,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
   if (application) {
     const canCancel = application.status === 'pending' || application.status === 'reviewing';
     return (
-      <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8">
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-bold text-gray-900">{actionLabel} 접수 완료</h2>
           {canCancel && (
@@ -341,7 +341,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
   }
 
   return (
-    <section className="bg-white border border-gray-200 rounded p-6 md:p-8">
+    <section className="bg-white border-y border-gray-200 p-6 md:p-8">
       <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하기</h2>
       <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 경력, 가능 일정, 연락처를 함께 남겨주세요.</p>
       <div className="mb-4 rounded border border-primary/20 bg-primary-50 p-4">

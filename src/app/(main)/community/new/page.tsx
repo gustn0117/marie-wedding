@@ -43,7 +43,7 @@ export default async function NewPostPage() {
         <h1 className="text-2xl font-bold text-gray-900">새 글 작성</h1>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded p-5">
+      <div className="bg-white border-y border-gray-200 p-5">
         <PostForm profileId={profile.id} />
       </div>
     </div>

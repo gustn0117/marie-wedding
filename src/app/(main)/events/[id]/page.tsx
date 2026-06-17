@@ -83,7 +83,7 @@ export default async function EventDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Article */}
-      <article className="bg-white border border-gray-200 rounded overflow-hidden">
+      <article className="bg-white border-y border-gray-200 overflow-hidden">
         {imageUrl && (
           <img src={imageUrl} alt={event.title} className="w-full max-h-[480px] object-cover" />
         )}

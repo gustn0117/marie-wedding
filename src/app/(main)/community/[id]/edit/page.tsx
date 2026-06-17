@@ -63,7 +63,7 @@ export default async function EditPostPage({ params }: PageProps) {
         <h1 className="text-2xl font-bold text-gray-900">글 수정</h1>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded p-5">
+      <div className="bg-white border-y border-gray-200 p-5">
         <PostForm
           initialData={{ title: post.title, content: post.content, category: post.category }}
           postId={params.id}

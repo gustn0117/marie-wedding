@@ -107,7 +107,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
   });
 
   return (
-    <section className="bg-white border border-gray-200 rounded overflow-hidden">
+    <section className="bg-white border-y border-gray-200 overflow-hidden">
       <header className="px-6 md:px-8 py-4 border-b border-gray-100 flex items-center gap-2">
         <h3 className="text-base font-bold text-gray-900">댓글</h3>
         <span className="text-sm font-bold text-primary">{comments.length}</span>

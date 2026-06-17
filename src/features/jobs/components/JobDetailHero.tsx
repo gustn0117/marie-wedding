@@ -23,7 +23,7 @@ export default function JobDetailHero({ job }: Props) {
   const isVerified = job.author?.verification_status === 'verified';
 
   return (
-    <section className={`bg-white border border-gray-200 rounded-xl overflow-hidden ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
+    <section className={`bg-white border-y border-gray-200 overflow-hidden ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
       {job.image && (
         <div className="border-b border-gray-200 bg-gray-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}

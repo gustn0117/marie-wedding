@@ -113,7 +113,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Hero Card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+      <div className="bg-white border-y border-gray-200 p-6 md:p-8">
         {/* Avatar + Name + Edit */}
         <div className="flex items-start gap-5 mb-5">
           {/* Logo */}
@@ -205,7 +205,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       </div>
 
       {/* Trust Card */}
-      <section className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">신뢰 지표</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <TrustMetricBar
@@ -236,7 +236,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Bio */}
       {profile.bio && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">소개</h2>
           <RichTextView html={profile.bio} className="text-[15px] text-gray-700 leading-relaxed" />
         </div>
@@ -244,7 +244,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Reviews */}
       {reviews.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             받은 리뷰 <span className="text-sm text-gray-400 font-normal ml-1">{reviews.length}</span>
           </h2>
@@ -261,7 +261,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
       {/* Portfolios */}
       {portfolios.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
             포트폴리오 <span className="text-sm text-gray-400 font-normal ml-1">{portfolios.length}</span>
           </h2>
@@ -277,7 +277,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           기존 데이터 보존을 위해 표시는 유지하되 key는 이미지 경로로 안정화 (이전: key={i}).
           신규 등록은 portfolios로 유도. */}
       {profile.gallery && profile.gallery.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
           <h2 className="text-lg font-bold text-ink mb-4 pb-3 border-b border-gray-200">
             갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
           </h2>
@@ -302,7 +302,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       )}
 
       {/* Jobs */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 md:p-8">
+      <div className="bg-white border-y border-gray-200 p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
           채용 공고 <span className="text-sm text-gray-400 font-normal ml-1">{jobs.length}</span>
         </h2>

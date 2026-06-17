@@ -78,7 +78,7 @@ export default async function PostDetailPage({ params }: PageProps) {
       </nav>
 
       {/* Post Card */}
-      <article className="bg-white border border-gray-200 rounded overflow-hidden">
+      <article className="bg-white border-y border-gray-200 overflow-hidden">
         {/* Header */}
         <header className="p-6 md:p-8 border-b border-gray-100">
           <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold mb-3">
