@@ -191,16 +191,16 @@ function BoxWidget({ title, href, children }: { title: string; href: string; chi
 
 function BoxEmpty({ message }: { message: string }) {
   return (
-    <div className="rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 p-8 text-center">
-      <p className="text-[13px] text-gray-500">{message}</p>
+    <div className="py-8 text-center">
+      <p className="text-[13px] text-gray-400">{message}</p>
     </div>
   );
 }
 
-/* === 게시판 리스트 컨테이너 — 네이버 카페 스타일 (헤더 + divide) === */
+/* === 게시판 리스트 컨테이너 — 미니멀 (선/박스 없음) === */
 function BoardList({ children, header }: { children: ReactNode; header?: string[] }) {
   return (
-    <div className="rounded-xl bg-white border border-gray-200 overflow-hidden">
+    <div>
       {header && (
         <div className="board-head">
           <span className="flex-1">{header[0] ?? '제목'}</span>
@@ -208,7 +208,7 @@ function BoardList({ children, header }: { children: ReactNode; header?: string[
           {header[2] && <span className="w-16 text-right">{header[2]}</span>}
         </div>
       )}
-      <div className="divide-y divide-gray-100">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }
