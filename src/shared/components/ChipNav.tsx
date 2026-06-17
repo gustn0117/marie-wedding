@@ -20,7 +20,7 @@ export default function ChipNav({ items, trailing }: { items: ChipItem[]; traili
       className="mb-5 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 overflow-x-auto overflow-y-hidden border-b border-gray-200 scrollbar-none"
       style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
     >
-      <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+      <div className="flex items-center gap-1 whitespace-nowrap lg:justify-center">
         {items.map((item) => (
           <Link
             key={item.label}
