@@ -62,6 +62,30 @@ export const authService = {
     return data;
   },
 
+  async signInWithGoogle() {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  async signInWithApple() {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
+
   async getSession() {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();

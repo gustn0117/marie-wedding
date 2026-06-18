@@ -192,7 +192,7 @@ export default async function MyPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
             </svg>
-            <span className="text-gray-500">{profile.region.split(',').map(r => getRegionLabel(r.trim())).join(', ')}</span>
+            <span className="text-gray-500">{(profile.region ?? '').split(',').map(r => getRegionLabel(r.trim())).filter(Boolean).join(', ') || '지역 미설정'}</span>
           </div>
           {profile.phone && (
             <div className="flex items-center gap-3 text-sm">

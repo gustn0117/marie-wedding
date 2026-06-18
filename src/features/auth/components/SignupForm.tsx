@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
+import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
 import type { SignupFormData } from '@/features/auth/types';
 
 const STEPS = {
@@ -96,6 +97,21 @@ export default function SignupForm() {
           </Link>
           <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼 회원가입</p>
         </div>
+
+        {/* Social Signup (Step 0에서만 노출) */}
+        {step === STEPS.SELECT_TYPE && (
+          <>
+            <SocialLoginButtons mode="signup" onError={setError} />
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-surface px-3 text-text-muted">또는 이메일로 가입</span>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">

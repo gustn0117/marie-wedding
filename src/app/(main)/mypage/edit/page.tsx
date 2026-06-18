@@ -7,6 +7,7 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
 import { compressImage } from '@/shared/utils/image';
 
 export default function EditProfilePage() {
@@ -336,6 +337,8 @@ export default function EditProfilePage() {
           </button>
         </div>
       </form>
+
+      <ConnectedAccountsSection />
     </div>
   );
 }

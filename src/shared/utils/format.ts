@@ -111,7 +111,7 @@ function findRegionLabel(value: string): string {
   return value;
 }
 
-export function getRegionLabel(type: string): string {
+export function getRegionLabel(type: string | null | undefined): string {
   if (!type) return '';
   if (type.includes(',')) {
     return type.split(',').map(r => findRegionLabel(r.trim())).join(', ');

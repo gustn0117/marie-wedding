@@ -35,8 +35,19 @@ export async function updateSession(request: NextRequest) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
 
-    const isAuthPage = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup');
-    const isAdminPath = request.nextUrl.pathname.startsWith('/admin');
+    const path = request.nextUrl.pathname;
+    const isAuthPage = path.startsWith('/login') || path.startsWith('/signup');
+    const isAdminPath = path.startsWith('/admin');
+    const isOnboardingPath = path === '/onboarding' || path.startsWith('/onboarding/');
+    // Public/bypass paths — never trigger onboarding redirect from these
+    const isPublicBypass =
+      path === '/' ||
+      path.startsWith('/auth/') ||
+      path.startsWith('/api/') ||
+      path.startsWith('/login') ||
+      path.startsWith('/signup') ||
+      path.startsWith('/banned') ||
+      isOnboardingPath;
 
     // 로그인한 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트
     if (user && isAuthPage) {
@@ -63,7 +74,7 @@ export async function updateSession(request: NextRequest) {
         );
         const { data: profile } = await serviceClient
           .from('profiles')
-          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason')
+          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason,onboarded_at,signup_provider')
           .eq('user_id', user.id)
           .single();
 
@@ -80,6 +91,15 @@ export async function updateSession(request: NextRequest) {
         if (isAdminPath && profile?.role !== 'admin') {
           const url = request.nextUrl.clone();
           url.pathname = '/';
+          return NextResponse.redirect(url);
+        }
+
+        // Onboarding 가드 — 로그인 + profile 존재하나 onboarded_at IS NULL인 경우 /onboarding으로 강제
+        // public/bypass 경로는 통과. 무한 루프 방지: /onboarding 자체는 isPublicBypass에 포함됨.
+        if (profile && !profile.onboarded_at && !isPublicBypass) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/onboarding';
+          url.searchParams.set('next', path);
           return NextResponse.redirect(url);
         }
 

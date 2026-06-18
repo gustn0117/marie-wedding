@@ -5,14 +5,19 @@ export type ReviewTagCategory = 'positive' | 'attention';
 export type ReviewDirection = 'hiring_to_applicant' | 'applicant_to_hiring';
 export type JobStatus = 'open' | 'urgent' | 'closed' | 'filled' | 'hidden';
 
+export type SignupProvider = 'email' | 'kakao' | 'google' | 'apple' | 'naver';
+
 export interface Profile {
   id: string;
   user_id: string;
-  account_type: AccountType;
+  account_type: AccountType | null;
   business_type: BusinessType | null;
   company_name: string | null;
   contact_name: string;
-  region: Region;
+  region: Region | null;
+  signup_provider: SignupProvider | null;
+  onboarded_at: string | null;
+  naver_sub: string | null;
   bio: string | null;
   phone: string | null;
   website: string | null;

@@ -39,7 +39,13 @@ docker-compose up -d --build  # Docker deployment
 
 ### Middleware
 
-Root `middleware.ts` delegates to `src/lib/supabase/middleware.ts`. Unauthenticated users are redirected to `/login`. Public paths: `/`, `/admin/*`, `/auth/callback`.
+Root `middleware.ts` delegates to `src/lib/supabase/middleware.ts`. Unauthenticated users are redirected to `/login`. Public paths: `/`, `/admin/*`, `/auth/*`, `/onboarding`, `/api/*`. Authenticated users with `profiles.onboarded_at IS NULL` are forced to `/onboarding`.
+
+### Social Login
+
+4 providers supported: Kakao, Google, Apple (Supabase native), Naver (custom OAuth at `/auth/naver/*`). Setup guide: [docs/auth-social-login.md](docs/auth-social-login.md).
+- New OAuth user flow: callback creates `profiles` row with `account_type=null, onboarded_at=null` → middleware forces `/onboarding` → 3-field form → `onboarded_at=NOW()` → redirect to original `next`.
+- Naver state cookie: `__Host-naver_oauth_state` (HttpOnly+Secure+SameSite=Lax, 10min, single-use).
 
 ### Feature Modules (`src/features/`)
 
