@@ -90,9 +90,19 @@ export function useAuth() {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
+    // 클라이언트 측 정리는 즉시
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    await supabaseRef.current.auth.signOut();
     setState({ user: null, profile: null, isLoading: false });
+
+    // Supabase signOut은 best-effort + 3초 timeout — 네트워크 hang으로 인한 무응답 방지
+    try {
+      await Promise.race([
+        supabaseRef.current.auth.signOut(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+      ]);
+    } catch {
+      // 무시
+    }
   }, []);
 
   return {

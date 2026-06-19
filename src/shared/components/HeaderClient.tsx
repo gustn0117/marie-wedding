@@ -54,11 +54,22 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   };
 
   const signOut = useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    // 클라이언트 측 정리는 즉시 (server signOut이 hang해도 UI는 무조건 반응)
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setProfile(null);
     setProfileMenuOpen(false);
+
+    // Supabase signOut은 best-effort + 3초 timeout
+    try {
+      const supabase = createClient();
+      await Promise.race([
+        supabase.auth.signOut(),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+      ]);
+    } catch {
+      // 무시 — 쿠키와 로컬 state는 이미 정리됨
+    }
+
     window.location.href = '/';
   }, []);
 
