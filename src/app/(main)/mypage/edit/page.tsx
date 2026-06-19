@@ -106,6 +106,15 @@ export default function EditProfilePage() {
       setError('지역을 1개 이상 선택해주세요.');
       return;
     }
+    const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
+    if (phoneDigits.length < 9) {
+      setError('연락처를 정확히 입력해주세요. (010-XXXX-XXXX)');
+      return;
+    }
+    if (formData.bio.trim().length < 10) {
+      setError('소개를 10자 이상 입력해주세요.');
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -324,15 +333,19 @@ export default function EditProfilePage() {
 
         {/* Bio */}
         <div className="space-y-1.5">
-          <label htmlFor="bio" className="block text-sm font-medium text-gray-800">소개</label>
-          <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} rows={4} className="input-field w-full resize-y" placeholder="간단한 소개를 입력해주세요" />
+          <label htmlFor="bio" className="block text-sm font-medium text-gray-800">
+            소개 <span className="text-state-urgent">*</span>
+          </label>
+          <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} rows={4} className="input-field w-full resize-y" placeholder="간단한 소개를 입력해주세요" required aria-required="true" />
         </div>
 
         {/* Phone & Website */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-800">연락처</label>
-            <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="input-field w-full" placeholder="010-0000-0000" />
+            <label htmlFor="phone" className="block text-sm font-medium text-gray-800">
+              연락처 <span className="text-state-urgent">*</span>
+            </label>
+            <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="input-field w-full" placeholder="010-0000-0000" required aria-required="true" />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="website" className="block text-sm font-medium text-gray-800">웹사이트</label>
