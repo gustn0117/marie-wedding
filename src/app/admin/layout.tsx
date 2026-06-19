@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
-import { useAuth } from '@/shared/hooks/useAuth';
 import Logo from '@/shared/components/Logo';
 
 const NAV_ITEMS = [
@@ -23,21 +22,12 @@ const NAV_ITEMS = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isLoading } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // 인증/권한 가드는 middleware가 담당 (src/lib/supabase/middleware.ts):
   //   - 비로그인 → /login (redirect param 포함)
   //   - role !== 'admin' → 홈으로
-  // 여기까지 도달하면 항상 admin 권한이 보장됨.
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-      </div>
-    );
-  }
+  // 여기까지 도달하면 항상 admin 권한이 보장됨. useAuth로 한 번 더 로딩 차단하지 않는다 — 매 페이지 진입마다 Supabase getSession을 기다려서 spinner 보이는 게 가장 큰 체감 지연이었다.
 
   const isActive = (href: string) => pathname === href;
 

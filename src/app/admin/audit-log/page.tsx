@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import AuditLogDiff from '@/features/admin/components/AuditLogDiff';
-import { useAuth } from '@/shared/hooks/useAuth';
 
 interface AuditRow {
   id: number;
@@ -50,7 +49,6 @@ const ACTION_OPTIONS = [
 const PAGE_SIZE = 30;
 
 export default function AdminAuditLogPage() {
-  useAuth();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

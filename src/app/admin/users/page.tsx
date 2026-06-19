@@ -5,12 +5,11 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
-import { useAuth } from '@/shared/hooks/useAuth';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import UserDetailModal from '@/features/admin/components/UserDetailModal';
 
 export default function AdminUsersPage() {
-  useAuth(); // session auth (RPC가 서버 측 권한 검증)
+  // 권한은 middleware가 보장. RPC는 서버 측에서 다시 검증.
   const [users, setUsers] = useState<Profile[]>([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);

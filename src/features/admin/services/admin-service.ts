@@ -26,6 +26,21 @@ export const adminService = {
   getRecentUsers: (limit = 5) => adminFetch('getRecentUsers', { limit }) as Promise<Profile[]>,
   getRecentJobs: (limit = 5) => adminFetch('getRecentJobs', { limit }) as Promise<Job[]>,
 
+  // 대시보드 한 방 호출 — stats + funnel + recent users + recent jobs를 단일 응답으로
+  getDashboard: () =>
+    adminFetch('getDashboard', {}) as Promise<{
+      stats: {
+        users: number; jobs: number; posts: number; comments: number;
+        reports: number; recentUsers: number; recentJobs: number;
+      };
+      funnel: {
+        totalApplications: number; acceptedApplications: number;
+        completedApplications: number; reviewsWritten: number;
+      };
+      recentUsers: Profile[];
+      recentJobs: Job[];
+    }>,
+
   // ── Users ──
   getUsers: (page = 1, search?: string, showDeleted = false) =>
     adminFetch('getUsers', { page, search, showDeleted }) as Promise<{ data: Profile[]; count: number }>,

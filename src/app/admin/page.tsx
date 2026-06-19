@@ -6,7 +6,6 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
-import { createClient } from '@/lib/supabase/client';
 
 interface Stats {
   users: number;
@@ -33,39 +32,23 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const [s, u, j] = await Promise.all([
-          adminService.getStats(),
-          adminService.getRecentUsers(5),
-          adminService.getRecentJobs(5),
-        ]);
-        setStats(s);
-        setRecentUsers(u);
-        setRecentJobs(j);
-
-        // 퍼널 — 클라이언트 직접 query (admin RLS)
-        const sb = createClient();
-        const [appAll, appAccepted, deals, reviews] = await Promise.all([
-          sb.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-          sb.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'accepted'),
-          sb.from('applications').select('id', { count: 'exact', head: true })
-            .is('deleted_at', null).not('hiring_completed_at', 'is', null).not('applicant_completed_at', 'is', null),
-          sb.from('reviews').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-        ]);
-        setFunnel({
-          totalApplications: appAll.count ?? 0,
-          acceptedApplications: appAccepted.count ?? 0,
-          completedApplications: deals.count ?? 0,
-          reviewsWritten: reviews.count ?? 0,
-        });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    let cancelled = false;
+    adminService
+      .getDashboard()
+      .then((d) => {
+        if (cancelled) return;
+        setStats(d.stats);
+        setFunnel(d.funnel);
+        setRecentUsers(d.recentUsers);
+        setRecentJobs(d.recentJobs);
+      })
+      .catch((err) => console.error(err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-    load();
   }, []);
 
   if (loading) {

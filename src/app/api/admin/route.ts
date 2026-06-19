@@ -46,6 +46,53 @@ export async function POST(request: NextRequest) {
         });
       }
 
+      // ── Dashboard 종합 (stats + funnel + recent users + recent jobs) ──
+      case 'getDashboard': {
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+        const [
+          users, jobs, posts, comments, reports, recentUsersCount, recentJobsCount,
+          appAll, appAccepted, deals, reviews,
+          recentUsers, recentJobs,
+        ] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('jobs').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('posts').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('comments').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'open'),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).is('deleted_at', null).gte('created_at', weekAgo),
+          supabase.from('jobs').select('*', { count: 'exact', head: true }).is('deleted_at', null).gte('created_at', weekAgo),
+          supabase.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('applications').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'accepted'),
+          supabase.from('applications').select('id', { count: 'exact', head: true })
+            .is('deleted_at', null).not('hiring_completed_at', 'is', null).not('applicant_completed_at', 'is', null),
+          supabase.from('reviews').select('id', { count: 'exact', head: true }).is('deleted_at', null),
+          supabase.from('profiles').select('*').is('deleted_at', null).order('created_at', { ascending: false }).limit(5),
+          supabase.from('jobs').select('*, author:profiles!jobs_author_id_fkey(id,company_name,contact_name,business_type,region)').is('deleted_at', null).order('created_at', { ascending: false }).limit(5),
+        ]);
+
+        return NextResponse.json({
+          stats: {
+            users: users.count ?? 0,
+            jobs: jobs.count ?? 0,
+            posts: posts.count ?? 0,
+            comments: comments.count ?? 0,
+            reports: reports.count ?? 0,
+            recentUsers: recentUsersCount.count ?? 0,
+            recentJobs: recentJobsCount.count ?? 0,
+          },
+          funnel: {
+            totalApplications: appAll.count ?? 0,
+            acceptedApplications: appAccepted.count ?? 0,
+            completedApplications: deals.count ?? 0,
+            reviewsWritten: reviews.count ?? 0,
+          },
+          recentUsers: recentUsers.data ?? [],
+          recentJobs: recentJobs.data ?? [],
+        });
+      }
+
       // ── Users ──
       case 'getUsers': {
         const { page = 1, search, showDeleted = false } = params;
