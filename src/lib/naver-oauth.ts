@@ -6,7 +6,7 @@ import crypto from 'crypto';
  * Supabase는 2026년 6월 현재 네이버 provider를 native 지원하지 않으므로 자체 라우트로 처리한다.
  * 보안 핵심:
  *   - state는 32바이트 random + HMAC. cookie에 raw 저장, query는 signed 형식.
- *   - cookie는 __Host- prefix + HttpOnly + Secure + SameSite=Lax + maxAge 600s + path 한정 + 1회용.
+ *   - cookie는 __Host- prefix + HttpOnly + Secure + SameSite=Lax + maxAge 600s + 1회용. (__Host-는 Path=/ 필수)
  *   - 모든 호출은 node runtime (Edge 미지원).
  *   - client_secret은 서버에서만, 절대 NEXT_PUBLIC_ 금지.
  */
@@ -16,7 +16,9 @@ const NAVER_TOKEN_URL = 'https://nid.naver.com/oauth2.0/token';
 const NAVER_USERINFO_URL = 'https://openapi.naver.com/v1/nid/me';
 
 export const NAVER_STATE_COOKIE = '__Host-naver_oauth_state';
-export const NAVER_STATE_COOKIE_PATH = '/auth/naver';
+// __Host- 프리픽스 쿠키는 Secure + Domain 없음 + Path=/ 가 강제다.
+// Path를 /auth/naver로 한정하면 브라우저가 쿠키를 통째로 거부 → 콜백에서 state 검증 실패.
+export const NAVER_STATE_COOKIE_PATH = '/';
 export const NAVER_STATE_COOKIE_MAX_AGE = 600;
 
 export interface NaverUserInfo {
