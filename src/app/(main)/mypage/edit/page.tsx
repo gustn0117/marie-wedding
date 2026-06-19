@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
 import { compressImage } from '@/shared/utils/image';
+import { toast } from '@/shared/components/Toast';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -98,21 +99,33 @@ export default function EditProfilePage() {
     e.preventDefault();
     if (!profile) return;
 
+    const fail = (msg: string, focusId?: string) => {
+      setError(msg);
+      toast(msg, 'error');
+      if (focusId) {
+        const el = document.getElementById(focusId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (el as HTMLInputElement | HTMLTextAreaElement).focus?.({ preventScroll: true });
+        }
+      }
+    };
+
     if (!formData.contact_name.trim()) {
-      setError('이름을 입력해주세요.');
+      fail('이름을 입력해주세요.', 'contact_name');
       return;
     }
     if (!formData.region || formData.region.split(',').filter(Boolean).length === 0) {
-      setError('지역을 1개 이상 선택해주세요.');
+      fail('지역을 1개 이상 선택해주세요.');
       return;
     }
     const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
     if (phoneDigits.length < 9) {
-      setError('연락처를 정확히 입력해주세요. (010-XXXX-XXXX)');
+      fail('연락처를 정확히 입력해주세요. (010-XXXX-XXXX)', 'phone');
       return;
     }
     if (formData.bio.trim().length < 10) {
-      setError('소개를 10자 이상 입력해주세요.');
+      fail('소개를 10자 이상 입력해주세요.', 'bio');
       return;
     }
 
@@ -154,7 +167,9 @@ export default function EditProfilePage() {
       window.location.href = next; // 즉시 이동 (setTimeout 1초 대기 제거)
     } catch (err) {
       console.error('[mypage/edit] save failed:', err);
-      setError(err instanceof Error ? err.message : '프로필 수정에 실패했습니다.');
+      const msg = err instanceof Error ? err.message : '프로필 수정에 실패했습니다.';
+      setError(msg);
+      toast(msg, 'error');
       setSubmitting(false);
     }
   };
