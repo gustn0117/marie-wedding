@@ -5,6 +5,7 @@ import { ROUTES } from '@/shared/constants';
 import { createServiceClient } from '@/lib/supabase/service';
 import JobNewSubmit from '@/features/jobs/components/JobNewSubmit';
 import { checkBusinessProfileCompleteness, REQUIRED_BUSINESS_FIELDS } from '@/features/jobs/lib/business-profile-completeness';
+import { getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -50,102 +51,99 @@ export default async function NewJobPage() {
   const check = checkBusinessProfileCompleteness(profile);
 
   if (!check.isComplete) {
+    const currentValues: Record<string, string | null> = {
+      company_name: profile.company_name || null,
+      business_type: profile.business_type ? getBusinessTypeLabels(profile.business_type).slice(0, 2).join(', ') : null,
+      region: profile.region ? getRegionLabel(profile.region) : null,
+      phone: profile.phone || null,
+      bio: profile.bio ? `${stripHtml(profile.bio).length}자 작성됨` : null,
+    };
+
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="saramin-section p-5 flex items-center gap-3">
-          <Link href={ROUTES.JOBS} className="p-2 rounded hover:bg-primary-50 transition-colors">
-            <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </Link>
-          <div>
-            <p className="text-sm font-bold text-primary">Recruit Posting</p>
-            <h1 className="text-2xl font-bold text-gray-900">공고 등록</h1>
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          {/* 단계 indicator */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+              <span className="w-5 h-5 rounded-full bg-ink text-white flex items-center justify-center text-[10px] font-bold">1</span>
+              프로필 준비
+            </span>
+            <span className="w-6 h-px bg-gray-300" />
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-400">
+              <span className="w-5 h-5 rounded-full border border-gray-300 flex items-center justify-center text-[10px] font-bold">2</span>
+              공고 등록
+            </span>
           </div>
-        </div>
 
-        <div className="bg-white border border-gray-200 rounded p-6 md:p-8 space-y-5">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-amber-700 mb-1">업체 프로필 작성 필요</p>
-            <h2 className="text-lg font-bold text-ink">먼저 업체 프로필을 완성해주세요</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              지원자가 우리 회사 정보를 보고 지원합니다. 핵심 정보를 채워야 공고를 게시할 수 있어요.
+          {/* 본문 */}
+          <header className="text-center mb-8">
+            <h1 className="text-[22px] sm:text-2xl font-bold text-ink leading-snug">
+              먼저 업체 프로필을<br className="sm:hidden" /> 완성해주세요
+            </h1>
+            <p className="mt-2 text-[13px] text-gray-500 leading-relaxed">
+              지원자는 회사 정보를 보고 지원을 결정해요.<br />
+              핵심 5가지만 채우면 바로 공고를 등록할 수 있어요.
             </p>
-          </div>
+          </header>
 
-          <div className="rounded border border-gray-200 overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-              <span className="text-xs font-bold text-gray-700">완성도</span>
-              <span className="text-xs font-bold text-gray-700">{check.filled} / {check.total} 항목</span>
-            </div>
-            <div className="h-2 bg-gray-100">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${(check.filled / check.total) * 100}%` }}
-                aria-hidden
-              />
-            </div>
-            <ul className="divide-y divide-gray-100">
-              {REQUIRED_BUSINESS_FIELDS.map((field) => {
-                const isMissing = check.missing.some((m) => m.key === field.key);
-                return (
-                  <li
-                    key={field.key}
-                    className={`flex items-start gap-3 px-4 py-3 ${isMissing ? '' : 'bg-emerald-50/40'}`}
+          {/* 체크리스트 — border 없이 행만 */}
+          <ul className="border-t border-gray-100 mb-2">
+            {REQUIRED_BUSINESS_FIELDS.map((field) => {
+              const isMissing = check.missing.some((m) => m.key === field.key);
+              const value = currentValues[field.key];
+              return (
+                <li
+                  key={field.key}
+                  className="flex items-center gap-3 py-3 border-b border-gray-100"
+                >
+                  <span
+                    className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      isMissing ? 'bg-gray-100' : 'bg-ink'
+                    }`}
+                    aria-hidden
                   >
-                    <div
-                      className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                        isMissing ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-700'
-                      }`}
-                      aria-hidden
-                    >
-                      {isMissing ? (
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      ) : (
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold ${isMissing ? 'text-ink' : 'text-emerald-800'}`}>
-                        {field.label}
-                      </p>
-                      <p className="text-[12px] text-gray-500">{field.hint}</p>
-                    </div>
-                    <span
-                      className={`shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                        isMissing ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'
-                      }`}
-                    >
-                      {isMissing ? '미작성' : '완료'}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                    {!isMissing && (
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[13px] font-semibold ${isMissing ? 'text-gray-400' : 'text-ink'}`}>
+                      {field.label}
+                    </p>
+                    <p className={`text-[11.5px] truncate ${isMissing ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {isMissing ? field.hint : value}
+                    </p>
+                  </div>
+                  <span className={`shrink-0 text-[11px] ${isMissing ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {isMissing ? '필요' : '완료'}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
 
-          <div className="flex flex-col sm:flex-row gap-2">
+          {/* 완성도 텍스트 */}
+          <p className="text-center text-[11.5px] text-gray-400 mb-7">
+            {check.filled} / {check.total} 완료 · 약 1~2분 소요
+          </p>
+
+          {/* 액션 */}
+          <div className="space-y-2.5">
             <Link
               href={`${ROUTES.MYPAGE_EDIT}?next=${encodeURIComponent(ROUTES.JOBS_NEW)}`}
-              className="flex-1 h-11 inline-flex items-center justify-center rounded bg-ink text-white text-sm font-bold hover:bg-ink/90 transition-colors"
+              className="block w-full h-12 leading-[3rem] text-center rounded-lg bg-ink text-white text-sm font-bold hover:bg-ink/90 transition-colors"
             >
               프로필 작성하러 가기
             </Link>
             <Link
               href={ROUTES.JOBS}
-              className="h-11 inline-flex items-center justify-center rounded border border-gray-300 text-sm font-bold text-gray-700 hover:border-gray-400 transition-colors px-5"
+              className="block w-full text-center text-[12.5px] text-gray-500 hover:text-ink py-2 transition-colors"
             >
               나중에 하기
             </Link>
           </div>
-
-          <p className="text-[11px] text-gray-400">
-            완성도 정보는 등록·검색 신뢰도 향상을 위해 사용되고, 지원자에게는 회사 소개 페이지에 노출됩니다.
-          </p>
         </div>
       </div>
     );
@@ -168,4 +166,9 @@ export default async function NewJobPage() {
       <JobNewSubmit profileId={profile.id} />
     </div>
   );
+}
+
+function stripHtml(html: string | null | undefined): string {
+  if (!html) return '';
+  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
