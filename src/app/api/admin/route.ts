@@ -69,6 +69,72 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ data: data ?? [], count: count ?? 0 });
       }
 
+      case 'getUserDetail': {
+        const { id } = params as { id: string };
+        if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+        const { data: profile, error: profileErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        if (profileErr) throw profileErr;
+        if (!profile) return NextResponse.json({ error: 'not found' }, { status: 404 });
+
+        let authUser: {
+          id: string;
+          email: string | null;
+          phone: string | null;
+          created_at: string | null;
+          last_sign_in_at: string | null;
+          email_confirmed_at: string | null;
+          identities: Array<{ provider: string; last_sign_in_at: string | null; identity_data: Record<string, unknown> | null }>;
+          banned_until: string | null;
+        } | null = null;
+        try {
+          const { data: au } = await supabase.auth.admin.getUserById(profile.user_id);
+          if (au?.user) {
+            authUser = {
+              id: au.user.id,
+              email: au.user.email ?? null,
+              phone: au.user.phone ?? null,
+              created_at: au.user.created_at ?? null,
+              last_sign_in_at: au.user.last_sign_in_at ?? null,
+              email_confirmed_at: au.user.email_confirmed_at ?? null,
+              identities: (au.user.identities ?? []).map((i) => ({
+                provider: i.provider,
+                last_sign_in_at: i.last_sign_in_at ?? null,
+                identity_data: (i.identity_data ?? null) as Record<string, unknown> | null,
+              })),
+              banned_until: (au.user as unknown as { banned_until?: string | null }).banned_until ?? null,
+            };
+          }
+        } catch (e) {
+          console.error('getUserById failed', e);
+        }
+
+        // 활동 카운트 — 공고 / 게시글 / 댓글 / 받은 지원 / 보낸 지원
+        const [jobsCount, postsCount, commentsCount, applicationsSent, applicationsReceived] = await Promise.all([
+          supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
+          supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
+          supabase.from('comments').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
+          supabase.from('applications').select('*', { count: 'exact', head: true }).eq('applicant_id', id),
+          supabase.from('applications').select('jobs!inner(author_id)', { count: 'exact', head: true }).eq('jobs.author_id', id),
+        ]);
+
+        return NextResponse.json({
+          profile,
+          auth: authUser,
+          activity: {
+            jobs: jobsCount.count ?? 0,
+            posts: postsCount.count ?? 0,
+            comments: commentsCount.count ?? 0,
+            applications_sent: applicationsSent.count ?? 0,
+            applications_received: applicationsReceived.count ?? 0,
+          },
+        });
+      }
+
       case 'getRecentUsers': {
         const { data, error } = await supabase
           .from('profiles')

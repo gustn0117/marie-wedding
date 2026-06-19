@@ -7,6 +7,7 @@ import type { Profile } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import UserDetailModal from '@/features/admin/components/UserDetailModal';
 
 export default function AdminUsersPage() {
   useAuth(); // session auth (RPC가 서버 측 권한 검증)
@@ -19,6 +20,7 @@ export default function AdminUsersPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [banModal, setBanModal] = useState<{ user: Profile; reason: string } | null>(null);
   const [noteModal, setNoteModal] = useState<{ user: Profile; note: string } | null>(null);
+  const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
   const totalPages = Math.ceil(count / 20);
 
@@ -194,6 +196,8 @@ export default function AdminUsersPage() {
                 <th className="text-left px-5 py-3 font-medium text-gray-500">유형</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">업종</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">지역</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500">휴대폰</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500">가입경로</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">권한</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">가입일</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">상태</th>
@@ -204,20 +208,24 @@ export default function AdminUsersPage() {
               {loading ? (
                 [...Array(5)].map((_, i) => (
                   <tr key={i}>
-                    <td colSpan={9} className="px-5 py-4">
+                    <td colSpan={11} className="px-5 py-4">
                       <div className="h-5 bg-gray-100 rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-5 py-12 text-center text-gray-400">
+                  <td colSpan={11} className="px-5 py-12 text-center text-gray-400">
                     회원이 없습니다.
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id} className={user.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'}>
+                  <tr
+                    key={user.id}
+                    className={`${user.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'} cursor-pointer`}
+                    onClick={() => setDetailUserId(user.id)}
+                  >
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary text-xs font-bold shrink-0">
@@ -231,11 +239,13 @@ export default function AdminUsersPage() {
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
                         user.account_type === 'business' ? 'bg-primary-50 text-primary-600' : 'bg-gray-100 text-gray-600'
                       }`}>
-                        {user.account_type === 'business' ? '업체' : '개인'}
+                        {user.account_type === 'business' ? '업체' : user.account_type === 'individual' ? '개인' : '미선택'}
                       </span>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{user.business_type ? getPrimaryBusinessTypeLabel(user.business_type, 2) : '-'}</td>
                     <td className="px-5 py-3 text-gray-600">{getRegionLabel(user.region)}</td>
+                    <td className="px-5 py-3 text-gray-600">{user.phone || '-'}</td>
+                    <td className="px-5 py-3 text-gray-600 text-xs">{signupProviderLabel(user.signup_provider)}</td>
                     <td className="px-5 py-3">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
                         user.role === 'admin' ? 'bg-state-urgent-bg text-state-urgent' : 'bg-gray-100 text-gray-500'
@@ -253,8 +263,14 @@ export default function AdminUsersPage() {
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-right">
+                    <td className="px-5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setDetailUserId(user.id)}
+                          className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                        >
+                          상세
+                        </button>
                         {user.deleted_at ? (
                           <button
                             onClick={() => handleRestore(user)}
@@ -386,6 +402,8 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      <UserDetailModal userId={detailUserId} onClose={() => setDetailUserId(null)} />
+
       {banModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
           <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
@@ -422,4 +440,13 @@ export default function AdminUsersPage() {
       )}
     </div>
   );
+}
+
+function signupProviderLabel(p: string | null | undefined): string {
+  if (!p) return '-';
+  if (p === 'email') return '이메일';
+  if (p === 'kakao') return '카카오';
+  if (p === 'google') return 'Google';
+  if (p === 'naver') return '네이버';
+  return p;
 }

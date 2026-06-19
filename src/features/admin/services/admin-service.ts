@@ -29,6 +29,27 @@ export const adminService = {
   // ── Users ──
   getUsers: (page = 1, search?: string, showDeleted = false) =>
     adminFetch('getUsers', { page, search, showDeleted }) as Promise<{ data: Profile[]; count: number }>,
+  getUserDetail: (id: string) =>
+    adminFetch('getUserDetail', { id }) as Promise<{
+      profile: Profile;
+      auth: {
+        id: string;
+        email: string | null;
+        phone: string | null;
+        created_at: string | null;
+        last_sign_in_at: string | null;
+        email_confirmed_at: string | null;
+        identities: Array<{ provider: string; last_sign_in_at: string | null; identity_data: Record<string, unknown> | null }>;
+        banned_until: string | null;
+      } | null;
+      activity: {
+        jobs: number;
+        posts: number;
+        comments: number;
+        applications_sent: number;
+        applications_received: number;
+      };
+    }>,
   updateUserRole: (id: string, role: 'user' | 'admin') => adminFetch('updateUserRole', { id, role }),
   softDeleteUser: (id: string) => adminFetch('softDeleteUser', { id }),
   restoreUser: (id: string) => adminFetch('restoreUser', { id }),
