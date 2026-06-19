@@ -22,36 +22,32 @@ export async function GET(request: Request) {
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';
 
-  let signedState: string;
-  let rawState: string;
   try {
-    const pair = generateState();
-    rawState = pair.rawState;
-    signedState = pair.signedState;
+    const { rawState, signedState } = generateState();
+
+    const cookieStore = await cookies();
+    cookieStore.set(NAVER_STATE_COOKIE, rawState, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: NAVER_STATE_COOKIE_PATH,
+      maxAge: NAVER_STATE_COOKIE_MAX_AGE,
+    });
+    // next 경로도 함께 cookie로 — state에 묶지 않고 분리 저장 (state는 순수 검증값으로 유지)
+    cookieStore.set('naver_oauth_next', next, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: NAVER_STATE_COOKIE_PATH,
+      maxAge: NAVER_STATE_COOKIE_MAX_AGE,
+    });
+
+    const authUrl = buildAuthorizationUrl(origin, signedState);
+    return NextResponse.redirect(authUrl);
   } catch {
-    // env 누락 등 — generic 에러
+    // env 누락(NAVER_CLIENT_ID/SECRET/STATE_SECRET) 등 — generic
     return NextResponse.redirect(`${origin}/login?error=naver_config`);
   }
-
-  const cookieStore = await cookies();
-  cookieStore.set(NAVER_STATE_COOKIE, rawState, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    path: NAVER_STATE_COOKIE_PATH,
-    maxAge: NAVER_STATE_COOKIE_MAX_AGE,
-  });
-  // next 경로도 함께 cookie로 — state에 묶지 않고 분리 저장 (state는 순수 검증값으로 유지)
-  cookieStore.set('naver_oauth_next', next, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    path: NAVER_STATE_COOKIE_PATH,
-    maxAge: NAVER_STATE_COOKIE_MAX_AGE,
-  });
-
-  const authUrl = buildAuthorizationUrl(origin, signedState);
-  return NextResponse.redirect(authUrl);
 }
 
 function sanitizeReturnTo(value: string | null): string | null {
