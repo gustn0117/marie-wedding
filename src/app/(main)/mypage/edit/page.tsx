@@ -131,7 +131,12 @@ export default function EditProfilePage() {
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       setSuccess(true);
-      setTimeout(() => { window.location.href = ROUTES.MYPAGE; }, 1000);
+
+      // ?next= 지원 (예: 공고 등록에서 프로필 완성하러 왔을 때) — 동일 origin path만 허용
+      const sp = new URLSearchParams(window.location.search);
+      const rawNext = sp.get('next');
+      const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://') ? rawNext : ROUTES.MYPAGE;
+      setTimeout(() => { window.location.href = next; }, 1000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '프로필 수정에 실패했습니다.');
     } finally {

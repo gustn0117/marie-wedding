@@ -88,9 +88,31 @@ export const jobService = {
 
   /**
    * Create a new job posting.
+   *
+   * INSERT 전 본인 업체 프로필의 핵심 필드(업체명/업종/지역/연락처/소개)가 채워져 있는지 검증한다.
+   * 클라이언트 측 가드는 우회 가능하므로 service 레이어에서 한 번 더 본다.
    */
   async createJob(formData: JobFormData, authorId: string): Promise<Job> {
     const supabase = createClient();
+
+    const { data: profile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('account_type, company_name, business_type, region, phone, bio')
+      .eq('id', authorId)
+      .maybeSingle();
+
+    if (profileErr) throw profileErr;
+    if (!profile) throw new Error('프로필을 찾을 수 없습니다.');
+    if (profile.account_type !== 'business') {
+      throw new Error('공고 등록은 업체 회원만 가능합니다.');
+    }
+
+    const { checkBusinessProfileCompleteness } = await import('@/features/jobs/lib/business-profile-completeness');
+    const check = checkBusinessProfileCompleteness(profile);
+    if (!check.isComplete) {
+      const missingLabels = check.missing.map((m) => m.label).join(', ');
+      throw new Error(`업체 프로필을 먼저 완성해주세요. 부족한 항목: ${missingLabels}`);
+    }
 
     const { data, error } = await supabase
       .from('jobs')
