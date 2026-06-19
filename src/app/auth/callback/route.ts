@@ -14,7 +14,8 @@ export const runtime = 'nodejs';
  * 동일 이메일 충돌은 Supabase가 자체 처리 (exchangeCodeForSession 에러 → /login?error=conflict).
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const code = searchParams.get('code');
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';

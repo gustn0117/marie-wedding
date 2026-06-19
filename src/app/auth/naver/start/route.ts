@@ -18,7 +18,8 @@ export const dynamic = 'force-dynamic';
  * 3. nid.naver.com/oauth2.0/authorize로 redirect (signedState를 ?state=에 포함)
  */
 export async function GET(request: Request) {
-  const { origin, searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';
 

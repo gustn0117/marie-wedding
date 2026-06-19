@@ -30,7 +30,8 @@ export const dynamic = 'force-dynamic';
  * 에러는 항상 generic 메시지로 /login?error=...로 보내 enumeration 방지.
  */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
   const code = searchParams.get('code');
   const signedState = searchParams.get('state');
   const naverError = searchParams.get('error');
