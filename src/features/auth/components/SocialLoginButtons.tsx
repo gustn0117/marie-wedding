@@ -22,12 +22,11 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
 
   const verb = mode === 'signup' ? '시작하기' : '로그인';
 
-  const handle = async (provider: 'kakao' | 'google' | 'apple') => {
+  const handle = async (provider: 'kakao' | 'google') => {
     setLoading(provider);
     try {
       if (provider === 'kakao') await authService.signInWithKakao();
       if (provider === 'google') await authService.signInWithGoogle();
-      if (provider === 'apple') await authService.signInWithApple();
       // signInWithOAuth는 redirect를 발생시키므로 promise resolve 후엔 페이지가 이미 떠난 상태일 수 있음
     } catch {
       onError?.(`${labelOf(provider)} 로그인에 실패했어요. 잠시 후 다시 시도해주세요.`);
@@ -64,22 +63,12 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
         <GoogleIcon />
         <span>{loading === 'google' ? 'Google 연결 중…' : `Google로 ${verb}`}</span>
       </button>
-
-      <button
-        type="button"
-        onClick={() => handle('apple')}
-        disabled={!!loading}
-        className="w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-black text-white text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
-      >
-        <AppleIcon />
-        <span>{loading === 'apple' ? 'Apple 연결 중…' : `Apple로 ${verb}`}</span>
-      </button>
     </div>
   );
 }
 
-function labelOf(p: 'kakao' | 'google' | 'apple') {
-  return p === 'kakao' ? '카카오' : p === 'google' ? 'Google' : 'Apple';
+function labelOf(p: 'kakao' | 'google') {
+  return p === 'kakao' ? '카카오' : 'Google';
 }
 
 function KakaoIcon() {
@@ -112,10 +101,3 @@ function GoogleIcon() {
   );
 }
 
-function AppleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="white" aria-hidden>
-      <path d="M17.05 12.04c-.03-2.45 2-3.63 2.1-3.69-1.14-1.67-2.92-1.9-3.55-1.93-1.51-.15-2.95.89-3.72.89-.77 0-1.96-.87-3.22-.85-1.66.03-3.19.97-4.04 2.45-1.72 2.98-.44 7.39 1.24 9.81.82 1.18 1.79 2.51 3.06 2.46 1.23-.05 1.69-.79 3.17-.79 1.48 0 1.9.79 3.2.77 1.32-.02 2.16-1.2 2.97-2.39.94-1.37 1.32-2.7 1.34-2.77-.03-.01-2.57-.98-2.6-3.96zM14.5 4.91c.68-.82 1.13-1.95 1.01-3.08-.97.04-2.15.65-2.84 1.46-.62.72-1.17 1.88-1.02 2.99 1.08.08 2.18-.55 2.85-1.37z" />
-    </svg>
-  );
-}

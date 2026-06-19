@@ -1,12 +1,11 @@
 # 소셜 로그인 설정 가이드
 
-Marié는 4개 provider 소셜 로그인을 지원합니다.
+Marié는 3개 provider 소셜 로그인을 지원합니다.
 
 | Provider | 방식 | 설정 위치 |
 |---|---|---|
 | Kakao | Supabase native | Supabase 콘솔 |
 | Google | Supabase native | Supabase 콘솔 + Google Cloud Console |
-| Apple | Supabase native | Supabase 콘솔 + Apple Developer |
 | Naver | 자체 OAuth 라우트 | 네이버 Developers + `.env.local` |
 
 ## 환경변수
@@ -24,7 +23,7 @@ NAVER_OAUTH_STATE_SECRET=<32바이트 random hex (HMAC 키)>
 openssl rand -hex 32
 ```
 
-Kakao/Google/Apple은 코드/.env에 client_id/secret 둘 필요 없음. Supabase 콘솔에만 입력.
+Kakao/Google은 코드/.env에 client_id/secret 둘 필요 없음. Supabase 콘솔에만 입력.
 
 ## Supabase 콘솔 설정
 
@@ -40,12 +39,6 @@ Kakao/Google/Apple은 코드/.env에 client_id/secret 둘 필요 없음. Supabas
 1. https://console.cloud.google.com 에서 OAuth client 생성
 2. 승인된 리디렉션 URI에 `<NEXT_PUBLIC_APP_URL>/auth/callback` 추가
 3. Supabase: Google 활성화 → Client ID / Secret 입력
-
-### Apple
-1. https://developer.apple.com 에서 App ID 생성 (Sign In with Apple capability)
-2. Services ID 생성 → return URL `<NEXT_PUBLIC_APP_URL>/auth/callback`
-3. Key 생성 → .p8 다운로드
-4. Supabase: Apple 활성화 → Service ID / Team ID / Key ID / .p8 키 내용 입력
 
 ### 공통 Redirect URL
 Supabase 자체 콜백 URL은 `https://<프로젝트>.supabase.co/auth/v1/callback`이며,
@@ -82,7 +75,7 @@ psql "$DATABASE_URL" < supabase/migrations/2026-06-19-social-login.sql
 
 ## 흐름 요약
 
-### 신규 가입 (Kakao/Google/Apple)
+### 신규 가입 (Kakao/Google)
 1. 사용자 `/login`에서 provider 버튼 클릭
 2. Supabase가 OAuth 처리 → `/auth/callback?code=...`
 3. 콜백이 세션 발급 + `profiles` INSERT (`account_type=null, onboarded_at=null`)
@@ -110,7 +103,7 @@ psql "$DATABASE_URL" < supabase/migrations/2026-06-19-social-login.sql
 - [ ] `NAVER_CLIENT_SECRET`이 `NEXT_PUBLIC_` 접두사로 시작하지 않는다
 - [ ] `NAVER_OAUTH_STATE_SECRET`이 32바이트 이상 랜덤 값이다
 - [ ] DB 마이그레이션이 적용되었고 기존 사용자 `onboarded_at` backfill이 완료되었다
-- [ ] 4개 provider 모두 신규 가입 → 온보딩 → 진입 흐름이 작동한다
+- [ ] 3개 provider 모두 신규 가입 → 온보딩 → 진입 흐름이 작동한다
 - [ ] 동일 이메일로 다른 provider 시도 시 generic 에러 메시지가 노출된다
 - [ ] `/mypage/edit`에서 마지막 인증 수단 해제 시 차단된다
 
