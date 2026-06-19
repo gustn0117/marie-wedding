@@ -29,12 +29,15 @@ export default function CheckoutButton({
 
   const handleCheckout = async () => {
     setLoading(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
     try {
       // 1. 서버에 결제 세션 생성 요청
       const res = await fetch('/api/payments/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
+        signal: ctrl.signal,
       });
 
       if (!res.ok) {
@@ -77,8 +80,10 @@ export default function CheckoutButton({
         router.push(`/mypage/payments?paid=${paymentId}`);
       }
     } catch (err) {
-      toast(err instanceof Error ? err.message : '결제 처리 중 오류', 'error');
+      const isAbort = err instanceof Error && err.name === 'AbortError';
+      toast(isAbort ? '결제 요청이 너무 오래 걸려요. 다시 시도해주세요.' : (err instanceof Error ? err.message : '결제 처리 중 오류'), 'error');
     } finally {
+      clearTimeout(timer);
       setLoading(false);
     }
   };

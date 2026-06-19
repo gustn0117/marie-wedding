@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/shared/utils/format';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { ROUTES } from '@/shared/constants';
 
 interface Notification {
@@ -97,23 +98,35 @@ export default function NotificationBell({ profileId }: { profileId: string }) {
   }, [open]);
 
   const handleMarkAllRead = async () => {
-    const sb = createClient();
-    await sb
-      .from('notifications')
-      .update({ read_at: new Date().toISOString() })
-      .eq('profile_id', profileId)
-      .is('read_at', null);
+    // UI는 즉시 반영 (낙관적). 서버 update가 hang해도 UX 영향 없음.
     setItems((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: new Date().toISOString() })));
     setUnreadCount(0);
+    try {
+      const sb = createClient();
+      await withTimeout(
+        sb.from('notifications').update({ read_at: new Date().toISOString() })
+          .eq('profile_id', profileId).is('read_at', null),
+        8000,
+      );
+    } catch {
+      // 무시 — 낙관적 UI는 유지
+    }
   };
 
   const handleItemClick = async (item: Notification) => {
+    setOpen(false); // 클릭 즉시 닫기
     if (!item.read_at) {
-      const sb = createClient();
-      await sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id);
       setUnreadCount((c) => Math.max(0, c - 1));
+      try {
+        const sb = createClient();
+        await withTimeout(
+          sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id),
+          5000,
+        );
+      } catch {
+        // 무시 — 다음 진입 시 반영됨
+      }
     }
-    setOpen(false);
   };
 
   return (

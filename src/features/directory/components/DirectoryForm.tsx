@@ -6,6 +6,7 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/shared/utils/image';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import type { Profile } from '@/types/database';
@@ -122,7 +123,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
           const ext = compressed.name.split('.').pop() || 'jpg';
           const path = `${profile.user_id}/avatar.${ext}`;
-          const { error: err } = await supabase.storage.from('avatars').upload(path, compressed, { upsert: true });
+          const { error: err } = await withTimeout(supabase.storage.from('avatars').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
           if (err) throw new Error('프로필 이미지 업로드 실패');
           return path;
         }
@@ -133,7 +134,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
         const ext = compressed.name.split('.').pop() || 'jpg';
         const path = `${profile.user_id}/gallery_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: err } = await supabase.storage.from('avatars').upload(path, compressed);
+        const { error: err } = await withTimeout(supabase.storage.from('avatars').upload(path, compressed), 15000, '이미지 업로드가 너무 오래 걸려요.');
         if (err) throw new Error('갤러리 이미지 업로드 실패');
         return path;
       });

@@ -7,6 +7,7 @@ import RichTextEditor from '@/shared/components/RichTextEditor';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
 import { adminService } from '@/features/admin/services/admin-service';
 import { EVENT_TYPES, EVENT_TYPE_DESCRIPTIONS } from '../types';
@@ -65,7 +66,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
     const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
     const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('event-images').upload(path, compressed, { upsert: true });
+    const { error: uploadError } = await withTimeout(supabase.storage.from('event-images').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
     if (uploadError) throw new Error('이미지 업로드 실패');
     return path;
   };

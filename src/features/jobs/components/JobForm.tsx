@@ -7,6 +7,7 @@ import DatePicker from '@/shared/components/DatePicker';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
 import type { JobFormData } from '../types';
 
@@ -71,7 +72,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
     const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('job-images').upload(path, compressed, { upsert: true });
+    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
   };

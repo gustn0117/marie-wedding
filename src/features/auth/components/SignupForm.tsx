@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
@@ -65,13 +66,13 @@ export default function SignupForm() {
 
     setLoading(true);
     try {
-      await authService.signUp(formData.email, formData.password, {
+      await withTimeout(authService.signUp(formData.email, formData.password, {
         accountType: formData.accountType,
         contactName: formData.contactName.trim(),
         regions: formData.regions,
         businessTypes: formData.businessTypes.length > 0 ? formData.businessTypes : undefined,
         companyName: formData.companyName?.trim() || undefined,
-      });
+      }), 15000);
       router.push(ROUTES.HOME);
     } catch (err) {
       if (err instanceof Error) {

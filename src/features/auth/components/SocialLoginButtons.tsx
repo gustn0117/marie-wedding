@@ -24,6 +24,11 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
 
   const handle = async (provider: 'kakao' | 'google') => {
     setLoading(provider);
+    // 8초 후에도 redirect 안 일어났으면 OAuth가 hang한 것으로 간주 — 버튼 잠금 해제
+    const safety = setTimeout(() => {
+      setLoading((prev) => (prev === provider ? null : prev));
+      onError?.(`${labelOf(provider)} 로그인이 응답하지 않아요. 다시 시도해주세요.`);
+    }, 8000);
     try {
       if (provider === 'kakao') await authService.signInWithKakao();
       if (provider === 'google') await authService.signInWithGoogle();
@@ -31,6 +36,8 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
     } catch {
       onError?.(`${labelOf(provider)} 로그인에 실패했어요. 잠시 후 다시 시도해주세요.`);
       setLoading(null);
+    } finally {
+      clearTimeout(safety);
     }
   };
 

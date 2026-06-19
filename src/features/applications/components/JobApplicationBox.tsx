@@ -10,6 +10,7 @@ import {
   applicationService,
 } from '@/features/applications/services/application-service';
 import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
@@ -135,12 +136,15 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     if (!profile || !canSubmit) return;
     setSubmitting(true);
     try {
-      const created = await applicationService.createApplication({
-        jobId,
-        applicantId: profile.id,
-        message: composedMessage,
-        contactPhone,
-      });
+      const created = await withTimeout(
+        applicationService.createApplication({
+          jobId,
+          applicantId: profile.id,
+          message: composedMessage,
+          contactPhone,
+        }),
+        10000,
+      );
       setApplication(created);
       setMessage('');
       setCareerSummary('');
@@ -148,8 +152,10 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       setDesiredPay('');
       setPortfolioLink('');
     } catch (err) {
-      const msg = err instanceof Error && err.message.includes('duplicate')
-        ? '이미 접수된 내역이 있습니다.'
+      const msg = err instanceof Error
+        ? err.message.includes('duplicate') ? '이미 접수된 내역이 있습니다.'
+          : err.message.includes('초과') ? '접수 요청이 너무 오래 걸려요. 다시 시도해주세요.'
+          : '접수에 실패했습니다.'
         : '접수에 실패했습니다.';
       toast(msg, 'error');
     } finally {

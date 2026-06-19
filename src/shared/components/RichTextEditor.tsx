@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/shared/utils/image';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface RichTextEditorProps {
   value: string;
@@ -139,7 +140,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
       const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
       const ext = compressed.name.split('.').pop() || 'jpg';
       const path = `content_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from(imageBucket).upload(path, compressed);
+      const { error: uploadError } = await withTimeout(supabase.storage.from(imageBucket).upload(path, compressed), 15000, '이미지 업로드가 너무 오래 걸려요.');
       if (uploadError) throw new Error(uploadError.message);
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
 

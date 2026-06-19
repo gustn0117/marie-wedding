@@ -10,6 +10,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
 import { compressImage } from '@/shared/utils/image';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -87,9 +88,11 @@ export default function EditProfilePage() {
     const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${profile.user_id}/avatar.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(path, compressed, { upsert: true });
+    const { error: uploadError } = await withTimeout(
+      supabase.storage.from('avatars').upload(path, compressed, { upsert: true }),
+      15000,
+      '이미지 업로드가 너무 오래 걸려요.',
+    );
 
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;

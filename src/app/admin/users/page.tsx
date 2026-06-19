@@ -7,6 +7,7 @@ import type { Profile } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import UserDetailModal from '@/features/admin/components/UserDetailModal';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminUsersPage() {
   // 권한은 middleware가 보장. RPC는 서버 측에서 다시 검증.
@@ -48,7 +49,7 @@ export default function AdminUsersPage() {
     if (!confirm(`${user.contact_name}님의 권한을 ${user.role === 'admin' ? '일반 유저' : '관리자'}로 변경하시겠습니까?`)) return;
     setActionLoading(user.id);
     try {
-      await adminService.updateUserRole(user.id, user.role === 'admin' ? 'user' : 'admin');
+      await withTimeout(adminService.updateUserRole(user.id, user.role === 'admin' ? 'user' : 'admin'), 10000);
       await load();
     } catch (err) {
       alert('권한 변경에 실패했습니다.');
@@ -64,7 +65,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('purge_profile_cascade', { p_profile_id: user.id });
+      const { error } = await withTimeout(sb.rpc('purge_profile_cascade', { p_profile_id: user.id }), 15000);
       if (error) throw error;
       toast('회원과 관련 데이터를 모두 삭제했습니다.', 'success');
       await load();
@@ -81,7 +82,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('restore_profile_cascade', { p_profile_id: user.id, p_restore_content: restoreContent });
+      const { error } = await withTimeout(sb.rpc('restore_profile_cascade', { p_profile_id: user.id, p_restore_content: restoreContent }), 15000);
       if (error) throw error;
       toast(restoreContent ? '회원과 콘텐츠를 모두 복원했습니다.' : '회원 계정만 복원했습니다.', 'success');
       await load();
@@ -100,7 +101,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('ban_user', { p_id: user.id, p_reason: reason.trim() });
+      const { error } = await withTimeout(sb.rpc('ban_user', { p_id: user.id, p_reason: reason.trim() }), 10000);
       if (error) throw error;
       toast(`${user.contact_name}님을 제재했습니다.`, 'success');
       setBanModal(null);
@@ -119,7 +120,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('set_admin_note', { p_id: user.id, p_note: note.trim() || null });
+      const { error } = await withTimeout(sb.rpc('set_admin_note', { p_id: user.id, p_note: note.trim() || null }), 10000);
       if (error) throw error;
       toast('관리자 메모를 저장했습니다.', 'success');
       setNoteModal(null);
@@ -137,7 +138,7 @@ export default function AdminUsersPage() {
     setActionLoading(user.id);
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('unban_user', { p_id: user.id });
+      const { error } = await withTimeout(sb.rpc('unban_user', { p_id: user.id }), 10000);
       if (error) throw error;
       toast('제재가 해제되었습니다.', 'success');
       await load();

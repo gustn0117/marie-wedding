@@ -20,8 +20,14 @@ export async function compressImage(
     const img = new Image();
     const reader = new FileReader();
 
+    // HEIC/AVIF/손상 이미지로 onload가 안 불리는 경우 원본 fallback + 10초 안전망
+    const safety = setTimeout(() => resolve(file), 10000);
+    img.onerror = () => { clearTimeout(safety); resolve(file); };
+    reader.onerror = () => { clearTimeout(safety); resolve(file); };
+
     reader.onload = (e) => {
       img.onload = () => {
+        clearTimeout(safety);
         let { width, height } = img;
         const longSide = Math.max(width, height);
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { ROUTES } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
@@ -55,7 +56,7 @@ export default function LoginForm() {
 
     setLoading(true);
     try {
-      await authService.signIn(formData.email, formData.password);
+      await withTimeout(authService.signIn(formData.email, formData.password), 10000);
       // redirect 쿼리 파라미터 처리 — 어드민 접근 시 미들웨어가 추가함
       const sp = new URLSearchParams(window.location.search);
       const redirect = sp.get('redirect');

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Message } from '@/types/database';
 import { messageService } from '@/features/messages/services/messageService';
+import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast } from '@/shared/components/Toast';
 
 interface Props {
   conversationId: string;
@@ -31,11 +33,12 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
     if (!text) return;
     setBusy(true);
     try {
-      const msg = await messageService.send(conversationId, text);
+      const msg = await withTimeout(messageService.send(conversationId, text), 10000);
       setMessages((prev) => [...prev, msg]);
       setBody('');
-    } catch {
-      window.alert('전송에 실패했습니다.');
+    } catch (err) {
+      const msg = err instanceof Error && err.message.includes('초과') ? '전송이 너무 오래 걸려요. 다시 시도해주세요.' : '전송에 실패했습니다.';
+      toast(msg, 'error');
     } finally {
       setBusy(false);
     }

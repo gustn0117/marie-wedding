@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { submitVerification } from '@/features/verification/services/verificationService';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function VerificationForm() {
   const [businessNumber, setBusinessNumber] = useState('');
@@ -14,10 +15,15 @@ export default function VerificationForm() {
     e.preventDefault();
     if (!file) { setError('사업자등록증 이미지를 첨부해 주세요.'); return; }
     setBusy(true); setError(null);
-    const result = await submitVerification({ businessNumber, documentFile: file });
-    setBusy(false);
-    if (!result.ok) { setError(result.error); return; }
-    setDone(true);
+    try {
+      const result = await withTimeout(submitVerification({ businessNumber, documentFile: file }), 20000);
+      if (!result.ok) { setError(result.error); return; }
+      setDone(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '신청에 실패했습니다.');
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (done) {

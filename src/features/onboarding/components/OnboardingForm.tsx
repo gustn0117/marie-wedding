@@ -36,6 +36,8 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
     if (!canSubmit) return;
     setError(null);
     startSubmit(async () => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 15000);
       try {
         const res = await fetch('/api/onboarding', {
           method: 'POST',
@@ -45,6 +47,7 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
             name: name.trim(),
             phone: phone.trim().replace(/-/g, ''),
           }),
+          signal: ctrl.signal,
         });
         const body = await res.json();
         if (!res.ok) {
@@ -53,7 +56,10 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
         router.replace(next);
         router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        const isAbort = err instanceof Error && err.name === 'AbortError';
+        setError(isAbort ? '저장이 너무 오래 걸려요. 다시 시도해주세요.' : (err instanceof Error ? err.message : '저장에 실패했습니다.'));
+      } finally {
+        clearTimeout(timer);
       }
     });
   };

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Portfolio } from '@/types/database';
 import { portfolioService } from '@/features/portfolios/services/portfolioService';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 
 
@@ -55,12 +56,21 @@ export default function PortfolioForm({ profileId, initial }: Props) {
       const id = await ensureDraftId();
       for (const file of Array.from(files)) {
         if (file.size > 5 * 1024 * 1024) { setError(`${file.name}: 5MB 초과`); continue; }
-        const path = await portfolioService.uploadImage(profileId, id, file);
-        setImages((prev) => {
-          const next = [...prev, path];
-          if (!coverImage) setCoverImage(path);
-          return next;
-        });
+        try {
+          const path = await withTimeout(
+            portfolioService.uploadImage(profileId, id, file),
+            20000,
+            `${file.name} 업로드가 너무 오래 걸려요.`,
+          );
+          setImages((prev) => {
+            const next = [...prev, path];
+            if (!coverImage) setCoverImage(path);
+            return next;
+          });
+        } catch (perFileErr) {
+          // 한 파일이 timeout/실패해도 다음 파일은 계속 시도
+          setError(perFileErr instanceof Error ? perFileErr.message : `${file.name} 업로드 실패`);
+        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : '업로드 실패');

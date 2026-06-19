@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { formatRelativeTime } from '@/shared/utils/format';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { communityService } from '../services/community-service';
 import type { Comment } from '@/types/database';
@@ -33,10 +34,10 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     setAdoptingId(commentId ?? 'reset');
     try {
       const sb = createClient();
-      const { error } = await sb.rpc('set_adopted_comment', {
+      const { error } = await withTimeout(sb.rpc('set_adopted_comment', {
         p_post_id: postId,
         p_comment_id: commentId,
-      });
+      }), 10000);
       if (error) throw error;
       setAdoptedId(commentId);
       toast(commentId ? '댓글을 채택했습니다.' : '채택을 취소했습니다.', 'success');
@@ -73,7 +74,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     if (!content.trim() || !profile) return;
     setIsSubmitting(true);
     try {
-      const newComment = await communityService.createComment(postId, content.trim(), profile.id);
+      const newComment = await withTimeout(communityService.createComment(postId, content.trim(), profile.id), 10000);
       setComments((prev) => [...prev, newComment]);
       setContent('');
     } catch (err) {

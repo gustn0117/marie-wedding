@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import type { Job, JobStatus } from '@/types/database';
 import { jobService } from '@/features/jobs/services/job-service';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 
@@ -28,7 +29,7 @@ export default function JobStatusMenu({ job, onChange }: { job: Job; onChange?: 
     if (status === job.status) { setOpen(false); return; }
     setBusy(true);
     try {
-      const updated = await jobService.updateStatus(job.id, status);
+      const updated = await withTimeout(jobService.updateStatus(job.id, status), 8000);
       toast('상태를 변경했습니다.', 'success');
       onChange?.(updated);
       setOpen(false);
