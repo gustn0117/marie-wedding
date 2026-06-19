@@ -118,7 +118,8 @@ export default function EditProfilePage() {
         profileImage = null;
       }
 
-      await directoryService.updateProfile(profile.id, {
+      // 15초 timeout — 어떤 이유로든 update가 hang하면 사용자에게 에러를 보여주고 다시 시도할 수 있게
+      const updatePromise = directoryService.updateProfile(profile.id, {
         contact_name: formData.contact_name.trim(),
         company_name: formData.company_name.trim() || null,
         business_type: formData.business_type || null,
@@ -128,18 +129,23 @@ export default function EditProfilePage() {
         website: formData.website.trim() || null,
         profile_image: profileImage,
       });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('저장이 너무 오래 걸려요. 다시 시도해주세요.')), 15000),
+      );
+      await Promise.race([updatePromise, timeoutPromise]);
 
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      setSuccess(true);
-
-      // ?next= 지원 (예: 공고 등록에서 프로필 완성하러 왔을 때) — 동일 origin path만 허용
+      // ?next= 지원 — 동일 origin path만 허용
       const sp = new URLSearchParams(window.location.search);
       const rawNext = sp.get('next');
       const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://') ? rawNext : ROUTES.MYPAGE;
-      setTimeout(() => { window.location.href = next; }, 1000);
+
+      // cookie clear는 redirect 직전에 (이전 setTimeout 패턴에서 race 가능성을 없앰)
+      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      setSuccess(true);
+      window.location.href = next; // 즉시 이동 (setTimeout 1초 대기 제거)
     } catch (err) {
+      console.error('[mypage/edit] save failed:', err);
       setError(err instanceof Error ? err.message : '프로필 수정에 실패했습니다.');
-    } finally {
       setSubmitting(false);
     }
   };
