@@ -115,9 +115,10 @@ export const directoryService = {
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
-      .single();
+      .maybeSingle(); // RLS SELECT가 자기 row를 못 보면 .single()이 PGRST116 throw — maybeSingle은 null 반환
 
     if (error) throw error;
+    if (!data) throw new Error('프로필을 저장했지만 다시 읽지 못했어요. 페이지를 새로고침해 주세요.');
     return data as Profile;
   },
 
