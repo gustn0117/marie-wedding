@@ -81,7 +81,7 @@ export default function FeaturedJobsCarousel({ jobs }: Props) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="shell-wide py-6">
+      <div className="max-w-[1280px] mx-auto px-5 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -116,10 +116,10 @@ export default function FeaturedJobsCarousel({ jobs }: Props) {
           )}
         </div>
 
-        {/* Cards row */}
+        {/* Cards row — 컨테이너 폭 안에서만 스크롤 */}
         <div
           ref={scrollRef}
-          className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory -mx-4 px-4 sm:mx-0 sm:px-0"
+          className="flex gap-4 overflow-x-auto scrollbar-none snap-x snap-mandatory"
           style={{ scrollPaddingLeft: '0px' }}
         >
           {jobs.map((job) => (
@@ -154,7 +154,7 @@ function FeaturedCard({ job }: { job: Job }) {
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
       data-card
-      className="snap-start shrink-0 w-[160px] sm:w-[180px] group"
+      className="snap-start shrink-0 w-[170px] sm:w-[195px] group"
     >
       <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
         {imageUrl ? (
