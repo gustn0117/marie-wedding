@@ -16,7 +16,7 @@ async function getHomeData() {
   const supabase = createServerQueryClient();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes] = await Promise.all([
+  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes] = await Promise.all([
     supabase
       .from('posts')
       .select('*, author:profiles!author_id(*), comments:comments(count)', { count: 'exact' })
@@ -58,6 +58,16 @@ async function getHomeData() {
       .eq('hidden_by_admin', false)
       .eq('posting_type', 'hiring')
       .gte('created_at', thirtyDaysAgo),
+    // 인기 공고 — 관리자가 선정한 featured_at IS NOT NULL인 공고만
+    supabase
+      .from('jobs')
+      .select('*, author:profiles!author_id(*)')
+      .is('deleted_at', null)
+      .eq('hidden_by_admin', false)
+      .not('featured_at', 'is', null)
+      .order('featured_order', { ascending: true })
+      .order('featured_at', { ascending: false })
+      .limit(20),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,6 +79,7 @@ async function getHomeData() {
   return {
     posts,
     jobs: (jobsRes.data ?? []) as Job[],
+    featuredJobs: (featuredJobsRes.data ?? []) as Job[],
     profiles: (profilesRes.data ?? []) as Profile[],
     events: (eventsRes.data ?? []) as Event[],
     counts: {
@@ -82,7 +93,7 @@ async function getHomeData() {
 }
 
 export default async function HomePage() {
-  const { posts, jobs, profiles, events, counts } = await getHomeData();
+  const { posts, jobs, featuredJobs, profiles, events, counts } = await getHomeData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -91,6 +102,7 @@ export default async function HomePage() {
       <HomeContent
         posts={posts}
         jobs={jobs}
+        featuredJobs={featuredJobs}
         profiles={profiles}
         events={events}
         counts={counts}

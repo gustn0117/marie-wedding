@@ -66,6 +66,19 @@ export default function AdminJobsPage() {
     }
   };
 
+  const handleToggleFeatured = async (job: Job) => {
+    setActionLoading(job.id);
+    try {
+      await adminService.toggleFeaturedJob(job.id, !job.featured_at);
+      await load();
+    } catch (err) {
+      alert('인기공고 설정에 실패했습니다.');
+      console.error(err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -160,6 +173,20 @@ export default function AdminJobsPage() {
                       )}
                     </td>
                     <td className="px-5 py-3 text-right">
+                      {!job.deleted_at && (
+                        <button
+                          onClick={() => handleToggleFeatured(job)}
+                          disabled={actionLoading === job.id}
+                          className={`px-2 py-1 text-xs rounded transition-colors disabled:opacity-50 mr-1 ${
+                            job.featured_at
+                              ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                          title={job.featured_at ? '메인 인기공고에서 제외' : '메인 인기공고로 노출'}
+                        >
+                          {job.featured_at ? '★ 인기' : '☆ 인기'}
+                        </button>
+                      )}
                       {job.deleted_at ? (
                         <button
                           onClick={() => handleRestore(job)}

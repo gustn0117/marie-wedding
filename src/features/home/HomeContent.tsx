@@ -11,10 +11,12 @@ import {
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
 import BusinessTypeIcon, { CheckIcon } from '@/shared/components/icons/BusinessTypeIcon';
+import FeaturedJobsCarousel from '@/features/home/FeaturedJobsCarousel';
 
 interface HomeContentProps {
   posts: Post[];
   jobs: Job[];
+  featuredJobs?: Job[];
   profiles: Profile[];
   events: Event[];
   counts: {
@@ -41,7 +43,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, profiles, events }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles, events }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -100,6 +102,11 @@ export default function HomeContent({ posts, jobs, profiles, events }: HomeConte
         </div>
       </section>
 
+
+      {/* 금주의 인기공고 — 관리자가 선정한 캐러셀 */}
+      {adminFeaturedJobs.length > 0 && (
+        <FeaturedJobsCarousel jobs={adminFeaturedJobs} />
+      )}
 
       {/* 추천 인재·업체 프로필 — 전체 폭 */}
       {featuredProfiles.length > 0 && (

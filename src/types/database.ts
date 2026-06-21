@@ -97,6 +97,8 @@ export interface Job {
   hidden_by_admin: boolean;
   is_promoted: boolean;
   promoted_until: string | null;
+  featured_at: string | null;
+  featured_order: number | null;
   status: JobStatus;
   salary_min: number | null;
   salary_max: number | null;

@@ -74,6 +74,12 @@ export const adminService = {
     adminFetch('getJobs', { page, search, showDeleted }) as Promise<{ data: Job[]; count: number }>,
   softDeleteJob: (id: string) => adminFetch('softDeleteJob', { id }),
   restoreJob: (id: string) => adminFetch('restoreJob', { id }),
+  // 인기 공고
+  getFeaturedJobs: () => adminFetch('getFeaturedJobs', {}) as Promise<Job[]>,
+  toggleFeaturedJob: (id: string, featured: boolean) =>
+    adminFetch('toggleFeaturedJob', { id, featured }),
+  reorderFeaturedJobs: (orderedIds: string[]) =>
+    adminFetch('reorderFeaturedJobs', { orderedIds }),
 
   // ── Posts ──
   getPosts: (page = 1, search?: string, showDeleted = false) =>

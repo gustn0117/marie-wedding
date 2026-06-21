@@ -257,6 +257,62 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
       }
 
+      // ── 인기 공고 (Featured) ──
+      case 'getFeaturedJobs': {
+        const { data, error } = await supabase
+          .from('jobs')
+          .select('*, author:profiles!author_id(*)')
+          .is('deleted_at', null)
+          .not('featured_at', 'is', null)
+          .order('featured_order', { ascending: true })
+          .order('featured_at', { ascending: false })
+          .limit(20);
+        if (error) throw error;
+        return NextResponse.json(data ?? []);
+      }
+
+      case 'toggleFeaturedJob': {
+        const { id, featured } = params as { id: string; featured: boolean };
+        if (featured) {
+          const { data: max } = await supabase
+            .from('jobs')
+            .select('featured_order')
+            .not('featured_order', 'is', null)
+            .order('featured_order', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const nextOrder = (max?.featured_order ?? 0) + 10;
+          const { error } = await supabase
+            .from('jobs')
+            .update({ featured_at: new Date().toISOString(), featured_order: nextOrder })
+            .eq('id', id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('jobs')
+            .update({ featured_at: null, featured_order: null })
+            .eq('id', id);
+          if (error) throw error;
+        }
+        return NextResponse.json({ success: true });
+      }
+
+      case 'reorderFeaturedJobs': {
+        const { orderedIds } = params as { orderedIds: string[] };
+        if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+          return NextResponse.json({ success: true });
+        }
+        await Promise.all(
+          orderedIds.map((id, idx) =>
+            supabase
+              .from('jobs')
+              .update({ featured_order: (idx + 1) * 10 })
+              .eq('id', id),
+          ),
+        );
+        return NextResponse.json({ success: true });
+      }
+
       // ── Posts ──
       case 'getPosts': {
         const { page = 1, search, showDeleted = false } = params;
