@@ -134,7 +134,9 @@ export default function FeaturedJobsCarousel({ jobs }: Props) {
 function FeaturedCard({ job }: { job: Job }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const imageUrl = job.image
-    ? `${supabaseUrl}/storage/v1/object/public/job-images/${job.image}`
+    ? (job.image.startsWith('http://') || job.image.startsWith('https://'))
+      ? job.image
+      : `${supabaseUrl}/storage/v1/object/public/job-images/${job.image}`
     : null;
 
   const dDay = (() => {
