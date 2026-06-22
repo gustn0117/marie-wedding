@@ -17,12 +17,35 @@ interface JobFormProps {
   submitLabel?: string;
 }
 
-const JOB_DESCRIPTION_TEMPLATE = `<h3>담당 업무</h3><ul><li>예식 당일/상담/예약/고객 응대 등 실제 맡게 될 업무를 적어주세요.</li><li>함께 일할 팀과 현장 분위기를 간단히 알려주세요.</li></ul><h3>지원 자격</h3><ul><li>필요한 경력, 가능한 요일/시간, 필수 역량을 적어주세요.</li><li>신입 가능 여부와 교육 제공 여부를 알려주세요.</li></ul><h3>근무 조건</h3><ul><li>근무 지역, 근무 시간, 급여, 채용 인원, 시작 가능일을 적어주세요.</li><li>정규직/계약직/단기알바 등 고용 형태를 구체화해주세요.</li></ul><h3>지원 시 알려주세요</h3><ul><li>이름, 연락처, 경력, 가능한 일정, 포트폴리오/참고 링크를 함께 남겨달라고 안내해주세요.</li></ul>`;
+// 작성 가이드 — 본문에 박지 않고 상단 가이드 박스에 항목별 안내로만 표시.
+// (이전: description 초기값에 HTML 템플릿 박힘 → 사용자가 지워가며 작성해야 해서 불편)
+const JOB_DESCRIPTION_GUIDE = [
+  {
+    title: '담당 업무',
+    hint: '실제 맡게 될 업무, 팀 구성, 현장 분위기',
+    sample: '예) 예식 당일 진행, 상담·예약, 고객 응대',
+  },
+  {
+    title: '지원 자격',
+    hint: '필요 경력, 가능한 요일·시간, 필수 역량',
+    sample: '예) 경력 1년 이상, 주말 가능, 메이크업 자격증',
+  },
+  {
+    title: '근무 조건',
+    hint: '근무 지역·시간, 급여, 인원, 시작 가능일',
+    sample: '예) 강남, 월~금 10–18시, 월 320만원, 즉시',
+  },
+  {
+    title: '지원 시 알려주세요',
+    hint: '이름·연락처·경력·일정·포트폴리오 안내',
+    sample: '예) 이름/연락처/경력 요약/가능 일정/링크',
+  },
+] as const;
 
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
   title: '',
-  description: JOB_DESCRIPTION_TEMPLATE, // 신규 작성 시 템플릿 자동 주입
+  description: '', // 가이드는 상단 박스에만, 본문은 비워서 시작
   businessType: '',
   employmentType: '',
   region: '',
@@ -264,25 +287,49 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
       {/* STEP 3: 상세 내용 */}
       <Section step={3} title="상세 내용을 작성하세요" description="지원자가 판단할 수 있도록 업무, 자격, 근무조건, 지원 시 필요한 정보를 나눠 적어주세요.">
-        <div>
-          <div className="flex items-center justify-between gap-3 mb-2">
-            <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
-            <span className={`text-xs font-semibold ${plainDescription.length >= 120 ? 'text-primary' : 'text-gray-400'}`}>
-              {plainDescription.length}/120자 권장
-            </span>
-          </div>
-          <RichTextEditor
-            value={formData.description}
-            onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
-            placeholder="- 담당 업무&#10;- 자격 요건&#10;- 우대 사항&#10;- 근무 조건 등을 자세히 작성해주세요."
-            minHeight={240}
-          />
-          <div className="mt-3 grid gap-2 sm:grid-cols-4">
-            {['담당 업무', '지원 자격', '근무 조건', '지원 시 필요 정보'].map((label) => (
-              <div key={label} className="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600">
-                {label}
-              </div>
-            ))}
+        <div className="space-y-4">
+          {/* 작성 가이드 — 본문에 박지 않고 항목별 안내만 */}
+          <details className="group rounded-lg border border-gray-200 bg-gray-50" open>
+            <summary className="flex items-center justify-between cursor-pointer list-none px-4 py-3">
+              <span className="flex items-center gap-2 text-sm font-bold text-ink">
+                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                </svg>
+                작성 가이드
+                <span className="text-[11px] font-normal text-gray-500">— 아래 항목을 참고해 본문에 자유롭게 적어주세요</span>
+              </span>
+              <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </summary>
+            <div className="border-t border-gray-200 px-4 py-4 grid gap-3 sm:grid-cols-2">
+              {JOB_DESCRIPTION_GUIDE.map((g, idx) => (
+                <div key={g.title} className="flex gap-3">
+                  <span className="shrink-0 w-5 h-5 rounded-full bg-ink text-white text-[10px] font-bold inline-flex items-center justify-center mt-0.5" aria-hidden>{idx + 1}</span>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-bold text-ink">{g.title}</p>
+                    <p className="text-[12px] text-gray-600 mt-0.5">{g.hint}</p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 italic">{g.sample}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </details>
+
+          {/* 본문 에디터 — 깨끗한 시작 */}
+          <div>
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
+              <span className={`text-xs font-semibold ${plainDescription.length >= 120 ? 'text-primary' : 'text-gray-400'}`}>
+                {plainDescription.length}/120자 권장
+              </span>
+            </div>
+            <RichTextEditor
+              value={formData.description}
+              onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
+              placeholder="위 가이드의 4가지 항목을 참고해 자유롭게 작성해 주세요."
+              minHeight={260}
+            />
           </div>
         </div>
       </Section>
