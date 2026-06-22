@@ -4,7 +4,6 @@ import { useState, useRef } from 'react';
 import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
-import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -17,30 +16,128 @@ interface JobFormProps {
   submitLabel?: string;
 }
 
-// 작성 가이드 — 본문에 박지 않고 상단 가이드 박스에 항목별 안내로만 표시.
-// (이전: description 초기값에 HTML 템플릿 박힘 → 사용자가 지워가며 작성해야 해서 불편)
-const JOB_DESCRIPTION_GUIDE = [
+// 4가지 표준 섹션 + 기타 = 5개 textarea로 분리. submit 시 단일 description HTML로 합침.
+const SECTIONS = [
   {
+    key: 'duty',
     title: '담당 업무',
-    hint: '실제 맡게 될 업무, 팀 구성, 현장 분위기',
-    sample: '예) 예식 당일 진행, 상담·예약, 고객 응대',
+    placeholder: '예) 예식 당일 진행, 상담·예약, 고객 응대\n팀 구성과 현장 분위기도 함께 적어주세요.',
+    required: true,
   },
   {
+    key: 'requirements',
     title: '지원 자격',
-    hint: '필요 경력, 가능한 요일·시간, 필수 역량',
-    sample: '예) 경력 1년 이상, 주말 가능, 메이크업 자격증',
+    placeholder: '예) 경력 1년 이상, 주말 가능, 메이크업 자격증\n신입 가능 여부, 교육 제공 여부를 알려주세요.',
+    required: true,
   },
   {
+    key: 'conditions',
     title: '근무 조건',
-    hint: '근무 지역·시간, 급여, 인원, 시작 가능일',
-    sample: '예) 강남, 월~금 10–18시, 월 320만원, 즉시',
+    placeholder: '예) 강남, 월~금 10–18시, 월 320만원\n채용 인원, 시작 가능일, 고용 형태(정규/계약/단기 등)를 적어주세요.',
+    required: true,
   },
   {
+    key: 'apply',
     title: '지원 시 알려주세요',
-    hint: '이름·연락처·경력·일정·포트폴리오 안내',
-    sample: '예) 이름/연락처/경력 요약/가능 일정/링크',
+    placeholder: '예) 이름·연락처·경력 요약·가능 일정·포트폴리오 링크',
+    required: false,
+  },
+  {
+    key: 'extra',
+    title: '기타 상세 내용',
+    placeholder: '복지·휴가·차량 지원·식대·우대 사항 등 자유롭게 작성해 주세요. (선택)',
+    required: false,
   },
 ] as const;
+
+type SectionKey = (typeof SECTIONS)[number]['key'];
+type SectionMap = Record<SectionKey, string>;
+
+const EMPTY_SECTIONS: SectionMap = { duty: '', requirements: '', conditions: '', apply: '', extra: '' };
+
+// 5개 섹션을 단일 HTML로 합침
+function serializeSections(s: SectionMap): string {
+  const blocks: string[] = [];
+  for (const sec of SECTIONS) {
+    const v = s[sec.key].trim();
+    if (!v) continue;
+    const html = v.split(/\n+/).map((line) => `<p>${escapeHtml(line)}</p>`).join('');
+    blocks.push(`<h3>${escapeHtml(sec.title)}</h3>${html}`);
+  }
+  return blocks.join('');
+}
+
+// 기존 description HTML을 5개 섹션으로 분해 (best-effort).
+// 헤더 패턴이 인식되면 분리, 안 되면 전체를 '기타 상세 내용'에.
+function parseSections(html: string): SectionMap {
+  const map: SectionMap = { ...EMPTY_SECTIONS };
+  if (!html?.trim()) return map;
+
+  // <h3>섹션</h3>...<h3>섹션</h3>... 형태로 split
+  const sectionToKey: Record<string, SectionKey> = {
+    '담당 업무': 'duty',
+    '담당업무': 'duty',
+    '업무': 'duty',
+    '지원 자격': 'requirements',
+    '지원자격': 'requirements',
+    '자격 요건': 'requirements',
+    '자격요건': 'requirements',
+    '근무 조건': 'conditions',
+    '근무조건': 'conditions',
+    '우대 사항': 'extra',
+    '우대사항': 'extra',
+    '지원 시 알려주세요': 'apply',
+    '지원시 알려주세요': 'apply',
+    '지원 방법': 'apply',
+    '지원방법': 'apply',
+    '기타': 'extra',
+    '기타 상세 내용': 'extra',
+    '기타 사항': 'extra',
+  };
+
+  // <h\d>…</h\d> 기준으로 chunk 분리
+  const pattern = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>([\s\S]*?)(?=<h[1-6][^>]*>|$)/gi;
+  let m: RegExpExecArray | null;
+  let matched = 0;
+  while ((m = pattern.exec(html)) !== null) {
+    const heading = m[1].trim();
+    const body = m[2].trim();
+    const k = sectionToKey[heading];
+    if (k) {
+      map[k] = (map[k] ? map[k] + '\n' : '') + htmlToPlain(body);
+      matched++;
+    } else if (body) {
+      map.extra = (map.extra ? map.extra + '\n' : '') + htmlToPlain(body);
+    }
+  }
+
+  // 헤더가 하나도 인식 안 되면 전체를 '기타'에
+  if (matched === 0) {
+    map.extra = htmlToPlain(html);
+  }
+  return map;
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+function htmlToPlain(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '· ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
@@ -64,6 +161,9 @@ function stripHtml(html: string) {
 
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
   const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
+  const [sections, setSections] = useState<SectionMap>(() =>
+    initialData?.description ? parseSections(initialData.description) : { ...EMPTY_SECTIONS }
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -71,6 +171,14 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}` : null
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 합쳐진 description (검증·미리보기·submit용)
+  const composedDescription = serializeSections(sections);
+  const plainComposed = stripHtml(composedDescription);
+
+  const setSection = (key: SectionKey, value: string) => {
+    setSections((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,7 +210,11 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
   const validate = (): string | null => {
     if (!formData.title.trim()) return '제목을 입력해주세요.';
-    if (!formData.description.trim()) return '상세 설명을 입력해주세요.';
+    for (const sec of SECTIONS) {
+      if (sec.required && !sections[sec.key].trim()) {
+        return `${sec.title}를 입력해주세요.`;
+      }
+    }
     if (!formData.businessType) return '업종을 선택해주세요.';
     if (!formData.employmentType) return '고용형태를 선택해주세요.';
     if (!formData.region) return '지역을 선택해주세요.';
@@ -124,7 +236,12 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       let imagePath = formData.image;
       if (imageFile) imagePath = await uploadImage();
       else if (!imagePreview) imagePath = null;
-      await onSubmit({ ...formData, postingType: 'hiring', image: imagePath });
+      await onSubmit({
+        ...formData,
+        postingType: 'hiring',
+        image: imagePath,
+        description: composedDescription, // 5개 섹션을 합친 HTML
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {
@@ -135,19 +252,18 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   // 필수 항목 완성도
   const requiredFilled = [
     formData.title.trim(),
-    formData.description.trim(),
+    plainComposed.trim(),
     formData.businessType,
     formData.employmentType,
     formData.region,
   ].filter(Boolean).length;
   const totalRequired = 5;
   const progress = Math.round((requiredFilled / totalRequired) * 100);
-  const plainDescription = stripHtml(formData.description);
   const qualityItems = [
     {
       key: 'description',
       label: '업무/자격/근무조건을 충분히 작성',
-      done: plainDescription.length >= 120,
+      done: plainComposed.length >= 120,
     },
     {
       key: 'salary',
@@ -285,52 +401,34 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         </div>
       </Section>
 
-      {/* STEP 3: 상세 내용 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="지원자가 판단할 수 있도록 업무, 자격, 근무조건, 지원 시 필요한 정보를 나눠 적어주세요.">
-        <div className="space-y-4">
-          {/* 작성 가이드 — 본문에 박지 않고 항목별 안내만 */}
-          <details className="group rounded-lg border border-gray-200 bg-gray-50" open>
-            <summary className="flex items-center justify-between cursor-pointer list-none px-4 py-3">
-              <span className="flex items-center gap-2 text-sm font-bold text-ink">
-                <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-                </svg>
-                작성 가이드
-                <span className="text-[11px] font-normal text-gray-500">— 아래 항목을 참고해 본문에 자유롭게 적어주세요</span>
-              </span>
-              <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </summary>
-            <div className="border-t border-gray-200 px-4 py-4 grid gap-3 sm:grid-cols-2">
-              {JOB_DESCRIPTION_GUIDE.map((g, idx) => (
-                <div key={g.title} className="flex gap-3">
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-ink text-white text-[10px] font-bold inline-flex items-center justify-center mt-0.5" aria-hidden>{idx + 1}</span>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-bold text-ink">{g.title}</p>
-                    <p className="text-[12px] text-gray-600 mt-0.5">{g.hint}</p>
-                    <p className="text-[11px] text-gray-400 mt-0.5 italic">{g.sample}</p>
-                  </div>
-                </div>
-              ))}
+      {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
+      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠 적으면 지원자가 한눈에 파악할 수 있어요. 빈 항목은 등록 후에도 보이지 않습니다.">
+        <div className="space-y-5">
+          {SECTIONS.map((sec) => (
+            <div key={sec.key}>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor={`section-${sec.key}`} className="text-sm font-semibold text-gray-800">
+                  {sec.title}
+                  {sec.required && <span className="text-state-urgent ml-1">*</span>}
+                  {!sec.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
+                </label>
+                <span className="text-[11px] text-gray-400 tabular-nums">{sections[sec.key].length}자</span>
+              </div>
+              <textarea
+                id={`section-${sec.key}`}
+                value={sections[sec.key]}
+                onChange={(e) => setSection(sec.key, e.target.value)}
+                placeholder={sec.placeholder}
+                rows={sec.key === 'extra' ? 3 : 4}
+                className="w-full rounded border border-gray-300 px-4 py-3 text-[14px] text-gray-900 placeholder:text-gray-400 placeholder:whitespace-pre-line focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100 resize-y"
+                required={sec.required}
+              />
             </div>
-          </details>
+          ))}
 
-          {/* 본문 에디터 — 깨끗한 시작 */}
-          <div>
-            <div className="flex items-center justify-between gap-3 mb-2">
-              <label className="text-sm font-semibold text-gray-800">상세 설명 <span className="text-state-urgent">*</span></label>
-              <span className={`text-xs font-semibold ${plainDescription.length >= 120 ? 'text-primary' : 'text-gray-400'}`}>
-                {plainDescription.length}/120자 권장
-              </span>
-            </div>
-            <RichTextEditor
-              value={formData.description}
-              onChange={(html) => setFormData(prev => ({ ...prev, description: html }))}
-              placeholder="위 가이드의 4가지 항목을 참고해 자유롭게 작성해 주세요."
-              minHeight={260}
-            />
-          </div>
+          <p className="text-[11px] text-gray-400 text-right">
+            총 {plainComposed.length}자 — 충분히 작성할수록 지원자 클릭률이 올라가요
+          </p>
         </div>
       </Section>
 
