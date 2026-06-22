@@ -16,128 +16,38 @@ interface JobFormProps {
   submitLabel?: string;
 }
 
-// 4가지 표준 섹션 + 기타 = 5개 textarea로 분리. submit 시 단일 description HTML로 합침.
-const SECTIONS = [
-  {
-    key: 'duty',
-    title: '담당 업무',
+import {
+  JOB_SECTIONS,
+  EMPTY_JOB_SECTIONS,
+  serializeSections,
+  parseSections,
+  type JobSectionKey,
+  type JobSectionMap,
+} from '@/features/jobs/lib/parse-job-description';
+
+// JobForm용 UI 메타 (placeholder · 필수 여부)
+const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; required: boolean }> = {
+  duty: {
     placeholder: '예) 예식 당일 진행, 상담·예약, 고객 응대\n팀 구성과 현장 분위기도 함께 적어주세요.',
     required: true,
   },
-  {
-    key: 'requirements',
-    title: '지원 자격',
+  requirements: {
     placeholder: '예) 경력 1년 이상, 주말 가능, 메이크업 자격증\n신입 가능 여부, 교육 제공 여부를 알려주세요.',
     required: true,
   },
-  {
-    key: 'conditions',
-    title: '근무 조건',
+  conditions: {
     placeholder: '예) 강남, 월~금 10–18시, 월 320만원\n채용 인원, 시작 가능일, 고용 형태(정규/계약/단기 등)를 적어주세요.',
     required: true,
   },
-  {
-    key: 'apply',
-    title: '지원 시 알려주세요',
+  apply: {
     placeholder: '예) 이름·연락처·경력 요약·가능 일정·포트폴리오 링크',
     required: false,
   },
-  {
-    key: 'extra',
-    title: '기타 상세 내용',
+  extra: {
     placeholder: '복지·휴가·차량 지원·식대·우대 사항 등 자유롭게 작성해 주세요. (선택)',
     required: false,
   },
-] as const;
-
-type SectionKey = (typeof SECTIONS)[number]['key'];
-type SectionMap = Record<SectionKey, string>;
-
-const EMPTY_SECTIONS: SectionMap = { duty: '', requirements: '', conditions: '', apply: '', extra: '' };
-
-// 5개 섹션을 단일 HTML로 합침
-function serializeSections(s: SectionMap): string {
-  const blocks: string[] = [];
-  for (const sec of SECTIONS) {
-    const v = s[sec.key].trim();
-    if (!v) continue;
-    const html = v.split(/\n+/).map((line) => `<p>${escapeHtml(line)}</p>`).join('');
-    blocks.push(`<h3>${escapeHtml(sec.title)}</h3>${html}`);
-  }
-  return blocks.join('');
-}
-
-// 기존 description HTML을 5개 섹션으로 분해 (best-effort).
-// 헤더 패턴이 인식되면 분리, 안 되면 전체를 '기타 상세 내용'에.
-function parseSections(html: string): SectionMap {
-  const map: SectionMap = { ...EMPTY_SECTIONS };
-  if (!html?.trim()) return map;
-
-  // <h3>섹션</h3>...<h3>섹션</h3>... 형태로 split
-  const sectionToKey: Record<string, SectionKey> = {
-    '담당 업무': 'duty',
-    '담당업무': 'duty',
-    '업무': 'duty',
-    '지원 자격': 'requirements',
-    '지원자격': 'requirements',
-    '자격 요건': 'requirements',
-    '자격요건': 'requirements',
-    '근무 조건': 'conditions',
-    '근무조건': 'conditions',
-    '우대 사항': 'extra',
-    '우대사항': 'extra',
-    '지원 시 알려주세요': 'apply',
-    '지원시 알려주세요': 'apply',
-    '지원 방법': 'apply',
-    '지원방법': 'apply',
-    '기타': 'extra',
-    '기타 상세 내용': 'extra',
-    '기타 사항': 'extra',
-  };
-
-  // <h\d>…</h\d> 기준으로 chunk 분리
-  const pattern = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>([\s\S]*?)(?=<h[1-6][^>]*>|$)/gi;
-  let m: RegExpExecArray | null;
-  let matched = 0;
-  while ((m = pattern.exec(html)) !== null) {
-    const heading = m[1].trim();
-    const body = m[2].trim();
-    const k = sectionToKey[heading];
-    if (k) {
-      map[k] = (map[k] ? map[k] + '\n' : '') + htmlToPlain(body);
-      matched++;
-    } else if (body) {
-      map.extra = (map.extra ? map.extra + '\n' : '') + htmlToPlain(body);
-    }
-  }
-
-  // 헤더가 하나도 인식 안 되면 전체를 '기타'에
-  if (matched === 0) {
-    map.extra = htmlToPlain(html);
-  }
-  return map;
-}
-
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-}
-
-function htmlToPlain(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<\/li>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '· ')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+};
 
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
@@ -161,8 +71,8 @@ function stripHtml(html: string) {
 
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
   const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
-  const [sections, setSections] = useState<SectionMap>(() =>
-    initialData?.description ? parseSections(initialData.description) : { ...EMPTY_SECTIONS }
+  const [sections, setSections] = useState<JobSectionMap>(() =>
+    initialData?.description ? parseSections(initialData.description).sections : { ...EMPTY_JOB_SECTIONS }
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,7 +86,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const composedDescription = serializeSections(sections);
   const plainComposed = stripHtml(composedDescription);
 
-  const setSection = (key: SectionKey, value: string) => {
+  const setSection = (key: JobSectionKey, value: string) => {
     setSections((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -210,8 +120,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
   const validate = (): string | null => {
     if (!formData.title.trim()) return '제목을 입력해주세요.';
-    for (const sec of SECTIONS) {
-      if (sec.required && !sections[sec.key].trim()) {
+    for (const sec of JOB_SECTIONS) {
+      if (FORM_SECTION_META[sec.key].required && !sections[sec.key].trim()) {
         return `${sec.title}를 입력해주세요.`;
       }
     }
@@ -404,13 +314,15 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
       <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠 적으면 지원자가 한눈에 파악할 수 있어요. 빈 항목은 등록 후에도 보이지 않습니다.">
         <div className="space-y-5">
-          {SECTIONS.map((sec) => (
+          {JOB_SECTIONS.map((sec) => {
+            const meta = FORM_SECTION_META[sec.key];
+            return (
             <div key={sec.key}>
               <div className="flex items-center justify-between mb-1.5">
                 <label htmlFor={`section-${sec.key}`} className="text-sm font-semibold text-gray-800">
                   {sec.title}
-                  {sec.required && <span className="text-state-urgent ml-1">*</span>}
-                  {!sec.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
+                  {meta.required && <span className="text-state-urgent ml-1">*</span>}
+                  {!meta.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
                 </label>
                 <span className="text-[11px] text-gray-400 tabular-nums">{sections[sec.key].length}자</span>
               </div>
@@ -418,13 +330,14 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 id={`section-${sec.key}`}
                 value={sections[sec.key]}
                 onChange={(e) => setSection(sec.key, e.target.value)}
-                placeholder={sec.placeholder}
+                placeholder={meta.placeholder}
                 rows={sec.key === 'extra' ? 3 : 4}
                 className="w-full rounded border border-gray-300 px-4 py-3 text-[14px] text-gray-900 placeholder:text-gray-400 placeholder:whitespace-pre-line focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100 resize-y"
-                required={sec.required}
+                required={meta.required}
               />
             </div>
-          ))}
+            );
+          })}
 
           <p className="text-[11px] text-gray-400 text-right">
             총 {plainComposed.length}자 — 충분히 작성할수록 지원자 클릭률이 올라가요

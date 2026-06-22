@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import type { Job } from '@/types/database';
-import RichTextView from '@/shared/components/RichTextView';
+import JobDescriptionView from '@/features/jobs/components/JobDescriptionView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
 import JobViewTracker from '@/features/jobs/components/JobViewTracker';
@@ -57,8 +57,8 @@ export default async function JobDetailPage({ params }: PageProps) {
 
           {/* Description */}
           <section className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">상세 내용</h2>
-            <RichTextView html={job.description} className="text-[15px] text-gray-700 leading-relaxed" />
+            <h2 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">상세 내용</h2>
+            <JobDescriptionView html={job.description} />
           </section>
 
           {/* Related jobs */}
