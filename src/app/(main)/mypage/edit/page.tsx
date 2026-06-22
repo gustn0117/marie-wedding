@@ -8,6 +8,7 @@ import { directoryService } from '@/features/directory/services/directory-servic
 import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
+import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 import { compressImage } from '@/shared/utils/image';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -396,6 +397,8 @@ export default function EditProfilePage() {
       </form>
 
       <ConnectedAccountsSection />
+
+      <AccountWithdrawalSection />
     </div>
   );
 }

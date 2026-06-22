@@ -105,37 +105,70 @@ export default async function MyPage() {
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
     : null;
 
+  const isBusinessAcc = profile.account_type === 'business';
+
   return (
     <div className="space-y-4">
       <PageHeader
         eyebrow="내 작업공간"
         title="마이페이지"
-        description="등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다."
+        description={isBusinessAcc
+          ? "등록한 공고, 지원 내역, 커뮤니티 활동과 업체 프로필을 한 곳에서 관리합니다."
+          : "지원 내역, 스크랩한 공고, 커뮤니티 활동을 한 곳에서 관리합니다."}
         actions={
-          <>
-            <Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">공고 등록</Link>
-            <Link href={ROUTES.MYPAGE_DASHBOARD} className="btn-outline text-sm">대시보드</Link>
-          </>
+          isBusinessAcc ? (
+            <>
+              <Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">공고 등록</Link>
+              <Link href={ROUTES.MYPAGE_DASHBOARD} className="btn-outline text-sm">대시보드</Link>
+            </>
+          ) : (
+            <>
+              <Link href={ROUTES.JOBS} className="btn-primary text-sm">공고 둘러보기</Link>
+              <Link href={ROUTES.MYPAGE_BOOKMARKS} className="btn-outline text-sm">스크랩한 공고</Link>
+            </>
+          )
         }
       />
 
-      {/* 활동 요약 — 3 stat 카드 */}
+      {/* 활동 요약 — 회원 유형별 다른 stat */}
       <section className="grid grid-cols-3 gap-3">
-        <div className="stat">
-          <p className="stat-label">등록 공고</p>
-          <p className="stat-value">{jobs.length}</p>
-          <p className="text-xs text-gray-400 mt-1">건</p>
-        </div>
-        <div className="stat">
-          <p className="stat-label">받은 지원</p>
-          <p className="stat-value">{receivedApplications.length}</p>
-          <p className="text-xs text-gray-400 mt-1">건</p>
-        </div>
-        <div className="stat">
-          <p className="stat-label">진행 완료</p>
-          <p className="stat-value">{profile.completed_deals_count}</p>
-          <p className="text-xs text-gray-400 mt-1">건</p>
-        </div>
+        {isBusinessAcc ? (
+          <>
+            <div className="stat">
+              <p className="stat-label">등록 공고</p>
+              <p className="stat-value">{jobs.length}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+            <div className="stat">
+              <p className="stat-label">받은 지원</p>
+              <p className="stat-value">{receivedApplications.length}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+            <div className="stat">
+              <p className="stat-label">진행 완료</p>
+              <p className="stat-value">{profile.completed_deals_count}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="stat">
+              <p className="stat-label">보낸 지원</p>
+              <p className="stat-value">{sentApplications.length}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+            <div className="stat">
+              <p className="stat-label">작성 글</p>
+              <p className="stat-value">{posts.length}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+            <div className="stat">
+              <p className="stat-label">진행 완료</p>
+              <p className="stat-value">{profile.completed_deals_count}</p>
+              <p className="text-xs text-gray-400 mt-1">건</p>
+            </div>
+          </>
+        )}
       </section>
 
       {/* Profile Card */}
@@ -239,22 +272,24 @@ export default async function MyPage() {
       {/* Recommended Jobs */}
       <RecommendedJobs profile={profile} />
 
-      {/* Stats Summary — 묶음 헤더로 정보 위계 부여 (C-8) */}
-      {/* 이전: 8개 동일 모양 metric-tile이 2행 4열로 나열 → 시각 노이즈, 우선순위 모호.
-          수정: '공고 운영' / '커뮤니티·지원' 2 묶음으로 분리, 각 4개씩. */}
-      <section>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
-        <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
-          <WorkspaceMetric label="등록한 공고" value={jobs.length} />
-          <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
-          <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
-          <WorkspaceMetric
-            label="응답률"
-            value={Math.round(profile.response_rate ?? 0)}
-            unit="%"
-          />
-        </div>
-      </section>
+      {/* Stats Summary — 회원 유형별 분기.
+          업체: 공고 운영(등록 공고/조회수/받은 지원/응답률)
+          개인: 노출 안 함 — 커뮤니티·지원 섹션만 표시 */}
+      {isBusinessAcc && (
+        <section>
+          <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
+          <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
+            <WorkspaceMetric label="등록한 공고" value={jobs.length} />
+            <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
+            <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
+            <WorkspaceMetric
+              label="응답률"
+              value={Math.round(profile.response_rate ?? 0)}
+              unit="%"
+            />
+          </div>
+        </section>
+      )}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">커뮤니티·지원</p>
         <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
