@@ -207,7 +207,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       {/* Trust Card */}
       <section className="bg-white border-y border-gray-200 p-6 md:p-8">
         <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">신뢰 지표</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
           <TrustMetricBar
             label="인증 상태"
             value={VERIFICATION_STATUS_LABELS[profile.verification_status]}

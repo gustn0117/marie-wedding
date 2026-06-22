@@ -244,7 +244,7 @@ export default async function MyPage() {
           수정: '공고 운영' / '커뮤니티·지원' 2 묶음으로 분리, 각 4개씩. */}
       <section>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
           <WorkspaceMetric label="등록한 공고" value={jobs.length} />
           <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
           <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
@@ -257,7 +257,7 @@ export default async function MyPage() {
       </section>
       <section>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">커뮤니티·지원</p>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
           <WorkspaceMetric label="작성한 게시글" value={posts.length} />
           <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
           <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} />
