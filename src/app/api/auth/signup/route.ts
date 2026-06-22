@@ -38,11 +38,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Create profile (bypasses RLS with service_role)
+    //    이메일 회원가입은 폼에서 이미 account_type / regions를 받았으므로 곧장 onboarded 상태로 저장.
+    //    그러지 않으면 미들웨어가 마이페이지 진입 시 /onboarding으로 다시 보내 사용자가 동일 질문을 다시 받음.
     const profileData: Record<string, unknown> = {
       user_id: authData.user.id,
       account_type: accountType || 'individual',
       contact_name: contactName,
       region: Array.isArray(regions) ? regions.join(',') : regions,
+      signup_provider: 'email',
+      onboarded_at: new Date().toISOString(),
     };
 
     if (accountType === 'business') {

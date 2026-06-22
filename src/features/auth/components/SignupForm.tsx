@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -18,7 +17,6 @@ const STEPS = {
 };
 
 export default function SignupForm() {
-  const router = useRouter();
   const [formData, setFormData] = useState<SignupFormData>({
     accountType: 'individual',
     email: '',
@@ -74,7 +72,10 @@ export default function SignupForm() {
         businessTypes: formData.businessTypes.length > 0 ? formData.businessTypes : undefined,
         companyName: formData.companyName?.trim() || undefined,
       }), 15000);
-      router.push(ROUTES.HOME);
+      // router.push는 client navigation이라 미들웨어를 통과하지 않아 marie_profile cookie가 set되지 않음.
+      // 가입 직후엔 full reload로 헤더(profile/이름/로그아웃 메뉴)가 즉시 반영되도록 한다.
+      window.location.href = ROUTES.HOME;
+      return;
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message.includes('already registered') ? '이미 가입된 이메일입니다.' : err.message);
