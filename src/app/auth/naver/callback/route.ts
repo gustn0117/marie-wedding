@@ -96,6 +96,14 @@ export async function GET(request: Request) {
 
   const service = createServiceClient();
 
+  // /signup STEP 0에서 cookie로 전달된 계정 유형 preset
+  const presetRaw = cookieStore.get('signup_account_type')?.value;
+  const presetAccountType: 'individual' | 'business' | null =
+    presetRaw === 'business' || presetRaw === 'individual' ? presetRaw : null;
+  if (presetRaw) {
+    cookieStore.set('signup_account_type', '', { path: '/', maxAge: 0 });
+  }
+
   // ④ 기존 user 조회 (naver_sub 기준)
   const { data: existingByNaver } = await service
     .from('profiles')
@@ -147,7 +155,7 @@ export async function GET(request: Request) {
       await service.from('profiles').insert({
         user_id: created.data.user.id,
         contact_name: userInfo.name ?? '사용자',
-        account_type: null,
+        account_type: presetAccountType,
         region: null,
         signup_provider: 'naver',
         naver_sub: naverSub,
@@ -169,7 +177,7 @@ export async function GET(request: Request) {
       await service.from('profiles').insert({
         user_id: created.data.user.id,
         contact_name: userInfo.name ?? '사용자',
-        account_type: null,
+        account_type: presetAccountType,
         region: null,
         signup_provider: 'naver',
         naver_sub: naverSub,

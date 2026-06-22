@@ -16,9 +16,16 @@ const STEPS = {
   PROFILE: 2,
 };
 
+// 회원가입 STEP 0에서 선택한 계정 유형을 OAuth callback에 전달하기 위해 cookie로 저장.
+// /auth/callback과 /auth/naver/callback에서 읽어 profile.account_type에 preset 후 cookie 삭제.
+function persistSignupType(type: 'individual' | 'business') {
+  if (typeof document === 'undefined') return;
+  document.cookie = `signup_account_type=${type}; path=/; max-age=600; samesite=lax`;
+}
+
 export default function SignupForm() {
   const [formData, setFormData] = useState<SignupFormData>({
-    accountType: 'individual',
+    accountType: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -61,6 +68,7 @@ export default function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (!formData.accountType) { setError('회원 유형을 선택해주세요.'); setStep(STEPS.SELECT_TYPE); return; }
     if (!validateProfile()) return;
 
     setLoading(true);
@@ -101,21 +109,6 @@ export default function SignupForm() {
           <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼 회원가입</p>
         </div>
 
-        {/* Social Signup (Step 0에서만 노출) */}
-        {step === STEPS.SELECT_TYPE && (
-          <>
-            <SocialLoginButtons mode="signup" onError={setError} />
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-surface px-3 text-text-muted">또는 이메일로 가입</span>
-              </div>
-            </div>
-          </>
-        )}
-
         {/* Step Indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {Array.from({ length: totalSteps }, (_, i) => (
@@ -140,11 +133,14 @@ export default function SignupForm() {
           {/* Step 0: 회원 유형 선택 */}
           {step === STEPS.SELECT_TYPE && (
             <>
+              <p className="text-center text-sm text-gray-700 mb-2 font-semibold">먼저, 어떤 회원으로 가입하시나요?</p>
+              <p className="text-center text-xs text-gray-500 mb-5">선택한 유형은 소셜 가입에도 적용됩니다.</p>
               <div className="space-y-3">
                 <button
                   type="button"
-                  onClick={() => { setFormData(prev => ({ ...prev, accountType: 'individual' })); setStep(STEPS.ACCOUNT); }}
-                  className="w-full p-5 rounded border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
+                  onClick={() => { setFormData(prev => ({ ...prev, accountType: 'individual' })); persistSignupType('individual'); }}
+                  className={`w-full p-5 rounded border-2 text-left transition-all hover:border-primary ${formData.accountType === 'individual' ? 'border-primary bg-primary-50' : 'border-gray-200'}`}
+                  aria-pressed={formData.accountType === 'individual'}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center">
@@ -161,8 +157,9 @@ export default function SignupForm() {
 
                 <button
                   type="button"
-                  onClick={() => { setFormData(prev => ({ ...prev, accountType: 'business' })); setStep(STEPS.ACCOUNT); }}
-                  className="w-full p-5 rounded border-2 text-left transition-all hover:border-primary hover:bg-primary-50 border-gray-200"
+                  onClick={() => { setFormData(prev => ({ ...prev, accountType: 'business' })); persistSignupType('business'); }}
+                  className={`w-full p-5 rounded border-2 text-left transition-all hover:border-primary ${formData.accountType === 'business' ? 'border-primary bg-primary-50' : 'border-gray-200'}`}
+                  aria-pressed={formData.accountType === 'business'}
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center">
@@ -177,6 +174,34 @@ export default function SignupForm() {
                   </div>
                 </button>
               </div>
+
+              {/* 유형 선택 후에만 진행 UI 노출 — '먼저 유형을 골라야 한다'는 흐름을 시각적으로 강제 */}
+              {formData.accountType && (
+                <div className="mt-5 pt-5 border-t border-gray-200 space-y-3">
+                  <p className="text-center text-[12px] text-gray-500">
+                    선택: <span className="font-bold text-ink">{formData.accountType === 'business' ? '업체 회원' : '개인 회원'}</span> —
+                    소셜로 가입해도 위 유형이 그대로 적용됩니다.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setStep(STEPS.ACCOUNT)}
+                    className="btn-primary w-full"
+                  >
+                    이메일로 가입 진행
+                  </button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+                    <div className="relative flex justify-center text-xs"><span className="bg-surface px-3 text-text-muted">또는 소셜로 가입</span></div>
+                  </div>
+                  <SocialLoginButtons mode="signup" onError={setError} />
+                </div>
+              )}
+
+              {!formData.accountType && (
+                <p className="mt-4 text-center text-[11.5px] text-gray-400">
+                  먼저 위에서 회원 유형을 선택해주세요.
+                </p>
+              )}
             </>
           )}
 
@@ -383,33 +408,6 @@ export default function SignupForm() {
           )}
         </form>
 
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-          <div className="relative flex justify-center text-xs"><span className="bg-surface px-3 text-text-muted">소셜 계정으로 간편 가입</span></div>
-        </div>
-
-        {/* Social Login */}
-        <div className="flex justify-center gap-4">
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                await authService.signInWithKakao();
-              } catch {
-                setError('카카오 로그인에 실패했습니다.');
-              }
-            }}
-            className="w-12 h-12 rounded bg-[#FEE500] flex items-center justify-center hover:opacity-80 transition-opacity"
-            title="카카오로 가입"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.8 5.16 4.5 6.54-.18.66-.66 2.4-.75 2.76-.12.48.18.48.36.36.15-.09 2.34-1.59 3.3-2.25.84.12 1.71.18 2.59.18 5.52 0 10-3.48 10-7.8S17.52 3 12 3z" fill="#3C1E1E"/>
-            </svg>
-          </button>
-        </div>
-
-        <div className="mt-6" />
 
         {/* Login Link */}
         <p className="text-center text-sm text-text-secondary">

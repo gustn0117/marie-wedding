@@ -1,5 +1,5 @@
 export interface SignupFormData {
-  accountType: 'individual' | 'business';
+  accountType: 'individual' | 'business' | '';
   email: string;
   password: string;
   confirmPassword: string;

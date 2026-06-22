@@ -74,10 +74,19 @@ export async function GET(request: Request) {
       user.identities?.[0]?.provider ||
       'email';
 
+    // /signup STEP 0에서 선택한 유형이 cookie로 전달됐으면 preset
+    const presetRaw = cookieStore.get('signup_account_type')?.value;
+    const presetAccountType =
+      presetRaw === 'business' || presetRaw === 'individual' ? presetRaw : null;
+    if (presetRaw) {
+      // 1회용 cookie 즉시 삭제
+      cookieStore.set('signup_account_type', '', { path: '/', maxAge: 0 });
+    }
+
     await serviceClient.from('profiles').insert({
       user_id: user.id,
       contact_name: name,
-      account_type: null,
+      account_type: presetAccountType,
       region: null,
       signup_provider: provider,
       onboarded_at: null,
