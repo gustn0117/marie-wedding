@@ -43,7 +43,9 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles, events }: HomeContentProps) {
+const HOT_KEYWORDS = ['예식장', '드레스', '스튜디오', '메이크업', '플래너', '예식 도우미'] as const;
+
+export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles, events, counts }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -60,32 +62,88 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
 
   return (
     <div className="pb-16">
-      {/* Hero — 가운데 정렬 */}
-      <section className="bg-white">
-        <div className="max-w-[1280px] mx-auto px-5 pt-16 pb-12 sm:pt-20 sm:pb-14">
+      {/* Hero — 가운데 정렬 + 옅은 그래디언트 + 미세 dot 패턴 */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white border-b border-gray-100">
+        {/* 미세 dot 패턴 — 무채색 깊이감 */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(15,23,42,0.45) 1px, transparent 0)',
+            backgroundSize: '22px 22px',
+            maskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0) 75%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0) 75%)',
+          }}
+        />
+
+        <div className="relative max-w-[1280px] mx-auto px-5 pt-14 pb-12 sm:pt-20 sm:pb-14">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
+            {/* Eyebrow */}
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 backdrop-blur px-3 py-1 text-[11px] font-bold tracking-wider text-gray-600 uppercase">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#F2C879]" aria-hidden />
+              Marié · 웨딩업계 전문 구인구직
+            </p>
+
+            {/* 제목 */}
+            <h1 className="mt-5 text-[34px] sm:text-[44px] font-bold leading-[1.18] tracking-tight text-ink">
               조건에 맞는 웨딩 일자리와<br className="lg:hidden" />
-              {' '}인재를 찾아보세요
+              {' '}<span className="italic font-semibold">인재</span>를 찾아보세요
             </h1>
-            {/* 제목 → 검색바: 충분한 호흡 */}
-            <form onSubmit={handleSearch} className="mt-8 sm:mt-10 flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
+            <p className="mt-3 text-[13.5px] sm:text-[14.5px] text-gray-500 leading-relaxed max-w-[520px]">
+              예식장·드레스·스튜디오·메이크업·플래너까지 — 한 곳에서 검색하고 바로 지원하세요.
+            </p>
+
+            {/* 검색바 */}
+            <form
+              onSubmit={handleSearch}
+              className="mt-8 sm:mt-9 flex h-14 sm:h-16 overflow-hidden rounded-2xl border border-gray-200 bg-white w-full max-w-[640px] shadow-[0_8px_24px_-12px_rgba(15,23,42,0.18)] focus-within:border-ink focus-within:shadow-[0_14px_32px_-14px_rgba(15,23,42,0.25)] transition-all"
+            >
+              <span className="pl-5 flex items-center text-gray-400" aria-hidden>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+              </span>
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="업체명, 직무, 지역을 검색하세요"
-                className="flex-1 min-w-0 px-5 text-[16px] outline-none placeholder:text-gray-400 text-ink"
+                className="flex-1 min-w-0 px-3 text-[15.5px] outline-none placeholder:text-gray-400 text-ink"
+                aria-label="검색어"
               />
-              <button type="submit" className="bg-white px-5 hover:bg-gray-50 transition-colors">
-                <svg className="w-6 h-6 text-ink" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                </svg>
+              <button
+                type="submit"
+                className="m-2 px-5 sm:px-7 rounded-xl bg-ink text-white text-sm font-bold hover:bg-ink/90 transition-colors"
+              >
+                검색
               </button>
             </form>
+
+            {/* 인기 검색어 */}
+            <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
+              <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">인기</span>
+              {HOT_KEYWORDS.map((kw) => (
+                <Link
+                  key={kw}
+                  href={`/search?q=${encodeURIComponent(kw)}`}
+                  className="text-[12.5px] text-gray-600 hover:text-ink hover:underline underline-offset-4 transition-colors"
+                >
+                  #{kw}
+                </Link>
+              ))}
+            </div>
+
+            {/* 통계 뱃지 — 신뢰 지표 */}
+            <div className="mt-7 flex items-center gap-5 sm:gap-7 text-center">
+              <Stat value={counts.jobs} label="등록 공고" />
+              <Divider />
+              <Stat value={counts.verified} label="인증 업체" />
+              <Divider />
+              <Stat value={counts.profiles} label="활동 회원" />
+            </div>
           </div>
 
           {/* 카테고리 아이콘 그리드 */}
-          <div className="mt-16 sm:mt-20 grid grid-cols-5 md:grid-cols-10 gap-2 sm:gap-3">
+          <div className="mt-14 sm:mt-16 grid grid-cols-5 md:grid-cols-10 gap-2 sm:gap-3">
             {CATEGORIES.map((c) => (
               <Link
                 key={c.label}
@@ -183,6 +241,22 @@ function BoxWidget({ title, href, children }: { title: string; href: string; chi
       {children}
     </div>
   );
+}
+
+function Stat({ value, label }: { value: number; label: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-[18px] sm:text-[20px] font-bold text-ink tabular-nums leading-none">
+        {value.toLocaleString()}
+        <span className="text-[12px] font-bold text-gray-400 align-top ml-0.5">+</span>
+      </p>
+      <p className="mt-1 text-[10.5px] sm:text-[11px] font-semibold text-gray-500 tracking-wide">{label}</p>
+    </div>
+  );
+}
+
+function Divider() {
+  return <span className="w-px h-7 bg-gray-200" aria-hidden />;
 }
 
 function BoxEmpty({ message }: { message: string }) {
