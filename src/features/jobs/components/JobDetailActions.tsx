@@ -7,6 +7,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { jobService } from '@/features/jobs/services/job-service';
 import { revalidate } from '@/shared/utils/revalidate';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface JobDetailActionsProps {
   jobId: string;
@@ -18,19 +19,21 @@ export default function JobDetailActions({ jobId, authorId }: JobDetailActionsPr
   const { profile } = useAuth();
   const [deleting, setDeleting] = useState(false);
 
-  const isAuthor = profile && profile.id === authorId;
-  if (!isAuthor) return null;
+  const canManage = !!profile && (profile.id === authorId || profile.role === 'admin');
+  if (!canManage) return null;
 
   const handleDelete = async () => {
-    if (!confirm('정말로 이 공고를 삭제하시겠습니까?')) return;
+    if (!confirm('정말로 이 공고를 삭제하시겠습니까? 삭제 후에는 복구할 수 없어요.')) return;
     setDeleting(true);
     try {
-      await jobService.deleteJob(jobId);
-      await revalidate('/', ROUTES.JOBS);
+      await withTimeout(jobService.deleteJob(jobId), 10000);
+      // revalidate는 best-effort — hang해도 navigation은 즉시
+      revalidate('/', ROUTES.JOBS).catch(() => {});
       router.push(ROUTES.JOBS);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+      console.error('[JobDetailActions] delete failed:', err);
+      alert(err instanceof Error ? `삭제에 실패했습니다.\n${err.message}` : '삭제에 실패했습니다.');
       setDeleting(false);
     }
   };

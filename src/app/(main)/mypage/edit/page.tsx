@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
@@ -32,21 +32,36 @@ export default function EditProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  if (profile && !initialized) {
-    setFormData({
-      contact_name: profile.contact_name || '',
-      company_name: profile.company_name || '',
-      business_type: profile.business_type || '',
-      region: profile.region || '',
-      bio: profile.bio || '',
-      phone: profile.phone || '',
-      website: profile.website || '',
-    });
-    if (profile.profile_image) {
-      setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`);
-    }
-    setInitialized(true);
-  }
+  // 미들웨어 쿠키 profile에는 bio/phone/website가 없으므로 DB에서 전체 profile을 다시 가져와 바인딩.
+  // useAuth().profile은 cookie 기반 lite 객체.
+  useEffect(() => {
+    if (!profile?.id || initialized) return;
+    let cancelled = false;
+    (async () => {
+      const sb = createClient();
+      const { data } = await sb
+        .from('profiles')
+        .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
+        .eq('id', profile.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const src = data ?? profile;
+      setFormData({
+        contact_name: src.contact_name || '',
+        company_name: src.company_name || '',
+        business_type: src.business_type || '',
+        region: src.region || '',
+        bio: src.bio || '',
+        phone: src.phone || '',
+        website: src.website || '',
+      });
+      if (src.profile_image) {
+        setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${src.profile_image}`);
+      }
+      setInitialized(true);
+    })();
+    return () => { cancelled = true; };
+  }, [profile, initialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

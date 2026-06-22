@@ -27,15 +27,27 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 의미있는 문자(영문/숫자/한글)가 최소 2자 이상 포함되어야 함
+  // 한글/영문/숫자 문자 카운트 (특수문자·공백 제외)
+  const meaningfulChars = (s: string) =>
+    (s.match(/[A-Za-z0-9가-힯ㄱ-ㆎ]/g) || []).length;
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').trim();
+  const titleClean = formData.title.trim();
+  const contentClean = stripHtml(formData.content);
   const isValid =
-    formData.title.trim().length > 0 &&
-    formData.content.trim().length > 0 &&
+    titleClean.length >= 2 &&
+    meaningfulChars(titleClean) >= 2 &&
+    contentClean.length >= 5 &&
+    meaningfulChars(contentClean) >= 5 &&
     formData.category.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) {
-      setError('모든 필수 항목을 입력해주세요.');
+      if (!formData.category) setError('카테고리를 선택해주세요.');
+      else if (meaningfulChars(titleClean) < 2) setError('제목에 영문/숫자/한글을 2자 이상 입력해주세요.');
+      else if (meaningfulChars(contentClean) < 5) setError('내용을 5자 이상 입력해주세요.');
+      else setError('모든 필수 항목을 입력해주세요.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -59,8 +71,12 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         else router.push(ROUTES.COMMUNITY_DETAIL(post.id));
         router.refresh();
       }
-    } catch {
-      setError(isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.');
+    } catch (err) {
+      console.error('[PostForm] submit failed:', err);
+      const base = isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.';
+      const detail = err instanceof Error && err.message ? ` (${err.message})` : '';
+      setError(base + detail);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
     }

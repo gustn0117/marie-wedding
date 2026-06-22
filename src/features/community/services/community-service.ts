@@ -102,9 +102,10 @@ export const communityService = {
         author_id: authorId,
       })
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) throw error;
+    if (!post) throw new Error('게시글이 등록되었지만 다시 읽지 못했어요. 게시판에서 확인해 주세요.');
     return post as Post;
   },
 

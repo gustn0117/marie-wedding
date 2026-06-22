@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { validateEmail } from '@/shared/utils/validation';
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,6 +9,12 @@ export async function POST(request: NextRequest) {
 
     if (!email || !password || !contactName || !regions?.length) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
+    }
+
+    // 이메일 형식 검증 (서버 측 — 클라이언트 우회 방지)
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      return NextResponse.json({ error: emailCheck.reason ?? '이메일 형식이 올바르지 않습니다.' }, { status: 400 });
     }
 
     const supabase = createServiceClient();

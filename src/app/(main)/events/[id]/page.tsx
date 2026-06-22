@@ -28,10 +28,10 @@ async function getEvent(id: string): Promise<Event | null> {
     .single();
   if (!data) return null;
 
-  // Atomic view count via RPC (SECURITY DEFINER)
+  // Atomic view count via RPC (SECURITY DEFINER). 화면에 즉시 반영되도록 +1.
   await supabase.rpc('increment_event_view_count', { p_event_id: id });
-
-  return data as Event;
+  const event = data as Event;
+  return { ...event, view_count: (event.view_count ?? 0) + 1 };
 }
 
 function getStaffSearchKeyword(event: Event) {

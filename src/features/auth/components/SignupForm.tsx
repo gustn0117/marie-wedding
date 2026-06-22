@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { validateEmail } from '@/shared/utils/validation';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
@@ -41,8 +42,8 @@ export default function SignupForm() {
   };
 
   const validateAccount = (): boolean => {
-    if (!formData.email) { setError('이메일을 입력해주세요.'); return false; }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) { setError('올바른 이메일 형식을 입력해주세요.'); return false; }
+    const emailCheck = validateEmail(formData.email);
+    if (!emailCheck.valid) { setError(emailCheck.reason ?? '이메일이 올바르지 않습니다.'); return false; }
     if (!formData.password) { setError('비밀번호를 입력해주세요.'); return false; }
     if (formData.password.length < 6) { setError('비밀번호는 최소 6자 이상이어야 합니다.'); return false; }
     if (formData.password !== formData.confirmPassword) { setError('비밀번호가 일치하지 않습니다.'); return false; }

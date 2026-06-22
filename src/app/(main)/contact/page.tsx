@@ -10,7 +10,18 @@ export default function ContactPage() {
         <h1 className="text-2xl font-bold text-gray-900">고객센터</h1>
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card p-6 text-center">
+          <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center mx-auto mb-3">
+            <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-bold text-text-primary mb-1">대표전화</h3>
+          <a href="tel:1660-0000" className="text-sm font-bold text-text-secondary hover:text-primary tabular-nums">1660-0000</a>
+          <p className="text-xs text-text-muted mt-1">평일 10:00 ~ 18:00</p>
+        </div>
+
         <div className="card p-6 text-center">
           <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -18,14 +29,14 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">이메일 문의</h3>
-          <a href="mailto:tlagustn020117@gmail.com" className="text-sm text-text-secondary hover:text-primary">tlagustn020117@gmail.com</a>
-          <p className="text-xs text-text-muted mt-1">영업일 기준 24시간 이내 답변</p>
+          <a href="mailto:tlagustn020117@gmail.com" className="text-sm text-text-secondary hover:text-primary break-all">tlagustn020117@gmail.com</a>
+          <p className="text-xs text-text-muted mt-1">영업일 기준 24시간 이내</p>
         </div>
 
         <div className="card p-6 text-center">
           <div className="w-12 h-12 bg-primary-50 rounded flex items-center justify-center mx-auto mb-3">
             <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">운영 시간</h3>
