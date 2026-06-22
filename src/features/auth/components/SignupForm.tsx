@@ -133,8 +133,7 @@ export default function SignupForm() {
           {/* Step 0: 회원 유형 선택 */}
           {step === STEPS.SELECT_TYPE && (
             <>
-              <p className="text-center text-sm text-gray-700 mb-2 font-semibold">먼저, 어떤 회원으로 가입하시나요?</p>
-              <p className="text-center text-xs text-gray-500 mb-5">선택한 유형은 소셜 가입에도 적용됩니다.</p>
+              <p className="text-center text-sm text-gray-700 mb-5 font-semibold">먼저, 어떤 회원으로 가입하시나요?</p>
               <div className="space-y-3">
                 <button
                   type="button"
@@ -409,11 +408,13 @@ export default function SignupForm() {
         </form>
 
 
-        {/* Login Link */}
-        <p className="text-center text-sm text-text-secondary">
-          이미 계정이 있으신가요?{' '}
-          <Link href={ROUTES.LOGIN} className="font-medium text-primary hover:text-primary-dark transition-colors">로그인</Link>
-        </p>
+        {/* Login Link — 위 액션 영역과 충분한 호흡 */}
+        <div className="mt-8 pt-6 border-t border-gray-100">
+          <p className="text-center text-sm text-text-secondary">
+            이미 계정이 있으신가요?{' '}
+            <Link href={ROUTES.LOGIN} className="font-medium text-primary hover:text-primary-dark transition-colors">로그인</Link>
+          </p>
+        </div>
       </div>
     </div>
   );
