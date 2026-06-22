@@ -53,6 +53,9 @@ export default async function JobDetailPage({ params }: PageProps) {
       {/* Main grid: content + sidebar */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4 min-w-0">
+          {/* Author actions (edit/delete for owner) — hero 상단 우측 */}
+          <JobDetailActions jobId={job.id} authorId={job.author_id} />
+
           <JobDetailHero job={job} />
 
           {/* Description */}
@@ -63,9 +66,6 @@ export default async function JobDetailPage({ params }: PageProps) {
 
           {/* Related jobs */}
           <RelatedJobs authorId={job.author_id} currentJobId={job.id} />
-
-          {/* Author actions (edit/delete for owner) */}
-          <JobDetailActions jobId={job.id} authorId={job.author_id} />
 
           {/* Application box (anchor target) */}
           <div id="apply" className="scroll-mt-20">
