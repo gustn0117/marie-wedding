@@ -19,6 +19,7 @@ import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewLi
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
 import TrustMetricBar from '@/features/verification/components/TrustMetricBar';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
+import GalleryLightbox from '@/shared/components/GalleryLightbox';
 
 export const dynamic = 'force-dynamic';
 
@@ -284,37 +285,22 @@ export default async function CompanyDetailPage({ params }: PageProps) {
       )}
 
       {/* 옛 gallery 필드 — Portfolios 컴포넌트로 대체된 deprecated 컬럼.
-          기존 데이터 보존을 위해 표시는 유지하되 key는 이미지 경로로 안정화 (이전: key={i}).
-          신규 등록은 portfolios로 유도. */}
-      {profile.gallery && profile.gallery.length > 0 && (
-        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
-          <h2 className="text-lg font-bold text-ink mb-4 pb-3 border-b border-gray-200">
-            갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {profile.gallery.map((img) => {
-              const url = resolveStorageUrl(img, 'avatars');
-              if (!url) return null;
-              return (
-                <a
-                  key={img}
-                  href={url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="aspect-square overflow-hidden rounded-lg border border-gray-200 group hover:border-ink transition-colors block"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={url}
-                    alt="갤러리 이미지"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </a>
-              );
-            })}
+          기존 데이터 보존을 위해 표시는 유지. 신규 등록은 portfolios로 유도.
+          클릭 시 새 탭 원본 이동 대신 lightbox 확대 표시. */}
+      {profile.gallery && profile.gallery.length > 0 && (() => {
+        const galleryUrls = profile.gallery
+          .map((img) => resolveStorageUrl(img, 'avatars'))
+          .filter((u): u is string => !!u);
+        if (galleryUrls.length === 0) return null;
+        return (
+          <div className="bg-white border-y border-gray-200 p-6 md:p-8">
+            <h2 className="text-lg font-bold text-ink mb-4 pb-3 border-b border-gray-200">
+              갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{galleryUrls.length}</span>
+            </h2>
+            <GalleryLightbox images={galleryUrls} altPrefix={`${displayName} 갤러리`} />
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Jobs */}
       <div className="bg-white border-y border-gray-200 p-6 md:p-8">
