@@ -34,35 +34,52 @@ export default function EditProfilePage() {
   const [success, setSuccess] = useState(false);
 
   // 미들웨어 쿠키 profile에는 bio/phone/website가 없으므로 DB에서 전체 profile을 다시 가져와 바인딩.
-  // useAuth().profile은 cookie 기반 lite 객체.
+  // useAuth().profile은 cookie 기반 lite 객체이며, useAuth 내부에서 두 번 setState되어
+  // 의존성 [profile, initialized]로 두면 매번 reference가 달라져 fetch가 재실행된다.
+  // → 의존성을 profile.id로 안정화 + fetch 실패 시 cookie fallback 금지(빈 form 노출 방지).
+  const profileId = profile?.id;
   useEffect(() => {
-    if (!profile?.id || initialized) return;
+    if (!profileId || initialized) return;
     let cancelled = false;
     (async () => {
-      const sb = createClient();
-      const { data } = await sb
-        .from('profiles')
-        .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
-        .eq('id', profile.id)
-        .maybeSingle();
-      if (cancelled) return;
-      const src = data ?? profile;
-      setFormData({
-        contact_name: src.contact_name || '',
-        company_name: src.company_name || '',
-        business_type: src.business_type || '',
-        region: src.region || '',
-        bio: src.bio || '',
-        phone: src.phone || '',
-        website: src.website || '',
-      });
-      if (src.profile_image) {
-        setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${src.profile_image}`);
+      try {
+        const sb = createClient();
+        const { data, error: fetchErr } = await withTimeout(
+          sb
+            .from('profiles')
+            .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
+            .eq('id', profileId)
+            .maybeSingle(),
+          10000,
+          '프로필을 가져오는 중 시간이 초과되었어요.',
+        );
+        if (cancelled) return;
+        if (fetchErr || !data) {
+          console.error('[mypage/edit] profile fetch failed:', fetchErr);
+          setError('프로필을 가져오지 못했어요. 페이지를 새로고침해 주세요.');
+          return; // initialized=false 유지 → form 자체 미렌더
+        }
+        setFormData({
+          contact_name: data.contact_name || '',
+          company_name: data.company_name || '',
+          business_type: data.business_type || '',
+          region: data.region || '',
+          bio: data.bio || '',
+          phone: data.phone || '',
+          website: data.website || '',
+        });
+        if (data.profile_image) {
+          setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`);
+        }
+        setInitialized(true);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[mypage/edit] profile fetch threw:', err);
+        setError(err instanceof Error && err.message ? err.message : '프로필을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');
       }
-      setInitialized(true);
     })();
     return () => { cancelled = true; };
-  }, [profile, initialized]);
+  }, [profileId, initialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -211,6 +228,38 @@ export default function EditProfilePage() {
       <div className="max-w-2xl mx-auto text-center py-16">
         <h2 className="text-xl font-bold text-gray-900 mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>
+      </div>
+    );
+  }
+
+  // DB 프로필 fetch 완료 전엔 빈 폼 노출 X — 에러가 있으면 에러 박스, 아니면 skeleton
+  if (!initialized) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-4">
+        {error ? (
+          <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+            {error}
+            <div className="mt-3">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="px-3 h-8 rounded border border-rose-300 bg-white text-xs font-semibold text-rose-700 hover:bg-rose-50"
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6 animate-pulse">
+            <div className="h-8 w-40 bg-gray-200 rounded" />
+            <div className="bg-white rounded border border-gray-200 p-8 space-y-4">
+              <div className="h-20 w-20 rounded bg-gray-200 mx-auto" />
+              <div className="h-10 rounded bg-gray-200" />
+              <div className="h-10 rounded bg-gray-200" />
+              <div className="h-10 rounded bg-gray-200" />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
