@@ -566,8 +566,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         />
       ) : viewMode === 'list' ? (
         <div className="platform-data-table">
-          {jobs.map((job) => (
-            <JobListRow key={job.id} job={job} />
+          {jobs.map((job, idx) => (
+            <JobListRow key={job.id} job={job} index={idx + 1} />
           ))}
         </div>
       ) : (

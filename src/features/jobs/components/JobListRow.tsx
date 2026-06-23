@@ -7,120 +7,152 @@ import {
   getEmploymentTypeLabel,
   getRegionLabel,
 } from '@/shared/utils/format';
-import { getDDayLabel, isUrgent, isNew, getJobTier } from '@/shared/utils/tier';
-import Badge from '@/shared/components/Badge';
+import { getDDayLabel, isUrgent } from '@/shared/utils/tier';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
-import SafeImage from '@/shared/components/SafeImage';
 
 interface Props {
   job: Job;
+  index?: number;
 }
 
-export default function JobListRow({ job }: Props) {
-  const tier = getJobTier(job);
+/**
+ * 사람인 스타일 가로 row.
+ *
+ * | idx | 회사 / 그룹 | 제목 + 키워드 + 카테고리 | 메타(지역/고용형태/경력) | CTA + D-day + 등록 |
+ *
+ * 키워드는 description HTML에서 한글/영문 명사 후보를 단순 추출(태그 제거 + 첫 N단어).
+ * 카테고리 칩은 직군(business_type) 기반 단일.
+ */
+export default function JobListRow({ job, index }: Props) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
-  const fresh = isNew(job.created_at);
-  const companyName = job.author?.company_name ?? job.author?.contact_name ?? '알 수 없음';
+  const companyName = job.author?.company_name ?? job.author?.contact_name ?? '미상';
   const region = job.author?.region ? getRegionLabel(job.author.region) : getRegionLabel(job.region);
-  const responseRate = Math.round(job.author?.response_rate ?? 0);
-  const completedProgress = job.author?.completed_deals_count ?? 0;
-  const imageUrl = job.image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
-    : null;
+  const employmentLabel = getEmploymentTypeLabel(job.employment_type);
+  const businessLabel = getBusinessTypeLabel(job.business_type);
+  const experience = experienceLabel(job.experience_min);
+  const keywords = extractKeywords(job.description, 5);
 
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className={`group flex gap-4 border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50/60 ${
-        tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/40' : ''
-      }`}
+      className="group grid grid-cols-[36px_minmax(140px,180px)_minmax(0,1fr)_auto_auto] items-center gap-3 sm:gap-5 border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50/60"
     >
-      {/* 썸네일 — 96x96, 이미지 실패 시 이니셜 fallback */}
-      <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-        <SafeImage
-          src={imageUrl}
-          alt={job.title}
-          className="w-full h-full object-cover"
-          wrapperClassName="w-full h-full flex items-center justify-center"
-          fallback={
-            <span className="text-2xl font-extrabold text-gray-300 tracking-tighter">
-              {companyName.charAt(0)}
-            </span>
-          }
-        />
+      {/* 좌측 ① 순위 번호 */}
+      <div className="text-center self-start hidden sm:block">
+        <p className="text-[18px] font-extrabold text-ink tabular-nums leading-none">{index ?? '-'}</p>
+        <p className="text-[10px] text-gray-300 mt-1">-</p>
       </div>
 
-      {/* 본문 — flex 1, 최대 폭 사용 */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
-        {/* 상단: 회사 메타 + 배지 */}
-        <div>
-          <div className="flex items-center gap-1.5 text-[12px] text-gray-500 mb-1">
-            <span className="font-semibold truncate">{companyName}</span>
-            {job.author && (
-              <VerificationBadge
-                verificationStatus={job.author.verification_status}
-                phoneVerified={job.author.phone_verified}
-              />
-            )}
-            <span className="text-gray-300" aria-hidden>·</span>
-            <span className="truncate">{region}</span>
-          </div>
-
-          {/* 제목 — 큰 강조 */}
-          <h3 className="text-[17px] sm:text-[18px] font-bold text-ink leading-snug tracking-tight line-clamp-1 group-hover:text-primary transition-colors">
-            {job.title}
-          </h3>
-
-          {/* 배지 행 — 상태 + 직군 + 고용형태 */}
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {urgent && <Badge kind="urgent">마감임박</Badge>}
-            {fresh && !urgent && <Badge kind="new">NEW</Badge>}
-            {tier === 2 && <Badge kind="promoted">스폰서</Badge>}
-            <Badge kind="attr">{getEmploymentTypeLabel(job.employment_type)}</Badge>
-            <Badge kind="category">{getBusinessTypeLabel(job.business_type)}</Badge>
-            {job.salary_info && (
-              <>
-                <span className="text-gray-300" aria-hidden>·</span>
-                <span className="text-[13px] font-bold text-primary">{job.salary_info}</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* 하단: 진행 이력/응답률 (있을 때만) */}
-        {(completedProgress > 0 || responseRate > 0) && (
-          <div className="mt-2 flex items-center gap-2 text-[11px] text-gray-500">
-            {completedProgress > 0 && (
-              <span>진행 <span className="font-bold text-gray-700 tabular-nums">{completedProgress}</span>건</span>
-            )}
-            {completedProgress > 0 && responseRate > 0 && <span className="text-gray-300" aria-hidden>·</span>}
-            {responseRate > 0 && (
-              <span>응답률 <span className="font-bold text-gray-700 tabular-nums">{responseRate}%</span></span>
-            )}
-          </div>
-        )}
+      {/* 좌측 ② 회사 */}
+      <div className="min-w-0 self-start">
+        <p className="text-[13.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
+          {companyName}
+          {job.author && (
+            <VerificationBadge
+              verificationStatus={job.author.verification_status}
+              phoneVerified={job.author.phone_verified}
+            />
+          )}
+        </p>
+        <p className="text-[11.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
       </div>
 
-      {/* 우측 메타 — 모바일은 컴팩트(D-day만), sm+에선 시각·CTA까지 */}
-      <div className="shrink-0 flex flex-col items-end justify-between text-right gap-2 min-w-[60px] sm:min-w-[88px]">
-        <time className="hidden sm:block text-[11px] font-semibold text-gray-400">
-          {formatRelativeTime(job.created_at)}
-        </time>
-        {dDay ? (
-          <span className={`text-[12px] font-bold tabular-nums ${urgent ? 'text-rose-500' : 'text-primary'}`}>
-            {dDay}
-          </span>
-        ) : (
-          <span className="text-[12px] font-bold text-gray-500">상시</span>
+      {/* 중앙 ③ 제목 + 키워드 + 카테고리 칩 */}
+      <div className="min-w-0">
+        <h3 className="text-[14.5px] sm:text-[15px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline underline-offset-4">
+          {job.title}
+        </h3>
+        {keywords.length > 0 && (
+          <p className="mt-1.5 text-[12px] text-gray-500 leading-snug truncate">
+            {keywords.map((k, i) => (
+              <span key={i}>
+                {i > 0 && <span className="mx-1.5 text-gray-300">|</span>}
+                {k}
+              </span>
+            ))}
+            <span className="ml-1.5 text-gray-400">외</span>
+          </p>
         )}
-        <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-600 group-hover:bg-ink group-hover:text-white group-hover:border-ink transition-colors">
-          상세보기
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
+        <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-rose-600 bg-rose-50">
+          <span aria-hidden>🔥</span>
+          {businessLabel} TOP
         </span>
+      </div>
+
+      {/* 우측 ④ 메타 (3행) — 모바일에선 숨김 */}
+      <div className="hidden sm:flex flex-col gap-1.5 text-[12px] text-gray-600 shrink-0 min-w-[120px]">
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+          </svg>
+          <span className="truncate">{region}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12L11.204 3.045c.439-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+          </svg>
+          <span className="truncate">{experience} · {employmentLabel}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.658-.813A59.906 59.906 0 0 1 12 3.493a59.903 59.903 0 0 1 10.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.717 50.717 0 0 1 12 13.489a50.702 50.702 0 0 1 7.74-3.342M6.75 15a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm0 0v-3.675A55.378 55.378 0 0 1 12 8.443m-7.007 11.55A5.981 5.981 0 0 0 6.75 15.75v-1.5" />
+          </svg>
+          <span className="truncate">학력무관</span>
+        </div>
+      </div>
+
+      {/* 극우 ⑤ CTA + D-day + 등록일 */}
+      <div className="flex flex-col items-end gap-1.5 shrink-0 min-w-[78px] sm:min-w-[88px]">
+        <span className="inline-flex items-center justify-center w-full sm:w-auto px-4 h-9 rounded-md border-2 border-rose-500 text-[12px] font-bold text-rose-500 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+          입사지원
+        </span>
+        <p className={`text-[12px] font-bold tabular-nums ${urgent ? 'text-rose-500' : 'text-gray-600'}`}>
+          {dDay ?? '상시'}
+        </p>
+        <p className="text-[10.5px] text-gray-400">
+          {formatRelativeTime(job.created_at)} 등록
+        </p>
       </div>
     </Link>
   );
 }
+
+function experienceLabel(min: number | null): string {
+  if (min === null || min === undefined) return '경력무관';
+  if (min === 0) return '신입';
+  return `경력 ${min}년+`;
+}
+
+// description HTML에서 단어 후보 추출 (제목·태그 제거 후 첫 N개)
+function extractKeywords(html: string | null | undefined, max: number): string[] {
+  if (!html) return [];
+  const plain = html
+    .replace(/<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/[•·▪▶◆※*\-—·]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const tokens = plain
+    .split(/[\s,.|·:;()/]+/)
+    .map((t) => t.trim())
+    .filter((t) => /^[가-힣A-Za-z][가-힣A-Za-z0-9]{1,7}$/.test(t));
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const t of tokens) {
+    if (seen.has(t)) continue;
+    if (STOP_WORDS.has(t)) continue;
+    seen.add(t);
+    result.push(t);
+    if (result.length >= max) break;
+  }
+  return result;
+}
+
+const STOP_WORDS = new Set<string>([
+  '담당', '업무', '내용', '지원', '자격', '근무', '조건', '회사', '경력', '신입', '필수', '우대',
+  '및', '등', '의', '를', '을', '에', '와', '관련', '있는', '있음', '없음', '가능', '필요', '제공',
+  '예', '대해', '대한', '대규모', '기타', '본인', '저희', '여러분',
+]);
