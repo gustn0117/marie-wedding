@@ -56,10 +56,10 @@ export default function JobListRow({ job, index }: Props) {
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <p className={`text-[12.5px] font-bold tabular-nums ${urgent ? 'text-rose-500' : 'text-gray-700'}`}>
+          <p className={`text-[12.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
             {dDay ?? '상시'}
           </p>
-          <span className="inline-flex h-7 px-2.5 items-center rounded-md border border-rose-500 text-[11px] font-bold text-rose-500">
+          <span className="inline-flex h-7 px-2.5 items-center rounded-md border border-primary text-[11px] font-bold text-primary">
             입사지원
           </span>
         </div>
@@ -104,8 +104,7 @@ export default function JobListRow({ job, index }: Props) {
               <span className="ml-1.5 text-gray-400">외</span>
             </p>
           )}
-          <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-rose-600 bg-rose-50">
-            <span aria-hidden>🔥</span>
+          <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-primary bg-primary-50">
             {businessLabel} TOP
           </span>
         </div>
@@ -135,10 +134,10 @@ export default function JobListRow({ job, index }: Props) {
 
         {/* ⑤ CTA + D-day + 등록일 (정적 — row hover 시 변형 없음) */}
         <div className="flex flex-col items-stretch gap-1.5">
-          <span className="inline-flex items-center justify-center h-9 rounded-md border border-rose-500 text-[12px] font-bold text-rose-500">
+          <span className="inline-flex items-center justify-center h-9 rounded-md border border-primary text-[12px] font-bold text-primary">
             입사지원
           </span>
-          <p className={`text-center text-[12.5px] font-bold tabular-nums ${urgent ? 'text-rose-500' : 'text-gray-700'}`}>
+          <p className={`text-center text-[12.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
             {dDay ?? '상시'}
           </p>
           <p className="text-center text-[10.5px] text-gray-400">

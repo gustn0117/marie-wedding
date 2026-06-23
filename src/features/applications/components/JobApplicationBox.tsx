@@ -376,11 +376,11 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
         <p className="text-sm text-gray-500 mb-4">
           지원은 개인 회원만 가능합니다. 업체 회원은 직접 공고를 등록해 지원자를 받을 수 있어요.
         </p>
-        <div className="inline-flex gap-2">
-          <Link href={ROUTES.JOBS} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary hover:text-primary">
+        <div className="inline-flex items-center gap-2">
+          <Link href={ROUTES.JOBS} className="btn-outline">
             다른 공고 보기
           </Link>
-          <Link href="/jobs/new" className="btn-primary inline-flex">
+          <Link href="/jobs/new" className="btn-primary">
             새 공고 등록
           </Link>
         </div>
