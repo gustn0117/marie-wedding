@@ -13,6 +13,7 @@ import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel } from 
 import { withTimeout } from '@/shared/utils/withTimeout';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import PhoneVerifyNudge from '@/features/verification/components/PhoneVerifyNudge';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface JobApplicationBoxProps {
@@ -391,6 +392,11 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     <section className="bg-white border-y border-gray-200 p-6 md:p-8">
       <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하기</h2>
       <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 경력, 가능 일정, 연락처를 함께 남겨주세요.</p>
+      {!profile.phone_verified && (
+        <div className="mb-4">
+          <PhoneVerifyNudge phoneVerified={false} context="apply" />
+        </div>
+      )}
       <div className="mb-4 rounded border border-primary/20 bg-primary-50 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
