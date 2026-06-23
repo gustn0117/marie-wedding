@@ -3,6 +3,7 @@ import type { Job } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import SafeImage from '@/shared/components/SafeImage';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 interface JobCardProps {
   job: Job;
@@ -14,9 +15,7 @@ export default function JobCard({ job }: JobCardProps) {
   const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const views = job.view_count ?? 0;
-  const imageUrl = job.image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${job.image}`
-    : null;
+  const imageUrl = resolveStorageUrl(job.image, 'job-images');
 
   return (
     <Link href={ROUTES.JOBS_DETAIL(job.id)} className="svc-card">

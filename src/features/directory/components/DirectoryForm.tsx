@@ -9,6 +9,7 @@ import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -48,11 +49,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    profile.profile_image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}` : null
+    resolveStorageUrl(profile.profile_image, 'avatars')
   );
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
-    (profile.gallery || []).map(g => `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${g}`)
+    (profile.gallery || []).map(g => resolveStorageUrl(g, 'avatars') ?? '').filter(Boolean)
   );
   const [existingGallery, setExistingGallery] = useState<string[]>(profile.gallery || []);
 

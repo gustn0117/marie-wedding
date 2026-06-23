@@ -3,6 +3,7 @@ import type { Profile } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import SafeImage from '@/shared/components/SafeImage';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 interface CompanyCardProps {
   profile: Profile;
@@ -13,9 +14,7 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const initial = name.charAt(0).toUpperCase();
   const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
-  const imageUrl = profile.profile_image
-    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
-    : null;
+  const imageUrl = resolveStorageUrl(profile.profile_image, 'avatars');
   const deals = profile.completed_deals_count ?? 0;
   const responseRate = Math.round(profile.response_rate ?? 0);
   const isNewBiz = deals === 0;

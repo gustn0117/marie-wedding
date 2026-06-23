@@ -6,6 +6,7 @@ import type { Job } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import SafeImage from '@/shared/components/SafeImage';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 interface Props {
   jobs: Job[];
@@ -133,12 +134,7 @@ export default function FeaturedJobsCarousel({ jobs }: Props) {
 }
 
 function FeaturedCard({ job }: { job: Job }) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const imageUrl = job.image
-    ? (job.image.startsWith('http://') || job.image.startsWith('https://'))
-      ? job.image
-      : `${supabaseUrl}/storage/v1/object/public/job-images/${job.image}`
-    : null;
+  const imageUrl = resolveStorageUrl(job.image, 'job-images');
 
   const dDay = (() => {
     if (!job.deadline) return null;

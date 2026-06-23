@@ -8,19 +8,12 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import { ROUTES } from '@/shared/constants';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
 
 interface Props {
   job: Job;
-}
-
-// job.image 는 'path/file.jpg' (Supabase Storage key) 또는 절대 http(s) URL 모두 들어올 수 있다.
-// 절대 URL이면 그대로 사용, 아니면 Supabase Storage public URL을 조립.
-function resolveJobImage(image: string): string {
-  if (/^https?:\/\//i.test(image)) return image;
-  if (image.startsWith('/')) return image;
-  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${image}`;
 }
 
 export default function JobDetailHero({ job }: Props) {
@@ -32,16 +25,19 @@ export default function JobDetailHero({ job }: Props) {
 
   return (
     <section className={`bg-white border-y border-gray-200 overflow-hidden ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
-      {job.image && (
-        <div className="border-b border-gray-200 bg-gray-50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={resolveJobImage(job.image)}
-            alt={job.title}
-            className="w-full max-h-[320px] object-contain"
-          />
-        </div>
-      )}
+      {(() => {
+        const src = resolveStorageUrl(job.image, 'job-images');
+        return src ? (
+          <div className="border-b border-gray-200 bg-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={src}
+              alt={job.title}
+              className="w-full max-h-[320px] object-contain"
+            />
+          </div>
+        ) : null;
+      })()}
 
       <div className="p-5 md:p-7">
         {/* Tag row */}

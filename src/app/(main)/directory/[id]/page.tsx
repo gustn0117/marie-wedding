@@ -18,6 +18,7 @@ import type { Portfolio, Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
 import TrustMetricBar from '@/features/verification/components/TrustMetricBar';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,15 +124,19 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         <div className="flex items-start gap-5 mb-5">
           {/* Logo */}
           <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0">
-            {profile.profile_image ? (
-              <img
-                src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`}
-                alt={displayName}
-                className="w-full h-full object-contain p-1"
-              />
-            ) : (
-              <span className="text-primary font-bold text-2xl">{displayName.charAt(0)}</span>
-            )}
+            {(() => {
+              const avatar = resolveStorageUrl(profile.profile_image, 'avatars');
+              return avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatar}
+                  alt={displayName}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-primary font-bold text-2xl">{displayName.charAt(0)}</span>
+              );
+            })()}
           </div>
 
           {/* Name + Tags */}
@@ -287,21 +292,26 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             갤러리 <span className="text-sm text-gray-400 font-normal ml-1">{profile.gallery.length}</span>
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-            {profile.gallery.map((img) => (
-              <a
-                key={img}
-                href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${img}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="aspect-square overflow-hidden rounded-lg border border-gray-200 group hover:border-ink transition-colors block"
-              >
-                <img
-                  src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${img}`}
-                  alt="갤러리 이미지"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </a>
-            ))}
+            {profile.gallery.map((img) => {
+              const url = resolveStorageUrl(img, 'avatars');
+              if (!url) return null;
+              return (
+                <a
+                  key={img}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="aspect-square overflow-hidden rounded-lg border border-gray-200 group hover:border-ink transition-colors block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={url}
+                    alt="갤러리 이미지"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                </a>
+              );
+            })}
           </div>
         </div>
       )}
