@@ -12,7 +12,6 @@ import {
 import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
 import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
-import PhoneVerifyNudge from '@/features/verification/components/PhoneVerifyNudge';
 import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
 import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
 import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
@@ -140,9 +139,6 @@ export default async function MyPage() {
           )
         }
       />
-
-      {/* Phone verification nudge (활성 미인증 사용자에게만 노출) */}
-      <PhoneVerifyNudge phoneVerified={profile.phone_verified} context="mypage" />
 
       {/* Profile Card */}
       <div className="surface p-5 sm:p-6">

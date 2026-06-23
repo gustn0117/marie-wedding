@@ -40,14 +40,13 @@ export default function OnboardingChecklist({ profile, portfolioCount, jobCount 
       done: profile.is_directory_listed,
       href: '/mypage/directory',
     },
-    {
+    // 업체 회원에게만 노출 — 개인 회원은 별도 본인 확인 절차 없음
+    ...(profile.account_type === 'business' ? [{
       key: 'verification',
-      label: profile.account_type === 'business' ? '업체 인증' : '본인 확인',
-      done: profile.account_type === 'business'
-        ? profile.verification_status === 'verified'
-        : profile.phone_verified,
-      href: profile.account_type === 'business' ? '/mypage/verification' : '/mypage/phone-verification',
-    },
+      label: '업체 인증',
+      done: profile.verification_status === 'verified',
+      href: '/mypage/verification',
+    }] : []),
     {
       key: 'portfolio',
       label: '포트폴리오 1개 이상 등록',

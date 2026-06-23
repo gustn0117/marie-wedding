@@ -106,7 +106,6 @@ export const ROUTES = {
   MYPAGE_PORTFOLIOS: '/mypage/portfolios',
   MYPAGE_PORTFOLIO_NEW: '/mypage/portfolios/new',
   MYPAGE_PORTFOLIO_EDIT: (id: string) => `/mypage/portfolios/${id}/edit`,
-  MYPAGE_PHONE_VERIFICATION: '/mypage/phone-verification',
   MYPAGE_SAVED_SEARCHES: '/mypage/saved-searches',
   MYPAGE_AVAILABILITY: '/mypage/availability',
   MYPAGE_MESSAGES: '/mypage/messages',
@@ -125,7 +124,6 @@ export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
 };
 
 export const VERIFICATION_BADGE_LABEL = '인증';
-export const PHONE_VERIFIED_BADGE_LABEL = '실명 확인';
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   open: '모집중',

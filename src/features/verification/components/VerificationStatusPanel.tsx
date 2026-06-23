@@ -2,7 +2,7 @@ import Link from 'next/link';
 import type { Profile } from '@/types/database';
 
 interface Props {
-  profile: Pick<Profile, 'account_type' | 'verification_status' | 'phone_verified'>;
+  profile: Pick<Profile, 'account_type' | 'verification_status'>;
 }
 
 type RowState = 'verified' | 'pending' | 'rejected' | 'none' | 'na';
@@ -18,7 +18,6 @@ export default function VerificationStatusPanel({ profile }: Props) {
         : profile.verification_status === 'rejected'
           ? 'rejected'
           : 'none';
-  const phoneStatus: RowState = profile.phone_verified ? 'verified' : 'none';
 
   return (
     <section className="platform-panel p-5">
@@ -30,13 +29,6 @@ export default function VerificationStatusPanel({ profile }: Props) {
           state={businessStatus}
           href="/mypage/verification"
           cta={ctaForBusiness(businessStatus)}
-        />
-        <StatusRow
-          title="휴대폰 본인인증"
-          subtitle="실명·연락처가 확인된 회원에게 '실명 확인' 배지가 노출됩니다."
-          state={phoneStatus}
-          href="/mypage/phone-verification"
-          cta={phoneStatus === 'verified' ? '인증 정보 보기' : '본인인증 하기'}
         />
       </ul>
     </section>

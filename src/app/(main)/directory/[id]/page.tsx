@@ -222,7 +222,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           <TrustMetricBar
             label="인증 상태"
             value={VERIFICATION_STATUS_LABELS[profile.verification_status]}
-            sub={profile.verification_status === 'verified' ? '관리자 승인 완료' : profile.phone_verified ? '실명 확인' : '미확인'}
+            sub={profile.verification_status === 'verified' ? '관리자 승인 완료' : '미확인'}
             emphasis={profile.verification_status === 'verified'}
           />
           <TrustMetricBar

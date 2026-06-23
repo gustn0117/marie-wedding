@@ -64,18 +64,16 @@ export interface ModerationKeyword {
   created_at: string;
 }
 
-export type TrustTier = 'unverified' | 'phone_verified' | 'business_verified' | 'deal_proven';
+export type TrustTier = 'unverified' | 'business_verified' | 'deal_proven';
 
-export function computeTrustTier(profile: Pick<Profile, 'verification_status' | 'phone_verified' | 'completed_deals_count'>): TrustTier {
+export function computeTrustTier(profile: Pick<Profile, 'verification_status' | 'completed_deals_count'>): TrustTier {
   if (profile.completed_deals_count >= 5) return 'deal_proven';
   if (profile.verification_status === 'verified') return 'business_verified';
-  if (profile.phone_verified) return 'phone_verified';
   return 'unverified';
 }
 
 export const TRUST_TIER_LABELS: Record<TrustTier, string> = {
   unverified: '미인증',
-  phone_verified: '실명 확인',
   business_verified: '인증 업체',
   deal_proven: '채용 검증',
 };
