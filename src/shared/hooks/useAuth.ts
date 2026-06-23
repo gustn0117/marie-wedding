@@ -90,19 +90,35 @@ export function useAuth() {
   }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
-    // 클라이언트 측 정리는 즉시
+    // 클라이언트 측 즉시 정리
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setState({ user: null, profile: null, isLoading: false });
 
-    // Supabase signOut은 best-effort + 3초 timeout — 네트워크 hang으로 인한 무응답 방지
+    // localStorage / sessionStorage의 supabase 세션 토큰 모두 제거
+    try {
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith('sb-')) localStorage.removeItem(k);
+      });
+      Object.keys(sessionStorage).forEach((k) => {
+        if (k.startsWith('sb-')) sessionStorage.removeItem(k);
+      });
+    } catch {}
+
+    // 서버 라우트로 supabase auth cookie 확실히 expire
+    try {
+      await Promise.race([
+        fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+      ]);
+    } catch {}
+
+    // 클라이언트 supabase signOut (in-memory session 정리)
     try {
       await Promise.race([
         supabaseRef.current.auth.signOut(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 2000)),
       ]);
-    } catch {
-      // 무시
-    }
+    } catch {}
   }, []);
 
   return {

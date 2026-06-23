@@ -54,21 +54,39 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   };
 
   const signOut = useCallback(async () => {
-    // 클라이언트 측 정리는 즉시 (server signOut이 hang해도 UI는 무조건 반응)
+    // 클라이언트 측 즉시 정리 (UI 반응 보장)
     document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setProfile(null);
     setProfileMenuOpen(false);
 
-    // Supabase signOut은 best-effort + 3초 timeout
+    // localStorage / sessionStorage의 supabase 세션 토큰 모두 제거
+    try {
+      Object.keys(localStorage).forEach((k) => {
+        if (k.startsWith('sb-')) localStorage.removeItem(k);
+      });
+      Object.keys(sessionStorage).forEach((k) => {
+        if (k.startsWith('sb-')) sessionStorage.removeItem(k);
+      });
+    } catch {}
+
+    // 서버 라우트로 supabase auth cookie + marie_profile 확실히 expire
+    try {
+      await Promise.race([
+        fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+      ]);
+    } catch {
+      // 무시 — full reload로 미들웨어가 다시 처리
+    }
+
+    // 클라이언트 supabase signOut도 best-effort (in-memory session 정리)
     try {
       const supabase = createClient();
       await Promise.race([
         supabase.auth.signOut(),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 2000)),
       ]);
-    } catch {
-      // 무시 — 쿠키와 로컬 state는 이미 정리됨
-    }
+    } catch {}
 
     window.location.href = '/';
   }, []);
