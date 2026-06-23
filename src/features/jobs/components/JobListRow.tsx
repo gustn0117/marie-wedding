@@ -66,9 +66,9 @@ export default function JobListRow({ job, index }: Props) {
       </div>
 
       {/* ───── 데스크톱 레이아웃 ───── */}
-      <div className="hidden sm:grid sm:grid-cols-[36px_188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-start">
+      <div className="hidden sm:grid sm:grid-cols-[36px_188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-center">
         {/* ① 순위 번호 — primary 톤으로 좌측 시각 앵커 */}
-        <div className="pt-0.5">
+        <div>
           <p className="text-[20px] font-extrabold text-primary tabular-nums leading-none text-center">
             {index ?? '-'}
           </p>
@@ -113,7 +113,7 @@ export default function JobListRow({ job, index }: Props) {
         </div>
 
         {/* ④ 메타 (지역 / 경력·고용형태 / 학력) */}
-        <div className="flex flex-col gap-1.5 text-[13px] text-gray-600 pt-0.5">
+        <div className="flex flex-col gap-1.5 text-[13px] text-gray-600">
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
