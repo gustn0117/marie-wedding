@@ -120,20 +120,30 @@ export default async function DashboardPage() {
         actions={<Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>}
       />
 
+      {/* Hero — 운영자의 다음 행동(검토 필요한 지원)을 가장 크게. 조회수는 보조 KPI로. */}
       <section className="surface-dark text-white p-8">
-        <p className="text-[13px] font-bold text-primary-200 mb-3">전체 공고 조회수</p>
+        <p className="text-[13px] font-bold text-primary-200 mb-3">지금 검토해야 할 지원</p>
         <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter text-white">
-          {dashboard.totalViews.toLocaleString()}
-          <span className="text-[20px] font-bold text-white/60 ml-2">회</span>
+          {dashboard.reviewingApplications.toLocaleString()}
+          <span className="text-[20px] font-bold text-white/60 ml-2">건</span>
         </p>
-        <div className="grid grid-cols-2 gap-3 pt-6 mt-6 border-t border-white/10">
+        <p className="mt-2 text-[13px] text-white/70">
+          {dashboard.reviewingApplications > 0
+            ? '지원자가 답변을 기다리고 있어요. 아래 파이프라인에서 확인해주세요.'
+            : '모든 지원이 처리되었어요. 새 공고를 열거나 통계를 살펴보세요.'}
+        </p>
+        <div className="grid grid-cols-3 gap-3 pt-6 mt-6 border-t border-white/10">
+          <div>
+            <p className="text-[12px] font-semibold text-white/50">미응답</p>
+            <p className={`mt-1 text-[18px] font-bold tabular-nums ${responseBacklog > 0 ? 'text-amber-200' : 'text-white'}`}>{responseBacklog}건</p>
+          </div>
+          <div>
+            <p className="text-[12px] font-semibold text-white/50">전체 조회수</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{dashboard.totalViews.toLocaleString()}회</p>
+          </div>
           <div>
             <p className="text-[12px] font-semibold text-white/50">지원 전환율</p>
             <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{applicationRate}%</p>
-          </div>
-          <div>
-            <p className="text-[12px] font-semibold text-white/50">공고당 평균 지원</p>
-            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{dashboard.avgApplicationsPerJob.toFixed(1)}건</p>
           </div>
         </div>
       </section>

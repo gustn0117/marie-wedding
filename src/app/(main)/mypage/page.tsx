@@ -140,47 +140,6 @@ export default async function MyPage() {
         }
       />
 
-      {/* 활동 요약 — 회원 유형별 다른 stat */}
-      <section className="grid grid-cols-3 gap-3">
-        {isBusinessAcc ? (
-          <>
-            <div className="stat">
-              <p className="stat-label">등록 공고</p>
-              <p className="stat-value">{jobs.length}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-            <div className="stat">
-              <p className="stat-label">받은 지원</p>
-              <p className="stat-value">{receivedApplications.length}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-            <div className="stat">
-              <p className="stat-label">진행 완료</p>
-              <p className="stat-value">{profile.completed_deals_count}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="stat">
-              <p className="stat-label">보낸 지원</p>
-              <p className="stat-value">{sentApplications.length}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-            <div className="stat">
-              <p className="stat-label">작성 글</p>
-              <p className="stat-value">{posts.length}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-            <div className="stat">
-              <p className="stat-label">진행 완료</p>
-              <p className="stat-value">{profile.completed_deals_count}</p>
-              <p className="text-xs text-gray-400 mt-1">건</p>
-            </div>
-          </>
-        )}
-      </section>
-
       {/* Profile Card */}
       <div className="surface p-5 sm:p-6">
         <div className="flex items-start gap-4">

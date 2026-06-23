@@ -22,12 +22,13 @@ function getCookieProfile(): Profile | null {
 }
 
 export function useAuth() {
-  const cookieProfile = getCookieProfile();
-
+  // SSR과 hydration 결과를 일치시키기 위해 초기값은 항상 null/true로.
+  // 클라이언트 cookie는 mount 후 effect에서 읽는다.
+  // (이전: useState 초기값으로 getCookieProfile() 호출 → SSR=null, hydration=cookie → mismatch 발생)
   const [state, setState] = useState<AuthState>({
     user: null,
-    profile: cookieProfile,
-    isLoading: !cookieProfile,
+    profile: null,
+    isLoading: true,
   });
 
   const supabaseRef = useRef(createClient());
@@ -44,6 +45,12 @@ export function useAuth() {
 
   useEffect(() => {
     const supabase = supabaseRef.current;
+
+    // 마운트 즉시 cookie의 profile을 우선 반영 (UI 첫 노출 빠르게)
+    const cookieProfile = getCookieProfile();
+    if (cookieProfile) {
+      setState((prev) => ({ ...prev, profile: cookieProfile }));
+    }
 
     const initSession = async () => {
       try {

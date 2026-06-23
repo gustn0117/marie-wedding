@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { Job } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import SafeImage from '@/shared/components/SafeImage';
 
 interface Props {
   jobs: Job[];
@@ -157,21 +158,12 @@ function FeaturedCard({ job }: { job: Job }) {
       className="snap-start shrink-0 w-[170px] sm:w-[195px] group"
     >
       <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-50 border border-gray-200">
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl}
-            alt={job.title}
-            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" strokeWidth={1.2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
-            </svg>
-          </div>
-        )}
+        <SafeImage
+          src={imageUrl}
+          alt={job.title}
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
+          wrapperClassName="w-full h-full"
+        />
         {/* 우상단 뱃지 — 조회수 */}
         <div className="absolute top-2 right-2 flex items-center gap-1 bg-black/65 backdrop-blur-sm text-white text-[10px] font-bold rounded-full px-2 py-1">
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">

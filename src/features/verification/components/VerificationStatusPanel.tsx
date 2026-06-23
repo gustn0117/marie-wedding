@@ -71,41 +71,44 @@ function StatusRow({
   const showLink = state !== 'na' && state !== 'pending';
 
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      {/* 좌측: 상태 점 */}
-      <span
-        className={`shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center ${dot.wrap}`}
-        aria-hidden
-      >
-        {dot.icon}
-      </span>
-
-      {/* 가운데: 제목 + 상태 + 부제 */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-[13.5px] font-bold text-ink truncate">{title}</p>
-          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${STATE_BADGE[state]}`}>
-            {statusLabel}
+    <li className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+      {/* 모바일: 세로 stack, sm+: 가로 한 줄 */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+          <span
+            className={`shrink-0 w-7 h-7 rounded-full inline-flex items-center justify-center ${dot.wrap}`}
+            aria-hidden
+          >
+            {dot.icon}
           </span>
-        </div>
-        <p className="mt-0.5 text-[11.5px] text-gray-500 leading-relaxed truncate">{subtitle}</p>
-      </div>
 
-      {/* 우측: CTA */}
-      {showLink && cta && (
-        <Link
-          href={href}
-          className="shrink-0 inline-flex items-center gap-1 px-3 h-8 rounded-lg border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 hover:border-ink hover:text-ink transition-colors"
-        >
-          {cta}
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" aria-hidden>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </Link>
-      )}
-      {state === 'pending' && (
-        <span className="shrink-0 text-[12px] font-semibold text-amber-700">검토 중</span>
-      )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-[13.5px] font-bold text-ink truncate">{title}</p>
+              <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${STATE_BADGE[state]}`}>
+                {statusLabel}
+              </span>
+            </div>
+            <p className="mt-0.5 text-[11.5px] text-gray-500 leading-relaxed">{subtitle}</p>
+          </div>
+        </div>
+
+        {/* CTA — 모바일에선 full-width, sm+에선 shrink-0 우측 */}
+        {showLink && cta && (
+          <Link
+            href={href}
+            className="shrink-0 inline-flex items-center justify-center gap-1 w-full sm:w-auto px-3 h-9 sm:h-8 rounded-lg border border-gray-200 bg-white text-[12px] font-semibold text-gray-700 hover:border-ink hover:text-ink transition-colors"
+          >
+            {cta}
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </Link>
+        )}
+        {state === 'pending' && (
+          <span className="shrink-0 text-[12px] font-semibold text-amber-700 self-start sm:self-center">검토 중</span>
+        )}
+      </div>
     </li>
   );
 }
