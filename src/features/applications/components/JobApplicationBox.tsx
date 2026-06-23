@@ -60,39 +60,38 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       return;
     }
 
-    const load = async () => {
-      setLoading(true);
-      try {
-        if (profile.id === authorId) {
-          const rows = await withTimeout(
-            applicationService.getReceivedApplications(profile.id),
-            8000,
-            '지원자 목록 조회가 지연되고 있어요.',
-          );
-          setReceived(rows.filter((row) => row.job_id === jobId));
-        } else {
-          const row = await withTimeout(
-            applicationService.getApplicationForJob(jobId, profile.id),
-            8000,
-            '지원 내역 조회가 지연되고 있어요.',
-          );
-          setApplication(row);
-          setContactPhone(profile.phone ?? '');
-          setCareerSummary((prev) => prev || stripHtml(profile.bio ?? '').slice(0, 180));
-          setPortfolioLink((prev) => prev || (profile.website ?? ''));
-        }
-      } catch {
-        // 네트워크/타임아웃 — 폼 자체는 보여서 사용자가 지원을 시작할 수 있게 함.
-        if (profile.id !== authorId) {
-          setApplication(null);
-          setContactPhone(profile.phone ?? '');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+    // 본인이 작성자가 아니면 폼을 즉시 노출하고, 기존 지원 내역 체크는 백그라운드로 수행.
+    // (체크 결과가 오기 전에도 사용자는 폼을 보고 입력 시작 가능)
+    if (profile.id !== authorId) {
+      // 폼 즉시 노출 — 스켈레톤 없음
+      setLoading(false);
+      setContactPhone(profile.phone ?? '');
+      setCareerSummary((prev) => prev || stripHtml(profile.bio ?? '').slice(0, 180));
+      setPortfolioLink((prev) => prev || (profile.website ?? ''));
 
-    load();
+      // 백그라운드: 이미 지원했는지 체크. 결과 오면 상태 전환, 실패해도 폼 그대로 유지.
+      withTimeout(
+        applicationService.getApplicationForJob(jobId, profile.id),
+        4000,
+        '지원 내역 조회 지연',
+      )
+        .then((row) => {
+          if (row) setApplication(row);
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // 작성자(업체) 측 — 지원자 파이프라인 조회는 데이터가 핵심이므로 스켈레톤 표시.
+    setLoading(true);
+    withTimeout(
+      applicationService.getReceivedApplications(profile.id),
+      5000,
+      '지원자 목록 조회 지연',
+    )
+      .then((rows) => setReceived(rows.filter((row) => row.job_id === jobId)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, [authorId, isLoading, jobId, profile]);
 
   const pendingCount = useMemo(
