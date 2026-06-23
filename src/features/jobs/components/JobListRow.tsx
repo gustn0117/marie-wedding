@@ -10,6 +10,7 @@ import {
 import { getDDayLabel, isUrgent, isNew, getJobTier } from '@/shared/utils/tier';
 import Badge from '@/shared/components/Badge';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import SafeImage from '@/shared/components/SafeImage';
 
 interface Props {
   job: Job;
@@ -35,18 +36,19 @@ export default function JobListRow({ job }: Props) {
         tier === 2 ? 'border-l-2 border-l-primary bg-primary-50/40' : ''
       }`}
     >
-      {/* 썸네일 — 96x96, 이미지 또는 이니셜 fallback (이미지 마크 중복 제거) */}
+      {/* 썸네일 — 96x96, 이미지 실패 시 이니셜 fallback */}
       <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200">
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={job.title} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
+        <SafeImage
+          src={imageUrl}
+          alt={job.title}
+          className="w-full h-full object-cover"
+          wrapperClassName="w-full h-full flex items-center justify-center"
+          fallback={
             <span className="text-2xl font-extrabold text-gray-300 tracking-tighter">
               {companyName.charAt(0)}
             </span>
-          </div>
-        )}
+          }
+        />
       </div>
 
       {/* 본문 — flex 1, 최대 폭 사용 */}
@@ -100,9 +102,9 @@ export default function JobListRow({ job }: Props) {
         )}
       </div>
 
-      {/* 우측 메타 — 시각/상태/CTA 세로 정렬 */}
-      <div className="shrink-0 flex flex-col items-end justify-between text-right gap-2 min-w-[88px]">
-        <time className="text-[11px] font-semibold text-gray-400">
+      {/* 우측 메타 — 모바일은 컴팩트(D-day만), sm+에선 시각·CTA까지 */}
+      <div className="shrink-0 flex flex-col items-end justify-between text-right gap-2 min-w-[60px] sm:min-w-[88px]">
+        <time className="hidden sm:block text-[11px] font-semibold text-gray-400">
           {formatRelativeTime(job.created_at)}
         </time>
         {dDay ? (
@@ -110,7 +112,7 @@ export default function JobListRow({ job }: Props) {
             {dDay}
           </span>
         ) : (
-          <span className="text-[12px] font-bold text-gray-500">상시채용</span>
+          <span className="text-[12px] font-bold text-gray-500">상시</span>
         )}
         <span className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 text-[11px] font-bold text-gray-600 group-hover:bg-ink group-hover:text-white group-hover:border-ink transition-colors">
           상세보기

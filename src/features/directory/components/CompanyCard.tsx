@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Profile } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import SafeImage from '@/shared/components/SafeImage';
 
 interface CompanyCardProps {
   profile: Profile;
@@ -37,14 +38,13 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
             인증
           </span>
         ) : null}
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={name} className="svc-card-thumb-img" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
-          </div>
-        )}
+        <SafeImage
+          src={imageUrl}
+          alt={name}
+          className="svc-card-thumb-img"
+          wrapperClassName="absolute inset-0 flex items-center justify-center"
+          fallback={<span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>}
+        />
       </div>
 
       {/* 본문 */}

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Job } from '@/types/database';
 import { ROUTES } from '@/shared/constants';
 import { getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import SafeImage from '@/shared/components/SafeImage';
 
 interface JobCardProps {
   job: Job;
@@ -26,16 +27,13 @@ export default function JobCard({ job }: JobCardProps) {
         ) : job.is_promoted ? (
           <span className="svc-card-badge svc-card-badge-promoted">스폰서</span>
         ) : null}
-        {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={job.title} className="svc-card-thumb-img" />
-        ) : (
-          // 의미 없는 이모지 대신 회사 이니셜.
-          // 이전: idx % EMOJIS.length로 결정되는 8종 이모지 — 같은 위치의 카드는 항상 같은 그림.
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>
-          </div>
-        )}
+        <SafeImage
+          src={imageUrl}
+          alt={job.title}
+          className="svc-card-thumb-img"
+          wrapperClassName="absolute inset-0 flex items-center justify-center"
+          fallback={<span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>}
+        />
       </div>
       <p className="svc-card-title">{job.title}</p>
       <div className="svc-card-rating">
