@@ -64,17 +64,29 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
       setLoading(true);
       try {
         if (profile.id === authorId) {
-          const rows = await applicationService.getReceivedApplications(profile.id);
+          const rows = await withTimeout(
+            applicationService.getReceivedApplications(profile.id),
+            8000,
+            '지원자 목록 조회가 지연되고 있어요.',
+          );
           setReceived(rows.filter((row) => row.job_id === jobId));
         } else {
-          const row = await applicationService.getApplicationForJob(jobId, profile.id);
+          const row = await withTimeout(
+            applicationService.getApplicationForJob(jobId, profile.id),
+            8000,
+            '지원 내역 조회가 지연되고 있어요.',
+          );
           setApplication(row);
           setContactPhone(profile.phone ?? '');
           setCareerSummary((prev) => prev || stripHtml(profile.bio ?? '').slice(0, 180));
           setPortfolioLink((prev) => prev || (profile.website ?? ''));
         }
       } catch {
-        // Keep the job readable even if the interaction layer is unavailable.
+        // 네트워크/타임아웃 — 폼 자체는 보여서 사용자가 지원을 시작할 수 있게 함.
+        if (profile.id !== authorId) {
+          setApplication(null);
+          setContactPhone(profile.phone ?? '');
+        }
       } finally {
         setLoading(false);
       }

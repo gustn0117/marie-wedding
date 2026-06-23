@@ -231,37 +231,45 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </div>
       </div>
 
-      {/* STEP 1: 프로필 이미지 & 업체명 */}
-      <Section step={1} title="업체 기본 정보" description="로고와 업체명은 디렉토리에서 가장 먼저 보이는 정보입니다.">
-        <div className="flex items-start gap-5">
-          <div className="flex flex-col items-center gap-2">
-            <div className="w-24 h-24 overflow-hidden rounded border border-gray-300 bg-gray-50">
-              {imagePreview ? (
+      {/* STEP 1: 썸네일 & 업체명 */}
+      <Section step={1} title="썸네일 & 업체명" description="썸네일과 업체명은 디렉토리 카드에 가장 먼저 보이는 정보입니다.">
+        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-5">
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              썸네일 이미지
+            </label>
+            {imagePreview ? (
+              <div className="group relative w-full aspect-square overflow-hidden rounded border border-gray-300 bg-gray-50">
                 <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-bold text-3xl">{(formData.company_name || profile.contact_name || '?').charAt(0)}</span>
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100 transition-all">
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded bg-white/95 px-3 py-1.5 text-xs font-bold text-gray-900 hover:bg-white">
+                    변경
+                  </button>
+                  <button type="button" onClick={handleRemoveImage} className="rounded bg-state-urgent px-3 py-1.5 text-xs font-bold text-white hover:opacity-90">
+                    삭제
+                  </button>
                 </div>
-              )}
-            </div>
-            <div className="flex gap-1 text-[11px]">
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="text-primary hover:underline">
-                {imagePreview ? '변경' : '등록'}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full aspect-square rounded border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary-50/30 transition-colors flex flex-col items-center justify-center gap-1.5 px-3"
+              >
+                <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
+                </svg>
+                <p className="text-sm font-bold text-gray-700">썸네일 등록</p>
+                <p className="text-[11px] text-gray-400 text-center leading-tight">정사각형 권장<br />최대 2MB</p>
               </button>
-              {imagePreview && (
-                <>
-                  <span className="text-gray-300">|</span>
-                  <button type="button" onClick={handleRemoveImage} className="text-state-urgent hover:underline">삭제</button>
-                </>
-              )}
-            </div>
-            <div className="mt-1">
-              <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="2MB" note="로고는 정사각형이 가장 잘 보여요" />
-            </div>
+            )}
+            <p className="text-[11px] text-gray-500 mt-2 leading-snug">
+              디렉토리 카드와 상세 페이지에 표시되는 대표 이미지입니다.
+            </p>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
           </div>
 
-          <div className="flex-1">
+          <div>
             <label className="block text-sm font-semibold text-gray-800 mb-1.5">업체명 / 표시 이름</label>
             <input
               type="text"
