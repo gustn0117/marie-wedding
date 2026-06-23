@@ -223,6 +223,29 @@ export async function GET(request: Request) {
     return redirectWith(origin, '/login', 'naver_session_failed');
   }
 
+  // Header(SSR) 즉시 갱신을 위해 marie_profile cookie 동봉
+  try {
+    const { data: { user: justSignedIn } } = await ssrClient.auth.getUser();
+    if (justSignedIn?.id) {
+      const { data: p } = await service
+        .from('profiles')
+        .select('id, contact_name, company_name, account_type, role, region, profile_image, is_directory_listed')
+        .eq('user_id', justSignedIn.id)
+        .maybeSingle();
+      if (p) {
+        cookieStore.set('marie_profile', JSON.stringify(p), {
+          path: '/',
+          httpOnly: false,
+          secure: true,
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 * 7,
+        });
+      }
+    }
+  } catch {
+    // cookie 못 set해도 미들웨어가 다음 요청에 set — 사용자 영향 최소
+  }
+
   // ⑥ redirect
   const onboarded = existingByNaver?.onboarded_at;
   if (isNewUser || !userInfo.email) {

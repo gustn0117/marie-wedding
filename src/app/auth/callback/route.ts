@@ -55,6 +55,25 @@ export async function GET(request: Request) {
 
   const serviceClient = createServiceClient();
 
+  // Header(SSR)가 redirect 직후 첫 페이지에서 즉시 사용자를 인지하도록
+  // marie_profile cookie를 redirect 응답에 함께 set한다.
+  // (이전: 미들웨어 의존 → race로 첫 SSR에 cookie 미적용 → '로그인' 버튼이 잠시 노출)
+  const setProfileCookieFromUserId = async (userId: string) => {
+    const { data: p } = await serviceClient
+      .from('profiles')
+      .select('id, contact_name, company_name, account_type, role, region, profile_image, is_directory_listed')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!p) return;
+    cookieStore.set('marie_profile', JSON.stringify(p), {
+      path: '/',
+      httpOnly: false,
+      secure: true,
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  };
+
   const { data: existingProfile } = await serviceClient
     .from('profiles')
     .select('id, onboarded_at')
@@ -92,10 +111,13 @@ export async function GET(request: Request) {
       onboarded_at: null,
     });
 
+    await setProfileCookieFromUserId(user.id);
     return NextResponse.redirect(
       `${origin}/onboarding?next=${encodeURIComponent(next)}`
     );
   }
+
+  await setProfileCookieFromUserId(user.id);
 
   if (!existingProfile.onboarded_at) {
     return NextResponse.redirect(
