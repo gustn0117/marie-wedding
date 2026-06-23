@@ -278,17 +278,8 @@ export default async function MyPage() {
       {/* Onboarding */}
       <OnboardingChecklist profile={profile} portfolioCount={portfolioCount} jobCount={jobs.length} />
 
-      {/* Pending Reviews */}
-      <PendingReviewsSection profileId={profile.id} />
-
-      {/* Recent Jobs */}
-      <RecentJobsSection />
-
-      {/* Bookmarked Jobs */}
-      <BookmarkedJobsSection profileId={profile.id} />
-
-      {/* Recommended Jobs */}
-      <RecommendedJobs profile={profile} />
+      {/* ────────── 본인 활동 (위쪽 우선 노출) ────────── */}
+      {/* 활동 통계 — Stats Summary는 아래(필수 데이터 위) */}
 
       {/* Stats Summary — 회원 유형별 분기.
           업체: 공고 운영(등록 공고/조회수/받은 지원/응답률)
@@ -338,8 +329,22 @@ export default async function MyPage() {
         </div>
       </section>
 
-      {/* Tabs */}
+      {/* Tabs — 본인의 등록 공고 / 게시글 / 지원 내역 (본인 활동의 핵심) */}
       <MyPageTabs jobs={jobs} posts={posts} sentApplications={sentApplications} receivedApplications={receivedApplications} />
+
+      {/* Pending Reviews — 작성 대기 중인 리뷰 (본인 처리 항목) */}
+      <PendingReviewsSection profileId={profile.id} />
+
+      {/* ────────── 탐색·추천 (아래쪽) ────────── */}
+
+      {/* Bookmarked Jobs — 스크랩한 공고 */}
+      <BookmarkedJobsSection profileId={profile.id} />
+
+      {/* Recommended Jobs — 맞춤 공고 */}
+      <RecommendedJobs profile={profile} />
+
+      {/* Recent Jobs — 최근 등록된 공고 */}
+      <RecentJobsSection />
     </div>
   );
 }
