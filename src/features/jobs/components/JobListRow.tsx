@@ -36,12 +36,12 @@ export default function JobListRow({ job, index }: Props) {
   return (
     <Link
       href={ROUTES.JOBS_DETAIL(job.id)}
-      className="group block border-b border-gray-100 px-4 py-4 transition-colors hover:bg-gray-50/60"
+      className="group block border-b border-gray-100 px-4 py-4 transition-colors hover:bg-primary-50/35"
     >
       {/* ───── 모바일 레이아웃 ───── */}
       <div className="sm:hidden flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-[11.5px] font-bold text-gray-500 truncate flex items-center gap-1">
+          <p className="text-[12.5px] font-bold text-gray-500 truncate flex items-center gap-1">
             {companyName}
             {job.author && (
               <VerificationBadge
@@ -50,33 +50,33 @@ export default function JobListRow({ job, index }: Props) {
               />
             )}
           </p>
-          <h3 className="text-[14px] font-bold text-ink leading-snug line-clamp-2 mt-1">{job.title}</h3>
-          <p className="text-[11.5px] text-gray-500 mt-1.5 truncate">
+          <h3 className="text-[15px] font-bold text-ink leading-snug line-clamp-2 mt-1">{job.title}</h3>
+          <p className="text-[12.5px] text-gray-500 mt-1.5 truncate">
             {region} · {employmentLabel} · {experience}
           </p>
         </div>
         <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <p className={`text-[12.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
+          <p className={`text-[13.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
             {dDay ?? '상시'}
           </p>
-          <span className="inline-flex h-7 px-2.5 items-center rounded-md border border-primary text-[11px] font-bold text-primary">
+          <span className="inline-flex h-8 px-3 items-center rounded-md bg-primary text-[12px] font-bold text-white shadow-sm">
             입사지원
           </span>
         </div>
       </div>
 
       {/* ───── 데스크톱 레이아웃 ───── */}
-      <div className="hidden sm:grid sm:grid-cols-[32px_180px_minmax(0,1fr)_170px_108px] sm:gap-5 sm:items-start">
-        {/* ① 순위 번호 */}
+      <div className="hidden sm:grid sm:grid-cols-[36px_188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-start">
+        {/* ① 순위 번호 — primary 톤으로 좌측 시각 앵커 */}
         <div className="pt-0.5">
-          <p className="text-[17px] font-extrabold text-ink tabular-nums leading-none text-center">
+          <p className="text-[20px] font-extrabold text-primary tabular-nums leading-none text-center">
             {index ?? '-'}
           </p>
         </div>
 
         {/* ② 회사 */}
         <div className="min-w-0">
-          <p className="text-[13.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
+          <p className="text-[14.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
             {companyName}
             {job.author && (
               <VerificationBadge
@@ -85,16 +85,16 @@ export default function JobListRow({ job, index }: Props) {
               />
             )}
           </p>
-          <p className="text-[11.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
+          <p className="text-[12.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
         </div>
 
         {/* ③ 제목 + 키워드 + 카테고리 칩 */}
         <div className="min-w-0">
-          <h3 className="text-[15px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline underline-offset-4">
+          <h3 className="text-[16px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline underline-offset-4 decoration-primary">
             {job.title}
           </h3>
           {keywords.length > 0 && (
-            <p className="mt-1.5 text-[12px] text-gray-500 leading-snug truncate">
+            <p className="mt-1.5 text-[13px] text-gray-500 leading-snug truncate">
               {keywords.map((k, i) => (
                 <span key={i}>
                   {i > 0 && <span className="mx-1.5 text-gray-300">|</span>}
@@ -104,13 +104,16 @@ export default function JobListRow({ job, index }: Props) {
               <span className="ml-1.5 text-gray-400">외</span>
             </p>
           )}
-          <span className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-primary bg-primary-50">
+          <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[12px] font-bold text-primary bg-primary-50 border border-primary-100">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l4-4 3 3 7-7 4 4M14 9l5 0 0 5" />
+            </svg>
             {businessLabel} TOP
           </span>
         </div>
 
         {/* ④ 메타 (지역 / 경력·고용형태 / 학력) */}
-        <div className="flex flex-col gap-1.5 text-[12px] text-gray-600 pt-0.5">
+        <div className="flex flex-col gap-1.5 text-[13px] text-gray-600 pt-0.5">
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -132,15 +135,15 @@ export default function JobListRow({ job, index }: Props) {
           </div>
         </div>
 
-        {/* ⑤ CTA + D-day + 등록일 (정적 — row hover 시 변형 없음) */}
+        {/* ⑤ CTA + D-day + 등록일 — primary fill 로 시각 앵커 */}
         <div className="flex flex-col items-stretch gap-1.5">
-          <span className="inline-flex items-center justify-center h-9 rounded-md border border-primary text-[12px] font-bold text-primary">
+          <span className="inline-flex items-center justify-center h-10 rounded-md bg-primary text-[13px] font-bold text-white shadow-sm group-hover:bg-primary-dark transition-colors">
             입사지원
           </span>
-          <p className={`text-center text-[12.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
+          <p className={`text-center text-[13.5px] font-bold tabular-nums ${urgent ? 'text-state-urgent' : 'text-gray-700'}`}>
             {dDay ?? '상시'}
           </p>
-          <p className="text-center text-[10.5px] text-gray-400">
+          <p className="text-center text-[11px] text-gray-400">
             {formatRelativeTime(job.created_at)} 등록
           </p>
         </div>
