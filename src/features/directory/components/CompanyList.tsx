@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import type { Profile } from '@/types/database';
 import CompanyCard from './CompanyCard';
+import CompanyMobileRow from './CompanyMobileRow';
 import Pagination from '@/shared/components/Pagination';
 import EmptyState from '@/shared/components/EmptyState';
 
@@ -46,7 +47,15 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
         <span className="trust-pill">인재·업체 프로필</span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      {/* 모바일 1열 compact row */}
+      <div className="sm:hidden flex flex-col divide-y divide-gray-100 border border-gray-200 rounded bg-white">
+        {profiles.map((profile) => (
+          <CompanyMobileRow key={profile.id} profile={profile} />
+        ))}
+      </div>
+
+      {/* 데스크톱 카드 그리드 */}
+      <div className="hidden sm:grid sm:grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-4">
         {profiles.map((profile) => (
           <CompanyCard key={profile.id} profile={profile} />
         ))}

@@ -15,6 +15,7 @@ export const metadata = {
 async function getHomeData() {
   const supabase = createServerQueryClient();
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes] = await Promise.all([
     supabase
@@ -38,10 +39,13 @@ async function getHomeData() {
       .eq('is_directory_listed', true)
       .order('company_name', { ascending: true })
       .range(0, 5),
+    // 홈 '다가오는 행사' — end_date 가 오늘 이후이거나, end_date 가 없고 start_date 가 오늘 이후이거나,
+    // 둘 다 없는 상시 행사만 노출. 종료된 행사는 제외.
     supabase
       .from('events')
       .select('*', { count: 'exact' })
       .is('deleted_at', null)
+      .or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`)
       .order('is_pinned', { ascending: false })
       .order('start_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })

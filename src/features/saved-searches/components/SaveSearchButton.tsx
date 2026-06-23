@@ -10,9 +10,16 @@ interface Props {
   scope: SavedSearchScope;
   query: Record<string, unknown>;
   defaultName?: string;
+  /** 버튼 라벨 명시 — 같은 화면에 여러 scope 가 있어 구분이 필요할 때 사용. */
+  label?: string;
 }
 
-export default function SaveSearchButton({ scope, query, defaultName }: Props) {
+const SCOPE_LABEL: Record<SavedSearchScope, string> = {
+  jobs: '공고',
+  directory: '업체',
+};
+
+export default function SaveSearchButton({ scope, query, defaultName, label }: Props) {
   const { profile } = useAuth();
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -45,7 +52,7 @@ export default function SaveSearchButton({ scope, query, defaultName }: Props) {
       disabled={busy}
       className="text-xs font-bold text-gray-700 hover:text-primary disabled:opacity-50 inline-flex items-center gap-1"
     >
-      {busy ? '저장 중…' : '+ 이 검색 저장'}
+      {busy ? '저장 중…' : `+ ${label ?? `${SCOPE_LABEL[scope]} 검색 저장`}`}
     </button>
   );
 }

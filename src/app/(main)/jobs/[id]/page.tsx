@@ -79,13 +79,13 @@ export default async function JobDetailPage({ params }: PageProps) {
             <JobDescriptionView html={job.description} />
           </section>
 
-          {/* Related jobs */}
-          <RelatedJobs authorId={job.author_id} currentJobId={job.id} />
-
-          {/* Application box (anchor target) */}
+          {/* Application box (anchor target) — 본문 직후 사용자의 다음 행동 */}
           <div id="apply" className="scroll-mt-20">
             <JobApplicationBox jobId={job.id} authorId={job.author_id} />
           </div>
+
+          {/* Related jobs — 지원 결정 후 추가 탐색 */}
+          <RelatedJobs authorId={job.author_id} currentJobId={job.id} />
         </div>
 
         {/* Sidebar */}

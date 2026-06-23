@@ -40,34 +40,53 @@ async function loadConversations(myId: string): Promise<Row[]> {
     image: p.profile_image,
   }));
 
-  const rows: Row[] = [];
-  for (const c of convs) {
+  // 기존: 대화 N개당 (last message + unread count) 2회 = 2N+1 쿼리
+  // 변경: 모든 conversation의 메시지를 한 번에 가져와 in-memory 집계 = 3 쿼리 고정
+  const convIds = convs.map((c) => c.id);
+
+  const [{ data: lastMsgs }, { data: unreadRows }] = await Promise.all([
+    supabase
+      .from('messages')
+      .select('conversation_id, body, created_at')
+      .in('conversation_id', convIds)
+      .order('conversation_id', { ascending: true })
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('messages')
+      .select('conversation_id')
+      .in('conversation_id', convIds)
+      .neq('sender_id', myId)
+      .is('read_at', null),
+  ]);
+
+  const lastBodyMap = new Map<string, string>();
+  for (const m of lastMsgs ?? []) {
+    if (!lastBodyMap.has(m.conversation_id as string)) {
+      lastBodyMap.set(m.conversation_id as string, (m.body as string) ?? '');
+    }
+  }
+
+  const unreadCountMap = new Map<string, number>();
+  for (const r of unreadRows ?? []) {
+    const cid = r.conversation_id as string;
+    unreadCountMap.set(cid, (unreadCountMap.get(cid) ?? 0) + 1);
+  }
+
+  const rows: Row[] = convs.map((c) => {
     const partnerId = c.participant_a === myId ? c.participant_b : c.participant_a;
     const meta = profileMap.get(partnerId) ?? { name: '알 수 없음', image: null };
-    const { data: lastMsg } = await supabase
-      .from('messages')
-      .select('body')
-      .eq('conversation_id', c.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    const { count } = await supabase
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('conversation_id', c.id)
-      .neq('sender_id', myId)
-      .is('read_at', null);
-    rows.push({
+    return {
       id: c.id,
       participant_a: c.participant_a,
       participant_b: c.participant_b,
       last_message_at: c.last_message_at,
       partner_name: meta.name,
       partner_image: meta.image,
-      last_body: lastMsg?.body ?? null,
-      unread: count ?? 0,
-    });
-  }
+      last_body: lastBodyMap.get(c.id) ?? null,
+      unread: unreadCountMap.get(c.id) ?? 0,
+    };
+  });
+
   return rows;
 }
 

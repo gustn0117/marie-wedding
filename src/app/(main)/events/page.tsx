@@ -23,6 +23,8 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
   const supabase = createServerQueryClient();
   const type = searchParams.type;
   const q = normalizeSearchTerm(searchParams.q);
+  const showPast = searchParams.past === '1';
+  const todayIso = new Date().toISOString().slice(0, 10);
 
   let query = supabase
     .from('events')
@@ -32,6 +34,12 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
   if (type) query = query.eq('type', type);
   if (q) query = query.or(`title.ilike.%${q}%,content.ilike.%${q}%,location.ilike.%${q}%`);
 
+  // 종료된 행사는 기본 숨김. ?past=1 로 명시 요청하면 함께 표시.
+  // end_date 가 있으면 end_date >= 오늘, 없으면 start_date >= 오늘, 둘 다 없으면(상시) 노출.
+  if (!showPast) {
+    query = query.or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`);
+  }
+
   query = query
     .order('is_pinned', { ascending: false })
     .order('start_date', { ascending: true, nullsFirst: false })
@@ -39,7 +47,7 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
     .range(0, 49);
 
   const { data, count } = await query;
-  return { events: (data ?? []) as Event[], count: count ?? 0 };
+  return { events: (data ?? []) as Event[], count: count ?? 0, showPast };
 }
 
 function getTypeLabel(type: string): string {
@@ -72,9 +80,17 @@ function getStaffSearchKeyword(event: Event) {
 }
 
 export default async function EventsPage({ searchParams }: PageProps) {
-  const { events, count } = await getEvents(searchParams);
+  const { events, count, showPast } = await getEvents(searchParams);
   const activeType = searchParams.type ?? '';
   const q = searchParams.q ?? '';
+  const pastQuery = (() => {
+    const params = new URLSearchParams();
+    if (activeType) params.set('type', activeType);
+    if (q) params.set('q', q);
+    if (!showPast) params.set('past', '1');
+    const qs = params.toString();
+    return qs ? `/events?${qs}` : '/events';
+  })();
 
   // 상단 고정 이벤트와 일반 이벤트 분리
   const pinned = events.filter(e => e.is_pinned);
@@ -111,7 +127,7 @@ export default async function EventsPage({ searchParams }: PageProps) {
       </form>
 
       {/* Filter Tabs */}
-      <div className="surface flex overflow-x-auto">
+      <div className="surface flex items-center overflow-x-auto">
         <Link
           href={q ? `/events?q=${encodeURIComponent(q)}` : '/events'}
           className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
@@ -131,6 +147,12 @@ export default async function EventsPage({ searchParams }: PageProps) {
             {t.label}
           </Link>
         ))}
+        <Link
+          href={pastQuery}
+          className="ml-auto px-4 py-3 text-xs font-bold text-gray-500 hover:text-primary whitespace-nowrap"
+        >
+          {showPast ? '진행 중만 보기' : '지난 행사도 보기'}
+        </Link>
       </div>
 
       {/* Events List */}

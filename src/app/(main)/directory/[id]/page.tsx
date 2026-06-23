@@ -28,6 +28,7 @@ interface PageProps {
 async function getData(id: string) {
   const supabase = createServerQueryClient();
 
+  // 1) profile 먼저 확인 (없으면 즉시 종료)
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
@@ -37,33 +38,37 @@ async function getData(id: string) {
 
   if (!profile) return null;
 
-  const { data: jobs } = await supabase
-    .from('jobs')
-    .select('*')
-    .eq('author_id', id)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false });
+  // 2) jobs / portfolios / reviews 는 profile.id 만 알면 되므로 병렬 실행
+  const [jobsRes, portfoliosRes, reviewsRes] = await Promise.all([
+    supabase
+      .from('jobs')
+      .select('*')
+      .eq('author_id', id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('portfolios')
+      .select('*')
+      .eq('profile_id', id)
+      .is('deleted_at', null)
+      .order('is_featured', { ascending: false })
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('reviews')
+      .select('*, reviewer:profiles!reviewer_id(id, company_name, contact_name)')
+      .eq('reviewee_id', id)
+      .eq('is_public', true)
+      .eq('is_hidden_by_admin', false)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(20),
+  ]);
 
-  const { data: portfolios } = await supabase
-    .from('portfolios')
-    .select('*')
-    .eq('profile_id', id)
-    .is('deleted_at', null)
-    .order('is_featured', { ascending: false })
-    .order('display_order', { ascending: true })
-    .order('created_at', { ascending: false });
+  const reviews = (reviewsRes.data ?? []) as Review[];
 
-  const { data: reviews } = await supabase
-    .from('reviews')
-    .select('*, reviewer:profiles!reviewer_id(id, company_name, contact_name)')
-    .eq('reviewee_id', id)
-    .eq('is_public', true)
-    .eq('is_hidden_by_admin', false)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  const tagIds = Array.from(new Set(((reviews ?? []) as Review[]).flatMap((r) => r.tags)));
+  // 3) review tags 는 reviews 결과에 의존 — 별도 await
+  const tagIds = Array.from(new Set(reviews.flatMap((r) => r.tags)));
   let tagRows: ReviewTag[] = [];
   if (tagIds.length > 0) {
     const { data: tagsData } = await supabase
@@ -76,9 +81,9 @@ async function getData(id: string) {
 
   return {
     profile: profile as Profile,
-    jobs: (jobs ?? []) as Job[],
-    portfolios: (portfolios ?? []) as Portfolio[],
-    reviews: (reviews ?? []) as Review[],
+    jobs: (jobsRes.data ?? []) as Job[],
+    portfolios: (portfoliosRes.data ?? []) as Portfolio[],
+    reviews,
     tagMap,
   };
 }
