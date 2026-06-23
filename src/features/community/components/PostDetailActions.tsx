@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { communityService } from '@/features/community/services/community-service';
+import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast } from '@/shared/components/Toast';
 
 interface PostDetailActionsProps {
   postId: string;
@@ -17,17 +19,22 @@ export default function PostDetailActions({ postId, authorId }: PostDetailAction
   const { profile } = useAuth();
   const [deleting, setDeleting] = useState(false);
 
-  const isAuthor = profile && profile.id === authorId;
-  if (!isAuthor) return null;
+  const canManage = !!profile && (profile.id === authorId || profile.role === 'admin');
+  if (!canManage) return null;
 
   const handleDelete = async () => {
-    if (!confirm('게시글을 삭제하시겠습니까?')) return;
+    if (!confirm('게시글을 삭제하시겠습니까? 삭제 후에는 복구할 수 없어요.')) return;
     setDeleting(true);
     try {
-      await communityService.deletePost(postId);
+      await withTimeout(communityService.deletePost(postId), 10000);
       router.push(ROUTES.COMMUNITY);
       router.refresh();
-    } catch {
+    } catch (err) {
+      console.error('[PostDetailActions] delete failed:', err);
+      const msg = err instanceof Error && err.message
+        ? `삭제에 실패했습니다. (${err.message})`
+        : '삭제에 실패했습니다. 다시 시도해 주세요.';
+      toast(msg, 'error');
       setDeleting(false);
     }
   };

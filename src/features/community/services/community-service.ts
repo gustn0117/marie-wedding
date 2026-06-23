@@ -131,16 +131,22 @@ export const communityService = {
 
   /**
    * Soft-delete a post.
+   * RLS UPDATE 정책이 자기 행만 허용해도, 어떤 이유로 0행만 update되면 사용자는 '성공처럼' 보이지만
+   * 실제로는 삭제 안 됨. select로 결과 행 수를 확인해 정확한 피드백을 준다.
    */
   async deletePost(id: string): Promise<void> {
     const supabase = createClient();
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('posts')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
-    if (error) throw error;
+    if (error) throw new Error(`게시글 삭제 실패: ${error.message}`);
+    if (!data || data.length === 0) {
+      throw new Error('권한이 없거나 이미 삭제된 게시글입니다.');
+    }
   },
 
   /**
