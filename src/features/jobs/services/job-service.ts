@@ -177,18 +177,17 @@ export const jobService = {
   },
 
   /**
-   * Soft delete a job posting by setting deleted_at.
+   * Soft delete a job posting.
+   * 클라이언트 측 UPDATE가 RLS WITH CHECK에서 막히는 케이스를 우회하기 위해 server route 경유.
    */
   async deleteJob(id: string): Promise<void> {
-    const supabase = createClient();
-
-    const { error } = await supabase
-      .from('jobs')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) {
-      throw new Error(`채용 공고 삭제에 실패했습니다: ${error.message}`);
+    const res = await fetch(`/api/jobs/${id}/delete`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `채용 공고 삭제에 실패했습니다 (HTTP ${res.status}).`);
     }
   },
 
