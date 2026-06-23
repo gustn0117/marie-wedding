@@ -37,11 +37,27 @@ export default function EditProfilePage() {
   // 미들웨어 쿠키 profile에는 bio/phone/website가 없으므로 DB에서 전체 profile을 다시 가져와 바인딩.
   // useAuth().profile은 cookie 기반 lite 객체이며, useAuth 내부에서 두 번 setState되어
   // 의존성 [profile, initialized]로 두면 매번 reference가 달라져 fetch가 재실행된다.
-  // → 의존성을 profile.id로 안정화 + fetch 실패 시 cookie fallback 금지(빈 form 노출 방지).
+  // → 의존성을 profile.id로 안정화. fetch 실패해도 cookie profile로 폼 노출 (무한 로딩 방지).
   const profileId = profile?.id;
   useEffect(() => {
     if (!profileId || initialized) return;
     let cancelled = false;
+
+    // 폴백: 5s 안에 DB fetch 못 끝내면 cookie profile로 폼 노출
+    const fallbackTimer = setTimeout(() => {
+      if (cancelled) return;
+      setFormData((prev) => prev.contact_name || prev.company_name ? prev : {
+        contact_name: profile?.contact_name || '',
+        company_name: profile?.company_name || '',
+        business_type: profile?.business_type || '',
+        region: profile?.region || '',
+        bio: prev.bio,
+        phone: prev.phone,
+        website: prev.website,
+      });
+      setInitialized(true);
+    }, 5000);
+
     (async () => {
       try {
         const sb = createClient();
@@ -51,14 +67,25 @@ export default function EditProfilePage() {
             .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
             .eq('id', profileId)
             .maybeSingle(),
-          10000,
-          '프로필을 가져오는 중 시간이 초과되었어요.',
+          5000,
+          '프로필 조회가 지연돼요.',
         );
         if (cancelled) return;
+        clearTimeout(fallbackTimer);
         if (fetchErr || !data) {
-          console.error('[mypage/edit] profile fetch failed:', fetchErr);
-          setError('프로필을 가져오지 못했어요. 페이지를 새로고침해 주세요.');
-          return; // initialized=false 유지 → form 자체 미렌더
+          console.warn('[mypage/edit] profile fetch failed, using cookie fallback:', fetchErr);
+          // 쿠키 fallback — bio/phone/website는 빈 채로
+          setFormData({
+            contact_name: profile?.contact_name || '',
+            company_name: profile?.company_name || '',
+            business_type: profile?.business_type || '',
+            region: profile?.region || '',
+            bio: '',
+            phone: '',
+            website: '',
+          });
+          setInitialized(true);
+          return;
         }
         setFormData({
           contact_name: data.contact_name || '',
@@ -75,11 +102,26 @@ export default function EditProfilePage() {
         setInitialized(true);
       } catch (err) {
         if (cancelled) return;
-        console.error('[mypage/edit] profile fetch threw:', err);
-        setError(err instanceof Error && err.message ? err.message : '프로필을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.');
+        clearTimeout(fallbackTimer);
+        console.warn('[mypage/edit] profile fetch threw, using cookie fallback:', err);
+        setFormData({
+          contact_name: profile?.contact_name || '',
+          company_name: profile?.company_name || '',
+          business_type: profile?.business_type || '',
+          region: profile?.region || '',
+          bio: '',
+          phone: '',
+          website: '',
+        });
+        setInitialized(true);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(fallbackTimer);
+    };
+  // profile 객체 전체를 dep에 넣으면 useAuth 내 두 번의 setState로 effect가 재실행되므로 profileId만.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, initialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
