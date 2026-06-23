@@ -10,6 +10,7 @@ import { withTimeout } from '@/shared/utils/withTimeout';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
+import { validatePhone } from '@/shared/utils/validation';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -111,6 +112,14 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
   const handleSave = async () => {
     if (!formData.region) { setError('지역을 1개 이상 선택해주세요.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    if (formData.phone.trim().length > 0) {
+      const phoneCheck = validatePhone(formData.phone);
+      if (!phoneCheck.valid) {
+        setError(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+    }
 
     setSaving(true);
     setError(null);

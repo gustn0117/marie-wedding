@@ -19,11 +19,17 @@ interface PageProps {
   searchParams: Record<string, string | undefined>;
 }
 
+type StatusFilter = 'all' | 'upcoming' | 'ongoing' | 'ended' | 'always';
+
 async function getEvents(searchParams: Record<string, string | undefined>) {
   const supabase = createServerQueryClient();
   const type = searchParams.type;
   const q = normalizeSearchTerm(searchParams.q);
-  const showPast = searchParams.past === '1';
+  const statusFilter: StatusFilter = (() => {
+    const v = searchParams.status;
+    if (v === 'upcoming' || v === 'ongoing' || v === 'ended' || v === 'always') return v;
+    return 'all';
+  })();
   const todayIso = new Date().toISOString().slice(0, 10);
 
   let query = supabase
@@ -34,10 +40,27 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
   if (type) query = query.eq('type', type);
   if (q) query = query.or(`title.ilike.%${q}%,content.ilike.%${q}%,location.ilike.%${q}%`);
 
-  // 종료된 행사는 기본 숨김. ?past=1 로 명시 요청하면 함께 표시.
-  // end_date 가 있으면 end_date >= 오늘, 없으면 start_date >= 오늘, 둘 다 없으면(상시) 노출.
-  if (!showPast) {
-    query = query.or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`);
+  // 상태별 필터 (QA-011)
+  // - upcoming: start_date > 오늘
+  // - ongoing:  start_date <= 오늘 AND (end_date >= 오늘 OR end_date is null)
+  // - ended:    end_date < 오늘 (혹은 start_date < 오늘 AND end_date is null)
+  // - always:   start_date is null AND end_date is null
+  // - all:      기본은 종료된 것 제외 (upcoming + ongoing + always 합집합)
+  switch (statusFilter) {
+    case 'upcoming':
+      query = query.gt('start_date', todayIso);
+      break;
+    case 'ongoing':
+      query = query.lte('start_date', todayIso).or(`end_date.gte.${todayIso},end_date.is.null`);
+      break;
+    case 'ended':
+      query = query.lt('end_date', todayIso);
+      break;
+    case 'always':
+      query = query.is('start_date', null).is('end_date', null);
+      break;
+    default:
+      query = query.or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`);
   }
 
   query = query
@@ -47,7 +70,7 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
     .range(0, 49);
 
   const { data, count } = await query;
-  return { events: (data ?? []) as Event[], count: count ?? 0, showPast };
+  return { events: (data ?? []) as Event[], count: count ?? 0, statusFilter };
 }
 
 function getTypeLabel(type: string): string {
@@ -79,18 +102,26 @@ function getStaffSearchKeyword(event: Event) {
   return event.title.split(/\s+/).slice(0, 2).join(' ') || '웨딩';
 }
 
+const STATUS_TABS: Array<{ value: StatusFilter; label: string }> = [
+  { value: 'all', label: '진행 중·예정' },
+  { value: 'upcoming', label: '진행 예정' },
+  { value: 'ongoing', label: '진행 중' },
+  { value: 'ended', label: '종료' },
+];
+
+function buildStatusHref(status: StatusFilter, type: string, q: string): string {
+  const params = new URLSearchParams();
+  if (status !== 'all') params.set('status', status);
+  if (type) params.set('type', type);
+  if (q) params.set('q', q);
+  const qs = params.toString();
+  return qs ? `/events?${qs}` : '/events';
+}
+
 export default async function EventsPage({ searchParams }: PageProps) {
-  const { events, count, showPast } = await getEvents(searchParams);
+  const { events, count, statusFilter } = await getEvents(searchParams);
   const activeType = searchParams.type ?? '';
   const q = searchParams.q ?? '';
-  const pastQuery = (() => {
-    const params = new URLSearchParams();
-    if (activeType) params.set('type', activeType);
-    if (q) params.set('q', q);
-    if (!showPast) params.set('past', '1');
-    const qs = params.toString();
-    return qs ? `/events?${qs}` : '/events';
-  })();
 
   // 상단 고정 이벤트와 일반 이벤트 분리
   const pinned = events.filter(e => e.is_pinned);
@@ -126,33 +157,45 @@ export default async function EventsPage({ searchParams }: PageProps) {
         <button className="btn-brand min-h-[44px] px-5 py-2.5 text-sm" type="submit">검색</button>
       </form>
 
-      {/* Filter Tabs */}
+      {/* Status filter (QA-011) — 진행 상태별 4탭 */}
+      <div className="surface flex items-center overflow-x-auto">
+        {STATUS_TABS.map((s) => {
+          const active = s.value === statusFilter;
+          return (
+            <Link
+              key={s.value}
+              href={buildStatusHref(s.value, activeType, q)}
+              className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
+                active ? 'text-primary border-primary' : 'text-gray-500 border-transparent hover:text-gray-700'
+              }`}
+            >
+              {s.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Type sub-filter */}
       <div className="surface flex items-center overflow-x-auto">
         <Link
-          href={q ? `/events?q=${encodeURIComponent(q)}` : '/events'}
+          href={buildStatusHref(statusFilter, '', q)}
           className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-            !activeType ? 'text-primary border-primary' : 'text-gray-500 border-transparent hover:text-gray-700'
+            !activeType ? 'text-ink border-ink' : 'text-gray-500 border-transparent hover:text-gray-700'
           }`}
         >
-          전체
+          전체 종류
         </Link>
         {EVENT_TYPES.map((t) => (
           <Link
             key={t.value}
-            href={`/events?type=${t.value}${q ? `&q=${encodeURIComponent(q)}` : ''}`}
+            href={buildStatusHref(statusFilter, t.value, q)}
             className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-              activeType === t.value ? 'text-primary border-primary' : 'text-gray-500 border-transparent hover:text-gray-700'
+              activeType === t.value ? 'text-ink border-ink' : 'text-gray-500 border-transparent hover:text-gray-700'
             }`}
           >
             {t.label}
           </Link>
         ))}
-        <Link
-          href={pastQuery}
-          className="ml-auto px-4 py-3 text-xs font-bold text-gray-500 hover:text-primary whitespace-nowrap"
-        >
-          {showPast ? '진행 중만 보기' : '지난 행사도 보기'}
-        </Link>
       </div>
 
       {/* Events List */}

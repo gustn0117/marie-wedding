@@ -10,6 +10,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 import { compressImage } from '@/shared/utils/image';
+import { validatePhone } from '@/shared/utils/validation';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
@@ -155,9 +156,9 @@ export default function EditProfilePage() {
       fail('지역을 1개 이상 선택해주세요.');
       return;
     }
-    const phoneDigits = formData.phone.replace(/[^0-9]/g, '');
-    if (phoneDigits.length < 9) {
-      fail('연락처를 정확히 입력해주세요. (010-XXXX-XXXX)', 'phone');
+    const phoneCheck = validatePhone(formData.phone);
+    if (!phoneCheck.valid) {
+      fail(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.', 'phone');
       return;
     }
     if (formData.bio.trim().length < 10) {

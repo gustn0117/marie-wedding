@@ -50,13 +50,15 @@ export const REGIONS = [
   { value: 'jeju', label: '제주' },
 ] as const;
 
+// QA-016: 정보공유/노하우공유/구인팁 의미 중복 → 라벨 재정리.
+// DB enum value 는 유지하여 기존 게시글 호환. label 만 교체.
 export const POST_CATEGORIES = [
-  { value: 'news', label: '정보공유' },
-  { value: 'tips', label: '노하우공유' },
   { value: 'qna', label: '질문' },
+  { value: 'jobtip', label: '취업·채용' },
+  { value: 'news', label: '업계 이야기' },
+  { value: 'tips', label: '실무 노하우' },
   { value: 'review', label: '후기' },
-  { value: 'local', label: '지역소식' },
-  { value: 'jobtip', label: '구인팁' },
+  { value: 'local', label: '지역 소식' },
   { value: 'free', label: '자유게시판' },
 ] as const;
 

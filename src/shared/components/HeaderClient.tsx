@@ -134,7 +134,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             </Link>
           )}
           <Link href={ROUTES.MYPAGE} className="hidden lg:inline-flex text-sm font-semibold text-gray-700 hover:text-ink px-3 py-2">
-            지원 관리
+            마이페이지
           </Link>
           <Link href={ROUTES.COMMUNITY} className="icon-btn" aria-label="커뮤니티">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -178,7 +178,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                     <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
                   </Link>
                   <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
-                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">지원 관리</Link>
+                  <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
+                    {profile.account_type === 'business' ? '받은 지원 / 내 활동' : '내 지원 / 활동'}
+                  </Link>
                   {profile.role === 'admin' && (
                     <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
                   )}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import {
@@ -39,8 +39,22 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
   const [jobs, setJobs] = useState(initialJobs);
   const applicationCount = sentApplications.length + receivedApplications.length;
 
+  // QA-012: 통계 카드 클릭 → URL hash → 해당 탭 자동 선택 + 스크롤
+  useEffect(() => {
+    const hash = typeof window !== 'undefined' ? window.location.hash : '';
+    let next: 'jobs' | 'posts' | 'applications' | null = null;
+    if (hash === '#registered-jobs') next = 'jobs';
+    else if (hash === '#my-posts') next = 'posts';
+    else if (hash === '#sent-applications' || hash === '#received-applications') next = 'applications';
+    if (next) {
+      setActiveTab(next);
+      const el = document.getElementById('mypage-tabs');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, []);
+
   return (
-    <div className="platform-panel">
+    <div id="mypage-tabs" className="platform-panel scroll-mt-20">
       <div className="border-b border-gray-200">
         <div className="flex overflow-x-auto bg-white">
           <button
@@ -220,7 +234,8 @@ function FilterableApplicationList({
             // Link 안에 Link 중첩은 HTML 스펙(§13.2.6.4.7) 위반.
             // 브라우저 파서가 outer anchor를 강제 종료하면서 클릭 핸들러가 두 곳 부착되어
             // 1클릭에 다중 네비게이션이 발생함. outer 카드는 div + 단일 내부 Link로 구성.
-            const cardHref = item.job ? ROUTES.JOBS_DETAIL(item.job.id) : ROUTES.JOBS;
+            // QA-013: 받은 지원 카드 클릭 시 application 상세로 이동 (job 상세로 이동하던 기존 동작 교체)
+            const cardHref = `/applications/${item.id}`;
             const showReviewLink = item.hiring_completed_at && item.applicant_completed_at;
             return (
               <div key={item.id} className="platform-data-row relative px-4 py-3">

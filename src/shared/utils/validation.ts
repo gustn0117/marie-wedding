@@ -68,3 +68,46 @@ export function validateEmail(raw: string): EmailValidationResult {
 
   return { valid: true };
 }
+
+export interface PhoneValidationResult {
+  valid: boolean;
+  reason?: string;
+}
+
+/**
+ * 한국 전화번호 형식 검증 (QA-015).
+ *
+ * 허용:
+ *  - 02 (서울): 9자리(02-XXX-XXXX) 또는 10자리(02-XXXX-XXXX)
+ *  - 0XX 일반 지역번호 / 010·011·016·017·018·019 휴대전화: 10~11자리
+ *  - 050X 인터넷전화 / 070 / 080 / 0505 등도 10~11자리 패턴에 포함
+ *
+ * 차단 예시(QA-015): 031-555-555 (9자리, 02 아님) → 거절
+ */
+export function validatePhone(raw: string): PhoneValidationResult {
+  const trimmed = raw.trim();
+  if (!trimmed) return { valid: false, reason: '연락처를 입력해주세요.' };
+
+  const digits = trimmed.replace(/[^0-9]/g, '');
+
+  if (!digits.startsWith('0')) {
+    return { valid: false, reason: '0으로 시작하는 전화번호를 입력해주세요. (예: 010-1234-5678)' };
+  }
+
+  const startsWithSeoul = digits.startsWith('02');
+  const minLen = startsWithSeoul ? 9 : 10;
+  const maxLen = startsWithSeoul ? 10 : 11;
+
+  if (digits.length < minLen) {
+    return {
+      valid: false,
+      reason: `자릿수가 짧습니다. ${startsWithSeoul ? '02-XXXX-XXXX' : '예) 010-1234-5678 / 031-555-5555'} 형식으로 입력해주세요.`,
+    };
+  }
+  if (digits.length > maxLen) {
+    return { valid: false, reason: '자릿수가 너무 많습니다. 다시 확인해주세요.' };
+  }
+
+  return { valid: true };
+}
+

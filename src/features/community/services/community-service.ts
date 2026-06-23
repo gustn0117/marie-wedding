@@ -87,25 +87,33 @@ export const communityService = {
   },
 
   /**
-   * Create a new post.
+   * Create a new post via service_role server route.
+   *
+   * 배경: 클라이언트 .insert().select().maybeSingle() 가 RLS readback / moderation
+   *      trigger 영향으로 data=null 을 반환해 UI 가 '실패' 로 인식하지만 DB 엔
+   *      저장되는 케이스가 있었음 (QA-010). 서버 라우트로 우회.
+   *
+   * authorId 인자는 호출자 시그니처 호환을 위해 받지만 실제 author는 서버에서 인증 쿠키로 재도출.
    */
-  async createPost(data: PostFormData, authorId: string): Promise<Post> {
-    const supabase = createClient();
-
-    const { data: post, error } = await supabase
-      .from('posts')
-      .insert({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async createPost(data: PostFormData, _authorId: string): Promise<Post> {
+    const res = await fetch('/api/posts/create', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         title: data.title,
         content: data.content,
         category: data.category,
         region: data.region || null,
-        author_id: authorId,
-      })
-      .select()
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!post) throw new Error('게시글이 등록되었지만 다시 읽지 못했어요. 게시판에서 확인해 주세요.');
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `게시글 등록에 실패했습니다 (HTTP ${res.status}).`);
+    }
+    const { post } = await res.json();
+    if (!post) throw new Error('게시글이 저장되었지만 응답이 비어 있어요. 게시판에서 확인해 주세요.');
     return post as Post;
   },
 

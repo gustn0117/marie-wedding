@@ -247,13 +247,14 @@ export default async function MyPage() {
         <section>
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
           <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
-            <WorkspaceMetric label="등록한 공고" value={jobs.length} />
-            <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" />
-            <WorkspaceMetric label="받은 지원" value={receivedApplications.length} />
+            <WorkspaceMetric label="등록한 공고" value={jobs.length} href="/mypage#registered-jobs" />
+            <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" href="/mypage/dashboard" />
+            <WorkspaceMetric label="받은 지원" value={receivedApplications.length} href="/mypage#received-applications" />
             <WorkspaceMetric
               label="응답률"
               value={Math.round(profile.response_rate ?? 0)}
               unit="%"
+              href="/mypage/dashboard"
             />
           </div>
         </section>
@@ -261,9 +262,9 @@ export default async function MyPage() {
       <section>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">커뮤니티·지원</p>
         <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
-          <WorkspaceMetric label="작성한 게시글" value={posts.length} />
-          <WorkspaceMetric label="지원 내역" value={sentApplications.length} />
-          <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} />
+          <WorkspaceMetric label="작성한 게시글" value={posts.length} href="/mypage#my-posts" />
+          <WorkspaceMetric label="지원 내역" value={sentApplications.length} href="/mypage#sent-applications" />
+          <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} href="/mypage/dashboard" />
           <WorkspaceMetric
             label="평균 응답"
             value={
@@ -284,6 +285,7 @@ export default async function MyPage() {
                     : '일'
                 : '-'
             }
+            href="/mypage/dashboard"
           />
         </div>
       </section>
@@ -308,14 +310,37 @@ export default async function MyPage() {
   );
 }
 
-function WorkspaceMetric({ label, value, unit = '건' }: { label: string; value: number; unit?: string }) {
-  return (
-    <div className="metric-tile p-5">
+function WorkspaceMetric({
+  label,
+  value,
+  unit = '건',
+  href,
+}: {
+  label: string;
+  value: number;
+  unit?: string;
+  href?: string;
+}) {
+  const body = (
+    <>
       <p className="text-sm font-bold text-gray-500 mb-1">{label}</p>
       <p className="text-2xl font-bold text-primary">
         {value}
         <span className="text-sm font-normal text-gray-400 ml-1">{unit}</span>
       </p>
-    </div>
+    </>
+  );
+
+  if (!href) {
+    return <div className="metric-tile p-5">{body}</div>;
+  }
+
+  return (
+    <Link
+      href={href}
+      className="metric-tile p-5 block transition-colors hover:bg-primary-50/40 hover:border-primary-200"
+    >
+      {body}
+    </Link>
   );
 }
