@@ -328,6 +328,10 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     );
   }
 
+  // 업체 회원은 본인이 작성자가 아니면 지원 자체가 불가.
+  // 단, 과거에 개인 회원으로 지원한 이력이 있으면 그 application은 그대로 보여줌(아래 application 분기로 진행).
+  const isBusinessApplicant = profile.account_type === 'business' && !isAuthor;
+
   if (application) {
     const canCancel = application.status === 'pending' || application.status === 'reviewing';
     return (
@@ -356,6 +360,30 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
             onMark={() => markCompleted(application.id, 'applied')}
           />
         )}
+      </section>
+    );
+  }
+
+  if (isBusinessApplicant) {
+    return (
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8 text-center">
+        <div className="mx-auto mb-3 inline-flex w-12 h-12 items-center justify-center rounded-full bg-gray-100">
+          <svg className="w-6 h-6 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-bold text-gray-900 mb-1">업체 회원은 지원할 수 없어요</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          지원은 개인 회원만 가능합니다. 업체 회원은 직접 공고를 등록해 지원자를 받을 수 있어요.
+        </p>
+        <div className="inline-flex gap-2">
+          <Link href={ROUTES.JOBS} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-700 hover:border-primary hover:text-primary">
+            다른 공고 보기
+          </Link>
+          <Link href="/jobs/new" className="btn-primary inline-flex">
+            새 공고 등록
+          </Link>
+        </div>
       </section>
     );
   }

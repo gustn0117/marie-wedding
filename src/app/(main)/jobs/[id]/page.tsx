@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
-import type { Job } from '@/types/database';
+import type { Job, Profile } from '@/types/database';
 import JobDescriptionView from '@/features/jobs/components/JobDescriptionView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
@@ -29,11 +30,25 @@ async function getJob(id: string): Promise<Job | null> {
   return data as Job | null;
 }
 
+function readCookieProfile(): Pick<Profile, 'id' | 'account_type'> | null {
+  try {
+    const raw = cookies().get('marie_profile')?.value;
+    if (!raw) return null;
+    const parsed = JSON.parse(decodeURIComponent(raw));
+    return { id: parsed.id ?? null, account_type: parsed.account_type ?? null };
+  } catch {
+    return null;
+  }
+}
+
 export default async function JobDetailPage({ params }: PageProps) {
   const job = await getJob(params.id);
   if (!job) notFound();
 
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
+  const viewer = readCookieProfile();
+  const isAuthorViewer = !!viewer?.id && viewer.id === job.author_id;
+  const isBusinessViewer = viewer?.account_type === 'business' && !isAuthorViewer;
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-4 pb-24 lg:pb-8">
@@ -74,11 +89,15 @@ export default async function JobDetailPage({ params }: PageProps) {
         </div>
 
         {/* Sidebar */}
-        <JobDetailSidebar job={job} />
+        <JobDetailSidebar job={job} blockReason={isBusinessViewer ? '업체 회원은 지원할 수 없어요' : null} />
       </div>
 
       {/* Mobile sticky apply bar */}
-      <JobMobileApplyBar label="지원하기" disabled={isExpired} />
+      <JobMobileApplyBar
+        label="지원하기"
+        disabled={isExpired || isBusinessViewer}
+        blockReason={isBusinessViewer ? '업체 회원은 지원할 수 없어요' : null}
+      />
     </div>
   );
 }

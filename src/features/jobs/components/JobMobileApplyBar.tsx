@@ -5,9 +5,11 @@ import { useEffect, useState } from 'react';
 interface Props {
   label: string;
   disabled?: boolean;
+  /** 차단 사유 — 설정되면 라벨 대신 표시되고 클릭 비활성. */
+  blockReason?: string | null;
 }
 
-export default function JobMobileApplyBar({ label, disabled }: Props) {
+export default function JobMobileApplyBar({ label, disabled, blockReason }: Props) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
@@ -26,6 +28,19 @@ export default function JobMobileApplyBar({ label, disabled }: Props) {
   }, []);
 
   if (!show) return null;
+
+  if (blockReason) {
+    return (
+      <div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden">
+        <div
+          className="block w-full text-center rounded bg-gray-100 text-gray-500 py-3 text-sm font-bold"
+          aria-disabled="true"
+        >
+          {blockReason}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden">

@@ -9,9 +9,11 @@ import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface Props {
   job: Job;
+  /** 지원 차단 사유 (예: 업체 회원은 지원 불가). null이면 정상 CTA 노출. */
+  blockReason?: string | null;
 }
 
-export default function JobDetailSidebar({ job }: Props) {
+export default function JobDetailSidebar({ job, blockReason }: Props) {
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const daysLeft = job.deadline
     ? Math.ceil((new Date(job.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
@@ -66,12 +68,21 @@ export default function JobDetailSidebar({ job }: Props) {
         ) : (
           <p className="text-base font-bold mb-3 text-gray-900">상시 채용</p>
         )}
-        <a
-          href="#apply"
-          className={`block w-full text-center btn-primary min-h-[44px] py-3 ${isExpired ? 'pointer-events-none opacity-50' : ''}`}
-        >
-          지원하기
-        </a>
+        {blockReason ? (
+          <div
+            className="block w-full text-center rounded bg-gray-100 text-gray-500 py-3 text-sm font-bold"
+            aria-disabled="true"
+          >
+            {blockReason}
+          </div>
+        ) : (
+          <a
+            href="#apply"
+            className={`block w-full text-center btn-primary min-h-[44px] py-3 ${isExpired ? 'pointer-events-none opacity-50' : ''}`}
+          >
+            지원하기
+          </a>
+        )}
       </section>
 
       {/* Quick actions */}
