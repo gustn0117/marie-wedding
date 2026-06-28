@@ -126,14 +126,19 @@ export const directoryService = {
   },
 
   async toggleDirectoryListing(id: string, listed: boolean): Promise<Profile> {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ is_directory_listed: listed, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
+    // updateProfile 와 동일하게 service_role 서버 라우트 경유 (is_directory_listed 도 화이트리스트에 포함됨)
+    const res = await fetch('/api/directory/update', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, updates: { is_directory_listed: listed } }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `상태 변경에 실패했습니다 (HTTP ${res.status}).`);
+    }
+    const { data } = await res.json();
+    if (!data) throw new Error('상태가 변경되었지만 응답이 비어 있어요.');
     return data as Profile;
   },
 };
