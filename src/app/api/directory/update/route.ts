@@ -88,22 +88,39 @@ export async function POST(request: Request) {
     if (ALLOWED.has(k)) payload[k] = v;
   }
 
-  const { data, error } = await service
+  // 1) UPDATE — .select() 없이. RETURNING 직렬화로 인해 trigger/RLS 이슈 발생 가능
+  const { error: updateErr } = await service
     .from('profiles')
     .update(payload)
-    .eq('id', id)
+    .eq('id', id);
+
+  if (updateErr) {
+    console.error('[api/directory/update] update failed:', updateErr);
+    return NextResponse.json(
+      { error: `저장에 실패했습니다: ${updateErr.message}` },
+      { status: 500 },
+    );
+  }
+
+  // 2) 별도 SELECT — service_role 는 RLS 우회하므로 항상 row 조회 가능
+  const { data, error: selectErr } = await service
+    .from('profiles')
     .select('*')
+    .eq('id', id)
     .maybeSingle();
 
-  if (error) {
+  if (selectErr) {
+    console.error('[api/directory/update] post-update select failed:', selectErr);
     return NextResponse.json(
-      { error: `저장에 실패했습니다: ${error.message}` },
+      { error: `저장은 되었지만 다시 읽지 못했습니다: ${selectErr.message}` },
       { status: 500 },
     );
   }
   if (!data) {
-    // service_role 로 select 도 안 보이는 케이스는 거의 없음 — but 만일을 대비해
-    return NextResponse.json({ success: true, data: null });
+    return NextResponse.json(
+      { error: '저장 후 프로필을 찾을 수 없습니다.' },
+      { status: 500 },
+    );
   }
   return NextResponse.json({ success: true, data });
 }

@@ -178,7 +178,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       // 즉시 이동 (setTimeout 제거)
       window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
     } catch (err) {
+      console.error('[DirectoryForm] save failed:', err);
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       setSaving(false);
     }
   };
