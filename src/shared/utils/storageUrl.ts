@@ -9,7 +9,7 @@
  */
 export function resolveStorageUrl(
   value: string | null | undefined,
-  bucket: 'avatars' | 'job-images' | 'event-images',
+  bucket: 'avatars' | 'job-images' | 'event-images' | 'portfolios',
 ): string | null {
   if (!value) return null;
   if (/^https?:\/\//i.test(value)) return value;

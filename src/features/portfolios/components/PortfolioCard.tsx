@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Portfolio } from '@/types/database';
-import { portfolioService } from '@/features/portfolios/services/portfolioService';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 interface Props {
   portfolio: Portfolio;
@@ -10,7 +10,9 @@ interface Props {
 
 export default function PortfolioCard({ portfolio, href, showEdit }: Props) {
   const cover = portfolio.cover_image || portfolio.images[0] || null;
-  const coverUrl = cover ? portfolioService.publicUrl(cover) : null;
+  // portfolioService 는 'use client' 라 server component에서 호출하면 RSC 직렬화 오류 (digest 288056872).
+  // 같은 동작의 resolveStorageUrl 헬퍼로 교체.
+  const coverUrl = cover ? resolveStorageUrl(cover, 'portfolios') : null;
 
   const inner = (
     <article className="platform-panel h-full overflow-hidden transition-colors group-hover:border-primary">
