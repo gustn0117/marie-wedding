@@ -108,17 +108,20 @@ export const directoryService = {
     address?: string | null;
     gallery?: string[] | null;
   }): Promise<Profile> {
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .maybeSingle(); // RLS SELECT가 자기 row를 못 보면 .single()이 PGRST116 throw — maybeSingle은 null 반환
-
-    if (error) throw error;
-    if (!data) throw new Error('프로필을 저장했지만 다시 읽지 못했어요. 페이지를 새로고침해 주세요.');
+    // service_role 서버 라우트 경유 — 클라이언트 .update().select().maybeSingle() 가
+    // RLS readback / moderation trigger 영향으로 hang 또는 null 반환되는 케이스 우회.
+    const res = await fetch('/api/directory/update', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, updates }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `프로필 저장에 실패했습니다 (HTTP ${res.status}).`);
+    }
+    const { data } = await res.json();
+    if (!data) throw new Error('프로필이 저장되었지만 응답이 비어 있어요.');
     return data as Profile;
   },
 

@@ -156,19 +156,23 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       const uploadedGallery = [...existingGallery, ...newGallery];
 
-      await directoryService.updateProfile(profile.id, {
-        company_name: formData.company_name.trim() || null,
-        business_type: formData.business_type || null,
-        region: formData.region,
-        bio: formData.bio.trim() || null,
-        phone: formData.phone.trim() || null,
-        website: formData.website.trim() || null,
-        profile_image: profileImage,
-        company_size: formData.company_size || null,
-        established_year: formData.established_year || null,
-        address: formData.address.trim() || null,
-        gallery: uploadedGallery.length > 0 ? uploadedGallery : null,
-      });
+      await withTimeout(
+        directoryService.updateProfile(profile.id, {
+          company_name: formData.company_name.trim() || null,
+          business_type: formData.business_type || null,
+          region: formData.region,
+          bio: formData.bio.trim() || null,
+          phone: formData.phone.trim() || null,
+          website: formData.website.trim() || null,
+          profile_image: profileImage,
+          company_size: formData.company_size || null,
+          established_year: formData.established_year || null,
+          address: formData.address.trim() || null,
+          gallery: uploadedGallery.length > 0 ? uploadedGallery : null,
+        }),
+        15000,
+        '프로필 저장이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
+      );
 
       document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       // 즉시 이동 (setTimeout 제거)
