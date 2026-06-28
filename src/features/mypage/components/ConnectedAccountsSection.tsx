@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/shared/components/Toast';
 
-type ProviderKey = 'kakao' | 'google' | 'naver';
+type ProviderKey = 'kakao' | 'naver';
 
 interface IdentityRow {
   provider: ProviderKey | 'email';
@@ -134,7 +134,7 @@ export default function ConnectedAccountsSection() {
       </header>
 
       <ul className="divide-y divide-gray-100">
-        {(['kakao', 'naver', 'google'] as ProviderKey[]).map((p) => {
+        {(['kakao', 'naver'] as ProviderKey[]).map((p) => {
           const { connected, row } = providerStatus(p);
           return (
             <li key={p} className="flex items-center justify-between py-3">
@@ -198,7 +198,7 @@ export default function ConnectedAccountsSection() {
 }
 
 function labelOf(p: ProviderKey): string {
-  return p === 'kakao' ? '카카오' : p === 'naver' ? '네이버' : 'Google';
+  return p === 'kakao' ? '카카오' : '네이버';
 }
 
 function formatDate(iso: string): string {
@@ -211,11 +211,11 @@ function formatDate(iso: string): string {
 }
 
 function ProviderBadge({ p }: { p: ProviderKey }) {
-  const bg = p === 'kakao' ? 'bg-[#FEE500]' : p === 'naver' ? 'bg-[#03C75A]' : 'bg-white border border-gray-300';
+  const bg = p === 'kakao' ? 'bg-[#FEE500]' : 'bg-[#03C75A]';
   return (
     <div className={`w-8 h-8 rounded ${bg} flex items-center justify-center`}>
-      <span className={`text-[11px] font-bold ${p === 'naver' ? 'text-white' : p === 'kakao' ? 'text-[#3C1E1E]' : 'text-gray-700'}`}>
-        {p === 'kakao' ? 'K' : p === 'naver' ? 'N' : 'G'}
+      <span className={`text-[11px] font-bold ${p === 'naver' ? 'text-white' : 'text-[#3C1E1E]'}`}>
+        {p === 'kakao' ? 'K' : 'N'}
       </span>
     </div>
   );

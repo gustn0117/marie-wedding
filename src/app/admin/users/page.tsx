@@ -446,7 +446,6 @@ function signupProviderLabel(p: string | null | undefined): string {
   if (!p) return '-';
   if (p === 'email') return '이메일';
   if (p === 'kakao') return '카카오';
-  if (p === 'google') return 'Google';
   if (p === 'naver') return '네이버';
   return p;
 }

@@ -6,7 +6,6 @@ import { authService } from '@/features/auth/services/auth-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { validateEmail } from '@/shared/utils/validation';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
-import Logo from '@/shared/components/Logo';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
 import type { SignupFormData } from '@/features/auth/types';
 
@@ -101,10 +100,10 @@ export default function SignupForm() {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-surface rounded border border-border p-8 shadow-sm">
-        {/* Logo */}
+        {/* Brand — 헤더와 동일한 타이포그래피, 로고 마크 제거 */}
         <div className="flex flex-col items-center text-center mb-6 gap-2">
-          <Link href={ROUTES.HOME} aria-label="Marié 홈">
-            <Logo variant="full" size="lg" />
+          <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink" aria-label="Marié 홈">
+            Marié
           </Link>
           <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼 회원가입</p>
         </div>
