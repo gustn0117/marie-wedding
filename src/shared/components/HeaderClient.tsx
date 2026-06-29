@@ -183,7 +183,10 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                   {profile.role === 'admin' && (
                     <Link href={ROUTES.ADMIN} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">관리자 패널</Link>
                   )}
-                  <button type="button" onClick={signOut} className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 border-t border-gray-100">로그아웃</button>
+                  <div className="border-t border-gray-100">
+                    <button type="button" onClick={signOut} className="block w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50">로그아웃</button>
+                    <Link href="/mypage/withdraw" onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-xs text-gray-400 hover:bg-gray-50 hover:text-state-urgent">회원 탈퇴</Link>
+                  </div>
                 </div>
               )}
             </div>

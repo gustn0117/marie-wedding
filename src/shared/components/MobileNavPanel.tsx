@@ -275,14 +275,16 @@ export default function MobileNavPanel({
           </div>
         </div>
 
-        {/* 6. 하단 sticky 메타·로그아웃 */}
+        {/* 6. 하단 sticky 메타·로그아웃·회원탈퇴 */}
         <div className="sticky bottom-0 border-t border-gray-100 bg-white px-5 py-3" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}>
           {isAuthenticated ? (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <button type="button" onClick={() => { onSignOut(); onClose(); }} className="text-[13px] font-semibold text-gray-600 hover:text-rose-600 transition-colors">
                 로그아웃
               </button>
-              <span className="text-[11px] text-gray-400">Marié</span>
+              <Link href="/mypage/withdraw" onClick={onClose} className="text-[11px] text-gray-400 hover:text-state-urgent">
+                회원 탈퇴
+              </Link>
             </div>
           ) : (
             <p className="text-center text-[12px] text-gray-500">
