@@ -15,10 +15,9 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  // 콜백이 실제로 동작한 도메인을 그대로 사용 — 쿠키는 동일 도메인에서만 유효.
-  // (이전: process.env.NEXT_PUBLIC_APP_URL 사용 → 다른 도메인에서 시작한 사용자는
-  //  callback 후 다른 도메인으로 redirect 되어 쿠키 분실 → 헤더에 로그인 버튼 노출)
-  const origin = new URL(request.url).origin;
+  // Cloudflare tunnel + Docker 환경에선 request.url 이 컨테이너 내부 바인딩
+  // (http://0.0.0.0:3000)을 가리키므로 X-Forwarded-Host 로 외부 도메인 검출.
+  const origin = resolveExternalOrigin(request);
   const code = searchParams.get('code');
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';
@@ -129,6 +128,34 @@ export async function GET(request: Request) {
   }
 
   return NextResponse.redirect(`${origin}${next}`);
+}
+
+/**
+ * Reverse proxy 뒤에서 사용자가 실제 접속한 외부 origin을 찾는다.
+ * 우선순위: X-Forwarded-Host > Host > NEXT_PUBLIC_APP_URL > request.url.origin
+ * 0.0.0.0 / localhost / 127.0.0.1 / 사설 IP 는 컨테이너 내부 주소로 간주하고 제외.
+ */
+function resolveExternalOrigin(request: Request): string {
+  const isInternal = (h: string | null) =>
+    !h || /^(0\.0\.0\.0|localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/i.test(h);
+
+  const xfHost = request.headers.get('x-forwarded-host');
+  const xfProto = request.headers.get('x-forwarded-proto');
+  if (xfHost && !isInternal(xfHost)) {
+    return `${xfProto || 'https'}://${xfHost}`;
+  }
+
+  const host = request.headers.get('host');
+  if (host && !isInternal(host)) {
+    return `${xfProto || 'https'}://${host}`;
+  }
+
+  const envOrigin = process.env.NEXT_PUBLIC_APP_URL;
+  if (envOrigin && !isInternal(new URL(envOrigin).hostname)) {
+    return envOrigin.replace(/\/$/, '');
+  }
+
+  return new URL(request.url).origin;
 }
 
 function sanitizeReturnTo(value: string | null): string | null {

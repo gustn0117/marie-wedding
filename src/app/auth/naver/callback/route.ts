@@ -31,8 +31,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  // callback이 동작한 도메인 그대로 사용 — start와 일치 + 쿠키 도메인 일치 보장
-  const origin = new URL(request.url).origin;
+  // reverse proxy 뒤의 실제 외부 origin 검출 (X-Forwarded-Host 우선)
+  const origin = resolveExternalOrigin(request);
   const code = searchParams.get('code');
   const signedState = searchParams.get('state');
   const naverError = searchParams.get('error');
@@ -270,4 +270,18 @@ function sanitizeReturnTo(value: string | null | undefined): string | null {
   if (value.startsWith('//')) return null;
   if (value.includes('://')) return null;
   return value;
+}
+
+/** Reverse proxy 뒤의 실제 외부 origin 검출. */
+function resolveExternalOrigin(request: Request): string {
+  const isInternal = (h: string | null) =>
+    !h || /^(0\.0\.0\.0|localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/i.test(h);
+  const xfHost = request.headers.get('x-forwarded-host');
+  const xfProto = request.headers.get('x-forwarded-proto');
+  if (xfHost && !isInternal(xfHost)) return `${xfProto || 'https'}://${xfHost}`;
+  const host = request.headers.get('host');
+  if (host && !isInternal(host)) return `${xfProto || 'https'}://${host}`;
+  const envOrigin = process.env.NEXT_PUBLIC_APP_URL;
+  if (envOrigin && !isInternal(new URL(envOrigin).hostname)) return envOrigin.replace(/\/$/, '');
+  return new URL(request.url).origin;
 }

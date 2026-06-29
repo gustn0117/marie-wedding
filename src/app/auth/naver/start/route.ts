@@ -19,9 +19,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  // 시작 도메인 그대로 유지 — 사용자가 hsweb.pics에서 시작했으면 hsweb.pics로 callback.
-  // (Naver 콘솔에 두 도메인 모두 Callback URL로 등록된 상태가 전제)
-  const origin = new URL(request.url).origin;
+  // Cloudflare tunnel / Docker 내부 바인딩(0.0.0.0:3000)을 피하기 위해
+  // X-Forwarded-Host 우선으로 외부 origin 검출.
+  const origin = resolveExternalOrigin(request);
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';
 
@@ -59,4 +59,18 @@ function sanitizeReturnTo(value: string | null): string | null {
   if (value.startsWith('//')) return null;
   if (value.includes('://')) return null;
   return value;
+}
+
+/** Reverse proxy 뒤의 실제 외부 origin 검출. /auth/callback/route.ts 의 동명 헬퍼와 동일. */
+function resolveExternalOrigin(request: Request): string {
+  const isInternal = (h: string | null) =>
+    !h || /^(0\.0\.0\.0|localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/i.test(h);
+  const xfHost = request.headers.get('x-forwarded-host');
+  const xfProto = request.headers.get('x-forwarded-proto');
+  if (xfHost && !isInternal(xfHost)) return `${xfProto || 'https'}://${xfHost}`;
+  const host = request.headers.get('host');
+  if (host && !isInternal(host)) return `${xfProto || 'https'}://${host}`;
+  const envOrigin = process.env.NEXT_PUBLIC_APP_URL;
+  if (envOrigin && !isInternal(new URL(envOrigin).hostname)) return envOrigin.replace(/\/$/, '');
+  return new URL(request.url).origin;
 }
