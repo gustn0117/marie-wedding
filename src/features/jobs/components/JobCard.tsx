@@ -34,17 +34,19 @@ export default function JobCard({ job }: JobCardProps) {
           fallback={<span className="text-5xl font-bold text-gray-300 select-none">{initial}</span>}
         />
       </div>
-      <p className="svc-card-title">{job.title}</p>
-      <div className="svc-card-rating">
-        <span className="svc-card-rating-count">
-          {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
-        </span>
-      </div>
-      <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
-      <div className="svc-card-seller">
-        <span className="truncate flex-1">{company}</span>
-        {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
-        {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
+      <div className="svc-card-body">
+        <p className="svc-card-title">{job.title}</p>
+        <div className="svc-card-rating">
+          <span className="svc-card-rating-count">
+            {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)}
+          </span>
+        </div>
+        <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
+        <div className="svc-card-seller">
+          <span className="truncate flex-1">{company}</span>
+          {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
+          {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
+        </div>
       </div>
     </Link>
   );
