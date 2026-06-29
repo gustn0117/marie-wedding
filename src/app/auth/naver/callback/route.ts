@@ -31,7 +31,8 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+  // callback이 동작한 도메인 그대로 사용 — start와 일치 + 쿠키 도메인 일치 보장
+  const origin = new URL(request.url).origin;
   const code = searchParams.get('code');
   const signedState = searchParams.get('state');
   const naverError = searchParams.get('error');

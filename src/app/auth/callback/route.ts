@@ -15,7 +15,10 @@ export const runtime = 'nodejs';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+  // 콜백이 실제로 동작한 도메인을 그대로 사용 — 쿠키는 동일 도메인에서만 유효.
+  // (이전: process.env.NEXT_PUBLIC_APP_URL 사용 → 다른 도메인에서 시작한 사용자는
+  //  callback 후 다른 도메인으로 redirect 되어 쿠키 분실 → 헤더에 로그인 버튼 노출)
+  const origin = new URL(request.url).origin;
   const code = searchParams.get('code');
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';

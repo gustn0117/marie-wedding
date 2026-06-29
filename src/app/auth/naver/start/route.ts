@@ -19,7 +19,9 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const origin = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+  // 시작 도메인 그대로 유지 — 사용자가 hsweb.pics에서 시작했으면 hsweb.pics로 callback.
+  // (Naver 콘솔에 두 도메인 모두 Callback URL로 등록된 상태가 전제)
+  const origin = new URL(request.url).origin;
   const requestedNext = searchParams.get('next');
   const next = sanitizeReturnTo(requestedNext) ?? '/jobs';
 
