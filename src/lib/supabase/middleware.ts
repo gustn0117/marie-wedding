@@ -68,9 +68,26 @@ export async function updateSession(request: NextRequest) {
         );
         const { data: profile } = await serviceClient
           .from('profiles')
-          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason,onboarded_at,signup_provider')
+          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason,onboarded_at,signup_provider,deleted_at')
           .eq('user_id', user.id)
           .single();
+
+        // 탈퇴된 프로필로 로그인된 세션 — 모든 인증 쿠키 만료시키고 로그인으로 redirect
+        // (auth.user 는 남고 profile.deleted_at 만 set 된 케이스: 탈퇴 후 동일 세션 재사용 시도)
+        if (profile?.deleted_at) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/login';
+          url.search = '';
+          const res = NextResponse.redirect(url);
+          const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+          res.cookies.set('marie_profile', '', expire);
+          for (const c of request.cookies.getAll()) {
+            if (c.name.startsWith('sb-')) {
+              res.cookies.set(c.name, '', { ...expire, httpOnly: true });
+            }
+          }
+          return res;
+        }
 
         // 제재된 사용자 — /banned 외 모든 페이지 접근 차단
         if (profile?.banned_at && !request.nextUrl.pathname.startsWith('/banned') && !request.nextUrl.pathname.startsWith('/auth/callback') && !request.nextUrl.pathname.startsWith('/api')) {

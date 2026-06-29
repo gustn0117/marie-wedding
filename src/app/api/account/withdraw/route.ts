@@ -34,18 +34,38 @@ export async function POST() {
 
   const service = createServiceClient();
 
-  // 본인 프로필 + 작성 콘텐츠 soft delete — DB 단일 트랜잭션 (cancel_my_account RPC는
-  // SECURITY DEFINER 라 service_role 컨텍스트에선 auth.uid()=NULL 이라 사용 불가.
-  // 같은 로직을 service_role 로 직접 수행)
+  // 본인 프로필 조회 — deleted_at 무관하게 user_id 기준
+  // (네이버 가입 중 profile insert 실패해 orphan 인 케이스 / 이미 삭제 후 재시도 케이스 모두 대응)
   const { data: profile } = await service
     .from('profiles')
-    .select('id')
+    .select('id, deleted_at')
     .eq('user_id', user.id)
-    .is('deleted_at', null)
     .maybeSingle();
 
+  // 프로필이 아예 없으면 → orphan auth user 만 남음. 그냥 쿠키 정리만 하고 성공 처리.
   if (!profile) {
-    return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 });
+    const res = NextResponse.json({ success: true, note: 'no_profile' });
+    const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+    res.cookies.set('marie_profile', '', expire);
+    for (const c of cookieStore.getAll()) {
+      if (c.name.startsWith('sb-')) {
+        res.cookies.set(c.name, '', { ...expire, httpOnly: true });
+      }
+    }
+    return res;
+  }
+
+  // 이미 탈퇴된 프로필 → 쿠키만 정리 (재시도 케이스)
+  if (profile.deleted_at) {
+    const res = NextResponse.json({ success: true, note: 'already_withdrawn' });
+    const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+    res.cookies.set('marie_profile', '', expire);
+    for (const c of cookieStore.getAll()) {
+      if (c.name.startsWith('sb-')) {
+        res.cookies.set(c.name, '', { ...expire, httpOnly: true });
+      }
+    }
+    return res;
   }
 
   const now = new Date().toISOString();
