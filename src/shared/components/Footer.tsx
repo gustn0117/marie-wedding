@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
-import Logo from './Logo';
 
 const SERVICE_LINKS = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
   { href: ROUTES.EVENTS, label: '행사·박람회' },
-  { href: '/pricing', label: '광고 상품' },
 ] as const;
 
 export default function Footer() {
@@ -22,6 +20,17 @@ export default function Footer() {
               {link.label}
             </Link>
           ))}
+          <a
+            href="https://haramevent.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-primary transition-colors inline-flex items-center gap-1"
+          >
+            웨딩 컨시어지(예식도우미)
+            <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
           <Link href="/terms" className="hover:text-primary transition-colors">이용약관</Link>
           <Link href="/privacy" className="text-gray-900 hover:text-primary transition-colors">개인정보처리방침</Link>
           <Link href="/contact" className="hover:text-primary transition-colors">고객센터</Link>
@@ -29,10 +38,9 @@ export default function Footer() {
 
         <div className="grid gap-4 py-5 md:grid-cols-[1fr_auto] md:items-start">
           <div>
-            <Logo variant="full" size="sm" />
-            <p className="mt-3 max-w-3xl text-xs leading-relaxed text-gray-500">
+            <p className="max-w-3xl text-xs leading-relaxed text-gray-500">
               마리에는 웨딩 업계 종사자와 업체를 위한 구인구직, 프로필 탐색, 커뮤니티 플랫폼입니다.
-              서비스 이용 문의와 광고 제휴 문의는 고객센터를 통해 접수해주세요.
+              서비스 이용 문의는 고객센터를 통해 접수해주세요.
             </p>
           </div>
 

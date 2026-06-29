@@ -10,18 +10,17 @@ import NotificationBell from '@/features/notifications/components/NotificationBe
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import MobileNavPanel from './MobileNavPanel';
 
-// 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 제휴업체
+// 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 외부 제휴업체 1건만
 const CAT_NAV = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
   { href: ROUTES.EVENTS, label: '행사·박람회' },
-  { href: '/pricing', label: '광고 상품' },
 ] as const;
 
+// 외부 링크 — haramevent.kr 로 새 탭 이동
 const PARTNER_NAV = [
-  { href: '/partners/wedding-hall-marketing', label: '웨딩홀 마케팅' },
-  { href: '/partners/wedding-concierge', label: '웨딩 컨시어지(예식도우미)' },
+  { href: 'https://haramevent.kr', label: '웨딩 컨시어지(예식도우미)', external: true },
 ] as const;
 
 // CAT_NAV href에서 path + 첫 query param을 분해. active 비교 시 정확 매칭에 사용.
@@ -223,21 +222,23 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           <Suspense fallback={<CatNavLinksFallback />}>
             <CatNavLinks pathname={pathname} />
           </Suspense>
-          {/* 우측 — 제휴업체 */}
+          {/* 우측 — 제휴업체 (외부 링크) */}
           <div className="ml-auto flex items-center gap-1 pl-3 border-l border-gray-100">
             <span className="text-[11px] font-bold text-gray-400 tracking-wider uppercase pr-1">제휴업체</span>
-            {PARTNER_NAV.map((p) => {
-              const isActive = pathname.startsWith(p.href);
-              return (
-                <Link
-                  key={p.href}
-                  href={p.href}
-                  className={`cat-nav-link ${isActive ? 'cat-nav-link-active' : ''}`}
-                >
-                  {p.label}
-                </Link>
-              );
-            })}
+            {PARTNER_NAV.map((p) => (
+              <a
+                key={p.href}
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cat-nav-link inline-flex items-center gap-1"
+              >
+                {p.label}
+                <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                </svg>
+              </a>
+            ))}
           </div>
         </div>
       </div>

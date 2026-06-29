@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import PageHeader from '@/shared/components/PageHeader';
@@ -63,9 +62,6 @@ export default async function PaymentsHistoryPage({ searchParams }: { searchPara
       <PageHeader
         title="결제 내역"
         description="최근 결제와 처리 상태를 확인합니다."
-        actions={
-          <Link href="/pricing" className="btn-outline text-sm">프리미엄 플랜 보기</Link>
-        }
       />
 
       {justPaid && (
@@ -79,9 +75,7 @@ export default async function PaymentsHistoryPage({ searchParams }: { searchPara
       {payments.length === 0 ? (
         <EmptyState
           title="결제 내역이 없습니다"
-          description="광고 상품을 이용하면 채용 공고와 프로필 노출을 늘릴 수 있습니다."
-          actionLabel="프리미엄 플랜 보기"
-          actionHref="/pricing"
+          description="아직 진행된 결제가 없어요."
         />
       ) : (
         <ul className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-100 overflow-hidden">
