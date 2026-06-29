@@ -1,8 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
 import { ROUTES } from '@/shared/constants';
 
@@ -11,12 +9,12 @@ const CONFIRM_PHRASE = '회원탈퇴 동의';
 /**
  * 자기 자신의 계정을 soft delete 처리하는 섹션.
  *
- * RPC marie_wedding.cancel_my_account()를 호출:
- *  - profiles.deleted_at = NOW(), is_directory_listed = false
- *  - 작성한 jobs/posts/comments도 함께 soft delete
- *  - auth.users는 그대로 남음 (관리자가 admin 패널에서 purge 가능)
+ * 신규 흐름 (POST /api/account/withdraw):
+ *  - service_role 한 번에 profiles + jobs + posts + comments 병렬 soft delete
+ *  - 응답 Set-Cookie 로 marie_profile + sb-* 모두 즉시 만료
+ *  - 클라는 한 번의 fetch 후 즉시 location.href = HOME (전체 ~1초)
  *
- * RPC 성공 후 클라이언트 측 supabase signOut + cookie clear + 홈으로 이동.
+ * 기존 흐름은 client RPC → await signOut → cookie clear → toast → redirect 로 3~6초 소요됨.
  */
 export default function AccountWithdrawalSection() {
   const [open, setOpen] = useState(false);
@@ -29,19 +27,16 @@ export default function AccountWithdrawalSection() {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('cancel_my_account'), 15000);
-      if (error) throw error;
-
-      // 클라이언트 측 정리 즉시
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-      try {
-        await withTimeout(sb.auth.signOut(), 3000);
-      } catch {
-        // 무시 — RPC는 이미 성공
+      const res = await fetch('/api/account/withdraw', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: '' }));
+        throw new Error(body.error || `탈퇴 처리에 실패했습니다 (HTTP ${res.status}).`);
       }
-
-      toast('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.', 'success');
+      // 응답에서 이미 marie_profile + sb-* 쿠키 만료됨. 즉시 redirect.
+      toast('회원 탈퇴가 완료되었습니다.', 'success');
       window.location.href = ROUTES.HOME;
     } catch (err) {
       console.error('[AccountWithdrawal] failed:', err);
