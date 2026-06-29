@@ -81,7 +81,7 @@ export default function LoginForm() {
       <div className="bg-surface rounded border border-border p-8 shadow-sm">
         {/* Brand — 헤더와 동일한 타이포그래피, 로고 마크 제거 */}
         <div className="flex flex-col items-center text-center mb-8 gap-2">
-          <Link href={ROUTES.HOME} className="text-2xl font-bold tracking-tight text-ink" aria-label="Marié 홈">
+          <Link href={ROUTES.HOME} className="text-4xl font-bold tracking-tight text-ink" aria-label="Marié 홈">
             Marié
           </Link>
           <p className="text-sm text-text-secondary">웨딩업계 구인구직 플랫폼</p>
