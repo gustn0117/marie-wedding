@@ -78,9 +78,22 @@ export async function GET(request: Request) {
 
   const { data: existingProfile } = await serviceClient
     .from('profiles')
-    .select('id, onboarded_at')
+    .select('id, onboarded_at, deleted_at')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  // 탈퇴한 프로필로 재로그인 시도 → 자동 복구 후 새로 온보딩.
+  // (기존 jobs/posts/comments 은 복구하지 않음 — 사용자가 원래 소프트 삭제한 자산)
+  if (existingProfile?.deleted_at) {
+    await serviceClient
+      .from('profiles')
+      .update({ deleted_at: null, onboarded_at: null, is_directory_listed: true })
+      .eq('id', existingProfile.id);
+    await setProfileCookieFromUserId(user.id);
+    return NextResponse.redirect(
+      `${origin}/onboarding?next=${encodeURIComponent(next)}`
+    );
+  }
 
   if (!existingProfile) {
     const name =

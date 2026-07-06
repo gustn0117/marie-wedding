@@ -108,9 +108,20 @@ export async function GET(request: Request) {
   // ④ 기존 user 조회 (naver_sub 기준)
   const { data: existingByNaver } = await service
     .from('profiles')
-    .select('id, user_id, onboarded_at')
+    .select('id, user_id, onboarded_at, deleted_at')
     .eq('naver_sub', naverSub)
     .maybeSingle();
+
+  // 탈퇴한 프로필로 재로그인 시도 → 복구 후 새로 온보딩
+  if (existingByNaver?.deleted_at && existingByNaver.user_id) {
+    await service
+      .from('profiles')
+      .update({ deleted_at: null, onboarded_at: null, is_directory_listed: true })
+      .eq('id', existingByNaver.id);
+    // 아래 로직이 다시 세션 발급 + onboarded_at=null 이므로 /onboarding 으로 감
+    existingByNaver.deleted_at = null;
+    existingByNaver.onboarded_at = null;
+  }
 
   let targetUserEmail: string;
   let isNewUser = false;
