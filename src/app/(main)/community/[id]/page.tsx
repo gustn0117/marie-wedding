@@ -54,9 +54,12 @@ export default async function PostDetailPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const profileCookie = cookieStore.get('marie_profile');
   let viewerProfileId: string | null = null;
+  let viewerRole: string | null = null;
   try {
     if (profileCookie?.value) {
-      viewerProfileId = JSON.parse(profileCookie.value)?.id ?? null;
+      const parsed = JSON.parse(profileCookie.value);
+      viewerProfileId = parsed?.id ?? null;
+      viewerRole = parsed?.role ?? null;
     }
   } catch {}
 
@@ -87,7 +90,13 @@ export default async function PostDetailPage({ params }: PageProps) {
             <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold">
               {getCategoryLabel(post.category)}
             </span>
-            <PostDetailActions postId={post.id} authorId={post.author_id} />
+            <PostDetailActions
+              postId={post.id}
+              authorId={post.author_id}
+              initialCanManage={
+                !!viewerProfileId && (viewerProfileId === post.author_id || viewerRole === 'admin')
+              }
+            />
           </div>
 
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-snug mb-4">{post.title}</h1>
@@ -165,7 +174,12 @@ export default async function PostDetailPage({ params }: PageProps) {
         </div>
       </article>
 
-      <CommentSection postId={post.id} postAuthorId={post.author_id} adoptedCommentId={post.adopted_comment_id} />
+      <CommentSection
+        postId={post.id}
+        postAuthorId={post.author_id}
+        adoptedCommentId={post.adopted_comment_id}
+        initialAuthenticated={!!viewerProfileId}
+      />
     </div>
   );
 }

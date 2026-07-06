@@ -52,13 +52,6 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/admin') ||
       isOnboardingPath;
 
-    // 로그인한 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트
-    if (user && isAuthPage) {
-      const url = request.nextUrl.clone();
-      url.pathname = '/';
-      return NextResponse.redirect(url);
-    }
-
     // Sync profile cookie - always refresh
     if (user) {
       {
@@ -73,14 +66,24 @@ export async function updateSession(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
-        // 탈퇴된 프로필로 로그인된 세션 — 모든 인증 쿠키 만료시키고 로그인으로 redirect
-        // (auth.user 는 남고 profile.deleted_at 만 set 된 케이스: 탈퇴 후 동일 세션 재사용 시도)
+        // 탈퇴된 프로필 검사 우선 — isAuthPage / '/' 무한 루프 방지.
+        // /login 자체는 그대로 표시 (redirect 하면 세션이 여전히 살아있어 다시 여기로 옴).
         if (profile?.deleted_at) {
+          const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+          if (isAuthPage) {
+            // 로그인 페이지에 이미 있음 — 쿠키만 clear
+            supabaseResponse.cookies.set('marie_profile', '', expire);
+            for (const c of request.cookies.getAll()) {
+              if (c.name.startsWith('sb-')) {
+                supabaseResponse.cookies.set(c.name, '', { ...expire, httpOnly: true });
+              }
+            }
+            return supabaseResponse;
+          }
           const url = request.nextUrl.clone();
           url.pathname = '/login';
           url.search = '';
           const res = NextResponse.redirect(url);
-          const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
           res.cookies.set('marie_profile', '', expire);
           for (const c of request.cookies.getAll()) {
             if (c.name.startsWith('sb-')) {
@@ -88,6 +91,13 @@ export async function updateSession(request: NextRequest) {
             }
           }
           return res;
+        }
+
+        // 로그인한 정상 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트
+        if (isAuthPage) {
+          const url = request.nextUrl.clone();
+          url.pathname = '/';
+          return NextResponse.redirect(url);
         }
 
         // 제재된 사용자 — /banned + /auth + /api + /admin(관리자 자체 게이트) 외 모든 페이지 차단

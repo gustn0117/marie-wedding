@@ -9,6 +9,7 @@ import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import MobileNavPanel from './MobileNavPanel';
+import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 
 // 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 외부 제휴업체 1건만
 const CAT_NAV = [
@@ -54,7 +55,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
   const signOut = useCallback(async () => {
     // 클라이언트 측 즉시 정리 (UI 반응 보장)
-    document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    clearMarieProfileCookie();
     setProfile(null);
     setProfileMenuOpen(false);
 

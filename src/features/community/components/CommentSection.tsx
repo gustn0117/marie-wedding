@@ -16,10 +16,14 @@ interface CommentSectionProps {
   postId: string;
   postAuthorId: string;
   adoptedCommentId?: string | null;
+  /** SSR 에서 marie_profile cookie 로 판정한 로그인 여부 — hydration flash 방지 */
+  initialAuthenticated?: boolean;
 }
 
-export default function CommentSection({ postId, postAuthorId, adoptedCommentId: initialAdopted }: CommentSectionProps) {
-  const { profile } = useAuth();
+export default function CommentSection({ postId, postAuthorId, adoptedCommentId: initialAdopted, initialAuthenticated = false }: CommentSectionProps) {
+  const { profile, isLoading } = useAuth();
+  // useAuth 가 아직 로딩중이면 SSR prop 을 신뢰 (로그인 CTA vs 폼 flash 방지)
+  const isAuthenticated = profile ? true : (isLoading ? initialAuthenticated : false);
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +120,21 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
 
       {/* Input (상단으로 이동) */}
       <div className="px-6 md:px-8 py-5 border-b border-gray-100 bg-secondary-50">
-        {profile ? (
+        {isLoading && !profile ? (
+          // useAuth 확정 전 — SSR prop 기준으로 skeleton 대체
+          isAuthenticated ? (
+            <div className="animate-pulse space-y-2">
+              <div className="h-20 rounded bg-white border border-gray-200" />
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <Link href={ROUTES.LOGIN} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
+                로그인하기
+              </Link>
+            </div>
+          )
+        ) : profile ? (
           <form onSubmit={handleSubmit} className="space-y-2">
             <div className="flex items-start gap-3">
               <ProfileAvatar

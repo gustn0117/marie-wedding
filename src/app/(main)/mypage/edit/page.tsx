@@ -13,6 +13,7 @@ import { compressImage } from '@/shared/utils/image';
 import { validatePhone } from '@/shared/utils/validation';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -241,7 +242,7 @@ export default function EditProfilePage() {
       const next = rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//') && !rawNext.includes('://') ? rawNext : ROUTES.MYPAGE;
 
       // cookie clear는 redirect 직전에 (이전 setTimeout 패턴에서 race 가능성을 없앰)
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      clearMarieProfileCookie();
       setSuccess(true);
       window.location.href = next; // 즉시 이동 (setTimeout 1초 대기 제거)
     } catch (err) {

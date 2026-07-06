@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
+import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 
 interface AuthState {
   user: User | null;
@@ -98,7 +99,7 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     // 클라이언트 측 즉시 정리
-    document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    clearMarieProfileCookie();
     setState({ user: null, profile: null, isLoading: false });
 
     // localStorage / sessionStorage의 supabase 세션 토큰 모두 제거

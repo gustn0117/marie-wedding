@@ -11,6 +11,7 @@ import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
+import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -102,7 +103,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     try {
       await directoryService.toggleDirectoryListing(profile.id, !listed);
       setListed(!listed);
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      clearMarieProfileCookie();
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : '처리에 실패했습니다.');
@@ -174,7 +175,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         '프로필 저장이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
       );
 
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      clearMarieProfileCookie();
       // 즉시 이동 (setTimeout 제거)
       window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
     } catch (err) {

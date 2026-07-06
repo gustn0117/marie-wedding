@@ -30,12 +30,16 @@ async function getJob(id: string): Promise<Job | null> {
   return data as Job | null;
 }
 
-function readCookieProfile(): Pick<Profile, 'id' | 'account_type'> | null {
+function readCookieProfile(): Pick<Profile, 'id' | 'account_type' | 'role'> | null {
   try {
     const raw = cookies().get('marie_profile')?.value;
     if (!raw) return null;
     const parsed = JSON.parse(decodeURIComponent(raw));
-    return { id: parsed.id ?? null, account_type: parsed.account_type ?? null };
+    return {
+      id: parsed.id ?? null,
+      account_type: parsed.account_type ?? null,
+      role: parsed.role ?? null,
+    };
   } catch {
     return null;
   }
@@ -68,8 +72,15 @@ export default async function JobDetailPage({ params }: PageProps) {
       {/* Main grid: content + sidebar */}
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4 min-w-0">
-          {/* Author actions (edit/delete for owner) — hero 상단 우측 */}
-          <JobDetailActions jobId={job.id} authorId={job.author_id} />
+          {/* Author actions (edit/delete for owner) — hero 상단 우측.
+              SSR 에서 viewer 판정한 canManage 를 prop 으로 넘겨 flash 방지. */}
+          <JobDetailActions
+            jobId={job.id}
+            authorId={job.author_id}
+            initialCanManage={
+              !!viewer?.id && (viewer.id === job.author_id || viewer.role === 'admin')
+            }
+          />
 
           <JobDetailHero job={job} />
 

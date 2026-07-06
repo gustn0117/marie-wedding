@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Portfolio } from '@/types/database';
 import { portfolioService } from '@/features/portfolios/services/portfolioService';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
@@ -220,7 +221,7 @@ export default function PortfolioForm({ profileId, initial }: Props) {
             {images.map((path) => (
               <div key={path} className="relative aspect-square border border-gray-200">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={portfolioService.publicUrl(path)} alt="" className="w-full h-full object-cover" />
+                <img src={resolveStorageUrl(path, 'portfolios') ?? ''} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors group">
                   <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100">
                     <button

@@ -48,57 +48,46 @@ export const eventService = {
     return data as Event;
   },
 
+  // ── mutations: 관리자 전용 service_role 서버 라우트 ──
+
   async createEvent(data: EventFormData): Promise<Event> {
-    const supabase = createClient();
-    const { data: event, error } = await supabase
-      .from('events')
-      .insert({
-        title: data.title,
-        content: data.content,
-        type: data.type,
-        image: data.image || null,
-        start_date: data.start_date || null,
-        end_date: data.end_date || null,
-        location: data.location || null,
-        link_url: data.link_url || null,
-        is_pinned: data.is_pinned,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return event as Event;
+    const res = await fetch('/api/events/write', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'create', payload: data }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || `등록 실패 (HTTP ${res.status}).`);
+    }
+    return (await res.json()).event as Event;
   },
 
   async updateEvent(id: string, data: Partial<EventFormData>): Promise<Event> {
-    const supabase = createClient();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const payload: any = { updated_at: new Date().toISOString() };
-    if (data.title !== undefined) payload.title = data.title;
-    if (data.content !== undefined) payload.content = data.content;
-    if (data.type !== undefined) payload.type = data.type;
-    if (data.image !== undefined) payload.image = data.image || null;
-    if (data.start_date !== undefined) payload.start_date = data.start_date || null;
-    if (data.end_date !== undefined) payload.end_date = data.end_date || null;
-    if (data.location !== undefined) payload.location = data.location || null;
-    if (data.link_url !== undefined) payload.link_url = data.link_url || null;
-    if (data.is_pinned !== undefined) payload.is_pinned = data.is_pinned;
-
-    const { data: event, error } = await supabase
-      .from('events')
-      .update(payload)
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw error;
-    return event as Event;
+    const res = await fetch('/api/events/write', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'update', id, payload: data }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || `수정 실패 (HTTP ${res.status}).`);
+    }
+    return (await res.json()).event as Event;
   },
 
   async deleteEvent(id: string): Promise<void> {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('events')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
-    if (error) throw error;
+    const res = await fetch('/api/events/write', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'delete', id }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || `삭제 실패 (HTTP ${res.status}).`);
+    }
   },
 };

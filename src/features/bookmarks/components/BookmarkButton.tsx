@@ -12,12 +12,14 @@ interface BookmarkButtonProps {
   targetType: BookmarkTargetType;
   targetId: string;
   label?: string;
+  /** SSR 에서 미리 조회한 saved 상태 — '저장' → '저장됨' flip flash 방지 */
+  initialSaved?: boolean;
 }
 
-export default function BookmarkButton({ targetType, targetId, label = '저장' }: BookmarkButtonProps) {
+export default function BookmarkButton({ targetType, targetId, label = '저장', initialSaved = false }: BookmarkButtonProps) {
   const router = useRouter();
   const { profile } = useAuth();
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

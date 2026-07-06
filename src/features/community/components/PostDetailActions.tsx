@@ -12,14 +12,19 @@ import { toast } from '@/shared/components/Toast';
 interface PostDetailActionsProps {
   postId: string;
   authorId: string;
+  /** SSR 에서 marie_profile cookie 로 미리 결정한 canManage — hydration flash 방지 */
+  initialCanManage?: boolean;
 }
 
-export default function PostDetailActions({ postId, authorId }: PostDetailActionsProps) {
+export default function PostDetailActions({ postId, authorId, initialCanManage = false }: PostDetailActionsProps) {
   const router = useRouter();
   const { profile } = useAuth();
   const [deleting, setDeleting] = useState(false);
 
-  const canManage = !!profile && (profile.id === authorId || profile.role === 'admin');
+  // useAuth 가 hydration 후 profile 을 확정하면 그 값 우선, 아니면 SSR prop 유지
+  const canManage = profile
+    ? profile.id === authorId || profile.role === 'admin'
+    : initialCanManage;
   if (!canManage) return null;
 
   const handleDelete = async () => {

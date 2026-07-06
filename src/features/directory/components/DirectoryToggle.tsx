@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
+import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 
 interface DirectoryToggleProps {
   profileId: string;
@@ -24,7 +25,7 @@ export default function DirectoryToggle({ profileId, initialListed, missingInfo 
       await directoryService.toggleDirectoryListing(profileId, next);
       setListed(next);
       // 쿠키 갱신을 위해 새로고침
-      document.cookie = 'marie_profile=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      clearMarieProfileCookie();
       window.location.reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : '처리에 실패했습니다. 다시 시도해주세요.');
