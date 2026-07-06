@@ -5,6 +5,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { savedSearchService } from '@/features/saved-searches/services/savedSearchService';
 import type { SavedSearchScope } from '@/types/database';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface Props {
   scope: SavedSearchScope;
@@ -31,7 +32,11 @@ export default function SaveSearchButton({ scope, query, defaultName, label }: P
     if (!name?.trim()) return;
     setBusy(true);
     try {
-      await savedSearchService.create({ profileId: profile.id, name: name.trim(), scope, query });
+      await withTimeout(
+        savedSearchService.create({ profileId: profile.id, name: name.trim(), scope, query }),
+        10000,
+        '검색 저장 지연',
+      );
       setDone(true);
       toast('검색을 저장했습니다.', 'success');
     } catch {

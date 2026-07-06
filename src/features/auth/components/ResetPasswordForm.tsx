@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ResetPasswordForm() {
   const router = useRouter();
@@ -39,7 +40,11 @@ export default function ResetPasswordForm() {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { error: apiError } = await supabase.auth.updateUser({ password });
+      const { error: apiError } = await withTimeout(
+        supabase.auth.updateUser({ password }),
+        12000,
+        '비밀번호 변경 지연',
+      );
       if (apiError) {
         setError(apiError.message);
         return;

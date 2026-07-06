@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { communityService } from '../services/community-service';
 import { ROUTES } from '@/shared/constants';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface LikeButtonProps {
   postId: string;
@@ -32,7 +33,11 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
     setLiked(!liked);
     setCount(liked ? count - 1 : count + 1);
     try {
-      const result = await communityService.toggleLike(postId, viewerProfileId);
+      const result = await withTimeout(
+        communityService.toggleLike(postId, viewerProfileId),
+        8000,
+        '좋아요 처리 지연',
+      );
       setLiked(result.liked);
       setCount(result.likeCount);
     } catch {

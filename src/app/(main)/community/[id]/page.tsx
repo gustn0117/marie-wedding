@@ -28,6 +28,7 @@ async function getPostData(id: string, viewerProfileId: string | null) {
     .select('*, author:profiles!author_id(*), comments:comments(count)')
     .eq('id', id)
     .is('deleted_at', null)
+    .filter('comments.deleted_at', 'is', null)
     .single();
 
   if (!post) return null;

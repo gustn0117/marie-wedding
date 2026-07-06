@@ -8,6 +8,7 @@ import {
 import { getBusinessTypeLabel } from '@/shared/utils/format';
 import type { VerificationRow } from '@/features/verification/types';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface RejectModal {
   id: string;
@@ -37,12 +38,20 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
       return;
     }
     startTransition(async () => {
-      const result = await decideVerification(id, 'verified');
-      if (result.ok) {
-        setItems((prev) => prev.filter((x) => x.id !== id));
-        toast('인증을 승인했습니다.', 'success');
-      } else {
-        toast(result.error, 'error');
+      try {
+        const result = await withTimeout(
+          decideVerification(id, 'verified'),
+          12000,
+          '인증 처리 지연',
+        );
+        if (result.ok) {
+          setItems((prev) => prev.filter((x) => x.id !== id));
+          toast('인증을 승인했습니다.', 'success');
+        } else {
+          toast(result.error, 'error');
+        }
+      } catch (err) {
+        toast(err instanceof Error ? err.message : '인증 처리 지연', 'error');
       }
     });
   }
@@ -55,13 +64,21 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
       return;
     }
     startTransition(async () => {
-      const result = await decideVerification(id, 'rejected', reason.trim());
-      if (result.ok) {
-        setItems((prev) => prev.filter((x) => x.id !== id));
-        toast('인증을 거절했습니다.', 'success');
-        setRejectModal(null);
-      } else {
-        toast(result.error, 'error');
+      try {
+        const result = await withTimeout(
+          decideVerification(id, 'rejected', reason.trim()),
+          12000,
+          '인증 처리 지연',
+        );
+        if (result.ok) {
+          setItems((prev) => prev.filter((x) => x.id !== id));
+          toast('인증을 거절했습니다.', 'success');
+          setRejectModal(null);
+        } else {
+          toast(result.error, 'error');
+        }
+      } catch (err) {
+        toast(err instanceof Error ? err.message : '인증 처리 지연', 'error');
       }
     });
   }

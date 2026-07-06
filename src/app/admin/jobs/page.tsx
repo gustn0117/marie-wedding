@@ -6,6 +6,7 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatDate, getBusinessTypeLabel, getRegionLabel, getEmploymentTypeLabel } from '@/shared/utils/format';
 import type { Job } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -43,7 +44,7 @@ export default function AdminJobsPage() {
     if (!confirm(`"${job.title}" 공고를 삭제하시겠습니까?`)) return;
     setActionLoading(job.id);
     try {
-      await adminService.softDeleteJob(job.id);
+      await withTimeout(adminService.softDeleteJob(job.id), 10000, '공고 삭제 지연');
       await load();
     } catch (err) {
       alert('삭제에 실패했습니다.');
@@ -56,7 +57,7 @@ export default function AdminJobsPage() {
   const handleRestore = async (job: Job) => {
     setActionLoading(job.id);
     try {
-      await adminService.restoreJob(job.id);
+      await withTimeout(adminService.restoreJob(job.id), 10000, '공고 복원 지연');
       await load();
     } catch (err) {
       alert('복원에 실패했습니다.');
@@ -69,7 +70,11 @@ export default function AdminJobsPage() {
   const handleToggleFeatured = async (job: Job) => {
     setActionLoading(job.id);
     try {
-      await adminService.toggleFeaturedJob(job.id, !job.featured_at);
+      await withTimeout(
+        adminService.toggleFeaturedJob(job.id, !job.featured_at),
+        10000,
+        '인기공고 설정 지연',
+      );
       await load();
     } catch (err) {
       alert('인기공고 설정에 실패했습니다.');

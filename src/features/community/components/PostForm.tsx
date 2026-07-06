@@ -6,6 +6,7 @@ import { POST_CATEGORIES, REGIONS, ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface PostFormProps {
   initialData?: PostFormData;
@@ -61,12 +62,20 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
 
     try {
       if (isEdit && postId) {
-        await communityService.updatePost(postId, formData);
+        await withTimeout(
+          communityService.updatePost(postId, formData),
+          12000,
+          '게시글 수정 지연',
+        );
         if (onSubmitSuccess) onSubmitSuccess(postId);
         else router.push(ROUTES.COMMUNITY_DETAIL(postId));
         router.refresh();
       } else {
-        const post = await communityService.createPost(formData, profileId!);
+        const post = await withTimeout(
+          communityService.createPost(formData, profileId!),
+          12000,
+          '게시글 등록 지연',
+        );
         if (onSubmitSuccess) onSubmitSuccess(post.id);
         else router.push(ROUTES.COMMUNITY_DETAIL(post.id));
         router.refresh();

@@ -7,6 +7,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { notificationService } from '@/features/notifications/services/notification-service';
 import { formatRelativeTime } from '@/shared/utils/format';
 import type { Notification } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function NotificationsPage() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -15,9 +16,9 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (isLoading || !isAuthenticated) return;
-    notificationService
-      .getNotifications()
+    withTimeout(notificationService.getNotifications(), 10000, '알림 조회 지연')
       .then(setItems)
+      .catch((err) => { console.error(err); })
       .finally(() => setLoading(false));
   }, [isAuthenticated, isLoading]);
 

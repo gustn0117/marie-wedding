@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { bannerService, type Banner } from '@/features/admin/services/banner-service';
 import { toast, toastConfirm } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminBannersPage() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -13,7 +14,7 @@ export default function AdminBannersPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      setBanners(await bannerService.listAll());
+      setBanners(await withTimeout(bannerService.listAll(), 10000, '배너 조회 지연'));
     } catch (err) {
       toast(err instanceof Error ? err.message : '로드 실패', 'error');
     } finally {

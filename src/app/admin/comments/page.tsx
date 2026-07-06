@@ -6,6 +6,7 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatDate } from '@/shared/utils/format';
 import type { Comment, Post } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminCommentsPage() {
   const [comments, setComments] = useState<(Comment & { post?: Post })[]>([]);
@@ -21,7 +22,11 @@ export default function AdminCommentsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await adminService.getComments(page, search || undefined, showDeleted);
+      const result = await withTimeout(
+        adminService.getComments(page, search || undefined, showDeleted),
+        10000,
+        '댓글 조회 지연',
+      );
       setComments(result.data);
       setCount(result.count);
     } catch (err) {
@@ -43,7 +48,7 @@ export default function AdminCommentsPage() {
     if (!confirm('이 댓글을 삭제하시겠습니까?')) return;
     setActionLoading(comment.id);
     try {
-      await adminService.softDeleteComment(comment.id);
+      await withTimeout(adminService.softDeleteComment(comment.id), 10000, '댓글 삭제 지연');
       await load();
     } catch (err) {
       alert('삭제에 실패했습니다.');
@@ -56,7 +61,7 @@ export default function AdminCommentsPage() {
   const handleRestore = async (comment: Comment) => {
     setActionLoading(comment.id);
     try {
-      await adminService.restoreComment(comment.id);
+      await withTimeout(adminService.restoreComment(comment.id), 10000, '댓글 복원 지연');
       await load();
     } catch (err) {
       alert('복원에 실패했습니다.');

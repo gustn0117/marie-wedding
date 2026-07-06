@@ -7,6 +7,7 @@ import { EVENT_TYPES } from '@/features/events/types';
 import { formatDate } from '@/shared/utils/format';
 import { ROUTES } from '@/shared/constants';
 import type { Event } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 function getTypeLabel(type: string): string {
   return EVENT_TYPES.find(t => t.value === type)?.label ?? type;
@@ -20,7 +21,11 @@ export default function AdminEventsPage() {
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await adminService.getEvents(1, undefined, undefined, false);
+      const { data } = await withTimeout(
+        adminService.getEvents(1, undefined, undefined, false),
+        10000,
+        '행사 조회 지연',
+      );
       setEvents(data);
     } catch (err) {
       console.error(err);

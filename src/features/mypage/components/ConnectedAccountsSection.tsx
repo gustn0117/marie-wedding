@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 type ProviderKey = 'kakao' | 'naver';
 
@@ -31,7 +32,14 @@ export default function ConnectedAccountsSection() {
     let cancelled = false;
     (async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      let user;
+      try {
+        const { data } = await withTimeout(supabase.auth.getUser(), 10000, '계정 조회 지연');
+        user = data.user;
+      } catch {
+        if (!cancelled) setLoading(false);
+        return;
+      }
       if (!user || cancelled) {
         setLoading(false);
         return;
@@ -66,12 +74,16 @@ export default function ConnectedAccountsSection() {
         return;
       }
       const supabase = createClient();
-      const { error } = await supabase.auth.linkIdentity({
-        provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/mypage/edit`,
-        },
-      });
+      const { error } = await withTimeout(
+        supabase.auth.linkIdentity({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=/mypage/edit`,
+          },
+        }),
+        12000,
+        '계정 연결 지연',
+      );
       if (error) throw error;
     } catch (err) {
       toast(err instanceof Error ? err.message : '연결에 실패했습니다.', 'error');
@@ -92,16 +104,20 @@ export default function ConnectedAccountsSection() {
     setActing(row.provider as ProviderKey);
     try {
       const supabase = createClient();
-      const { error } = await supabase.auth.unlinkIdentity({
-        identity_id: row.identity_id,
-        provider: row.provider,
-        user_id: '',
-        id: row.identity_id,
-        identity_data: {},
-        last_sign_in_at: row.last_sign_in_at ?? '',
-        created_at: '',
-        updated_at: '',
-      });
+      const { error } = await withTimeout(
+        supabase.auth.unlinkIdentity({
+          identity_id: row.identity_id,
+          provider: row.provider,
+          user_id: '',
+          id: row.identity_id,
+          identity_data: {},
+          last_sign_in_at: row.last_sign_in_at ?? '',
+          created_at: '',
+          updated_at: '',
+        }),
+        12000,
+        '계정 해제 지연',
+      );
       if (error) throw error;
       setIdentities((prev) => prev.filter((i) => i.identity_id !== row.identity_id));
       toast('연결을 해제했어요.', 'success');

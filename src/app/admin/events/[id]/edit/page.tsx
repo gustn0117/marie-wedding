@@ -7,6 +7,7 @@ import EventForm from '@/features/events/components/EventForm';
 import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import type { Event } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminEventEditPage() {
   const params = useParams();
@@ -15,13 +16,16 @@ export default function AdminEventEditPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    adminService.getEvent(id).then((data) => {
-      setEvent(data);
-      setLoading(false);
-    }).catch(() => {
-      setEvent(null);
-      setLoading(false);
-    });
+    withTimeout(adminService.getEvent(id), 10000, '행사 상세 조회 지연')
+      .then((data) => {
+        setEvent(data);
+      })
+      .catch(() => {
+        setEvent(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   if (loading) {

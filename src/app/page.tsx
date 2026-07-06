@@ -22,6 +22,7 @@ async function getHomeData() {
       .from('posts')
       .select('*, author:profiles!author_id(*), comments:comments(count)', { count: 'exact' })
       .is('deleted_at', null)
+      .filter('comments.deleted_at', 'is', null)
       .order('created_at', { ascending: false })
       .range(0, 4),
     supabase

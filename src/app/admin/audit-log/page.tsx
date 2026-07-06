@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import AuditLogDiff from '@/features/admin/components/AuditLogDiff';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface AuditRow {
   id: number;
@@ -75,7 +76,7 @@ export default function AdminAuditLogPage() {
       if (actionFilter) query = query.eq('action', actionFilter);
       if (recordIdFilter && recordIdFilter.length >= 8) query = query.eq('record_id', recordIdFilter.trim());
 
-      const { data, error: e } = await query;
+      const { data, error: e } = await withTimeout(query, 10000, '감사 로그 조회 지연');
       if (e) throw e;
       setRows((data ?? []) as AuditRow[]);
     } catch (err) {

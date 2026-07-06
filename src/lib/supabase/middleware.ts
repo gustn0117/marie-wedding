@@ -90,8 +90,12 @@ export async function updateSession(request: NextRequest) {
           return res;
         }
 
-        // 제재된 사용자 — /banned 외 모든 페이지 접근 차단
-        if (profile?.banned_at && !request.nextUrl.pathname.startsWith('/banned') && !request.nextUrl.pathname.startsWith('/auth/callback') && !request.nextUrl.pathname.startsWith('/api')) {
+        // 제재된 사용자 — /banned + /auth + /api + /admin(관리자 자체 게이트) 외 모든 페이지 차단
+        if (profile?.banned_at
+            && !request.nextUrl.pathname.startsWith('/banned')
+            && !request.nextUrl.pathname.startsWith('/auth/callback')
+            && !request.nextUrl.pathname.startsWith('/api')
+            && !request.nextUrl.pathname.startsWith('/admin')) {
           const url = request.nextUrl.clone();
           url.pathname = '/banned';
           return NextResponse.redirect(url);
@@ -106,7 +110,9 @@ export async function updateSession(request: NextRequest) {
         if (profile && !profile.onboarded_at && !isPublicBypass) {
           const url = request.nextUrl.clone();
           url.pathname = '/onboarding';
-          url.searchParams.set('next', path);
+          // next 에 pathname + search 모두 보존 — 필터/쿼리 상태를 온보딩 후 그대로 복원
+          const fullNext = path + (request.nextUrl.search || '');
+          url.searchParams.set('next', fullNext);
           return NextResponse.redirect(url);
         }
 

@@ -30,6 +30,8 @@ export const communityService = {
         { count: 'exact' },
       )
       .is('deleted_at', null)
+      // 삭제된 댓글은 카운트에서 제외 (embedded filter)
+      .filter('comments.deleted_at', 'is', null)
       .order('created_at', { ascending: false })
       .range(from, to);
 

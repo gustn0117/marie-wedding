@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { createClient } from '@/lib/supabase/client';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ChangePasswordPage() {
   const { isLoading, isAuthenticated } = useAuth();
@@ -30,7 +31,11 @@ export default function ChangePasswordPage() {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      const { error: updateError } = await withTimeout(
+        supabase.auth.updateUser({ password: newPassword }),
+        12000,
+        '비밀번호 변경 지연',
+      );
       if (updateError) throw updateError;
       setSuccess(true);
       setNewPassword('');

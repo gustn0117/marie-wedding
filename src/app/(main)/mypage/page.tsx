@@ -38,6 +38,7 @@ async function getMyData(profileId: string) {
       .select('*, author:profiles!author_id(*), comments:comments(count)')
       .eq('author_id', profileId)
       .is('deleted_at', null)
+      .filter('comments.deleted_at', 'is', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
     supabase

@@ -6,6 +6,7 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatDate, getCategoryLabel } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -21,7 +22,11 @@ export default function AdminPostsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await adminService.getPosts(page, search || undefined, showDeleted);
+      const result = await withTimeout(
+        adminService.getPosts(page, search || undefined, showDeleted),
+        10000,
+        '게시글 조회 지연',
+      );
       setPosts(result.data);
       setCount(result.count);
     } catch (err) {
@@ -43,7 +48,7 @@ export default function AdminPostsPage() {
     if (!confirm(`"${post.title}" 게시글을 삭제하시겠습니까?`)) return;
     setActionLoading(post.id);
     try {
-      await adminService.softDeletePost(post.id);
+      await withTimeout(adminService.softDeletePost(post.id), 10000, '게시글 삭제 지연');
       await load();
     } catch (err) {
       alert('삭제에 실패했습니다.');
@@ -56,7 +61,7 @@ export default function AdminPostsPage() {
   const handleRestore = async (post: Post) => {
     setActionLoading(post.id);
     try {
-      await adminService.restorePost(post.id);
+      await withTimeout(adminService.restorePost(post.id), 10000, '게시글 복원 지연');
       await load();
     } catch (err) {
       alert('복원에 실패했습니다.');

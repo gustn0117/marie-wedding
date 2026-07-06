@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { reviewService, reviewErrorMessage } from '@/features/reviews/services/reviewService';
 import type { ReviewTag } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface Props {
   applicationId: string;
@@ -19,7 +20,7 @@ export default function ReviewForm({ applicationId, appliesTo }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    reviewService.listActiveTags()
+    withTimeout(reviewService.listActiveTags(), 10000, '리뷰 태그 조회 지연')
       .then((data) => setTags(data.filter((t) => t.applies_to.includes(appliesTo))))
       .catch(() => setError('태그를 불러오지 못했습니다.'))
       .finally(() => setLoading(false));

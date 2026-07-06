@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export interface Banner {
   id: string;
@@ -29,33 +30,49 @@ export interface BannerInput {
 export const bannerService = {
   async listAll(): Promise<Banner[]> {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('banners')
-      .select('*')
-      .is('deleted_at', null)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
+    const { data, error } = await withTimeout(
+      supabase
+        .from('banners')
+        .select('*')
+        .is('deleted_at', null)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false }),
+      10000,
+      '배너 조회 지연',
+    );
     if (error) throw new Error(error.message);
     return (data ?? []) as Banner[];
   },
 
   async create(input: BannerInput): Promise<Banner> {
     const supabase = createClient();
-    const { data, error } = await supabase.from('banners').insert(input).select().single();
+    const { data, error } = await withTimeout(
+      supabase.from('banners').insert(input).select().single(),
+      12000,
+      '배너 등록 지연',
+    );
     if (error) throw new Error(error.message);
     return data as Banner;
   },
 
   async update(id: string, input: Partial<BannerInput>): Promise<Banner> {
     const supabase = createClient();
-    const { data, error } = await supabase.from('banners').update(input).eq('id', id).select().single();
+    const { data, error } = await withTimeout(
+      supabase.from('banners').update(input).eq('id', id).select().single(),
+      12000,
+      '배너 수정 지연',
+    );
     if (error) throw new Error(error.message);
     return data as Banner;
   },
 
   async softDelete(id: string): Promise<void> {
     const supabase = createClient();
-    const { error } = await supabase.from('banners').update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    const { error } = await withTimeout(
+      supabase.from('banners').update({ deleted_at: new Date().toISOString() }).eq('id', id),
+      10000,
+      '배너 삭제 지연',
+    );
     if (error) throw new Error(error.message);
   },
 
@@ -63,7 +80,11 @@ export const bannerService = {
     const supabase = createClient();
     const ext = file.name.split('.').pop() || 'jpg';
     const path = `${kind}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const { error } = await supabase.storage.from('banners').upload(path, file, { upsert: false });
+    const { error } = await withTimeout(
+      supabase.storage.from('banners').upload(path, file, { upsert: false }),
+      15000,
+      '배너 업로드 지연',
+    );
     if (error) throw new Error(`업로드 실패: ${error.message}`);
     return path;
   },

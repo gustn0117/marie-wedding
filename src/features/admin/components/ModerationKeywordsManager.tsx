@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import type { ModerationKeyword, ModerationScope, ModerationAction } from '@/types/database';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 const SCOPE_LABELS: Record<ModerationScope, string> = {
   job: '공고',
@@ -27,9 +28,18 @@ export default function ModerationKeywordsManager() {
 
   async function load() {
     const sb = createClient();
-    const { data } = await sb.from('moderation_keywords').select('*').order('created_at', { ascending: false });
-    setRows((data ?? []) as ModerationKeyword[]);
-    setLoading(false);
+    try {
+      const { data } = await withTimeout(
+        sb.from('moderation_keywords').select('*').order('created_at', { ascending: false }),
+        10000,
+        '키워드 조회 지연',
+      );
+      setRows((data ?? []) as ModerationKeyword[]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { load(); }, []);
@@ -39,11 +49,15 @@ export default function ModerationKeywordsManager() {
     if (!keyword.trim()) { toast('키워드를 입력해 주세요.', 'error'); return; }
     startTransition(async () => {
       const sb = createClient();
-      const { error } = await sb.from('moderation_keywords').insert({
-        keyword: keyword.trim(),
-        scope,
-        action,
-      });
+      const { error } = await withTimeout(
+        sb.from('moderation_keywords').insert({
+          keyword: keyword.trim(),
+          scope,
+          action,
+        }),
+        10000,
+        '키워드 추가 지연',
+      );
       if (error) {
         toast(error.message.includes('duplicate') ? '이미 등록된 키워드입니다.' : '추가에 실패했습니다.', 'error');
         return;
@@ -59,7 +73,11 @@ export default function ModerationKeywordsManager() {
     if (!ok) return;
     startTransition(async () => {
       const sb = createClient();
-      const { error } = await sb.from('moderation_keywords').delete().eq('id', id);
+      const { error } = await withTimeout(
+        sb.from('moderation_keywords').delete().eq('id', id),
+        10000,
+        '키워드 삭제 지연',
+      );
       if (error) { toast('삭제에 실패했습니다.', 'error'); return; }
       toast('삭제되었습니다.', 'success');
       load();

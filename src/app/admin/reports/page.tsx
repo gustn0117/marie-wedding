@@ -8,6 +8,7 @@ import { formatRelativeTime } from '@/shared/utils/format';
 import type { Profile, Report } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 const STATUS_OPTIONS: { value: Report['status'] | ''; label: string }[] = [
   { value: '', label: '전체' },
@@ -69,7 +70,11 @@ export default function AdminReportsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await adminService.getReports(1, status || undefined);
+      const result = await withTimeout(
+        adminService.getReports(1, status || undefined),
+        10000,
+        '신고 조회 지연',
+      );
       setReports(result.data);
       setCount(result.count);
     } catch (err) {
@@ -84,13 +89,17 @@ export default function AdminReportsPage() {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const todayIso = startOfDay.toISOString();
-    const [openRes, reviewingRes, resolvedRes, dismissedRes, todayRes] = await Promise.all([
-      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
-      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'resolved'),
-      sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'dismissed'),
-      sb.from('reports').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
-    ]);
+    const [openRes, reviewingRes, resolvedRes, dismissedRes, todayRes] = await withTimeout(
+      Promise.all([
+        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
+        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'resolved'),
+        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'dismissed'),
+        sb.from('reports').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
+      ]),
+      10000,
+      '신고 통계 조회 지연',
+    );
     setStats({
       open: openRes.count ?? 0,
       reviewing: reviewingRes.count ?? 0,

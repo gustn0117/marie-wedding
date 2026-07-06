@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { AvailabilitySlot, AvailabilityStatus } from '@/types/database';
 import { availabilityService, monthBounds, ymd } from '@/features/availability/services/availabilityService';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface Props {
   profileId: string;
@@ -42,7 +43,11 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
   useEffect(() => {
     const { from, to } = monthBounds(year, month);
     setBusy(true);
-    availabilityService.listForProfile(profileId, from, to, { publicOnly: !editable })
+    withTimeout(
+      availabilityService.listForProfile(profileId, from, to, { publicOnly: !editable }),
+      10000,
+      '일정 조회 지연',
+    )
       .then((rows) => {
         const map: Record<string, AvailabilitySlot> = {};
         rows.forEach((r) => { map[r.date] = r; });
@@ -65,10 +70,14 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
     const next = nextStatus(curr);
     try {
       if (next === null && slots[key]) {
-        await availabilityService.remove(slots[key].id);
+        await withTimeout(availabilityService.remove(slots[key].id), 10000, '일정 삭제 지연');
         setSlots((prev) => { const c = { ...prev }; delete c[key]; return c; });
       } else if (next) {
-        const updated = await availabilityService.upsert({ profileId, date: key, status: next });
+        const updated = await withTimeout(
+          availabilityService.upsert({ profileId, date: key, status: next }),
+          10000,
+          '일정 저장 지연',
+        );
         setSlots((prev) => ({ ...prev, [key]: updated }));
       }
     } catch {
