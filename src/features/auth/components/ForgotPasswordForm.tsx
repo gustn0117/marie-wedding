@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -22,9 +23,11 @@ export default function ForgotPasswordForm() {
       const redirectTo = typeof window !== 'undefined'
         ? `${window.location.origin}${ROUTES.RESET_PASSWORD}`
         : undefined;
-      const { error: apiError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo,
-      });
+      const { error: apiError } = await withTimeout(
+        supabase.auth.resetPasswordForEmail(email, { redirectTo }),
+        12000,
+        '메일 전송 요청 지연',
+      );
       // 보안상 이메일 존재 여부를 노출하지 않음 — 항상 성공처럼 표시
       if (apiError && !apiError.message.toLowerCase().includes('email')) {
         setError(apiError.message);

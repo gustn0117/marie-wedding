@@ -55,16 +55,25 @@ export default function NotificationBell({ profileId }: { profileId: string }) {
 
   const loadItems = useCallback(async () => {
     setLoading(true);
-    const sb = createClient();
-    const { data } = await sb
-      .from('notifications')
-      .select('id, type, title, message, link_url, read_at, created_at')
-      .eq('profile_id', profileId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    setItems((data ?? []) as Notification[]);
-    setLoading(false);
+    try {
+      const sb = createClient();
+      const { data } = await withTimeout(
+        sb
+          .from('notifications')
+          .select('id, type, title, message, link_url, read_at, created_at')
+          .eq('profile_id', profileId)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        8000,
+        '알림 조회 지연',
+      );
+      setItems((data ?? []) as Notification[]);
+    } catch (err) {
+      console.error('[NotificationBell] loadItems failed:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [profileId]);
 
   useEffect(() => {

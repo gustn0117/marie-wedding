@@ -7,6 +7,7 @@ import {
   NAVER_STATE_COOKIE_MAX_AGE,
   NAVER_STATE_COOKIE_PATH,
 } from '@/lib/naver-oauth';
+import { resolveExternalOrigin } from '@/lib/proxy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,16 +62,3 @@ function sanitizeReturnTo(value: string | null): string | null {
   return value;
 }
 
-/** Reverse proxy 뒤의 실제 외부 origin 검출. /auth/callback/route.ts 의 동명 헬퍼와 동일. */
-function resolveExternalOrigin(request: Request): string {
-  const isInternal = (h: string | null) =>
-    !h || /^(0\.0\.0\.0|localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/i.test(h);
-  const xfHost = request.headers.get('x-forwarded-host');
-  const xfProto = request.headers.get('x-forwarded-proto');
-  if (xfHost && !isInternal(xfHost)) return `${xfProto || 'https'}://${xfHost}`;
-  const host = request.headers.get('host');
-  if (host && !isInternal(host)) return `${xfProto || 'https'}://${host}`;
-  const envOrigin = process.env.NEXT_PUBLIC_APP_URL;
-  if (envOrigin && !isInternal(new URL(envOrigin).hostname)) return envOrigin.replace(/\/$/, '');
-  return new URL(request.url).origin;
-}

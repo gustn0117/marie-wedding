@@ -5,6 +5,7 @@ import { useAuth } from '@/shared/hooks/useAuth';
 import { reportService } from '@/features/reports/services/report-service';
 import type { ReportTargetType } from '@/types/database';
 import { toast } from '@/shared/components/Toast';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 const REASONS = [
   '허위 정보',
@@ -29,13 +30,13 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
   const submit = async () => {
     setSubmitting(true);
     try {
-      await reportService.createReport({
+      await withTimeout(reportService.createReport({
         reporterId: profile?.id ?? null,
         targetType,
         targetId,
         reason,
         details,
-      });
+      }), 10000, '신고 접수 지연');
       setOpen(false);
       setDetails('');
       // 옛 패턴 (alert/confirm)은 Toast 인프라와 톤 불일치.

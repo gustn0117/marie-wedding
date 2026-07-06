@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface Conversation {
   id: string;
@@ -22,13 +23,18 @@ export default function ConversationSidebar({ myProfileId, activeId }: { myProfi
 
   const load = useCallback(async () => {
     setLoading(true);
+    try {
     const sb = createClient();
-    const { data: convs } = await sb
-      .from('conversations')
-      .select('id, participant_a, participant_b, last_message_at')
-      .or(`participant_a.eq.${myProfileId},participant_b.eq.${myProfileId}`)
-      .order('last_message_at', { ascending: false })
-      .limit(50);
+    const { data: convs } = await withTimeout(
+      sb
+        .from('conversations')
+        .select('id, participant_a, participant_b, last_message_at')
+        .or(`participant_a.eq.${myProfileId},participant_b.eq.${myProfileId}`)
+        .order('last_message_at', { ascending: false })
+        .limit(50),
+      10000,
+      '대화 목록 조회 지연',
+    );
 
     const list = (convs ?? []) as Array<{ id: string; participant_a: string; participant_b: string; last_message_at: string }>;
     if (list.length === 0) { setItems([]); setLoading(false); return; }
@@ -36,11 +42,11 @@ export default function ConversationSidebar({ myProfileId, activeId }: { myProfi
     const partnerIds = Array.from(new Set(list.map((c) => c.participant_a === myProfileId ? c.participant_b : c.participant_a)));
     const convIds = list.map((c) => c.id);
 
-    const [partnersRes, lastMsgsRes, unreadRes] = await Promise.all([
+    const [partnersRes, lastMsgsRes, unreadRes] = await withTimeout(Promise.all([
       sb.from('profiles').select('id, company_name, contact_name, profile_image').in('id', partnerIds),
       sb.from('messages').select('conversation_id, body, created_at').in('conversation_id', convIds).order('created_at', { ascending: false }),
       sb.from('messages').select('conversation_id').in('conversation_id', convIds).is('read_at', null).neq('sender_id', myProfileId),
-    ]);
+    ]), 10000, '대화 요약 조회 지연');
 
     const partnerMap = new Map<string, { name: string; image: string | null }>();
     for (const p of (partnersRes.data ?? []) as Array<{ id: string; company_name: string | null; contact_name: string; profile_image: string | null }>) {
@@ -68,7 +74,11 @@ export default function ConversationSidebar({ myProfileId, activeId }: { myProfi
       };
     });
     setItems(rows);
-    setLoading(false);
+    } catch (err) {
+      console.error('[ConversationSidebar] load failed:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [myProfileId]);
 
   useEffect(() => { load(); }, [load]);

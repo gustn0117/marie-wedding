@@ -23,8 +23,10 @@ export const jobService = {
 
     let query = supabase
       .from('jobs')
-      .select('*, author:profiles!author_id(*)', { count: 'exact' })
+      // author.deleted_at IS NULL — 탈퇴 업체 공고 은닉
+      .select('*, author:profiles!author_id!inner(*)', { count: 'exact' })
       .is('deleted_at', null)
+      .is('author.deleted_at', null)
       .eq('posting_type', 'hiring')
       .order('is_promoted', { ascending: false })
       .order('created_at', { ascending: false })
@@ -73,9 +75,11 @@ export const jobService = {
 
     const { data, error } = await supabase
       .from('jobs')
-      .select('*, author:profiles!author_id(*)')
+      // author.deleted_at IS NULL — 탈퇴 업체의 공고 상세도 은닉
+      .select('*, author:profiles!author_id!inner(*)')
       .eq('id', id)
       .is('deleted_at', null)
+      .is('author.deleted_at', null)
       .single();
 
     if (error) {
@@ -92,88 +96,42 @@ export const jobService = {
    * INSERT 전 본인 업체 프로필의 핵심 필드(업체명/업종/지역/연락처/소개)가 채워져 있는지 검증한다.
    * 클라이언트 측 가드는 우회 가능하므로 service 레이어에서 한 번 더 본다.
    */
-  async createJob(formData: JobFormData, authorId: string): Promise<Job> {
-    const supabase = createClient();
-
-    const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('account_type, company_name, business_type, region, phone, bio')
-      .eq('id', authorId)
-      .maybeSingle();
-
-    if (profileErr) throw profileErr;
-    if (!profile) throw new Error('프로필을 찾을 수 없습니다.');
-    if (profile.account_type !== 'business') {
-      throw new Error('공고 등록은 업체 회원만 가능합니다.');
+  /**
+   * Create a new job posting — service_role 서버 라우트 경유.
+   * QA-010 재발 방지 (auto_moderate + protect_job_admin_cols 트리거 우회).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async createJob(formData: JobFormData, _authorId: string): Promise<Job> {
+    const res = await fetch('/api/jobs/write', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'create', payload: formData }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `등록에 실패했습니다 (HTTP ${res.status}).`);
     }
-
-    const { checkBusinessProfileCompleteness } = await import('@/features/jobs/lib/business-profile-completeness');
-    const check = checkBusinessProfileCompleteness(profile);
-    if (!check.isComplete) {
-      const missingLabels = check.missing.map((m) => m.label).join(', ');
-      throw new Error(`업체 프로필을 먼저 완성해주세요. 부족한 항목: ${missingLabels}`);
-    }
-
-    const { data, error } = await supabase
-      .from('jobs')
-      .insert({
-        author_id: authorId,
-        posting_type: 'hiring',
-        title: formData.title,
-        description: formData.description,
-        business_type: formData.businessType,
-        employment_type: formData.employmentType,
-        region: formData.region,
-        salary_info: formData.salaryInfo || null,
-        salary_min: formData.salaryMin ?? null,
-        salary_max: formData.salaryMax ?? null,
-        salary_unit: formData.salaryUnit ?? 'monthly',
-        experience_min: formData.experienceMin ?? null,
-        deadline: formData.deadline || null,
-        image: formData.image || null,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`채용 공고 등록에 실패했습니다: ${error.message}`);
-    }
-
-    return data as Job;
+    const { job } = await res.json();
+    return job as Job;
   },
 
   /**
-   * Update an existing job posting.
+   * Update an existing job posting — service_role 서버 라우트 경유.
    */
   async updateJob(id: string, formData: Partial<JobFormData>): Promise<Job> {
-    const supabase = createClient();
-
-    const updateData: Record<string, unknown> = {};
-    if (formData.title !== undefined) updateData.title = formData.title;
-    if (formData.description !== undefined) updateData.description = formData.description;
-    if (formData.businessType !== undefined) updateData.business_type = formData.businessType;
-    if (formData.employmentType !== undefined) updateData.employment_type = formData.employmentType;
-    if (formData.region !== undefined) updateData.region = formData.region;
-    if (formData.salaryInfo !== undefined) updateData.salary_info = formData.salaryInfo || null;
-    if (formData.salaryMin !== undefined) updateData.salary_min = formData.salaryMin;
-    if (formData.salaryMax !== undefined) updateData.salary_max = formData.salaryMax;
-    if (formData.salaryUnit !== undefined) updateData.salary_unit = formData.salaryUnit;
-    if (formData.experienceMin !== undefined) updateData.experience_min = formData.experienceMin;
-    if (formData.deadline !== undefined) updateData.deadline = formData.deadline || null;
-    if (formData.image !== undefined) updateData.image = formData.image || null;
-
-    const { data, error } = await supabase
-      .from('jobs')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(`채용 공고 수정에 실패했습니다: ${error.message}`);
+    const res = await fetch('/api/jobs/write', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'update', id, payload: formData }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `수정에 실패했습니다 (HTTP ${res.status}).`);
     }
-
-    return data as Job;
+    const { job } = await res.json();
+    return job as Job;
   },
 
   /**

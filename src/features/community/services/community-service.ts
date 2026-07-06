@@ -118,22 +118,27 @@ export const communityService = {
   },
 
   /**
-   * Update an existing post.
+   * Update an existing post via service_role server route.
+   * QA-010 재발 방지 — moderation 트리거 RETURNING null 이슈 우회.
    */
   async updatePost(id: string, data: Partial<PostFormData>): Promise<Post> {
-    const supabase = createClient();
-
-    const { data: post, error } = await supabase
-      .from('posts')
-      .update({
-        ...data,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
+    const res = await fetch('/api/posts/update', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id,
+        title: data.title,
+        content: data.content,
+        category: data.category,
+        region: data.region || null,
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `수정에 실패했습니다 (HTTP ${res.status}).`);
+    }
+    const { post } = await res.json();
     return post as Post;
   },
 

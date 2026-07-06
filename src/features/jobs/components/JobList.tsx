@@ -9,6 +9,7 @@ import JobCard from './JobCard';
 import Pagination from '@/shared/components/Pagination';
 import EmptyState from '@/shared/components/EmptyState';
 import { ROUTES } from '@/shared/constants';
+import { withTimeout } from '@/shared/utils/withTimeout';
 
 const PAGE_SIZE = 12;
 
@@ -36,7 +37,11 @@ export default function JobList() {
     setError(null);
 
     try {
-      const result = await jobService.getJobs(filters, currentPage, PAGE_SIZE);
+      const result = await withTimeout(
+        jobService.getJobs(filters, currentPage, PAGE_SIZE),
+        10000,
+        '공고 조회 지연',
+      );
       setJobs(result.data);
       setTotalCount(result.count);
     } catch (err) {

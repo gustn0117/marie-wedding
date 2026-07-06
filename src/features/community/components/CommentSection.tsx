@@ -56,7 +56,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
 
   const fetchComments = useCallback(async () => {
     try {
-      const data = await communityService.getComments(postId);
+      const data = await withTimeout(communityService.getComments(postId), 10000, '댓글 조회 지연');
       setComments(data);
     } catch (err) {
       console.error('Failed to fetch comments:', err);

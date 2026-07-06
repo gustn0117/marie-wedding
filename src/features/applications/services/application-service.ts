@@ -39,8 +39,10 @@ export const applicationService = {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('applications')
-      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터
+      .select('*, job:jobs!inner(*), applicant:profiles!inner(*)')
       .is('deleted_at', null)
+      .is('applicant.deleted_at', null)
       .eq('job.author_id', profileId)
       .order('created_at', { ascending: false });
 
@@ -52,8 +54,10 @@ export const applicationService = {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('applications')
-      .select('*, job:jobs(*), applicant:profiles(*)')
+      // 삭제된 공고 / 탈퇴한 공고 작성자 표시 X
+      .select('*, job:jobs!inner(*), applicant:profiles(*)')
       .is('deleted_at', null)
+      .is('job.deleted_at', null)
       .eq('applicant_id', profileId)
       .order('created_at', { ascending: false });
 

@@ -200,7 +200,8 @@ export async function POST(request: NextRequest) {
       }
 
       case 'softDeleteUser': {
-        const { error } = await supabase.from('profiles').update({ deleted_at: new Date().toISOString() }).eq('id', params.id);
+        // withdraw 라우트와 동일 정책 — purge_profile_cascade 로 관련 콘텐츠 전체 soft delete
+        const { error } = await supabase.rpc('purge_profile_cascade', { p_profile_id: params.id });
         if (error) throw error;
         return NextResponse.json({ success: true });
       }

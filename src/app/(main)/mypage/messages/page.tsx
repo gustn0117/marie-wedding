@@ -32,12 +32,13 @@ async function loadConversations(myId: string): Promise<Row[]> {
   const partnerIds = convs.map((c) => (c.participant_a === myId ? c.participant_b : c.participant_a));
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, company_name, contact_name, profile_image')
+    .select('id, company_name, contact_name, profile_image, deleted_at')
     .in('id', partnerIds);
   const profileMap = new Map<string, { name: string; image: string | null }>();
   (profiles ?? []).forEach((p) => profileMap.set(p.id, {
-    name: p.company_name || p.contact_name || '알 수 없음',
-    image: p.profile_image,
+    // 탈퇴 상대 실명 마스킹 — 대화 자체는 유지하되 이름/사진은 숨김
+    name: p.deleted_at ? '탈퇴한 회원' : (p.company_name || p.contact_name || '알 수 없음'),
+    image: p.deleted_at ? null : p.profile_image,
   }));
 
   // 기존: 대화 N개당 (last message + unread count) 2회 = 2N+1 쿼리

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { adminService } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime, getBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import type { Profile, Job } from '@/types/database';
 
 interface Stats {
@@ -33,8 +34,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    adminService
-      .getDashboard()
+    withTimeout(adminService.getDashboard(), 10000, '대시보드 조회 지연')
       .then((d) => {
         if (cancelled) return;
         setStats(d.stats);

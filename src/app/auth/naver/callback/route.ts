@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { resolveExternalOrigin } from '@/lib/proxy';
 import {
   exchangeCodeForToken,
   fetchUserInfo,
@@ -283,16 +284,3 @@ function sanitizeReturnTo(value: string | null | undefined): string | null {
   return value;
 }
 
-/** Reverse proxy 뒤의 실제 외부 origin 검출. */
-function resolveExternalOrigin(request: Request): string {
-  const isInternal = (h: string | null) =>
-    !h || /^(0\.0\.0\.0|localhost|127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.)/i.test(h);
-  const xfHost = request.headers.get('x-forwarded-host');
-  const xfProto = request.headers.get('x-forwarded-proto');
-  if (xfHost && !isInternal(xfHost)) return `${xfProto || 'https'}://${xfHost}`;
-  const host = request.headers.get('host');
-  if (host && !isInternal(host)) return `${xfProto || 'https'}://${host}`;
-  const envOrigin = process.env.NEXT_PUBLIC_APP_URL;
-  if (envOrigin && !isInternal(new URL(envOrigin).hostname)) return envOrigin.replace(/\/$/, '');
-  return new URL(request.url).origin;
-}

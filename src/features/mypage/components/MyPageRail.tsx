@@ -54,10 +54,17 @@ const SECTIONS: RailSection[] = [
   },
 ];
 
-export default function MyPageRail() {
+interface MyPageRailProps {
+  /** SSR 에서 marie_profile 쿠키로 미리 결정된 account_type — hydration flash 방지 */
+  initialAccountType?: 'business' | 'individual' | null;
+}
+
+export default function MyPageRail({ initialAccountType = null }: MyPageRailProps = {}) {
   const pathname = usePathname();
   const { profile } = useAuth();
-  const isBusiness = profile?.account_type === 'business';
+  // useAuth 가 hydration 후 확정한 값이 있으면 그걸 우선, 아니면 SSR prop.
+  const accountType = profile?.account_type ?? initialAccountType;
+  const isBusiness = accountType === 'business';
 
   // 개인 회원에겐 공고 운영 관련 메뉴를 숨긴다 — 구인구직 섹션에서 '공고 등록' 빠지고,
   // 개요의 '공고 성과', 프로필의 '공개 프로필', 설정의 '사업자 인증'도 제외.

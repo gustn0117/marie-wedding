@@ -40,8 +40,10 @@ function getStateSecret(): string {
 }
 
 function getRedirectUri(origin: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || origin;
-  return `${base}/auth/naver/callback`;
+  // 호출자가 넘긴 origin(= resolveExternalOrigin 결과)을 우선 신뢰. env 는 절대 fallback.
+  // 이전: env 를 우선 사용 → 사용자가 별칭 도메인 접속 시 Naver 가 env 도메인으로 redirect
+  //        → __Host-naver_oauth_state 쿠키 도메인 불일치로 state_mismatch, exchange 실패.
+  return `${origin}/auth/naver/callback`;
 }
 
 /**

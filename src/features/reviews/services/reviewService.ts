@@ -30,11 +30,13 @@ export const reviewService = {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('reviews')
-      .select('*, reviewer:profiles!reviewer_id(*)')
+      // reviewer.deleted_at IS NULL — 탈퇴 리뷰어 실명 노출 방지
+      .select('*, reviewer:profiles!reviewer_id!inner(*)')
       .eq('reviewee_id', revieweeId)
       .eq('is_public', true)
       .eq('is_hidden_by_admin', false)
       .is('deleted_at', null)
+      .is('reviewer.deleted_at', null)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
     if (error) throw error;

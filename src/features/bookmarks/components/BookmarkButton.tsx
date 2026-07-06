@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { bookmarkService } from '@/features/bookmarks/services/bookmark-service';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import type { BookmarkTargetType } from '@/types/database';
 
 interface BookmarkButtonProps {
@@ -37,7 +38,11 @@ export default function BookmarkButton({ targetType, targetId, label = '저장' 
     if (loading) return;
     setLoading(true);
     try {
-      const result = await bookmarkService.toggleBookmark(profile.id, targetType, targetId);
+      const result = await withTimeout(
+        bookmarkService.toggleBookmark(profile.id, targetType, targetId),
+        8000,
+        '저장 처리 지연',
+      );
       setSaved(result.saved);
     } catch {
       alert('저장 처리에 실패했습니다.');

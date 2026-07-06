@@ -13,13 +13,16 @@ type AppWithJob = Application & {
 
 async function load(profileId: string) {
   const supabase = createServerQueryClient();
-  const baseSelect = '*, job:jobs!inner(id, title, author_id, business_type), applicant:profiles(id, company_name, contact_name)';
+  // job.deleted_at IS NULL + applicant.deleted_at IS NULL — 삭제된 공고/탈퇴자에 대한 stale 리뷰 카드 방지
+  const baseSelect = '*, job:jobs!inner(id, title, author_id, business_type, deleted_at), applicant:profiles!inner(id, company_name, contact_name, deleted_at)';
 
   const [asApplicantRes, asAuthorRes, myReviewsRes] = await Promise.all([
     supabase
       .from('applications')
       .select(baseSelect)
       .is('deleted_at', null)
+      .is('job.deleted_at', null)
+      .is('applicant.deleted_at', null)
       .not('hiring_completed_at', 'is', null)
       .not('applicant_completed_at', 'is', null)
       .eq('applicant_id', profileId),
@@ -27,6 +30,8 @@ async function load(profileId: string) {
       .from('applications')
       .select(baseSelect)
       .is('deleted_at', null)
+      .is('job.deleted_at', null)
+      .is('applicant.deleted_at', null)
       .not('hiring_completed_at', 'is', null)
       .not('applicant_completed_at', 'is', null)
       .eq('job.author_id', profileId),

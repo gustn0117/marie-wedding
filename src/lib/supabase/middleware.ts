@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 import { SUPABASE_SCHEMA } from './schema';
+import { resolveExternalOrigin } from '@/lib/proxy';
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -134,8 +135,34 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse.cookies.delete('marie_profile');
       }
     }
-  } catch {
-    // Supabase connection failed, allow request through
+  } catch (err) {
+    // fail-closed: Supabase 연결/스키마 오류 시 로그인 페이지 접근·정적 자산 외에는 /login 으로 튕김.
+    // (이전: 모두 통과시켜 탈퇴/제재 계정이 진입 가능했음)
+    console.error('[middleware] auth guard failed:', err);
+    const path = request.nextUrl.pathname;
+    const isFailSafe =
+      path === '/' ||
+      path.startsWith('/login') ||
+      path.startsWith('/signup') ||
+      path.startsWith('/auth/') ||
+      path.startsWith('/api/') ||
+      path.startsWith('/_next/') ||
+      path.startsWith('/favicon') ||
+      path.startsWith('/banned') ||
+      path.startsWith('/admin'); // admin 은 자체 게이트
+    if (!isFailSafe) {
+      const externalOrigin = resolveExternalOrigin(request);
+      const loginUrl = new URL(`${externalOrigin}/login`);
+      const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+      const res = NextResponse.redirect(loginUrl);
+      res.cookies.set('marie_profile', '', expire);
+      for (const c of request.cookies.getAll()) {
+        if (c.name.startsWith('sb-')) {
+          res.cookies.set(c.name, '', { ...expire, httpOnly: true });
+        }
+      }
+      return res;
+    }
   }
 
   return supabaseResponse;

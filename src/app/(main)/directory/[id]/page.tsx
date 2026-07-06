@@ -58,11 +58,13 @@ async function getData(id: string) {
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
-      .select('*, reviewer:profiles!reviewer_id(id, company_name, contact_name)')
+      // reviewer.deleted_at IS NULL — 탈퇴 리뷰어 실명 노출 방지
+      .select('*, reviewer:profiles!reviewer_id!inner(id, company_name, contact_name, deleted_at)')
       .eq('reviewee_id', id)
       .eq('is_public', true)
       .eq('is_hidden_by_admin', false)
       .is('deleted_at', null)
+      .is('reviewer.deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(20),
   ]);

@@ -68,37 +68,16 @@ export async function POST() {
     return res;
   }
 
-  const now = new Date().toISOString();
-
-  // 병렬 처리 — 4개 테이블 동시 soft delete
-  const [profileRes, jobsRes, postsRes, commentsRes] = await Promise.all([
-    service.from('profiles')
-      .update({ deleted_at: now, is_directory_listed: false })
-      .eq('id', profile.id),
-    service.from('jobs')
-      .update({ deleted_at: now })
-      .eq('author_id', profile.id)
-      .is('deleted_at', null),
-    service.from('posts')
-      .update({ deleted_at: now })
-      .eq('author_id', profile.id)
-      .is('deleted_at', null),
-    service.from('comments')
-      .update({ deleted_at: now })
-      .eq('author_id', profile.id)
-      .is('deleted_at', null),
-  ]);
-
-  if (profileRes.error) {
+  // purge_profile_cascade RPC — profiles + jobs + posts + comments + applications + reviews + portfolios + notifications
+  // 모두 한 트랜잭션에서 idempotent 하게 soft delete. admin softDeleteUser 와 동일 로직.
+  const { error: rpcErr } = await service.rpc('purge_profile_cascade', { p_profile_id: profile.id });
+  if (rpcErr) {
+    console.error('[withdraw] purge_profile_cascade failed:', rpcErr);
     return NextResponse.json(
-      { error: `탈퇴 처리에 실패했습니다: ${profileRes.error.message}` },
+      { error: `탈퇴 처리에 실패했습니다: ${rpcErr.message}` },
       { status: 500 },
     );
   }
-  // jobs/posts/comments 실패는 critical 하지 않음 — 운영자가 후속 처리 가능
-  if (jobsRes.error) console.error('[withdraw] jobs soft delete failed:', jobsRes.error);
-  if (postsRes.error) console.error('[withdraw] posts soft delete failed:', postsRes.error);
-  if (commentsRes.error) console.error('[withdraw] comments soft delete failed:', commentsRes.error);
 
   // 응답에 모든 인증 쿠키 만료 — 클라는 redirect 직후 비로그인 상태
   const res = NextResponse.json({ success: true });
