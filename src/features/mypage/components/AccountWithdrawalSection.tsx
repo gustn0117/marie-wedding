@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from '@/shared/components/Toast';
+import { friendlyError } from '@/shared/utils/errorMessages';
 import { ROUTES } from '@/shared/constants';
 
 const CONFIRM_PHRASE = '회원탈퇴 동의';
@@ -33,14 +34,14 @@ export default function AccountWithdrawalSection() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: '' }));
-        throw new Error(body.error || `탈퇴 처리에 실패했습니다 (HTTP ${res.status}).`);
+        throw new Error(body.error || '탈퇴 처리에 실패했습니다.');
       }
       // 응답에서 이미 marie_profile + sb-* 쿠키 만료됨. 즉시 redirect.
       toast('회원 탈퇴가 완료되었습니다.', 'success');
       window.location.href = ROUTES.HOME;
     } catch (err) {
       console.error('[AccountWithdrawal] failed:', err);
-      toast(err instanceof Error ? err.message : '탈퇴 처리에 실패했습니다.', 'error');
+      toast(friendlyError(err, '탈퇴 처리에 실패했습니다.'), 'error');
       setSubmitting(false);
     }
   };

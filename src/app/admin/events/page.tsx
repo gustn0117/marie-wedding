@@ -8,6 +8,7 @@ import { formatDate } from '@/shared/utils/format';
 import { ROUTES } from '@/shared/constants';
 import type { Event } from '@/types/database';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 function getTypeLabel(type: string): string {
   return EVENT_TYPES.find(t => t.value === type)?.label ?? type;
@@ -39,13 +40,13 @@ export default function AdminEventsPage() {
   }, [fetchEvents]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+    if (!(await toastConfirm('정말 삭제하시겠습니까?'))) return;
     setDeleting(id);
     try {
       await adminService.softDeleteEvent(id);
       setEvents(prev => prev.filter(e => e.id !== id));
     } catch {
-      alert('삭제에 실패했습니다.');
+      toast('삭제에 실패했습니다.', 'error');
     } finally {
       setDeleting(null);
     }

@@ -7,6 +7,7 @@ import RichTextEditor from '@/shared/components/RichTextEditor';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { friendlyError } from '@/shared/utils/errorMessages';
 
 interface PostFormProps {
   initialData?: PostFormData;
@@ -83,8 +84,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     } catch (err) {
       console.error('[PostForm] submit failed:', err);
       const base = isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.';
-      const detail = err instanceof Error && err.message ? ` (${err.message})` : '';
-      setError(base + detail);
+      setError(friendlyError(err, base));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);

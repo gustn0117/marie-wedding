@@ -219,26 +219,27 @@ export default function PortfolioForm({ profileId, initial }: Props) {
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
             {images.map((path) => (
-              <div key={path} className="relative aspect-square border border-gray-200">
+              <div key={path} className="relative aspect-square border border-gray-200 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={resolveStorageUrl(path, 'portfolios') ?? ''} alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/0 hover:bg-black/40 transition-colors group">
-                  <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100">
-                    <button
-                      type="button"
-                      onClick={() => setCoverImage(path)}
-                      className={`px-1.5 py-0.5 text-[10px] font-bold ${coverImage === path ? 'bg-primary text-white' : 'bg-white text-gray-700'}`}
-                    >
-                      {coverImage === path ? '대표' : '대표로'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeImage(path)}
-                      className="px-1.5 py-0.5 bg-white text-[10px] font-bold text-state-urgent"
-                    >
-                      삭제
-                    </button>
-                  </div>
+                {/* 액션 항상 상시 노출 — 모바일 hover 없음 대응 */}
+                <div className="absolute bottom-1 right-1 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage(path)}
+                    aria-label={coverImage === path ? '대표 이미지' : '대표로 지정'}
+                    className={`px-1.5 py-0.5 text-[11px] font-bold rounded shadow ring-1 ring-gray-200 ${coverImage === path ? 'bg-primary text-white ring-primary' : 'bg-white/95 text-gray-700'}`}
+                  >
+                    {coverImage === path ? '대표' : '대표로'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeImage(path)}
+                    aria-label="이미지 삭제"
+                    className="px-1.5 py-0.5 rounded bg-white/95 text-[11px] font-bold text-state-urgent shadow ring-1 ring-gray-200 hover:bg-state-urgent hover:text-white"
+                  >
+                    삭제
+                  </button>
                 </div>
               </div>
             ))}

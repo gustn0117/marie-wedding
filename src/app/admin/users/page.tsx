@@ -46,13 +46,13 @@ export default function AdminUsersPage() {
   };
 
   const handleToggleRole = async (user: Profile) => {
-    if (!confirm(`${user.contact_name}님의 권한을 ${user.role === 'admin' ? '일반 유저' : '관리자'}로 변경하시겠습니까?`)) return;
+    if (!(await toastConfirm(`${user.contact_name}님의 권한을 ${user.role === 'admin' ? '일반 유저' : '관리자'}로 변경하시겠습니까?`))) return;
     setActionLoading(user.id);
     try {
       await withTimeout(adminService.updateUserRole(user.id, user.role === 'admin' ? 'user' : 'admin'), 10000);
       await load();
     } catch (err) {
-      alert('권한 변경에 실패했습니다.');
+      toast('권한 변경에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);

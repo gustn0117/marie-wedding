@@ -2,7 +2,16 @@ export const metadata = {
   title: '고객센터 | 마리에',
 };
 
+/**
+ * 연락처는 env 로 관리 — 담당자·번호 변경 시 코드 수정 없이 배포.
+ * NEXT_PUBLIC_CONTACT_EMAIL / NEXT_PUBLIC_CONTACT_PHONE / NEXT_PUBLIC_CONTACT_HOURS 미설정 시 안전한 기본값.
+ */
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'help@marie.co.kr';
+const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '1660-0000';
+const CONTACT_HOURS = process.env.NEXT_PUBLIC_CONTACT_HOURS || '평일 10:00 ~ 18:00';
+
 export default function ContactPage() {
+  const telHref = `tel:${CONTACT_PHONE.replace(/[^0-9]/g, '')}`;
   return (
     <div className="max-w-[900px] mx-auto space-y-4">
       <section className="saramin-section p-5">
@@ -18,8 +27,8 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">대표전화</h3>
-          <a href="tel:1660-0000" className="text-sm font-bold text-text-secondary hover:text-primary tabular-nums">1660-0000</a>
-          <p className="text-xs text-text-muted mt-1">평일 10:00 ~ 18:00</p>
+          <a href={telHref} className="text-sm font-bold text-text-secondary hover:text-primary tabular-nums">{CONTACT_PHONE}</a>
+          <p className="text-xs text-text-muted mt-1">{CONTACT_HOURS}</p>
         </div>
 
         <div className="card p-6 text-center">
@@ -29,7 +38,7 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">이메일 문의</h3>
-          <a href="mailto:tlagustn020117@gmail.com" className="text-sm text-text-secondary hover:text-primary break-all">tlagustn020117@gmail.com</a>
+          <a href={`mailto:${CONTACT_EMAIL}`} className="text-sm text-text-secondary hover:text-primary break-all">{CONTACT_EMAIL}</a>
           <p className="text-xs text-text-muted mt-1">영업일 기준 24시간 이내</p>
         </div>
 
@@ -40,7 +49,7 @@ export default function ContactPage() {
             </svg>
           </div>
           <h3 className="text-base font-bold text-text-primary mb-1">운영 시간</h3>
-          <p className="text-sm text-text-secondary">평일 10:00 ~ 18:00</p>
+          <p className="text-sm text-text-secondary">{CONTACT_HOURS}</p>
           <p className="text-xs text-text-muted mt-1">주말·공휴일 휴무</p>
         </div>
       </div>
@@ -53,7 +62,7 @@ export default function ContactPage() {
             { q: '공고 등록은 무료인가요?', a: '현재 모든 공고 등록은 무료로 제공되고 있습니다.' },
             { q: '프로필 정보를 수정하고 싶어요.', a: '로그인 후 우측 상단 프로필 메뉴에서 "마이페이지"를 클릭하신 후 "프로필 수정"에서 변경하실 수 있습니다.' },
             { q: '비밀번호를 잊어버렸어요.', a: '로그인 페이지에서 "비밀번호 찾기"를 통해 가입하신 이메일로 재설정 링크를 받으실 수 있습니다.' },
-            { q: '광고/제휴 문의는 어떻게 하나요?', a: 'tlagustn020117@gmail.com으로 문의 내용을 보내주시면 담당자가 확인 후 연락드리겠습니다.' },
+            { q: '광고/제휴 문의는 어떻게 하나요?', a: `${CONTACT_EMAIL}으로 문의 내용을 보내주시면 담당자가 확인 후 연락드리겠습니다.` },
           ].map((faq, idx) => (
             <details key={idx} className="group">
               <summary className="flex items-center justify-between cursor-pointer py-3 border-b border-gray-100 text-sm font-medium text-text-primary hover:text-primary transition-colors">

@@ -31,7 +31,10 @@ export default function JobMobileApplyBar({ label, disabled, blockReason }: Prop
 
   if (blockReason) {
     return (
-      <div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden">
+      <div
+        className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+      >
         <div
           className="block w-full text-center rounded bg-gray-100 text-gray-500 py-3 text-sm font-bold"
           aria-disabled="true"

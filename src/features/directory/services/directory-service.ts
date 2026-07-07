@@ -118,7 +118,7 @@ export const directoryService = {
     });
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' }));
-      throw new Error(body.error || `프로필 저장에 실패했습니다 (HTTP ${res.status}).`);
+      throw new Error(body.error || '프로필 저장에 실패했습니다.');
     }
     const { data } = await res.json();
     if (!data) throw new Error('프로필이 저장되었지만 응답이 비어 있어요.');

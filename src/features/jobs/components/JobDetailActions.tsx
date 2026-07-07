@@ -8,6 +8,8 @@ import { ROUTES } from '@/shared/constants';
 import { jobService } from '@/features/jobs/services/job-service';
 import { revalidate } from '@/shared/utils/revalidate';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast, toastConfirm } from '@/shared/components/Toast';
+import { friendlyError } from '@/shared/utils/errorMessages';
 
 interface JobDetailActionsProps {
   jobId: string;
@@ -28,7 +30,7 @@ export default function JobDetailActions({ jobId, authorId, initialCanManage = f
   if (!canManage) return null;
 
   const handleDelete = async () => {
-    if (!confirm('정말로 이 공고를 삭제하시겠습니까? 삭제 후에는 복구할 수 없어요.')) return;
+    if (!(await toastConfirm('정말로 이 공고를 삭제하시겠습니까? 삭제 후에는 복구할 수 없어요.'))) return;
     setDeleting(true);
     try {
       await withTimeout(jobService.deleteJob(jobId), 10000);
@@ -38,7 +40,7 @@ export default function JobDetailActions({ jobId, authorId, initialCanManage = f
       router.refresh();
     } catch (err) {
       console.error('[JobDetailActions] delete failed:', err);
-      alert(err instanceof Error ? `삭제에 실패했습니다.\n${err.message}` : '삭제에 실패했습니다.');
+      toast(friendlyError(err, '삭제에 실패했습니다.'), 'error');
       setDeleting(false);
     }
   };

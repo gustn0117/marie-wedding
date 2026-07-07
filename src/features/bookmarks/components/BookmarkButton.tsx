@@ -6,6 +6,8 @@ import { bookmarkService } from '@/features/bookmarks/services/bookmark-service'
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast } from '@/shared/components/Toast';
+import { friendlyError } from '@/shared/utils/errorMessages';
 import type { BookmarkTargetType } from '@/types/database';
 
 interface BookmarkButtonProps {
@@ -46,8 +48,8 @@ export default function BookmarkButton({ targetType, targetId, label = '저장',
         '저장 처리 지연',
       );
       setSaved(result.saved);
-    } catch {
-      alert('저장 처리에 실패했습니다.');
+    } catch (err) {
+      toast(friendlyError(err, '저장 처리에 실패했습니다.'), 'error');
     } finally {
       setLoading(false);
     }

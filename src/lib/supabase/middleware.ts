@@ -146,6 +146,19 @@ export async function updateSession(request: NextRequest) {
         }
       }
     } else {
+      // 비로그인 사용자가 인증 필요 경로에 접근 시 → /login?redirect={path+search} 로 통일
+      // (기존: 개별 페이지에서 redirect(ROUTES.LOGIN) 만 호출해 원경로 유실)
+      const needsAuth =
+        !isPublicBypass &&
+        (path.startsWith('/mypage') || path.startsWith('/applications') || path.startsWith('/jobs/new') || path.startsWith('/community/new'));
+      if (needsAuth) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        const backto = path + (request.nextUrl.search || '');
+        url.searchParams.set('redirect', backto);
+        url.search = url.searchParams.toString();
+        return NextResponse.redirect(url);
+      }
       if (request.cookies.has('marie_profile')) {
         request.cookies.delete('marie_profile');
         supabaseResponse.cookies.delete('marie_profile');

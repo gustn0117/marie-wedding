@@ -12,6 +12,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
+import { friendlyError } from '@/shared/utils/errorMessages';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -106,7 +107,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       clearMarieProfileCookie();
       window.location.reload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : '처리에 실패했습니다.');
+      setError(friendlyError(err, '처리에 실패했습니다.'));
       setSubmitting(false);
     }
   };
@@ -180,7 +181,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
     } catch (err) {
       console.error('[DirectoryForm] save failed:', err);
-      setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
+      setError(friendlyError(err, '저장에 실패했습니다.'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setSaving(false);
     }
@@ -256,14 +257,29 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               썸네일 이미지
             </label>
             {imagePreview ? (
-              <div className="group relative w-full aspect-square overflow-hidden rounded border border-gray-300 bg-gray-50">
+              <div className="relative w-full aspect-square overflow-hidden rounded border border-gray-300 bg-gray-50">
                 <img src={imagePreview} alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100 transition-all">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded bg-white/95 px-3 py-1.5 text-xs font-bold text-gray-900 hover:bg-white">
-                    변경
+                {/* 액션은 모바일에서도 항상 보이도록 우상단 아이콘 버튼으로. 큰 hover overlay 는 desktop 만 */}
+                <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    aria-label="썸네일 변경"
+                    className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white/95 shadow ring-1 ring-gray-200 hover:bg-white"
+                  >
+                    <svg className="w-4 h-4 text-gray-800" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                    </svg>
                   </button>
-                  <button type="button" onClick={handleRemoveImage} className="rounded bg-state-urgent px-3 py-1.5 text-xs font-bold text-white hover:opacity-90">
-                    삭제
+                  <button
+                    type="button"
+                    onClick={handleRemoveImage}
+                    aria-label="썸네일 삭제"
+                    className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white/95 shadow ring-1 ring-gray-200 hover:bg-state-urgent hover:text-white text-state-urgent"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -404,14 +420,16 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         {galleryPreviews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
             {galleryPreviews.map((src, i) => (
-              <div key={i} className="relative aspect-square overflow-hidden rounded border border-gray-200 group">
+              <div key={i} className="relative aspect-square overflow-hidden rounded border border-gray-200">
                 <img src={src} alt="" className="w-full h-full object-cover" />
+                {/* 항상 상시 노출 — 모바일 hover 없음 대응 */}
                 <button
                   type="button"
                   onClick={() => handleRemoveGalleryItem(i)}
-                  className="absolute top-1 right-1 w-6 h-6 rounded bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label={`갤러리 ${i + 1}번 이미지 삭제`}
+                  className="absolute top-1 right-1 w-7 h-7 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-state-urgent"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -433,7 +451,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       </Section>
 
       {/* Save */}
-      <div className="sticky bottom-0 -mx-4 flex items-center justify-end gap-2 border-t border-gray-200 bg-white px-4 py-4">
+      <div
+        className="sticky bottom-0 -mx-4 flex items-center justify-end gap-2 border-t border-gray-200 bg-white px-4 py-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
         <button
           onClick={handleSave}

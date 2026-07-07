@@ -7,6 +7,7 @@ import { ROUTES } from '@/shared/constants';
 import { formatDate, getBusinessTypeLabel, getRegionLabel, getEmploymentTypeLabel } from '@/shared/utils/format';
 import type { Job } from '@/types/database';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 export default function AdminJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -41,13 +42,13 @@ export default function AdminJobsPage() {
   };
 
   const handleDelete = async (job: Job) => {
-    if (!confirm(`"${job.title}" 공고를 삭제하시겠습니까?`)) return;
+    if (!(await toastConfirm(`"${job.title}" 공고를 삭제하시겠습니까?`))) return;
     setActionLoading(job.id);
     try {
       await withTimeout(adminService.softDeleteJob(job.id), 10000, '공고 삭제 지연');
       await load();
     } catch (err) {
-      alert('삭제에 실패했습니다.');
+      toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -60,7 +61,7 @@ export default function AdminJobsPage() {
       await withTimeout(adminService.restoreJob(job.id), 10000, '공고 복원 지연');
       await load();
     } catch (err) {
-      alert('복원에 실패했습니다.');
+      toast('복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -77,7 +78,7 @@ export default function AdminJobsPage() {
       );
       await load();
     } catch (err) {
-      alert('인기공고 설정에 실패했습니다.');
+      toast('인기공고 설정에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);

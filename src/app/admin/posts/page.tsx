@@ -7,6 +7,7 @@ import { ROUTES } from '@/shared/constants';
 import { formatDate, getCategoryLabel } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast, toastConfirm } from '@/shared/components/Toast';
 
 export default function AdminPostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -45,13 +46,13 @@ export default function AdminPostsPage() {
   };
 
   const handleDelete = async (post: Post) => {
-    if (!confirm(`"${post.title}" 게시글을 삭제하시겠습니까?`)) return;
+    if (!(await toastConfirm(`"${post.title}" 게시글을 삭제하시겠습니까?`))) return;
     setActionLoading(post.id);
     try {
       await withTimeout(adminService.softDeletePost(post.id), 10000, '게시글 삭제 지연');
       await load();
     } catch (err) {
-      alert('삭제에 실패했습니다.');
+      toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -64,7 +65,7 @@ export default function AdminPostsPage() {
       await withTimeout(adminService.restorePost(post.id), 10000, '게시글 복원 지연');
       await load();
     } catch (err) {
-      alert('복원에 실패했습니다.');
+      toast('복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);

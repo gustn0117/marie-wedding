@@ -161,7 +161,7 @@ function DetailBody({ d }: { d: Detail }) {
       </Section>
 
       <Section title="활동 통계">
-        <Field label="응답률">{Number.isFinite(p.response_rate) ? `${(p.response_rate * 100).toFixed(0)}%` : '-'}</Field>
+        <Field label="응답률">{Number.isFinite(p.response_rate) ? `${Math.round(p.response_rate)}%` : '-'}</Field>
         <Field label="평균 응답 시간">{p.avg_response_minutes != null ? `${p.avg_response_minutes}분` : '-'}</Field>
         <Field label="완료 거래">{p.completed_deals_count}건</Field>
         <Field label="등록 공고">{d.activity.jobs}건</Field>

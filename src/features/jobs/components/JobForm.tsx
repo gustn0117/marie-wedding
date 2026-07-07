@@ -443,7 +443,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* Submit */}
-      <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-4">
+      <div
+        className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-4"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
+      >
         <p className="text-xs text-gray-500">
           필수 항목 {requiredFilled}/{totalRequired}개 입력 완료
         </p>
