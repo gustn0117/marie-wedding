@@ -81,13 +81,22 @@ export async function GET(request: Request) {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  // 탈퇴한 프로필로 재로그인 시도 → 자동 복구 후 새로 온보딩.
-  // (기존 jobs/posts/comments 은 복구하지 않음 — 사용자가 원래 소프트 삭제한 자산)
+  // 탈퇴한 프로필로 재로그인 시도 → 완전 초기화 후 새로 온보딩.
+  // reactivate_profile_clean RPC 가 bio/phone/gallery/verification_* 등 모든
+  // 사용자 컬럼을 NULL/default 로 리셋. (jobs/posts/comments 등 소유 콘텐츠는
+  // 이미 purge cascade 로 soft-delete 된 상태 — 복구하지 않음.)
   if (existingProfile?.deleted_at) {
-    await serviceClient
-      .from('profiles')
-      .update({ deleted_at: null, onboarded_at: null, is_directory_listed: true })
-      .eq('id', existingProfile.id);
+    const { error: rpcErr } = await serviceClient.rpc('reactivate_profile_clean', {
+      p_profile_id: existingProfile.id,
+    });
+    if (rpcErr) {
+      console.error('[auth/callback] reactivate_profile_clean failed:', rpcErr);
+      // fallback: 최소 3개 컬럼만 리셋 (레거시 동작)
+      await serviceClient
+        .from('profiles')
+        .update({ deleted_at: null, onboarded_at: null, is_directory_listed: false })
+        .eq('id', existingProfile.id);
+    }
     await setProfileCookieFromUserId(user.id);
     return NextResponse.redirect(
       `${origin}/onboarding?next=${encodeURIComponent(next)}`
