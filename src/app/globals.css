@@ -26,6 +26,19 @@
     line-height: 1.6;
   }
 
+  /* Sticky header 아래로 앵커 target 이 숨지 않도록 스크롤 오프셋 확보.
+     href="#apply", href="#comment" 등 클릭 시 header 뒤에 감춰지던 버그 방지. */
+  :target,
+  [id]:not(body) {
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+
   ::selection {
     @apply bg-primary-100 text-primary-900;
   }

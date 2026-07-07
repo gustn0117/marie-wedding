@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { reportService } from '@/features/reports/services/report-service';
 import type { ReportTargetType } from '@/types/database';
@@ -26,6 +26,19 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
   const [reason, setReason] = useState<string>(REASONS[0]);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Escape 로 모달 닫기 + body scroll lock (모바일 배경 스크롤 방지)
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [open]);
 
   const submit = async () => {
     setSubmitting(true);
@@ -63,10 +76,13 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4" onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
-          <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl">
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+        >
+          <div role="dialog" aria-modal="true" aria-labelledby="report-modal-title" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white shadow-xl">
             <div className="border-b border-gray-100 px-5 py-4">
-              <h2 className="text-base font-bold text-gray-900">신고하기</h2>
+              <h2 id="report-modal-title" className="text-base font-bold text-gray-900">신고하기</h2>
               <p className="mt-1 text-xs text-gray-500">검토에 필요한 최소 정보만 입력해주세요.</p>
             </div>
             <div className="space-y-4 p-5">

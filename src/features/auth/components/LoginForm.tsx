@@ -105,6 +105,7 @@ export default function LoginForm() {
               name="email"
               type="email"
               autoComplete="email"
+              autoFocus
               required
               value={formData.email}
               onChange={handleChange}

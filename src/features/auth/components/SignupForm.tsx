@@ -208,7 +208,7 @@ export default function SignupForm() {
             <>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">이메일</label>
-                <input id="email" name="email" type="email" autoComplete="email" required value={formData.email} onChange={handleChange} placeholder="example@company.com" className="input-field" />
+                <input id="email" name="email" type="email" autoComplete="email" autoFocus required value={formData.email} onChange={handleChange} placeholder="example@company.com" className="input-field" />
               </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-1.5">비밀번호</label>

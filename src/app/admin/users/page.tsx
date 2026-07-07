@@ -39,6 +39,18 @@ export default function AdminUsersPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Escape로 열려 있는 모달 (ban/note) 하나만 닫기
+  useEffect(() => {
+    if (!banModal && !noteModal) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (banModal) setBanModal(null);
+      else if (noteModal) setNoteModal(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [banModal, noteModal]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
@@ -369,7 +381,10 @@ export default function AdminUsersPage() {
       </div>
 
       {noteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setNoteModal(null); }}
+        >
           <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">관리자 메모</p>
             <h2 className="text-base font-bold text-gray-900 mb-3">{noteModal.user.contact_name}</h2>
@@ -405,7 +420,10 @@ export default function AdminUsersPage() {
       <UserDetailModal userId={detailUserId} onClose={() => setDetailUserId(null)} />
 
       {banModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setBanModal(null); }}
+        >
           <div role="dialog" aria-modal="true" className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-5 shadow-xl">
             <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">사용자 제재</p>
             <h2 className="text-base font-bold text-gray-900 mb-1">{banModal.user.contact_name}</h2>
