@@ -90,6 +90,18 @@ BEGIN
   EXCEPTION WHEN undefined_table THEN NULL;
   END;
 
+  -- 12) 게시글 좋아요 (hard delete — 익명 집계로도 남지 않도록)
+  BEGIN
+    DELETE FROM marie_wedding.post_likes WHERE profile_id = p_profile_id;
+  EXCEPTION WHEN undefined_table THEN NULL;
+  END;
+
+  -- 13) 휴대폰 OTP 요청 기록 (hard delete — 재가입 시 다시 인증)
+  BEGIN
+    DELETE FROM marie_wedding.phone_otps WHERE profile_id = p_profile_id;
+  EXCEPTION WHEN undefined_table THEN NULL;
+  END;
+
   PERFORM set_config('marie_wedding.system_context', 'off', true);
 END;
 $function$;
