@@ -17,6 +17,7 @@ export const dynamic = 'force-dynamic';
  * 본인 또는 admin 만 허용.
  */
 export async function POST(request: Request) {
+  const t0 = Date.now();
   let body: { id?: string; updates?: Record<string, unknown> };
   try {
     body = await request.json();
@@ -46,33 +47,28 @@ export async function POST(request: Request) {
   );
 
   const { data: { user } } = await ssr.auth.getUser();
+  const tAuth = Date.now();
   if (!user) {
+    console.warn('[api/directory/update] 401 no session', { profile_id: id, elapsed_ms: tAuth - t0 });
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
   const service = createServiceClient();
-  const { data: target } = await service
-    .from('profiles')
-    .select('id, user_id, role')
-    .eq('id', id)
-    .is('deleted_at', null)
-    .maybeSingle();
+  const [{ data: target }, { data: me }] = await Promise.all([
+    service.from('profiles').select('id, user_id, role').eq('id', id).is('deleted_at', null).maybeSingle(),
+    service.from('profiles').select('id, role').eq('user_id', user.id).is('deleted_at', null).maybeSingle(),
+  ]);
+  const tLookup = Date.now();
 
   if (!target) {
+    console.warn('[api/directory/update] 404 target missing', { profile_id: id, elapsed_ms: tLookup - t0 });
     return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 });
   }
-
-  // 본인 또는 admin 인가
-  const { data: me } = await service
-    .from('profiles')
-    .select('id, role')
-    .eq('user_id', user.id)
-    .is('deleted_at', null)
-    .maybeSingle();
 
   const isOwner = target.user_id === user.id;
   const isAdmin = me?.role === 'admin';
   if (!isOwner && !isAdmin) {
+    console.warn('[api/directory/update] 403 not owner', { profile_id: id, requester: me?.id, elapsed_ms: tLookup - t0 });
     return NextResponse.json({ error: '권한이 없습니다.' }, { status: 403 });
   }
 
@@ -93,9 +89,10 @@ export async function POST(request: Request) {
     .from('profiles')
     .update(payload)
     .eq('id', id);
+  const tUpdate = Date.now();
 
   if (updateErr) {
-    console.error('[api/directory/update] update failed:', updateErr);
+    console.error('[api/directory/update] UPDATE failed', { profile_id: id, elapsed_ms: tUpdate - t0, err: updateErr });
     return NextResponse.json(
       { error: `저장에 실패했습니다: ${updateErr.message}` },
       { status: 500 },
@@ -108,19 +105,31 @@ export async function POST(request: Request) {
     .select('*')
     .eq('id', id)
     .maybeSingle();
+  const tSelect = Date.now();
 
   if (selectErr) {
-    console.error('[api/directory/update] post-update select failed:', selectErr);
+    console.error('[api/directory/update] post-update SELECT failed', { profile_id: id, elapsed_ms: tSelect - t0, err: selectErr });
     return NextResponse.json(
       { error: `저장은 되었지만 다시 읽지 못했습니다: ${selectErr.message}` },
       { status: 500 },
     );
   }
   if (!data) {
+    console.error('[api/directory/update] post-update row missing', { profile_id: id, elapsed_ms: tSelect - t0 });
     return NextResponse.json(
       { error: '저장 후 프로필을 찾을 수 없습니다.' },
       { status: 500 },
     );
   }
+  const total = tSelect - t0;
+  console.info('[api/directory/update] ok', {
+    profile_id: id,
+    total_ms: total,
+    auth_ms: tAuth - t0,
+    lookup_ms: tLookup - tAuth,
+    update_ms: tUpdate - tLookup,
+    select_ms: tSelect - tUpdate,
+    fields: Object.keys(payload).length,
+  });
   return NextResponse.json({ success: true, data });
 }

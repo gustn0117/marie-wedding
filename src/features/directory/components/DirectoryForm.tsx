@@ -33,6 +33,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [listed, setListed] = useState(profile.is_directory_listed);
   const [submitting, setSubmitting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingStep, setSavingStep] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -113,7 +114,17 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   };
 
   const handleSave = async () => {
-    if (!formData.region) { setError('지역을 1개 이상 선택해주세요.'); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    // 클라이언트 유효성 검사 — 서버 왕복 없이 즉시 피드백
+    if (!formData.region) {
+      setError('지역을 1개 이상 선택해주세요. 지역 카드를 눌러 활성화하세요.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (!formData.business_type) {
+      setError('업종을 1개 이상 선택해주세요.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     if (formData.phone.trim().length > 0) {
       const phoneCheck = validatePhone(formData.phone);
       if (!phoneCheck.valid) {
@@ -126,38 +137,53 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     setSaving(true);
     setError(null);
     setSuccess(false);
+    const startedAt = performance.now();
     try {
       const supabase = createClient();
+      const galleryCount = galleryFiles.length;
+      const hasImage = !!imageFile;
 
-      // 프로필 이미지 + 갤러리 병렬 압축 + 업로드
-      const profileImagePromise: Promise<string | null> = (async () => {
-        if (imageFile) {
-          const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
-          const ext = compressed.name.split('.').pop() || 'jpg';
-          const path = `${profile.user_id}/avatar.${ext}`;
-          const { error: err } = await withTimeout(supabase.storage.from('avatars').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
-          if (err) throw new Error('프로필 이미지 업로드 실패');
-          return path;
-        }
-        return !imagePreview ? null : profile.profile_image;
-      })();
-
-      const galleryPromises = galleryFiles.map(async (file) => {
-        const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+      // 프로필 이미지 업로드 (단계 표시)
+      let profileImage: string | null;
+      if (hasImage && imageFile) {
+        setSavingStep('프로필 이미지 처리 중...');
+        const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
         const ext = compressed.name.split('.').pop() || 'jpg';
-        const path = `${profile.user_id}/gallery_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error: err } = await withTimeout(supabase.storage.from('avatars').upload(path, compressed), 15000, '이미지 업로드가 너무 오래 걸려요.');
-        if (err) throw new Error('갤러리 이미지 업로드 실패');
-        return path;
-      });
+        const path = `${profile.user_id}/avatar.${ext}`;
+        const { error: err } = await withTimeout(
+          supabase.storage.from('avatars').upload(path, compressed, { upsert: true }),
+          15000,
+          '프로필 이미지 업로드가 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
+        );
+        if (err) throw new Error(`프로필 이미지 업로드 실패: ${err.message}`);
+        profileImage = path;
+      } else {
+        profileImage = !imagePreview ? null : profile.profile_image;
+      }
 
-      const [profileImage, ...newGallery] = await Promise.all([
-        profileImagePromise,
-        ...galleryPromises,
-      ]);
+      // 갤러리 업로드 (병렬, 카운트 표시)
+      let newGallery: string[] = [];
+      if (galleryCount > 0) {
+        setSavingStep(`갤러리 이미지 업로드 (${galleryCount}장)...`);
+        newGallery = await Promise.all(
+          galleryFiles.map(async (file, i) => {
+            const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+            const ext = compressed.name.split('.').pop() || 'jpg';
+            const path = `${profile.user_id}/gallery_${Date.now()}_${i}_${Math.random().toString(36).slice(2)}.${ext}`;
+            const { error: err } = await withTimeout(
+              supabase.storage.from('avatars').upload(path, compressed),
+              15000,
+              `갤러리 ${i + 1}번째 이미지 업로드 실패`,
+            );
+            if (err) throw new Error(`갤러리 ${i + 1}번째 이미지 업로드 실패: ${err.message}`);
+            return path;
+          }),
+        );
+      }
 
       const uploadedGallery = [...existingGallery, ...newGallery];
 
+      setSavingStep('프로필 정보 저장 중...');
       await withTimeout(
         directoryService.updateProfile(profile.id, {
           company_name: formData.company_name.trim() || null,
@@ -176,14 +202,20 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         '프로필 저장이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
       );
 
+      const elapsed = Math.round(performance.now() - startedAt);
+      console.info('[DirectoryForm] save success in', elapsed, 'ms');
+
+      setSavingStep('완료 — 페이지 이동 중...');
+      setSuccess(true);
       clearMarieProfileCookie();
-      // 즉시 이동 (setTimeout 제거)
       window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
     } catch (err) {
-      console.error('[DirectoryForm] save failed:', err);
+      const elapsed = Math.round(performance.now() - startedAt);
+      console.error(`[DirectoryForm] save failed after ${elapsed}ms:`, err);
       setError(friendlyError(err, '저장에 실패했습니다.'));
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setSaving(false);
+      setSavingStep(null);
     }
   };
 
@@ -452,17 +484,28 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       {/* Save */}
       <div
-        className="sticky bottom-0 -mx-4 flex items-center justify-end gap-2 border-t border-gray-200 bg-white px-4 py-4"
+        className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-4 py-4"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)' }}
       >
-        <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
-        >
-          {saving ? '저장 중...' : '저장하기'}
-        </button>
+        <div className="min-w-0 flex-1">
+          {saving && savingStep && (
+            <p className="truncate text-xs font-medium text-primary" aria-live="polite">
+              {savingStep}
+            </p>
+          )}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            aria-busy={saving}
+            className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
+          >
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+        </div>
       </div>
     </div>
   );
