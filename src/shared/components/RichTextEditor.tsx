@@ -17,8 +17,13 @@ interface RichTextEditorProps {
 
 // 허용 태그 (img 포함)
 const ALLOWED_TAGS = ['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'img'];
-const ALLOWED_STYLES = ['font-weight', 'font-style', 'text-decoration', 'text-align', 'max-width', 'width', 'height'];
-const IMG_ALLOWED_ATTRS = ['src', 'alt'];
+const ALLOWED_STYLES = [
+  'font-weight', 'font-style', 'text-decoration', 'text-align',
+  'max-width', 'width', 'height',
+  // 이미지 정렬·크기 컨트롤 지원
+  'display', 'margin', 'margin-left', 'margin-right', 'float',
+];
+const IMG_ALLOWED_ATTRS = ['src', 'alt', 'style'];
 
 function sanitize(html: string): string {
   if (typeof document === 'undefined') return html;
@@ -37,19 +42,27 @@ function sanitize(html: string): string {
           return;
         }
         const attrs = Array.from(el.attributes);
+        const filterStyle = (raw: string) =>
+          raw.split(';').filter(s => {
+            const prop = s.split(':')[0]?.trim().toLowerCase();
+            return ALLOWED_STYLES.includes(prop);
+          }).join(';');
         attrs.forEach(attr => {
-          if (tag === 'img' && IMG_ALLOWED_ATTRS.includes(attr.name.toLowerCase())) {
-            // img는 src/alt 유지
-            if (attr.name.toLowerCase() === 'src' && attr.value.startsWith('javascript:')) {
+          const name = attr.name.toLowerCase();
+          if (tag === 'img' && IMG_ALLOWED_ATTRS.includes(name)) {
+            if (name === 'src' && attr.value.startsWith('javascript:')) {
               el.removeAttribute(attr.name);
+              return;
+            }
+            if (name === 'style') {
+              const styles = filterStyle(attr.value);
+              if (styles) el.setAttribute('style', styles);
+              else el.removeAttribute('style');
             }
             return;
           }
-          if (attr.name === 'style') {
-            const styles = attr.value.split(';').filter(s => {
-              const prop = s.split(':')[0]?.trim().toLowerCase();
-              return ALLOWED_STYLES.includes(prop);
-            }).join(';');
+          if (name === 'style') {
+            const styles = filterStyle(attr.value);
             if (styles) el.setAttribute('style', styles);
             else el.removeAttribute('style');
           } else {
@@ -77,12 +90,36 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   const imgInputRef = useRef<HTMLInputElement>(null);
   const [activeFormats, setActiveFormats] = useState<Record<string, boolean>>({});
   const [uploading, setUploading] = useState(false);
+  // 이미지 툴바 상태 — 선택된 이미지 요소와 뷰포트 기준 위치
+  const [imgToolbar, setImgToolbar] = useState<{ el: HTMLImageElement; top: number; left: number } | null>(null);
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value || '';
     }
   }, [value]);
+
+  // execCommand 가 <font> 나 align 속성 대신 CSS 인라인 스타일을 쓰도록 지시
+  // → 저장 후 sanitizer 가 유지하는 text-align 정책과 일치
+  useEffect(() => {
+    try { document.execCommand('styleWithCSS', false, 'true'); } catch {}
+  }, []);
+
+  // 스크롤/리사이즈 시 툴바 위치 재계산
+  useEffect(() => {
+    if (!imgToolbar) return;
+    const reposition = () => {
+      if (!imgToolbar.el.isConnected) { setImgToolbar(null); return; }
+      const rect = imgToolbar.el.getBoundingClientRect();
+      setImgToolbar((prev) => prev ? { ...prev, top: rect.top, left: rect.left + rect.width / 2 } : null);
+    };
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
+  }, [imgToolbar]);
 
   const updateActiveFormats = () => {
     if (typeof document === 'undefined') return;
@@ -109,6 +146,64 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     if (!editorRef.current) return;
     const html = sanitize(editorRef.current.innerHTML);
     onChange(html);
+  };
+
+  // 편집 영역 클릭 시 이미지 감지 → 툴바 표시
+  const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      const img = target as HTMLImageElement;
+      const rect = img.getBoundingClientRect();
+      setImgToolbar({ el: img, top: rect.top, left: rect.left + rect.width / 2 });
+    } else {
+      setImgToolbar(null);
+    }
+  };
+
+  // 이미지 크기 프리셋 적용 (부모 컨테이너 대비 %)
+  const setImgWidth = (percent: 25 | 50 | 75 | 100) => {
+    if (!imgToolbar) return;
+    imgToolbar.el.style.width = `${percent}%`;
+    imgToolbar.el.style.height = 'auto';
+    imgToolbar.el.style.maxWidth = '100%';
+    handleInput();
+    // 위치 재계산
+    const rect = imgToolbar.el.getBoundingClientRect();
+    setImgToolbar({ el: imgToolbar.el, top: rect.top, left: rect.left + rect.width / 2 });
+  };
+
+  // 이미지 정렬
+  const setImgAlign = (align: 'left' | 'center' | 'right') => {
+    if (!imgToolbar) return;
+    const img = imgToolbar.el;
+    // 이전 정렬 스타일 정리
+    img.style.display = '';
+    img.style.marginLeft = '';
+    img.style.marginRight = '';
+    img.style.float = '';
+    if (align === 'center') {
+      img.style.display = 'block';
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = 'auto';
+    } else if (align === 'left') {
+      img.style.display = 'block';
+      img.style.marginLeft = '0';
+      img.style.marginRight = 'auto';
+    } else {
+      img.style.display = 'block';
+      img.style.marginLeft = 'auto';
+      img.style.marginRight = '0';
+    }
+    handleInput();
+    const rect = img.getBoundingClientRect();
+    setImgToolbar({ el: img, top: rect.top, left: rect.left + rect.width / 2 });
+  };
+
+  const deleteImg = () => {
+    if (!imgToolbar) return;
+    imgToolbar.el.remove();
+    handleInput();
+    setImgToolbar(null);
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -270,9 +365,51 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           onKeyUp={updateActiveFormats}
           onMouseUp={updateActiveFormats}
           onFocus={updateActiveFormats}
-          className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content break-words"
+          onClick={handleEditorClick}
+          className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content break-words rich-text-editor-body"
           style={{ minHeight }}
         />
+
+        {/* 이미지 플로팅 툴바 — 이미지 클릭 시 위에 뜨는 크기/정렬/삭제 컨트롤 */}
+        {imgToolbar && (
+          <div
+            className="fixed z-50 -translate-x-1/2 -translate-y-full mt-[-8px] flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1 shadow-lg pointer-events-auto"
+            style={{ top: imgToolbar.top, left: imgToolbar.left }}
+            onMouseDown={(e) => e.preventDefault()} /* 편집 포커스 유지 */
+          >
+            <div className="flex items-center gap-0.5 px-1">
+              <span className="text-[10px] text-gray-500 mr-1">크기</span>
+              {[25, 50, 75, 100].map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setImgWidth(p as 25 | 50 | 75 | 100)}
+                  className="rounded px-1.5 py-1 text-[11px] font-semibold text-gray-700 hover:bg-gray-100"
+                  title={`${p}%`}
+                >
+                  {p}%
+                </button>
+              ))}
+            </div>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+            <div className="flex items-center gap-0.5 px-1">
+              <span className="text-[10px] text-gray-500 mr-1">정렬</span>
+              <button type="button" onClick={() => setImgAlign('left')} className="rounded p-1.5 text-gray-700 hover:bg-gray-100" title="왼쪽">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h12M3 18h18" /></svg>
+              </button>
+              <button type="button" onClick={() => setImgAlign('center')} className="rounded p-1.5 text-gray-700 hover:bg-gray-100" title="가운데">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M6 12h12M3 18h18" /></svg>
+              </button>
+              <button type="button" onClick={() => setImgAlign('right')} className="rounded p-1.5 text-gray-700 hover:bg-gray-100" title="오른쪽">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M9 12h12M3 18h18" /></svg>
+              </button>
+            </div>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
+            <button type="button" onClick={deleteImg} className="rounded p-1.5 text-state-urgent hover:bg-state-urgent-bg" title="삭제">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9M5 6h14l-1.09 13.09A2 2 0 0116 21H8a2 2 0 01-1.91-1.91L5 6zm5 0V4a1 1 0 011-1h2a1 1 0 011 1v2" /></svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Bottom Hint */}

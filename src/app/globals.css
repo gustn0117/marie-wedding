@@ -325,7 +325,21 @@
   .rich-text-content ol { @apply list-decimal pl-6 my-2; }
   .rich-text-content li { @apply my-0.5; }
   .rich-text-content img, .rich-text-content .rich-text-image {
-    @apply max-w-full h-auto my-3 rounded block;
+    /* inline-block 이어야 부모의 text-align(center/right) 가 이미지에 적용됨.
+       인라인 스타일(width, display:block, margin:0 auto 등)은 유저가 이미지 툴바로
+       직접 지정하므로 이 CSS 는 최소 기본값만 담당. */
+    @apply max-w-full h-auto my-3 rounded inline-block align-top;
+  }
+
+  /* 편집기 안에서 이미지에 hover / focus 시 시각 힌트 — 클릭 가능 안내 */
+  .rich-text-editor-body img {
+    cursor: pointer;
+    transition: outline-color 120ms;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .rich-text-editor-body img:hover {
+    outline-color: theme('colors.primary.200', #d1d5db);
   }
 
   .saramin-section {
