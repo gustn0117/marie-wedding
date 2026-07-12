@@ -144,18 +144,25 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       const hasImage = !!imageFile;
 
       // 프로필 이미지 업로드 (단계 표시)
+      // 캐시버스팅: URL 이 항상 동일하면 Cloudflare/브라우저가 옛 이미지를 계속 노출
+      // → 매 업로드마다 timestamp+random 을 파일명에 포함해 새 URL 로 저장.
+      // 이전 avatar 파일은 이후 best-effort 로 정리.
       let profileImage: string | null;
+      let previousAvatarPath: string | null = null;
       if (hasImage && imageFile) {
         setSavingStep('프로필 이미지 처리 중...');
         const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
         const ext = compressed.name.split('.').pop() || 'jpg';
-        const path = `${profile.user_id}/avatar.${ext}`;
+        const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
         const { error: err } = await withTimeout(
-          supabase.storage.from('avatars').upload(path, compressed, { upsert: true }),
+          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
           15000,
           '프로필 이미지 업로드가 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
         );
         if (err) throw new Error(`프로필 이미지 업로드 실패: ${err.message}`);
+        // 새 avatar 저장 성공 → 이전 avatar 를 정리 대상으로 표시 (실패해도 저장은 그대로 진행)
+        previousAvatarPath = profile.profile_image ?? null;
         profileImage = path;
       } else {
         profileImage = !imagePreview ? null : profile.profile_image;
@@ -204,6 +211,14 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       const elapsed = Math.round(performance.now() - startedAt);
       console.info('[DirectoryForm] save success in', elapsed, 'ms');
+
+      // 이전 avatar 정리 (best-effort — 실패해도 저장 성공에 영향 없음)
+      if (previousAvatarPath && previousAvatarPath !== profileImage) {
+        supabase.storage
+          .from('avatars')
+          .remove([previousAvatarPath])
+          .catch((cleanupErr) => console.warn('[DirectoryForm] old avatar cleanup failed:', cleanupErr));
+      }
 
       setSavingStep('완료 — 페이지 이동 중...');
       setSuccess(true);
