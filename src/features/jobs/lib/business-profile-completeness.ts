@@ -8,14 +8,14 @@ import type { Profile } from '@/types/database';
  *  - business_type: 업종 (검색·매칭 기반)
  *  - region       : 활동 지역 (지역 필터링)
  *  - phone        : 연락처 (채용 진행 시 즉시 연락)
- *  - bio          : 회사 소개 (지원자가 회사 파악) — 최소 30자
+ *
+ * bio(회사 소개) 는 권장이지만 필수가 아님.
  */
 export const REQUIRED_BUSINESS_FIELDS = [
   { key: 'company_name', label: '업체명', hint: '예: 마리에 웨딩홀' },
   { key: 'business_type', label: '업종', hint: '예식장 / 드레스 / 스튜디오 등' },
   { key: 'region', label: '활동 지역', hint: '서울 / 경기 등' },
   { key: 'phone', label: '연락처', hint: '010-XXXX-XXXX' },
-  { key: 'bio', label: '회사 소개', hint: '최소 30자 — 채용 신뢰도 향상' },
 ] as const;
 
 export interface CompletenessResult {
@@ -23,11 +23,6 @@ export interface CompletenessResult {
   missing: Array<{ key: string; label: string; hint: string }>;
   filled: number;
   total: number;
-}
-
-function stripHtml(html: string | null | undefined): string {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 export function checkBusinessProfileCompleteness(
@@ -46,9 +41,6 @@ export function checkBusinessProfileCompleteness(
   }
   if (!profile.phone?.trim() || profile.phone.replace(/[^0-9]/g, '').length < 9) {
     missing.push({ key: 'phone', label: '연락처', hint: '010-XXXX-XXXX' });
-  }
-  if (stripHtml(profile.bio).length < 30) {
-    missing.push({ key: 'bio', label: '회사 소개', hint: '최소 30자 — 채용 신뢰도 향상' });
   }
 
   const total = REQUIRED_BUSINESS_FIELDS.length;

@@ -7,6 +7,8 @@ import JobNewSubmit from '@/features/jobs/components/JobNewSubmit';
 import { checkBusinessProfileCompleteness, REQUIRED_BUSINESS_FIELDS } from '@/features/jobs/lib/business-profile-completeness';
 import { getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
 
+// jobs/new 관문 텍스트에서만 참조 — 코어 로직은 business-profile-completeness.ts
+
 export const dynamic = 'force-dynamic';
 
 export default async function NewJobPage() {
@@ -56,7 +58,6 @@ export default async function NewJobPage() {
       business_type: profile.business_type ? getBusinessTypeLabels(profile.business_type).slice(0, 2).join(', ') : null,
       region: profile.region ? getRegionLabel(profile.region) : null,
       phone: profile.phone || null,
-      bio: profile.bio ? `${stripHtml(profile.bio).length}자 작성됨` : null,
     };
 
     return (
@@ -82,7 +83,7 @@ export default async function NewJobPage() {
             </h1>
             <p className="mt-2 text-[13px] text-gray-500 leading-relaxed">
               지원자는 회사 정보를 보고 지원을 결정해요.<br />
-              핵심 5가지만 채우면 바로 공고를 등록할 수 있어요.
+              핵심 4가지만 채우면 바로 공고를 등록할 수 있어요.
             </p>
           </header>
 
@@ -168,7 +169,3 @@ export default async function NewJobPage() {
   );
 }
 
-function stripHtml(html: string | null | undefined): string {
-  if (!html) return '';
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
