@@ -42,12 +42,20 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
       if (orPart) query = query.or(orPart);
     }
   }
+  // region 은 콤마-구분 다중값으로 저장될 수 있음 ("seoul,gyeonggi").
+  // .in() 은 완전 일치만 매칭 → 다중지역 프로필이 필터에서 누락되던 버그를
+  // ilike '%X%' 로 통일해 부분 매칭으로 해결. (business_type 도 같은 방식)
   if (searchParams.subRegion) {
     const subs = searchParams.subRegion.split(',').map((r) => r.trim()).filter(Boolean);
-    if (subs.length > 0) query = query.in('region', subs);
+    if (subs.length > 0) {
+      const orPart = subs.map((r) => `region.ilike.%${r}%`).join(',');
+      query = query.or(orPart);
+    }
   } else if (searchParams.region) {
     const details = REGION_DETAILS[searchParams.region]?.map((d) => d.value) ?? [];
-    query = query.in('region', [searchParams.region, ...details]);
+    const all = [searchParams.region, ...details];
+    const orPart = all.map((r) => `region.ilike.%${r}%`).join(',');
+    query = query.or(orPart);
   }
   if (searchParams.search) {
     const term = normalizeSearchTerm(searchParams.search);

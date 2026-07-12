@@ -34,8 +34,11 @@ export const directoryService = {
     }
 
     if (filters?.region) {
+      // region 은 콤마-구분 다중값 지원 → business_type 과 같은 ilike 매칭
       const details = REGION_DETAILS[filters.region]?.map((d) => d.value) ?? [];
-      query = query.in('region', [filters.region, ...details]);
+      const all = [filters.region, ...details];
+      const orPart = all.map((r) => `region.ilike.%${r}%`).join(',');
+      query = query.or(orPart);
     }
 
     if (filters?.search) {
