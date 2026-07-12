@@ -35,98 +35,77 @@ export default function EditProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 미들웨어 쿠키 profile에는 bio/phone/website가 없으므로 DB에서 전체 profile을 다시 가져와 바인딩.
-  // useAuth().profile은 cookie 기반 lite 객체이며, useAuth 내부에서 두 번 setState되어
-  // 의존성 [profile, initialized]로 두면 매번 reference가 달라져 fetch가 재실행된다.
-  // → 의존성을 profile.id로 안정화. fetch 실패해도 cookie profile로 폼 노출 (무한 로딩 방지).
+  // 사용자가 입력을 시작하면 백그라운드 DB 갱신이 입력을 덮어쓰지 않도록 가드
+  const userDirtyRef = useRef(false);
+
+  // 렌더 전략: 쿠키 profile(즉시 사용 가능)로 폼·사진을 곧바로 노출하고,
+  // bio/phone/website 등 쿠키에 없는 필드는 백그라운드 DB 조회로 채워 넣는다.
+  // (기존: DB 조회가 끝나야만 initialized → 조회가 느리면 5초 스켈레톤,
+  //  실패 fallback 시 profile_image 미반영 → '사진 연동 안됨' 증상)
   const profileId = profile?.id;
   useEffect(() => {
     if (!profileId || initialized) return;
     let cancelled = false;
 
-    // 폴백: 5s 안에 DB fetch 못 끝내면 cookie profile로 폼 노출
-    const fallbackTimer = setTimeout(() => {
-      if (cancelled) return;
-      setFormData((prev) => prev.contact_name || prev.company_name ? prev : {
-        contact_name: profile?.contact_name || '',
-        company_name: profile?.company_name || '',
-        business_type: profile?.business_type || '',
-        region: profile?.region || '',
-        bio: prev.bio,
-        phone: prev.phone,
-        website: prev.website,
-      });
-      setInitialized(true);
-    }, 5000);
+    // 1) 쿠키 값으로 즉시 폼 오픈 (사진 포함)
+    setFormData((prev) => ({
+      contact_name: prev.contact_name || profile?.contact_name || '',
+      company_name: prev.company_name || profile?.company_name || '',
+      business_type: prev.business_type || profile?.business_type || '',
+      region: prev.region || profile?.region || '',
+      bio: prev.bio,
+      phone: prev.phone,
+      website: prev.website,
+    }));
+    if (profile?.profile_image) {
+      setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`);
+    }
+    setInitialized(true);
 
+    // 2) 백그라운드: 전체 profile 조회 → 사용자가 입력 시작 전이면 채워 넣기
     (async () => {
       try {
         const sb = createClient();
-        const { data, error: fetchErr } = await withTimeout(
+        const { data } = await withTimeout(
           sb
             .from('profiles')
             .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
             .eq('id', profileId)
             .maybeSingle(),
-          5000,
+          8000,
           '프로필 조회가 지연돼요.',
         );
-        if (cancelled) return;
-        clearTimeout(fallbackTimer);
-        if (fetchErr || !data) {
-          console.warn('[mypage/edit] profile fetch failed, using cookie fallback:', fetchErr);
-          // 쿠키 fallback — bio/phone/website는 빈 채로
+        if (cancelled || !data) return;
+        if (!userDirtyRef.current) {
           setFormData({
-            contact_name: profile?.contact_name || '',
-            company_name: profile?.company_name || '',
-            business_type: profile?.business_type || '',
-            region: profile?.region || '',
-            bio: '',
-            phone: '',
-            website: '',
+            contact_name: data.contact_name || '',
+            company_name: data.company_name || '',
+            business_type: data.business_type || '',
+            region: data.region || '',
+            bio: data.bio || '',
+            phone: data.phone || '',
+            website: data.website || '',
           });
-          setInitialized(true);
-          return;
         }
-        setFormData({
-          contact_name: data.contact_name || '',
-          company_name: data.company_name || '',
-          business_type: data.business_type || '',
-          region: data.region || '',
-          bio: data.bio || '',
-          phone: data.phone || '',
-          website: data.website || '',
-        });
-        if (data.profile_image) {
-          setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`);
-        }
-        setInitialized(true);
+        // 사진은 새 파일을 고르지 않았을 때만 DB 값으로 동기화
+        setImagePreview((prev) =>
+          imageFile ? prev : data.profile_image
+            ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`
+            : prev,
+        );
       } catch (err) {
-        if (cancelled) return;
-        clearTimeout(fallbackTimer);
-        console.warn('[mypage/edit] profile fetch threw, using cookie fallback:', err);
-        setFormData({
-          contact_name: profile?.contact_name || '',
-          company_name: profile?.company_name || '',
-          business_type: profile?.business_type || '',
-          region: profile?.region || '',
-          bio: '',
-          phone: '',
-          website: '',
-        });
-        setInitialized(true);
+        // 쿠키 값으로 이미 폼이 열려 있으므로 치명적이지 않음
+        console.warn('[mypage/edit] background profile fetch failed:', err);
       }
     })();
-    return () => {
-      cancelled = true;
-      clearTimeout(fallbackTimer);
-    };
+    return () => { cancelled = true; };
   // profile 객체 전체를 dep에 넣으면 useAuth 내 두 번의 setState로 effect가 재실행되므로 profileId만.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId, initialized]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    userDirtyRef.current = true;
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
     setSuccess(false);
@@ -160,18 +139,27 @@ export default function EditProfilePage() {
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile || !profile) return profile?.profile_image || null;
 
+    // 쿠키 lite profile 엔 user_id 가 없음 — useAuth 의 DB fetch 완료 전이면 재시도 안내
+    if (!profile.user_id) throw new Error('프로필 정보를 불러오는 중이에요. 잠시 후 다시 시도해주세요.');
+
     const supabase = createClient();
     const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
     const ext = compressed.name.split('.').pop() || 'jpg';
-    const path = `${profile.user_id}/avatar.${ext}`;
+    // 캐시버스팅: 고정 경로 재사용 시 Cloudflare 가 옛 이미지를 계속 반환 (DirectoryForm 과 동일 정책)
+    const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
 
     const { error: uploadError } = await withTimeout(
-      supabase.storage.from('avatars').upload(path, compressed, { upsert: true }),
+      supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
       15000,
       '이미지 업로드가 너무 오래 걸려요.',
     );
 
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
+    // 이전 파일 정리 (best-effort)
+    if (profile.profile_image && profile.profile_image !== path) {
+      supabase.storage.from('avatars').remove([profile.profile_image]).catch(() => {});
+    }
     return path;
   };
 

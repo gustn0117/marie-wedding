@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/shared/hooks/useAuth';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
@@ -23,10 +24,17 @@ interface IdentityRow {
  * 네이버는 자체 OAuth라 Supabase identities에 잡히지 않음 — profiles.signup_provider='naver'로 별도 표시.
  */
 export default function ConnectedAccountsSection() {
+  const { profile } = useAuth();
   const [identities, setIdentities] = useState<IdentityRow[]>([]);
   const [naverConnected, setNaverConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<ProviderKey | null>(null);
+
+  // 쿠키 profile 의 signup_provider 는 즉시 사용 가능 — getUser() 실패/지연과 무관하게
+  // 네이버 가입 계정이 '미연결' 로 잘못 표시되지 않도록 1차 신호로 사용.
+  useEffect(() => {
+    if (profile?.signup_provider === 'naver') setNaverConnected(true);
+  }, [profile?.signup_provider]);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,11 +58,24 @@ export default function ConnectedAccountsSection() {
         identity_id: i.identity_id ?? undefined,
       }));
       setIdentities(rows);
-      // 네이버 연결 여부: profiles.signup_provider 또는 user_metadata.provider
+      // 네이버 연결 여부 — 신호 3종 중 하나라도 참이면 연결로 판정:
+      //  1) user_metadata.provider/naver_id (네이버 가입 시 기록)
+      //  2) profiles.naver_sub (네이버 계정 연동 키)
       const provider = (user.app_metadata?.provider as string | undefined)
         || (user.user_metadata?.provider as string | undefined);
       if (provider === 'naver' || user.user_metadata?.naver_id) {
         setNaverConnected(true);
+      } else {
+        try {
+          const { data: p } = await withTimeout(
+            supabase.from('profiles').select('naver_sub, signup_provider').eq('user_id', user.id).maybeSingle(),
+            8000,
+            '프로필 조회 지연',
+          );
+          if (!cancelled && (p?.naver_sub || p?.signup_provider === 'naver')) {
+            setNaverConnected(true);
+          }
+        } catch { /* 쿠키 신호가 이미 반영돼 있으므로 무시 */ }
       }
       setLoading(false);
     })();
