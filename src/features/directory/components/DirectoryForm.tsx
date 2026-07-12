@@ -14,6 +14,7 @@ import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { friendlyError } from '@/shared/utils/errorMessages';
+import { revalidate } from '@/shared/utils/revalidate';
 import { toast } from '@/shared/components/Toast';
 import type { Profile } from '@/types/database';
 
@@ -269,7 +270,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       if (newGallery.length > 0) setExistingGallery(uploadedGallery);
       clearMarieProfileCookie();
 
-      // 페이지 리로드 없이 서버 컴포넌트만 갱신 + 저장 완료 토스트
+      // 다른 페이지 서버 캐시 무효화 — 저장 직후 페이지 보기로 이동 시 옛 데이터 뜨는 문제 방지.
+      // /directory/[id] · /directory (목록) · /mypage 는 모두 이 프로필의 캐시된 렌더 대상.
+      revalidate(ROUTES.DIRECTORY_DETAIL(profile.id), ROUTES.DIRECTORY, ROUTES.MYPAGE).catch(() => {});
+
+      // 페이지 리로드 없이 현재 서버 컴포넌트만 갱신 + 저장 완료 토스트
       setSuccess(true);
       setSavingStep(null);
       toast('저장되었습니다.', 'success');
