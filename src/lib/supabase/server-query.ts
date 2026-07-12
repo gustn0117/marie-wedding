@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_SCHEMA } from './schema';
 
@@ -5,7 +6,7 @@ import { SUPABASE_SCHEMA } from './schema';
 // Uses service_role to bypass RLS for read operations
 export function createServerQueryClient() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_SERVER_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { db: { schema: SUPABASE_SCHEMA } }
   );

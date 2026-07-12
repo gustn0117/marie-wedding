@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -20,7 +21,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   const cookieStore = await cookies();
   const ssr = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {

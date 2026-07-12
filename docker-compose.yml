@@ -9,4 +9,16 @@ services:
       - "${PORT:-3000}:3000"
     env_file:
       - .env.production
+    environment:
+      # 서버사이드 Supabase 호출은 Cloudflare 를 우회해 같은 호스트의 Kong 으로 직결.
+      # (공인 URL 경유 시 요청당 +300ms hairpin + cloudflared 불안정 시 hang → 무한 로딩)
+      - SUPABASE_INTERNAL_URL=http://kong:8000
+    networks:
+      - default
+      - supabase
     restart: unless-stopped
+
+networks:
+  supabase:
+    external: true
+    name: supabase_default

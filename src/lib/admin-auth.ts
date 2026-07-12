@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
@@ -23,7 +24,7 @@ export async function isAdminRequest(password?: string): Promise<boolean> {
 
   // 로그인된 admin role
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {

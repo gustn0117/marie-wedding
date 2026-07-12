@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSbClient } from '@supabase/supabase-js';
 import { createServiceClient } from '@/lib/supabase/service';
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   if (!auth?.startsWith('Bearer ')) return new NextResponse('unauthorized', { status: 401 });
   const accessToken = auth.slice('Bearer '.length);
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const url = SUPABASE_SERVER_URL;
 
   // 1) verify user via anon client + Authorization header
   const userSb = createSbClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {

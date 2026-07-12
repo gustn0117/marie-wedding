@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -103,7 +104,7 @@ export default async function MyPage() {
 
   // 본인 이메일 조회 (네이버 검수: 이메일 활용 화면 노출용)
   const authClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
   );

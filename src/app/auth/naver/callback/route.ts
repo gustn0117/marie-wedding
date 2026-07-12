@@ -1,3 +1,4 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
@@ -220,7 +221,7 @@ export async function GET(request: Request) {
   // @supabase/ssr의 createServerClient(cookies()) 인스턴스에서 verifyOtp 호출
   // → SDK가 자동으로 Set-Cookie를 발행해 브라우저 세션 쿠키를 심는다.
   const ssrClient = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
