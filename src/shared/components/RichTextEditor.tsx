@@ -17,7 +17,7 @@ interface RichTextEditorProps {
 
 // 허용 태그 (img 포함)
 const ALLOWED_TAGS = ['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'img'];
-const ALLOWED_STYLES = ['font-weight', 'font-style', 'text-decoration', 'max-width', 'width', 'height'];
+const ALLOWED_STYLES = ['font-weight', 'font-style', 'text-decoration', 'text-align', 'max-width', 'width', 'height'];
 const IMG_ALLOWED_ATTRS = ['src', 'alt'];
 
 function sanitize(html: string): string {
@@ -92,6 +92,9 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
       underline: document.queryCommandState('underline'),
       h2: document.queryCommandValue('formatBlock') === 'h2',
       h3: document.queryCommandValue('formatBlock') === 'h3',
+      alignLeft: document.queryCommandState('justifyLeft'),
+      alignCenter: document.queryCommandState('justifyCenter'),
+      alignRight: document.queryCommandState('justifyRight'),
     });
   };
 
@@ -198,6 +201,24 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <ToolbarButton onClick={() => exec('insertOrderedList')} title="번호 매기기">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M8.242 5.992h12m-12 6.003H20.24m-12 5.999h12M4.117 7.495v-3.75H2.99m1.125 3.75H2.99m1.125 0H5.24m-1.92 2.577a1.125 1.125 0 111.591 1.59l-1.83 1.83h2.16M2.99 15.745h1.125a1.125 1.125 0 010 2.25H3.74m0-.002h.375a1.125 1.125 0 010 2.25H2.99" />
+          </svg>
+        </ToolbarButton>
+
+        <div className="w-px h-5 bg-gray-300 mx-1" />
+
+        <ToolbarButton active={activeFormats.alignLeft} onClick={() => exec('justifyLeft')} title="왼쪽 정렬">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M3 12h12M3 18h18" />
+          </svg>
+        </ToolbarButton>
+        <ToolbarButton active={activeFormats.alignCenter} onClick={() => exec('justifyCenter')} title="가운데 정렬">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M6 12h12M3 18h18" />
+          </svg>
+        </ToolbarButton>
+        <ToolbarButton active={activeFormats.alignRight} onClick={() => exec('justifyRight')} title="오른쪽 정렬">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M9 12h12M3 18h18" />
           </svg>
         </ToolbarButton>
 

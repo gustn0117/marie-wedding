@@ -23,6 +23,7 @@ function sanitizeServer(html: string): string {
         'font-weight': [/^(bold|normal|[1-9]00)$/],
         'font-style': [/^(italic|normal)$/],
         'text-decoration': [/^(underline|none)$/],
+        'text-align': [/^(left|center|right|justify)$/],
         width: [/^\d+(\.\d+)?(px|%)$/],
         height: [/^\d+(\.\d+)?(px|%)$/],
         'max-width': [/^\d+(\.\d+)?(px|%)$/],
