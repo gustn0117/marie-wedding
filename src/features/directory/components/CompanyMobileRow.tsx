@@ -19,7 +19,9 @@ export default function CompanyMobileRow({ profile }: Props) {
   const initial = name.charAt(0).toUpperCase();
   const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
-  const imageUrl = resolveStorageUrl(profile.profile_image, 'avatars');
+  const imageUrl =
+    resolveStorageUrl(profile.cover_image, 'avatars') ??
+    resolveStorageUrl(profile.profile_image, 'avatars');
   const deals = profile.completed_deals_count ?? 0;
   const responseRate = Math.round(profile.response_rate ?? 0);
   const isNewBiz = deals === 0;

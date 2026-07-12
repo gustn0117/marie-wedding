@@ -14,7 +14,10 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
   const initial = name.charAt(0).toUpperCase();
   const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
-  const imageUrl = resolveStorageUrl(profile.profile_image, 'avatars');
+  // 카드 썸네일은 커버 이미지 우선 (가로), 없으면 프로필 이미지(로고), 없으면 이니셜
+  const imageUrl =
+    resolveStorageUrl(profile.cover_image, 'avatars') ??
+    resolveStorageUrl(profile.profile_image, 'avatars');
   const deals = profile.completed_deals_count ?? 0;
   const responseRate = Math.round(profile.response_rate ?? 0);
   const isNewBiz = deals === 0;

@@ -22,6 +22,7 @@ export interface Profile {
   phone: string | null;
   website: string | null;
   profile_image: string | null;
+  cover_image: string | null;
   is_directory_listed: boolean;
   company_size: string | null;
   established_year: string | null;

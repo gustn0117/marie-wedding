@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
@@ -13,6 +14,7 @@ import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { friendlyError } from '@/shared/utils/errorMessages';
+import { toast } from '@/shared/components/Toast';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -30,6 +32,7 @@ interface DirectoryFormProps {
 }
 
 export default function DirectoryForm({ profile }: DirectoryFormProps) {
+  const router = useRouter();
   const [listed, setListed] = useState(profile.is_directory_listed);
   const [submitting, setSubmitting] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,6 +40,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -54,6 +58,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
     resolveStorageUrl(profile.profile_image, 'avatars')
+  );
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(
+    resolveStorageUrl(profile.cover_image, 'avatars')
   );
   const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
@@ -75,6 +83,22 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { setError('커버 이미지는 5MB 이하여야 합니다.'); return; }
+    if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
+    setCoverFile(file);
+    setCoverPreview(URL.createObjectURL(file));
+    setError(null);
+  };
+
+  const handleRemoveCover = () => {
+    setCoverFile(null);
+    setCoverPreview(null);
+    if (coverInputRef.current) coverInputRef.current.value = '';
   };
 
   const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,56 +165,68 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     try {
       const supabase = createClient();
       const galleryCount = galleryFiles.length;
-      const hasImage = !!imageFile;
 
-      // 프로필 이미지 업로드 (단계 표시)
-      // 캐시버스팅: URL 이 항상 동일하면 Cloudflare/브라우저가 옛 이미지를 계속 노출
-      // → 매 업로드마다 timestamp+random 을 파일명에 포함해 새 URL 로 저장.
-      // 이전 avatar 파일은 이후 best-effort 로 정리.
-      let profileImage: string | null;
-      let previousAvatarPath: string | null = null;
-      if (hasImage && imageFile) {
-        setSavingStep('프로필 이미지 처리 중...');
+      // 캐시버스팅: URL 이 항상 동일하면 Cloudflare/브라우저가 옛 이미지를 계속 노출.
+      // 매 업로드마다 timestamp+random 접미사로 새 경로 → 새 URL 로 저장.
+      // 이전 파일은 저장 성공 후 best-effort remove.
+      const stampPath = (kind: 'avatar' | 'cover' | 'gallery', i = 0, ext: string) => {
+        const stamp = `${Date.now()}_${i}_${Math.random().toString(36).slice(2, 8)}`;
+        return `${profile.user_id}/${kind}_${stamp}.${ext}`;
+      };
+
+      setSavingStep('이미지 업로드 중...');
+
+      // 프로필(로고) · 커버 · 갤러리 병렬 업로드
+      const profileImagePromise: Promise<string | null> = (async () => {
+        if (!imageFile) return !imagePreview ? null : profile.profile_image;
         const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
         const ext = compressed.name.split('.').pop() || 'jpg';
-        const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
+        const path = stampPath('avatar', 0, ext);
         const { error: err } = await withTimeout(
           supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-          15000,
-          '프로필 이미지 업로드가 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
+          20000,
+          '프로필 이미지 업로드가 너무 오래 걸려요.',
         );
         if (err) throw new Error(`프로필 이미지 업로드 실패: ${err.message}`);
-        // 새 avatar 저장 성공 → 이전 avatar 를 정리 대상으로 표시 (실패해도 저장은 그대로 진행)
-        previousAvatarPath = profile.profile_image ?? null;
-        profileImage = path;
-      } else {
-        profileImage = !imagePreview ? null : profile.profile_image;
-      }
+        return path;
+      })();
 
-      // 갤러리 업로드 (병렬, 카운트 표시)
-      let newGallery: string[] = [];
-      if (galleryCount > 0) {
-        setSavingStep(`갤러리 이미지 업로드 (${galleryCount}장)...`);
-        newGallery = await Promise.all(
-          galleryFiles.map(async (file, i) => {
-            const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
-            const ext = compressed.name.split('.').pop() || 'jpg';
-            const path = `${profile.user_id}/gallery_${Date.now()}_${i}_${Math.random().toString(36).slice(2)}.${ext}`;
-            const { error: err } = await withTimeout(
-              supabase.storage.from('avatars').upload(path, compressed),
-              15000,
-              `갤러리 ${i + 1}번째 이미지 업로드 실패`,
-            );
-            if (err) throw new Error(`갤러리 ${i + 1}번째 이미지 업로드 실패: ${err.message}`);
-            return path;
-          }),
+      const coverImagePromise: Promise<string | null> = (async () => {
+        if (!coverFile) return !coverPreview ? null : profile.cover_image;
+        const compressed = await compressImage(coverFile, { maxDimension: 1600, quality: 0.85 });
+        const ext = compressed.name.split('.').pop() || 'jpg';
+        const path = stampPath('cover', 0, ext);
+        const { error: err } = await withTimeout(
+          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+          20000,
+          '커버 이미지 업로드가 너무 오래 걸려요.',
         );
-      }
+        if (err) throw new Error(`커버 이미지 업로드 실패: ${err.message}`);
+        return path;
+      })();
+
+      const galleryPromises = galleryFiles.map(async (file, i) => {
+        const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+        const ext = compressed.name.split('.').pop() || 'jpg';
+        const path = stampPath('gallery', i, ext);
+        const { error: err } = await withTimeout(
+          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+          20000,
+          `갤러리 ${i + 1}번째 이미지 업로드 실패`,
+        );
+        if (err) throw new Error(`갤러리 ${i + 1}번째 이미지 업로드 실패: ${err.message}`);
+        return path;
+      });
+
+      const [profileImage, coverImage, ...newGallery] = await Promise.all([
+        profileImagePromise,
+        coverImagePromise,
+        ...galleryPromises,
+      ]);
 
       const uploadedGallery = [...existingGallery, ...newGallery];
+      setSavingStep(galleryCount > 0 ? `프로필 정보 저장 중... (이미지 ${galleryCount + Number(!!imageFile) + Number(!!coverFile)}장 처리 완료)` : '프로필 정보 저장 중...');
 
-      setSavingStep('프로필 정보 저장 중...');
       await withTimeout(
         directoryService.updateProfile(profile.id, {
           company_name: formData.company_name.trim() || null,
@@ -200,30 +236,47 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           phone: formData.phone.trim() || null,
           website: formData.website.trim() || null,
           profile_image: profileImage,
+          cover_image: coverImage,
           company_size: formData.company_size || null,
           established_year: formData.established_year || null,
           address: formData.address.trim() || null,
           gallery: uploadedGallery.length > 0 ? uploadedGallery : null,
         }),
         15000,
-        '프로필 저장이 너무 오래 걸려요. 잠시 후 다시 시도해주세요.',
+        '프로필 저장이 너무 오래 걸려요.',
       );
 
       const elapsed = Math.round(performance.now() - startedAt);
       console.info('[DirectoryForm] save success in', elapsed, 'ms');
 
-      // 이전 avatar 정리 (best-effort — 실패해도 저장 성공에 영향 없음)
-      if (previousAvatarPath && previousAvatarPath !== profileImage) {
+      // 이전 이미지 정리 (best-effort — 실패해도 저장 성공에 영향 없음)
+      const oldPaths = [
+        imageFile && profile.profile_image && profile.profile_image !== profileImage ? profile.profile_image : null,
+        coverFile && profile.cover_image && profile.cover_image !== coverImage ? profile.cover_image : null,
+      ].filter((v): v is string => !!v);
+      if (oldPaths.length > 0) {
         supabase.storage
           .from('avatars')
-          .remove([previousAvatarPath])
-          .catch((cleanupErr) => console.warn('[DirectoryForm] old avatar cleanup failed:', cleanupErr));
+          .remove(oldPaths)
+          .catch((cleanupErr) => console.warn('[DirectoryForm] old image cleanup failed:', cleanupErr));
       }
 
-      setSavingStep('완료 — 페이지 이동 중...');
-      setSuccess(true);
+      // 새 파일 상태 초기화 → 재저장 시 재업로드 안됨
+      setImageFile(null);
+      setCoverFile(null);
+      setGalleryFiles([]);
+      // 갤러리 새 항목이 있었다면 existingGallery 를 새 리스트로 교체
+      if (newGallery.length > 0) setExistingGallery(uploadedGallery);
       clearMarieProfileCookie();
-      window.location.href = ROUTES.DIRECTORY_DETAIL(profile.id);
+
+      // 페이지 리로드 없이 서버 컴포넌트만 갱신 + 저장 완료 토스트
+      setSuccess(true);
+      setSavingStep(null);
+      toast('저장되었습니다.', 'success');
+      router.refresh();
+      // 저장 배너는 3초 후 자동 해제
+      setTimeout(() => setSuccess(false), 3000);
+      setSaving(false);
     } catch (err) {
       const elapsed = Math.round(performance.now() - startedAt);
       console.error(`[DirectoryForm] save failed after ${elapsed}ms:`, err);
@@ -296,12 +349,61 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </div>
       </div>
 
-      {/* STEP 1: 썸네일 & 업체명 */}
-      <Section step={1} title="썸네일 & 업체명" description="썸네일과 업체명은 디렉토리 카드에 가장 먼저 보이는 정보입니다.">
+      {/* STEP 1: 로고 · 커버 · 업체명 */}
+      <Section step={1} title="로고 · 커버 · 업체명" description="로고(정사각)와 커버(가로 배너)를 각각 등록하세요. 디렉토리 카드와 상세 페이지에 표시됩니다.">
+        {/* 커버 이미지 — 가로 배너 (상세 페이지 히어로 · 카드 배경) */}
+        <div className="mb-5">
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            커버 이미지 <span className="text-gray-400 font-normal">(가로 배너)</span>
+          </label>
+          {coverPreview ? (
+            <div className="relative w-full aspect-[16/9] max-h-64 overflow-hidden rounded border border-gray-300 bg-gray-50">
+              <img src={coverPreview} alt="" className="w-full h-full object-cover" />
+              <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  aria-label="커버 변경"
+                  className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white/95 shadow ring-1 ring-gray-200 hover:bg-white"
+                >
+                  <svg className="w-4 h-4 text-gray-800" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRemoveCover}
+                  aria-label="커버 삭제"
+                  className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-white/95 shadow ring-1 ring-gray-200 hover:bg-state-urgent hover:text-white text-state-urgent"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              className="w-full aspect-[16/9] max-h-48 rounded border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary-50/30 transition-colors flex flex-col items-center justify-center gap-1.5 px-3"
+            >
+              <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
+              </svg>
+              <p className="text-sm font-bold text-gray-700">커버 이미지 등록</p>
+              <p className="text-[11px] text-gray-400 text-center leading-tight">
+                권장 1600×900px (16:9)<br />JPG · PNG · 최대 5MB
+              </p>
+            </button>
+          )}
+          <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-5">
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">
-              썸네일 이미지
+              로고 <span className="text-gray-400 font-normal">(정사각)</span>
             </label>
             {imagePreview ? (
               <div className="relative w-full aspect-square overflow-hidden rounded border border-gray-300 bg-gray-50">
@@ -339,12 +441,15 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 <svg className="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
                 </svg>
-                <p className="text-sm font-bold text-gray-700">썸네일 등록</p>
-                <p className="text-[11px] text-gray-400 text-center leading-tight">정사각형 권장<br />최대 2MB</p>
+                <p className="text-sm font-bold text-gray-700">로고 등록</p>
+                <p className="text-[11px] text-gray-400 text-center leading-tight">
+                  권장 800×800px<br />JPG · PNG · 최대 2MB
+                </p>
               </button>
             )}
             <p className="text-[11px] text-gray-500 mt-2 leading-snug">
-              디렉토리 카드와 상세 페이지에 표시되는 대표 이미지입니다.
+              업체 상징(로고 또는 담당자 사진)입니다.<br />
+              <b>800×800px</b> 정사각 권장 · JPG/PNG · 최대 2MB
             </p>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
           </div>

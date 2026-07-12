@@ -12,12 +12,10 @@ import {
 import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
-import { VERIFICATION_STATUS_LABELS } from '@/shared/constants';
 import PortfolioCard from '@/features/portfolios/components/PortfolioCard';
 import type { Portfolio, Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
-import TrustMetricBar from '@/features/verification/components/TrustMetricBar';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import GalleryLightbox from '@/shared/components/GalleryLightbox';
 
@@ -121,6 +119,18 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         <span className="text-gray-900 font-medium truncate">{displayName}</span>
       </nav>
 
+      {/* Cover Image (가로 배너) */}
+      {(() => {
+        const cover = resolveStorageUrl(profile.cover_image, 'avatars');
+        if (!cover) return null;
+        return (
+          <div className="w-full aspect-[16/9] max-h-72 overflow-hidden border-y border-gray-200 bg-gray-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={cover} alt={`${displayName} 커버`} className="w-full h-full object-cover" />
+          </div>
+        );
+      })()}
+
       {/* Hero Card */}
       <div className="bg-white border-y border-gray-200 p-6 md:p-8">
         {/* Avatar + Name + Edit */}
@@ -216,36 +226,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           )}
         </div>
       </div>
-
-      {/* Trust Card */}
-      <section className="bg-white border-y border-gray-200 p-6 md:p-8">
-        <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">신뢰 지표</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-5">
-          <TrustMetricBar
-            label="인증 상태"
-            value={VERIFICATION_STATUS_LABELS[profile.verification_status]}
-            sub={profile.verification_status === 'verified' ? '관리자 승인 완료' : '미확인'}
-            emphasis={profile.verification_status === 'verified'}
-          />
-          <TrustMetricBar
-            label="진행 완료"
-            value={`${profile.completed_deals_count}건`}
-            sub={profile.completed_deals_count > 0 ? '지원 이후 진행 기록' : '기록 없음'}
-            fillPercent={Math.min(100, profile.completed_deals_count * 10)}
-          />
-          <TrustMetricBar
-            label="응답률"
-            value={profile.response_rate > 0 ? `${Math.round(profile.response_rate)}%` : '-'}
-            sub="받은 지원 기준"
-            fillPercent={profile.response_rate > 0 ? profile.response_rate : undefined}
-          />
-          <TrustMetricBar
-            label="평균 응답"
-            value={profile.avg_response_minutes ? formatResponseMinutes(profile.avg_response_minutes) : '-'}
-            sub="첫 응답까지"
-          />
-        </div>
-      </section>
 
       {/* Bio */}
       {profile.bio && (
@@ -351,9 +331,3 @@ function InfoCell({ label, value, wide = false }: { label: string; value: string
   );
 }
 
-function formatResponseMinutes(min: number): string {
-  if (min < 60) return `${min}분`;
-  const hours = Math.floor(min / 60);
-  if (hours < 24) return `${hours}시간`;
-  return `${Math.floor(hours / 24)}일`;
-}

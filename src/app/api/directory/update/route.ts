@@ -75,7 +75,7 @@ export async function POST(request: Request) {
   // 화이트리스트 — UI 가 보내는 필드만 허용
   const ALLOWED = new Set([
     'contact_name', 'company_name', 'business_type', 'region',
-    'bio', 'phone', 'website', 'profile_image',
+    'bio', 'phone', 'website', 'profile_image', 'cover_image',
     'company_size', 'established_year', 'address', 'gallery',
     'is_directory_listed',
   ]);
