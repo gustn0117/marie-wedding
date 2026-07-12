@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { toast } from '@/shared/components/Toast';
 
 interface RichTextEditorProps {
   value: string;
@@ -227,7 +228,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
 
   const uploadAndInsertImage = async (file: File) => {
     if (file.size > 10 * 1024 * 1024) {
-      alert('이미지는 10MB 이하여야 합니다.');
+      toast('이미지는 10MB 이하여야 합니다.', 'error');
       return;
     }
     if (!file.type.startsWith('image/')) return;
@@ -246,7 +247,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
       document.execCommand('insertHTML', false, `<img src="${url}" alt="" class="rich-text-image" /><p><br></p>`);
       handleInput();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
+      toast(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.', 'error');
     } finally {
       setUploading(false);
     }

@@ -94,7 +94,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     if (!ok) return;
     setDeletingId(commentId);
     try {
-      await communityService.deleteComment(commentId);
+      await withTimeout(communityService.deleteComment(commentId), 10000, '댓글 삭제 지연');
       setComments((prev) => prev.filter((c) => c.id !== commentId));
       toast('삭제되었습니다.', 'success');
     } catch {

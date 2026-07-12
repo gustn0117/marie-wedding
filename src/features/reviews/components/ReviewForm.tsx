@@ -46,7 +46,7 @@ export default function ReviewForm({ applicationId, appliesTo }: Props) {
     if (selected.size === 0) { setError('태그를 1개 이상 선택해 주세요.'); return; }
     setBusy(true); setError(null);
     try {
-      await reviewService.submit(applicationId, Array.from(selected));
+      await withTimeout(reviewService.submit(applicationId, Array.from(selected)), 10000, '리뷰 제출 지연');
       router.push('/mypage');
       router.refresh();
     } catch (err) {

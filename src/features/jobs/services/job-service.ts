@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { createClient } from '@/lib/supabase/client';
 import type { Job } from '@/types/database';
 import type { JobFormData, JobFilters } from '../types';
@@ -102,7 +103,7 @@ export const jobService = {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createJob(formData: JobFormData, _authorId: string): Promise<Job> {
-    const res = await fetch('/api/jobs/write', {
+    const res = await apiFetch('/api/jobs/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -120,7 +121,7 @@ export const jobService = {
    * Update an existing job posting — service_role 서버 라우트 경유.
    */
   async updateJob(id: string, formData: Partial<JobFormData>): Promise<Job> {
-    const res = await fetch('/api/jobs/write', {
+    const res = await apiFetch('/api/jobs/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -139,7 +140,7 @@ export const jobService = {
    * 클라이언트 측 UPDATE가 RLS WITH CHECK에서 막히는 케이스를 우회하기 위해 server route 경유.
    */
   async deleteJob(id: string): Promise<void> {
-    const res = await fetch(`/api/jobs/${id}/delete`, {
+    const res = await apiFetch(`/api/jobs/${id}/delete`, {
       method: 'POST',
       credentials: 'include',
     });

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { createClient } from '@/lib/supabase/client';
 
 export const authService = {
@@ -9,7 +10,7 @@ export const authService = {
     companyName?: string;
   }) {
     // Use API route for signup (service_role key, bypasses RLS)
-    const res = await fetch('/api/auth/signup', {
+    const res = await apiFetch('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

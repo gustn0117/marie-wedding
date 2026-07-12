@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from '@/shared/components/Toast';
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { friendlyError } from '@/shared/utils/errorMessages';
 import { ROUTES } from '@/shared/constants';
 
@@ -28,10 +29,10 @@ export default function AccountWithdrawalSection() {
     if (!canSubmit) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/account/withdraw', {
+      const res = await apiFetch('/api/account/withdraw', {
         method: 'POST',
         credentials: 'include',
-      });
+      }, 20000);
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: '' }));
         throw new Error(body.error || '탈퇴 처리에 실패했습니다.');

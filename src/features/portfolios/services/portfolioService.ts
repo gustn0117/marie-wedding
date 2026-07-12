@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/shared/utils/apiFetch';
+
 import { createClient } from '@/lib/supabase/client';
 import type { Portfolio } from '@/types/database';
 
@@ -36,7 +38,7 @@ export const portfolioService = {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async create(input: Omit<Portfolio, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>): Promise<Portfolio> {
-    const res = await fetch('/api/portfolios/write', {
+    const res = await apiFetch('/api/portfolios/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -50,7 +52,7 @@ export const portfolioService = {
   },
 
   async update(id: string, input: Partial<Omit<Portfolio, 'id' | 'profile_id' | 'created_at' | 'updated_at'>>): Promise<Portfolio> {
-    const res = await fetch('/api/portfolios/write', {
+    const res = await apiFetch('/api/portfolios/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -64,7 +66,7 @@ export const portfolioService = {
   },
 
   async softDelete(id: string): Promise<void> {
-    const res = await fetch('/api/portfolios/delete', {
+    const res = await apiFetch('/api/portfolios/delete', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

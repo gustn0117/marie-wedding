@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/shared/utils/apiFetch';
+
 import { createClient } from '@/lib/supabase/client';
 
 export async function decideVerification(
@@ -11,7 +13,7 @@ export async function decideVerification(
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { ok: false, error: '로그인이 필요합니다.' };
 
-  const res = await fetch('/api/admin/verifications/decide', {
+  const res = await apiFetch('/api/admin/verifications/decide', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

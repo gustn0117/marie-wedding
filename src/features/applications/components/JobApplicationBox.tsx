@@ -176,7 +176,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   const updateStatus = async (id: string, status: ApplicationStatus) => {
     try {
-      const updated = await applicationService.updateStatus(id, status);
+      const updated = await withTimeout(applicationService.updateStatus(id, status), 10000, '상태 변경 지연');
       setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
     } catch {
       toast('상태 변경에 실패했습니다.', 'error');
@@ -185,7 +185,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   const markCompleted = async (id: string, target: 'received' | 'applied') => {
     try {
-      const updated = await applicationService.markCompleted(id);
+      const updated = await withTimeout(applicationService.markCompleted(id), 10000, '완료 처리 지연');
       if (target === 'received') {
         setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
       } else {
@@ -202,7 +202,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     const ok = await toastConfirm('지원을 취소하시겠습니까? 취소 후 다시 지원하려면 새로 작성해야 합니다.');
     if (!ok) return;
     try {
-      const updated = await applicationService.updateStatus(application.id, 'cancelled');
+      const updated = await withTimeout(applicationService.updateStatus(application.id, 'cancelled'), 10000, '지원 취소 지연');
       setApplication(updated);
       toast('지원이 취소되었습니다.', 'success');
     } catch {
@@ -538,7 +538,7 @@ function AuthorNoteEditor({
   async function save() {
     setSaving(true);
     try {
-      const updated = await applicationService.setAuthorNote(application.id, draft.trim());
+      const updated = await withTimeout(applicationService.setAuthorNote(application.id, draft.trim()), 10000, '메모 저장 지연');
       onChange(updated);
       setEditing(false);
       toast('메모를 저장했습니다.', 'success');

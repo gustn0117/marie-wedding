@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { messageService } from '@/features/messages/services/messageService';
+import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
 
 interface Props {
@@ -22,7 +23,7 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
     if (!profile) { toast('로그인이 필요합니다.', 'error'); return; }
     setBusy(true);
     try {
-      const conv = await messageService.startConversation(targetProfileId);
+      const conv = await withTimeout(messageService.startConversation(targetProfileId), 10000, '대화 시작 지연');
       router.push(`/mypage/messages/${conv.id}`);
     } catch {
       toast('대화 시작에 실패했습니다.', 'error');

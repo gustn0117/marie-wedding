@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { createClient } from '@/lib/supabase/client';
 import type { Profile } from '@/types/database';
 import type { DirectoryFilters } from '../types';
@@ -114,7 +115,7 @@ export const directoryService = {
   }): Promise<Profile> {
     // service_role 서버 라우트 경유 — 클라이언트 .update().select().maybeSingle() 가
     // RLS readback / moderation trigger 영향으로 hang 또는 null 반환되는 케이스 우회.
-    const res = await fetch('/api/directory/update', {
+    const res = await apiFetch('/api/directory/update', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -131,7 +132,7 @@ export const directoryService = {
 
   async toggleDirectoryListing(id: string, listed: boolean): Promise<Profile> {
     // updateProfile 와 동일하게 service_role 서버 라우트 경유 (is_directory_listed 도 화이트리스트에 포함됨)
-    const res = await fetch('/api/directory/update', {
+    const res = await apiFetch('/api/directory/update', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

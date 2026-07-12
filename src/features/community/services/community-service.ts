@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { createClient } from '@/lib/supabase/client';
 import type { Post, Comment } from '@/types/database';
 import type { PostFormData, PostFilters } from '../types';
@@ -99,7 +100,7 @@ export const communityService = {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async createPost(data: PostFormData, _authorId: string): Promise<Post> {
-    const res = await fetch('/api/posts/create', {
+    const res = await apiFetch('/api/posts/create', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -124,7 +125,7 @@ export const communityService = {
    * QA-010 재발 방지 — moderation 트리거 RETURNING null 이슈 우회.
    */
   async updatePost(id: string, data: Partial<PostFormData>): Promise<Post> {
-    const res = await fetch('/api/posts/update', {
+    const res = await apiFetch('/api/posts/update', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -149,7 +150,7 @@ export const communityService = {
    * RLS WITH CHECK 이슈를 우회하기 위해 service_role server route 경유.
    */
   async deletePost(id: string): Promise<void> {
-    const res = await fetch(`/api/posts/${id}/delete`, {
+    const res = await apiFetch(`/api/posts/${id}/delete`, {
       method: 'POST',
       credentials: 'include',
     });

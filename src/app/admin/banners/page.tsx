@@ -28,7 +28,7 @@ export default function AdminBannersPage() {
     const ok = await toastConfirm(`'${b.title}' 배너를 삭제할까요? (soft delete)`);
     if (!ok) return;
     try {
-      await bannerService.softDelete(b.id);
+      await withTimeout(bannerService.softDelete(b.id), 10000, '배너 삭제 지연');
       toast('삭제되었습니다.', 'success');
       await load();
     } catch (err) {
@@ -38,7 +38,7 @@ export default function AdminBannersPage() {
 
   const handleToggleActive = async (b: Banner) => {
     try {
-      await bannerService.update(b.id, { is_active: !b.is_active });
+      await withTimeout(bannerService.update(b.id, { is_active: !b.is_active }), 10000, '배너 변경 지연');
       toast(b.is_active ? '비활성화됨' : '활성화됨', 'success');
       await load();
     } catch (err) {
@@ -170,7 +170,7 @@ function BannerForm({
     const setPath = kind === 'pc' ? setImagePathPc : setImagePathMobile;
     setUploading(true);
     try {
-      const path = await bannerService.uploadImage(file, kind);
+      const path = await withTimeout(bannerService.uploadImage(file, kind), 20000, '이미지 업로드 지연');
       setPath(path);
       toast(`${kind === 'pc' ? 'PC' : '모바일'} 이미지 업로드 완료`, 'success');
     } catch (err) {
@@ -196,10 +196,10 @@ function BannerForm({
         image_path_mobile: imagePathMobile || null,
       };
       if (initial) {
-        await bannerService.update(initial.id, payload);
+        await withTimeout(bannerService.update(initial.id, payload), 10000, '배너 수정 지연');
         toast('수정되었습니다.', 'success');
       } else {
-        await bannerService.create(payload);
+        await withTimeout(bannerService.create(payload), 10000, '배너 등록 지연');
         toast('등록되었습니다.', 'success');
       }
       onSaved();

@@ -1,3 +1,4 @@
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { createClient } from '@/lib/supabase/client';
 import type { Event } from '@/types/database';
 import type { EventFormData } from '../types';
@@ -51,7 +52,7 @@ export const eventService = {
   // ── mutations: 관리자 전용 service_role 서버 라우트 ──
 
   async createEvent(data: EventFormData): Promise<Event> {
-    const res = await fetch('/api/events/write', {
+    const res = await apiFetch('/api/events/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -65,7 +66,7 @@ export const eventService = {
   },
 
   async updateEvent(id: string, data: Partial<EventFormData>): Promise<Event> {
-    const res = await fetch('/api/events/write', {
+    const res = await apiFetch('/api/events/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -79,7 +80,7 @@ export const eventService = {
   },
 
   async deleteEvent(id: string): Promise<void> {
-    const res = await fetch('/api/events/write', {
+    const res = await apiFetch('/api/events/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },

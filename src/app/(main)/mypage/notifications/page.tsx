@@ -24,16 +24,24 @@ export default function NotificationsPage() {
 
   const markRead = async (item: Notification) => {
     if (item.read_at) return;
-    await notificationService.markRead(item.id);
-    setItems((prev) => prev.map((row) => (
-      row.id === item.id ? { ...row, read_at: new Date().toISOString() } : row
-    )));
+    try {
+      await withTimeout(notificationService.markRead(item.id), 8000, '읽음 처리 지연');
+      setItems((prev) => prev.map((row) => (
+        row.id === item.id ? { ...row, read_at: new Date().toISOString() } : row
+      )));
+    } catch (err) {
+      console.error('[notifications] markRead failed:', err);
+    }
   };
 
   const markAllRead = async () => {
-    await notificationService.markAllRead();
-    const now = new Date().toISOString();
-    setItems((prev) => prev.map((row) => ({ ...row, read_at: row.read_at ?? now })));
+    try {
+      await withTimeout(notificationService.markAllRead(), 8000, '모두 읽음 처리 지연');
+      const now = new Date().toISOString();
+      setItems((prev) => prev.map((row) => ({ ...row, read_at: row.read_at ?? now })));
+    } catch (err) {
+      console.error('[notifications] markAllRead failed:', err);
+    }
   };
 
   if (isLoading) {

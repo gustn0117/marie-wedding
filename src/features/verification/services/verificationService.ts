@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/shared/utils/apiFetch';
+
 import { createClient } from '@/lib/supabase/client';
 import type { VerificationSubmitRequest } from '@/features/verification/types';
 
@@ -12,7 +14,7 @@ export async function submitVerification(req: VerificationSubmitRequest): Promis
   form.set('businessNumber', req.businessNumber);
   form.set('document', req.documentFile);
 
-  const res = await fetch('/api/verifications/submit', {
+  const res = await apiFetch('/api/verifications/submit', {
     method: 'POST',
     body: form,
     headers: { Authorization: `Bearer ${session.access_token}` },
