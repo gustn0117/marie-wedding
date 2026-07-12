@@ -51,11 +51,12 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const { data: me } = await service
     .from('profiles')
-    .select('id, role')
+    .select('id, role, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .maybeSingle();
   if (!me) return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
+  if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
 
   if (mode === 'create') {
     if (!payload.title) return NextResponse.json({ error: '제목 필수' }, { status: 400 });

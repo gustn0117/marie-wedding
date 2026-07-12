@@ -34,6 +34,8 @@ async function search(q: string) {
       .from('jobs')
       .select('*, author:profiles!author_id(*)')
       .is('deleted_at', null)
+      .eq('hidden_by_admin', false)
+      .neq('status', 'hidden')
       .eq('posting_type', 'hiring')
       .or(`title.ilike.${keyword},description.ilike.${keyword}`)
       .order('created_at', { ascending: false })

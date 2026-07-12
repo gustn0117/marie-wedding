@@ -57,9 +57,21 @@ export default function LoginForm() {
     try {
       await withTimeout(authService.signIn(formData.email, formData.password), 10000);
       // redirect 쿼리 파라미터 처리 — 어드민 접근 시 미들웨어가 추가함
+      // open-redirect 방지: 브라우저와 동일한 URL 파서로 정규화 후 same-origin 만 허용
+      // (백슬래시/스킴 우회 차단: new URL('/\\evil.com', origin) → https://evil.com)
       const sp = new URLSearchParams(window.location.search);
       const redirect = sp.get('redirect');
-      const safeRedirect = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : ROUTES.HOME;
+      let safeRedirect: string = ROUTES.HOME;
+      if (redirect) {
+        try {
+          const u = new URL(redirect, window.location.origin);
+          if (u.origin === window.location.origin) {
+            safeRedirect = u.pathname + u.search + u.hash;
+          }
+        } catch {
+          // malformed → fall back to HOME
+        }
+      }
       window.location.href = safeRedirect;
     } catch (err) {
       if (err instanceof Error) {

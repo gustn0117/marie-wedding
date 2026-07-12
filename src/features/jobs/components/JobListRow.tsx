@@ -27,7 +27,7 @@ export default function JobListRow({ job, index }: Props) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
   const companyName = job.author?.company_name ?? job.author?.contact_name ?? '미상';
-  const region = job.author?.region ? getRegionLabel(job.author.region) : getRegionLabel(job.region);
+  const region = getRegionLabel(job.region);
   const employmentLabel = getEmploymentTypeLabel(job.employment_type);
   const businessLabel = getBusinessTypeLabel(job.business_type);
   const experience = experienceLabel(job.experience_min);

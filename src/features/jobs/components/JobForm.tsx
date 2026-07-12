@@ -128,6 +128,25 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     if (!formData.businessType) return '업종을 선택해주세요.';
     if (!formData.employmentType) return '고용형태를 선택해주세요.';
     if (!formData.region) return '지역을 선택해주세요.';
+
+    // 급여 범위 검증 — INTEGER 컬럼 초과·역전 방지 (null = 미기재 허용)
+    const MAX_SALARY = 100_000_000;
+    for (const [label, v] of [['최소', formData.salaryMin], ['최대', formData.salaryMax]] as const) {
+      if (v != null && (!Number.isInteger(v) || v < 0 || v > MAX_SALARY)) {
+        return `급여 ${label}값은 0 이상 ${MAX_SALARY.toLocaleString()} 이하의 정수여야 합니다.`;
+      }
+    }
+    if (formData.salaryMin != null && formData.salaryMax != null && formData.salaryMin > formData.salaryMax) {
+      return '급여 최소값이 최대값보다 클 수 없습니다.';
+    }
+    // 최소 경력 검증 — INTEGER 컬럼 초과·음수 방지
+    if (
+      formData.experienceMin != null &&
+      (!Number.isInteger(formData.experienceMin) || formData.experienceMin < 0 || formData.experienceMin > 50)
+    ) {
+      return '최소 경력은 0 이상 50 이하의 정수여야 합니다.';
+    }
+
     return null;
   };
 

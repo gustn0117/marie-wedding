@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
@@ -18,6 +18,8 @@ import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 interface JobApplicationBoxProps {
   jobId: string;
   authorId: string;
+  /** 공고가 마감(마감일 경과 또는 status closed/filled/hidden)되면 지원 폼 대신 마감 안내를 노출. */
+  isClosed?: boolean;
 }
 
 const NEXT_STATUSES: ApplicationStatus[] = ['reviewing', 'accepted', 'rejected'];
@@ -36,7 +38,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export default function JobApplicationBox({ jobId, authorId }: JobApplicationBoxProps) {
+export default function JobApplicationBox({ jobId, authorId, isClosed = false }: JobApplicationBoxProps) {
   const { profile, isLoading } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [received, setReceived] = useState<Application[]>([]);
@@ -49,6 +51,8 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  // 프로필 값 프리필을 최초 1회로 제한 (토큰 갱신 시 profile 재생성으로 인한 입력값 덮어쓰기 방지)
+  const prefilledRef = useRef(false);
 
   const isAuthor = !!profile && profile.id === authorId;
   const actionLabel = '지원';
@@ -65,9 +69,14 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
     if (profile.id !== authorId) {
       // 폼 즉시 노출 — 스켈레톤 없음
       setLoading(false);
-      setContactPhone(profile.phone ?? '');
-      setCareerSummary((prev) => prev || stripHtml(profile.bio ?? '').slice(0, 180));
-      setPortfolioLink((prev) => prev || (profile.website ?? ''));
+      // 프로필 값으로 최초 1회만 프리필. 토큰 갱신으로 effect가 재실행돼도
+      // 사용자가 입력하거나 지운 값(연락처·경력·포트폴리오)을 덮어쓰지 않는다.
+      if (!prefilledRef.current) {
+        prefilledRef.current = true;
+        setContactPhone(profile.phone ?? '');
+        setCareerSummary(stripHtml(profile.bio ?? '').slice(0, 180));
+        setPortfolioLink(profile.website ?? '');
+      }
 
       // 백그라운드: 이미 지원했는지 체크. 결과 오면 상태 전환, 실패해도 폼 그대로 유지.
       withTimeout(
@@ -84,15 +93,18 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
     // 작성자(업체) 측 — 지원자 파이프라인 조회는 데이터가 핵심이므로 스켈레톤 표시.
     setLoading(true);
+    // 이 공고의 지원서만 서버에서 필터링 조회 (전체 지원서 무제한 fetch + 클라 필터 제거).
     withTimeout(
-      applicationService.getReceivedApplications(profile.id),
+      applicationService.getApplicationsForJob(jobId),
       5000,
       '지원자 목록 조회 지연',
     )
-      .then((rows) => setReceived(rows.filter((row) => row.job_id === jobId)))
+      .then((rows) => setReceived(rows))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [authorId, isLoading, jobId, profile]);
+    // profile 객체 identity(토큰 갱신마다 새 참조)가 아닌 profile.id 에만 반응해 effect 재실행을 막는다.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authorId, isLoading, jobId, profile?.id]);
 
   const pendingCount = useMemo(
     () => received.filter((item) => item.status === 'pending' || item.status === 'reviewing').length,
@@ -199,7 +211,7 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
 
   const cancelMyApplication = async () => {
     if (!application) return;
-    const ok = await toastConfirm('지원을 취소하시겠습니까? 취소 후 다시 지원하려면 새로 작성해야 합니다.');
+    const ok = await toastConfirm('지원을 취소하시겠습니까? 취소 후에는 이 공고에 다시 지원할 수 없습니다.');
     if (!ok) return;
     try {
       const updated = await withTimeout(applicationService.updateStatus(application.id, 'cancelled'), 10000, '지원 취소 지연');
@@ -383,6 +395,18 @@ export default function JobApplicationBox({ jobId, authorId }: JobApplicationBox
             새 공고 등록
           </Link>
         </div>
+      </section>
+    );
+  }
+
+  // 마감된 공고(마감일 경과 또는 status closed/filled/hidden)에는 지원 폼 대신 마감 안내.
+  // isAuthor(파이프라인)·application(기존 지원 상태) 분기는 위에서 이미 처리되어 마감 후에도 유지된다.
+  if (isClosed) {
+    return (
+      <section className="bg-white border-y border-gray-200 p-6 md:p-8 text-center">
+        <h2 className="text-lg font-bold text-gray-900 mb-1">마감된 공고입니다</h2>
+        <p className="text-sm text-gray-500 mb-4">이 공고는 마감되어 더 이상 지원할 수 없습니다.</p>
+        <Link href={ROUTES.JOBS} className="btn-outline inline-flex">다른 공고 보기</Link>
       </section>
     );
   }

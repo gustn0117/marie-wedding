@@ -1,10 +1,14 @@
 import Link from 'next/link';
+import { unstable_cache } from 'next/cache';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
 import StatsExportButton from '@/features/stats/components/StatsExportButton';
 import PageHeader from '@/shared/components/PageHeader';
 
-export const revalidate = 300; // 5분 캐싱 — 데이터 증가 시 더 늘릴 것
+// (main) 레이아웃 Header가 cookies()를 호출해 라우트가 dynamic으로 전환되므로
+// export const revalidate(ISR/Full Route Cache)는 무효다. 대신 unstable_cache로
+// loadStats 결과를 5분간 캐싱해 요청마다 DB 스캔이 반복되는 것을 막는다.
+const getStats = unstable_cache(loadStats, ['platform-stats'], { revalidate: 300 });
 
 export const metadata = {
   title: '플랫폼 통계 | Marié',
@@ -76,7 +80,7 @@ async function loadStats() {
 }
 
 export default async function StatsPage() {
-  const s = await loadStats();
+  const s = await getStats();
   const regionLabel = Object.fromEntries(REGIONS.map((r) => [r.value, r.label]));
   const bizLabel = Object.fromEntries(BUSINESS_TYPES.map((b) => [b.value, b.label]));
 

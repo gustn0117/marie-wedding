@@ -26,9 +26,16 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
+  // 목록 카드/모바일 행이 실제로 렌더하거나 쿼리가 정렬/필터에 쓰는 공개 컬럼만 조회.
+  // select('*') 는 (a) bio(리치 HTML 수십 KB)·gallery 를 카드가 안 쓰는데도 20행씩 실어 나르고
+  // (b) 서버 클라이언트가 service_role 이라 RLS 를 우회해 business_number·phone·admin_note·
+  // verification_document 등 내부 컬럼이 RSC 페이로드로 방문자에게 새어 나간다. 둘 다 차단.
   let query = supabase
     .from('profiles')
-    .select('*', { count: 'exact' })
+    .select(
+      'id, company_name, contact_name, business_type, region, profile_image, cover_image, verification_status, phone_verified, premium_tier, completed_deals_count, response_rate, verified_at',
+      { count: 'exact' },
+    )
     .is('deleted_at', null)
     .eq('is_directory_listed', true);
 

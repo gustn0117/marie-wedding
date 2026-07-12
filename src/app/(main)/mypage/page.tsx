@@ -29,14 +29,14 @@ async function getMyData(profileId: string) {
     supabase.from('profiles').select('*').eq('id', profileId).single(),
     supabase
       .from('jobs')
-      .select('*, author:profiles!author_id(*)')
+      .select('id, title, status, employment_type, region, view_count, created_at')
       .eq('author_id', profileId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
     supabase
       .from('posts')
-      .select('*, author:profiles!author_id(*), comments:comments(count)')
+      .select('id, title, category, view_count, created_at, comments:comments(count)')
       .eq('author_id', profileId)
       .is('deleted_at', null)
       .filter('comments.deleted_at', 'is', null)
@@ -44,21 +44,21 @@ async function getMyData(profileId: string) {
       .range(0, 49),
     supabase
       .from('applications')
-      .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
+      .select('id, job_id, status, message, created_at, hiring_completed_at, applicant_completed_at, job:jobs(id, title, author:profiles!author_id(company_name, contact_name))')
       .eq('applicant_id', profileId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
     supabase
       .from('applications')
-      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      .select('id, job_id, status, message, created_at, hiring_completed_at, applicant_completed_at, job:jobs!inner(id, title), applicant:profiles(id, company_name, contact_name)')
       .eq('job.author_id', profileId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
     supabase
       .from('portfolios')
-      .select('id')
+      .select('id', { count: 'exact', head: true })
       .eq('profile_id', profileId)
       .is('deleted_at', null),
   ]);
@@ -75,9 +75,10 @@ async function getMyData(profileId: string) {
     profile,
     jobs,
     posts,
-    sentApplications: (sentApplicationsRes.data ?? []) as Application[],
-    receivedApplications: (receivedApplicationsRes.data ?? []) as Application[],
-    portfolioCount: (portfoliosRes.data ?? []).length,
+    // 좁힌 select로 임베드(job/applicant)가 배열로 추론돼 Application과 직접 겹치지 않으므로 unknown 경유.
+    sentApplications: (sentApplicationsRes.data ?? []) as unknown as Application[],
+    receivedApplications: (receivedApplicationsRes.data ?? []) as unknown as Application[],
+    portfolioCount: portfoliosRes.count ?? 0,
   };
 }
 
@@ -249,9 +250,9 @@ export default async function MyPage() {
         <section>
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
           <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
-            <WorkspaceMetric label="등록한 공고" value={jobs.length} href="/mypage#registered-jobs" />
+            <WorkspaceMetric label="등록한 공고" value={jobs.length} href="/mypage?tab=jobs" />
             <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" href="/mypage/dashboard" />
-            <WorkspaceMetric label="받은 지원" value={receivedApplications.length} href="/mypage#received-applications" />
+            <WorkspaceMetric label="받은 지원" value={receivedApplications.length} href="/mypage?tab=applications" />
             <WorkspaceMetric
               label="응답률"
               value={Math.round(profile.response_rate ?? 0)}
@@ -264,8 +265,8 @@ export default async function MyPage() {
       <section>
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">커뮤니티·지원</p>
         <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
-          <WorkspaceMetric label="작성한 게시글" value={posts.length} href="/mypage#my-posts" />
-          <WorkspaceMetric label="지원 내역" value={sentApplications.length} href="/mypage#sent-applications" />
+          <WorkspaceMetric label="작성한 게시글" value={posts.length} href="/mypage?tab=posts" />
+          <WorkspaceMetric label="지원 내역" value={sentApplications.length} href="/mypage?tab=applications" />
           <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} href="/mypage/dashboard" />
           <WorkspaceMetric
             label="평균 응답"

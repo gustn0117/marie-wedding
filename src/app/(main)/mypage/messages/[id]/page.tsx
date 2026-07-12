@@ -36,7 +36,7 @@ export default async function MessageDetailPage({ params }: Props) {
   const partnerId = conv.participant_a === me.id ? conv.participant_b : conv.participant_a;
   const { data: partner } = await supabase
     .from('profiles')
-    .select('id, company_name, contact_name')
+    .select('id, company_name, contact_name, deleted_at')
     .eq('id', partnerId)
     .maybeSingle();
 
@@ -46,7 +46,9 @@ export default async function MessageDetailPage({ params }: Props) {
     .eq('conversation_id', params.id)
     .order('created_at', { ascending: true });
 
-  const partnerName = partner?.company_name || partner?.contact_name || '알 수 없음';
+  const partnerName = partner?.deleted_at
+    ? '탈퇴한 회원'
+    : (partner?.company_name || partner?.contact_name || '알 수 없음');
 
   return (
     <main className="mx-auto max-w-6xl space-y-4">

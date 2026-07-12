@@ -7,6 +7,7 @@ import { portfolioService } from '@/features/portfolios/services/portfolioServic
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { compressImage } from '@/shared/utils/image';
 
 
 
@@ -56,10 +57,15 @@ export default function PortfolioForm({ profileId, initial }: Props) {
     try {
       const id = await ensureDraftId();
       for (const file of Array.from(files)) {
-        if (file.size > 5 * 1024 * 1024) { setError(`${file.name}: 5MB 초과`); continue; }
+        // 다른 업로드 경로와 동일하게 압축(긴 변 1600px, q0.85) 후 업로드 —
+        // 셀프호스팅 Storage는 이미지 변환이 없어 원본이 그대로 썸네일에 내려감.
+        // 압축을 먼저 하면 스마트폰 원본(5MB 초과)도 통과하지만, HEIC 등에서
+        // 원본이 그대로 반환될 수 있으므로 압축 후에도 크기 체크는 유지.
+        const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+        if (compressed.size > 5 * 1024 * 1024) { setError(`${file.name}: 5MB 초과`); continue; }
         try {
           const path = await withTimeout(
-            portfolioService.uploadImage(profileId, id, file),
+            portfolioService.uploadImage(profileId, id, compressed),
             20000,
             `${file.name} 업로드가 너무 오래 걸려요.`,
           );

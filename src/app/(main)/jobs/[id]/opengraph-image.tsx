@@ -17,6 +17,8 @@ export default async function Image({ params }: Props) {
     .select('title, business_type, region, author:profiles!author_id(company_name, contact_name)')
     .eq('id', params.id)
     .is('deleted_at', null)
+    .eq('hidden_by_admin', false)
+    .neq('status', 'hidden')
     .single();
 
   const title = job?.title ?? '마리에';

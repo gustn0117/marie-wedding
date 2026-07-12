@@ -41,36 +41,26 @@ async function loadConversations(myId: string): Promise<Row[]> {
     image: p.deleted_at ? null : p.profile_image,
   }));
 
-  // 기존: 대화 N개당 (last message + unread count) 2회 = 2N+1 쿼리
-  // 변경: 모든 conversation의 메시지를 한 번에 가져와 in-memory 집계 = 3 쿼리 고정
-  const convIds = convs.map((c) => c.id);
-
-  const [{ data: lastMsgs }, { data: unreadRows }] = await Promise.all([
-    supabase
-      .from('messages')
-      .select('conversation_id, body, created_at')
-      .in('conversation_id', convIds)
-      .order('conversation_id', { ascending: true })
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('messages')
-      .select('conversation_id')
-      .in('conversation_id', convIds)
-      .neq('sender_id', myId)
-      .is('read_at', null),
-  ]);
+  // 대화 미리보기(마지막 메시지 1건 + 안읽음 수)를 서버 RPC로 집계한다.
+  // 기존엔 모든 대화의 전체 메시지 body를 한 번에 가져와 in-memory에서 첫 행만
+  // 취했기 때문에 대화·메시지가 쌓일수록 전송량이 무한 증가했다. RPC는
+  // DISTINCT ON (conversation_id) 으로 대화당 1건만 뽑고 body는 LEFT(body, 100)
+  // 로 잘라 반환하므로, 전송량이 (2,000자 본문 × 전체 메시지)가 아니라 대화 수에
+  // 비례해 유계가 된다. (get_conversation_previews RPC 정의는 별도 SQL 마이그레이션 필요)
+  const { data: previews } = await supabase.rpc('get_conversation_previews', {
+    p_profile_id: myId,
+  });
 
   const lastBodyMap = new Map<string, string>();
-  for (const m of lastMsgs ?? []) {
-    if (!lastBodyMap.has(m.conversation_id as string)) {
-      lastBodyMap.set(m.conversation_id as string, (m.body as string) ?? '');
-    }
-  }
-
   const unreadCountMap = new Map<string, number>();
-  for (const r of unreadRows ?? []) {
-    const cid = r.conversation_id as string;
-    unreadCountMap.set(cid, (unreadCountMap.get(cid) ?? 0) + 1);
+  for (const p of (previews ?? []) as Array<{
+    conversation_id: string;
+    last_body: string | null;
+    unread_count: number | string;
+  }>) {
+    // unread_count 는 BIGINT → supabase-js 에서 문자열로 올 수 있어 Number() 로 정규화
+    if (p.last_body) lastBodyMap.set(p.conversation_id, p.last_body);
+    unreadCountMap.set(p.conversation_id, Number(p.unread_count ?? 0));
   }
 
   const rows: Row[] = convs.map((c) => {

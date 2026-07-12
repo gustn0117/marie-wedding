@@ -16,24 +16,29 @@ function getTypeLabel(type: string): string {
 
 export default function AdminEventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+
+  const totalPages = Math.ceil(count / 20);
 
   const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await withTimeout(
-        adminService.getEvents(1, undefined, undefined, false),
+      const { data, count } = await withTimeout(
+        adminService.getEvents(page, undefined, undefined, false),
         10000,
         '행사 조회 지연',
       );
       setEvents(data);
+      setCount(count);
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     fetchEvents();
@@ -44,7 +49,11 @@ export default function AdminEventsPage() {
     setDeleting(id);
     try {
       await adminService.softDeleteEvent(id);
-      setEvents(prev => prev.filter(e => e.id !== id));
+      if (events.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        await fetchEvents();
+      }
     } catch {
       toast('삭제에 실패했습니다.', 'error');
     } finally {
@@ -57,7 +66,7 @@ export default function AdminEventsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">행사·박람회 관리</h1>
-          <p className="text-sm text-gray-500 mt-1">총 {events.length}건</p>
+          <p className="text-sm text-gray-500 mt-1">총 {count.toLocaleString()}건</p>
         </div>
         <Link href={ROUTES.ADMIN_EVENTS_NEW} className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white text-sm font-semibold hover:bg-primary-dark transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -137,6 +146,41 @@ export default function AdminEventsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1 px-5 py-4 border-t border-gray-100">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              이전
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              if (p > totalPages) return null;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-8 h-8 text-sm rounded ${
+                    p === page ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              다음
+            </button>
           </div>
         )}
       </div>

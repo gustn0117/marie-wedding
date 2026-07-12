@@ -101,7 +101,11 @@ export async function updateSession(request: NextRequest) {
           return NextResponse.redirect(url);
         }
 
-        // 제재된 사용자 — /banned + /auth + /api + /admin(관리자 자체 게이트) 외 모든 페이지 차단
+        // 제재된 사용자 — /banned + /auth + /api + /admin(관리자 자체 게이트) 외 모든 페이지 차단.
+        // /api 는 여기서 리다이렉트하지 않는다(리다이렉트 응답은 fetch/API 클라이언트에 부적절).
+        // 대신 각 write API 라우트(posts/create·update, jobs/write, portfolios/write,
+        // events/write, directory/update, verifications/submit)가 프로필의 banned_at 을
+        // 직접 검사해 403 을 반환한다 — service_role 우회 write 경로의 제재 무력화를 라우트 레벨에서 봉인.
         if (profile?.banned_at
             && !request.nextUrl.pathname.startsWith('/banned')
             && !request.nextUrl.pathname.startsWith('/auth/callback')

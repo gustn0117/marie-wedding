@@ -81,10 +81,17 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
     } else {
       const { data } = await supabase
         .from('posts')
-        .select('id, title, category, view_count, like_count, comment_count, created_at')
+        .select('id, title, category, view_count, like_count, created_at, comments:comments(count)')
         .in('id', ids)
-        .is('deleted_at', null);
-      posts = (data ?? []).sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
+        .is('deleted_at', null)
+        .filter('comments.deleted_at', 'is', null);
+      posts = (data ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((row: any) => {
+          const { comments: commentAgg, ...rest } = row;
+          return { ...rest, comment_count: commentAgg?.[0]?.count ?? 0 };
+        })
+        .sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
     }
   }
 

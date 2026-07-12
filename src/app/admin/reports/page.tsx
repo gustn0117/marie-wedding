@@ -63,15 +63,18 @@ export default function AdminReportsPage() {
   const [reports, setReports] = useState<(Report & { reporter?: Profile })[]>([]);
   const [status, setStatus] = useState<Report['status'] | ''>('open');
   const [count, setCount] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [stats, setStats] = useState<StatusStats | null>(null);
+
+  const totalPages = Math.ceil(count / 20);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const result = await withTimeout(
-        adminService.getReports(1, status || undefined),
+        adminService.getReports(page, status || undefined),
         10000,
         '신고 조회 지연',
       );
@@ -82,7 +85,7 @@ export default function AdminReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [status]);
+  }, [status, page]);
 
   const loadStats = useCallback(async () => {
     const sb = createClient();
@@ -150,7 +153,7 @@ export default function AdminReportsPage() {
           <button
             key={option.value || 'all'}
             type="button"
-            onClick={() => setStatus(option.value)}
+            onClick={() => { setStatus(option.value); setPage(1); }}
             className={`rounded border px-4 py-2 text-sm font-bold transition-colors ${
               status === option.value
                 ? 'border-primary bg-primary text-white'
@@ -201,6 +204,41 @@ export default function AdminReportsPage() {
                 </div>
               </article>
             ))}
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1 px-5 py-4 border-t border-gray-100">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              이전
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              if (p > totalPages) return null;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-8 h-8 text-sm rounded ${
+                    p === page ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage(Math.min(totalPages, page + 1))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              다음
+            </button>
           </div>
         )}
       </div>

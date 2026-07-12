@@ -56,6 +56,10 @@ export default async function EditJobPage({ params }: PageProps) {
     employmentType: job.employment_type,
     region: job.region,
     salaryInfo: job.salary_info ?? '',
+    salaryMin: job.salary_min,
+    salaryMax: job.salary_max,
+    salaryUnit: job.salary_unit,
+    experienceMin: job.experience_min,
     deadline: job.deadline ? job.deadline.split('T')[0] : '',
     image: job.image ?? null,
   };

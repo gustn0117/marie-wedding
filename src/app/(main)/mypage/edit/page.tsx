@@ -37,6 +37,10 @@ export default function EditProfilePage() {
 
   // 사용자가 입력을 시작하면 백그라운드 DB 갱신이 입력을 덮어쓰지 않도록 가드
   const userDirtyRef = useRef(false);
+  // 백그라운드 전체 프로필 조회가 성공했는지 여부.
+  // 미로드(조회 실패/timeout) 상태에서 빈 website/business_type 을 저장 payload 에 실으면
+  // 기존 DB 값이 조용히 NULL 로 덮어써지므로, 이 플래그로 해당 키를 payload 에서 제외한다.
+  const fullLoadedRef = useRef(false);
 
   // 렌더 전략: 쿠키 profile(즉시 사용 가능)로 폼·사진을 곧바로 노출하고,
   // bio/phone/website 등 쿠키에 없는 필드는 백그라운드 DB 조회로 채워 넣는다.
@@ -76,17 +80,29 @@ export default function EditProfilePage() {
           '프로필 조회가 지연돼요.',
         );
         if (cancelled || !data) return;
-        if (!userDirtyRef.current) {
-          setFormData({
-            contact_name: data.contact_name || '',
-            company_name: data.company_name || '',
-            business_type: data.business_type || '',
-            region: data.region || '',
-            bio: data.bio || '',
-            phone: data.phone || '',
-            website: data.website || '',
-          });
-        }
+        fullLoadedRef.current = true;
+        // 사용자가 입력을 시작(userDirty)했으면 통째로 덮어쓰지 않고,
+        // 쿠키에 없어 ''로 시작한 빈 필드(bio/phone/website 등)만 DB 값으로 채운다.
+        // (기존 동작: userDirty 면 조회 결과 전량 폐기 → bio/phone/website 유실)
+        setFormData((prev) =>
+          userDirtyRef.current
+            ? {
+                ...prev,
+                business_type: prev.business_type || data.business_type || '',
+                bio: prev.bio || data.bio || '',
+                phone: prev.phone || data.phone || '',
+                website: prev.website || data.website || '',
+              }
+            : {
+                contact_name: data.contact_name || '',
+                company_name: data.company_name || '',
+                business_type: data.business_type || '',
+                region: data.region || '',
+                bio: data.bio || '',
+                phone: data.phone || '',
+                website: data.website || '',
+              },
+        );
         // 사진은 새 파일을 고르지 않았을 때만 DB 값으로 동기화
         setImagePreview((prev) =>
           imageFile ? prev : data.profile_image
@@ -208,15 +224,26 @@ export default function EditProfilePage() {
         profileImage = null;
       }
 
+      // 백그라운드 전체 조회가 아직 안 끝났고(fullLoadedRef=false) 값이 비어 있으면,
+      // 기존 DB 값을 NULL 로 덮어쓰지 않도록 payload 에서 키 자체를 제외(undefined).
+      // JSON.stringify 가 undefined 키를 버리고 route.ts 의 Object.entries 루프가 자동 스킵한다.
+      const websiteTrimmed = formData.website.trim();
+      const business_type = formData.business_type
+        ? formData.business_type
+        : (fullLoadedRef.current ? null : undefined);
+      const website = websiteTrimmed
+        ? websiteTrimmed
+        : (fullLoadedRef.current ? null : undefined);
+
       // 15초 timeout — 어떤 이유로든 update가 hang하면 사용자에게 에러를 보여주고 다시 시도할 수 있게
       const updatePromise = directoryService.updateProfile(profile.id, {
         contact_name: formData.contact_name.trim(),
         company_name: formData.company_name.trim() || null,
-        business_type: formData.business_type || null,
+        business_type,
         region: formData.region,
         bio: formData.bio.trim() || null,
         phone: formData.phone.trim() || null,
-        website: formData.website.trim() || null,
+        website,
         profile_image: profileImage,
       });
       const timeoutPromise = new Promise<never>((_, reject) =>

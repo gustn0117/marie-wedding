@@ -15,9 +15,15 @@ export const directoryService = {
   ): Promise<{ data: Profile[]; count: number }> {
     const supabase = createClient();
 
+    // 카드가 렌더하거나 쿼리가 정렬/필터에 쓰는 공개 컬럼만 조회 (directory/page.tsx 와 동일).
+    // select('*') 는 bio·gallery 를 불필요하게 실어 나르고 business_number·phone·admin_note 등
+    // 내부 컬럼까지 클라이언트로 노출한다.
     let query = supabase
       .from('profiles')
-      .select('*', { count: 'exact' })
+      .select(
+        'id, company_name, contact_name, business_type, region, profile_image, cover_image, verification_status, phone_verified, premium_tier, completed_deals_count, response_rate, verified_at',
+        { count: 'exact' },
+      )
       .is('deleted_at', null)
       .eq('is_directory_listed', true)
       .order('company_name', { ascending: true });

@@ -18,6 +18,7 @@ export default async function RelatedJobs({ authorId, currentJobId }: Props) {
     .neq('id', currentJobId)
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
+    .neq('status', 'hidden')
     .order('created_at', { ascending: false })
     .limit(5);
 

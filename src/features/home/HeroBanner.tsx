@@ -9,14 +9,22 @@ interface BannerRow {
 }
 
 /**
- * 메인 hero 위 배너. 공개 SELECT 정책으로 활성+기간 내 자동 필터.
- * 데이터 없으면 빗금 placeholder.
+ * 메인 hero 위 배너.
+ * createServerQueryClient() 는 service_role 로 RLS 를 우회하므로
+ * banners_public_select 정책(deleted_at IS NULL AND is_active AND 노출기간 내)이
+ * 자동 적용되지 않는다. 따라서 동일 조건을 쿼리에서 직접 재현한다.
+ * 데이터 없으면 아무것도 렌더 안 함.
  */
 export default async function HeroBanner() {
   const supabase = createServerQueryClient();
+  const nowIso = new Date().toISOString();
   const { data } = await supabase
     .from('banners')
     .select('id, title, image_path_pc, image_path_mobile, link_url')
+    .is('deleted_at', null)
+    .eq('is_active', true)
+    .or(`valid_from.is.null,valid_from.lte.${nowIso}`)
+    .or(`valid_until.is.null,valid_until.gte.${nowIso}`)
     .order('display_order', { ascending: true })
     .limit(1);
 

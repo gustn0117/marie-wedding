@@ -24,7 +24,6 @@ const PIPELINE_STATUSES: ApplicationStatus[] = ['pending', 'reviewing', 'accepte
 interface HiringDashboard {
   jobs: Job[];
   receivedApplications: Application[];
-  sentApplications: Application[];
   activeJobs: number;
   totalViews: number;
   totalApplications: number;
@@ -35,10 +34,10 @@ interface HiringDashboard {
 
 async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> {
   const supabase = createServerQueryClient();
-  const [jobsRes, receivedRes, sentRes] = await Promise.all([
+  const [jobsRes, receivedRes] = await Promise.all([
     supabase
       .from('jobs')
-      .select('*, author:profiles!author_id(*)')
+      .select('id, title, status, view_count, employment_type, region, created_at')
       .eq('author_id', profileId)
       .eq('posting_type', 'hiring')
       .is('deleted_at', null)
@@ -46,23 +45,15 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
       .range(0, 49),
     supabase
       .from('applications')
-      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      .select('id, status, created_at, job:jobs!inner(id, title, author_id), applicant:profiles(id, company_name, contact_name)')
       .eq('job.author_id', profileId)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .range(0, 99),
-    supabase
-      .from('applications')
-      .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
-      .eq('applicant_id', profileId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 99),
   ]);
 
   const jobs = (jobsRes.data ?? []) as Job[];
-  const receivedApplications = (receivedRes.data ?? []) as Application[];
-  const sentApplications = (sentRes.data ?? []) as Application[];
+  const receivedApplications = (receivedRes.data ?? []) as unknown as Application[];
   const activeJobs = jobs.filter((job) => !['closed', 'filled', 'hidden'].includes(job.status)).length;
   const totalViews = jobs.reduce((sum, job) => sum + (job.view_count ?? 0), 0);
   const totalApplications = receivedApplications.length;
@@ -72,7 +63,6 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
   return {
     jobs,
     receivedApplications,
-    sentApplications,
     activeJobs,
     totalViews,
     totalApplications,

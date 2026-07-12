@@ -40,11 +40,12 @@ export async function POST(req: NextRequest) {
   // 2) find profile
   const { data: profile, error: profErr } = await adminSb
     .from('profiles')
-    .select('id, account_type, verification_status')
+    .select('id, account_type, verification_status, banned_at')
     .eq('user_id', userData.user.id)
     .is('deleted_at', null)
     .single();
   if (profErr || !profile) return new NextResponse('profile not found', { status: 404 });
+  if (profile.banned_at) return new NextResponse('제재된 계정은 이용할 수 없습니다.', { status: 403 });
   if (profile.account_type !== 'business') {
     return new NextResponse('업체 계정만 인증 신청이 가능합니다.', { status: 403 });
   }

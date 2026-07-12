@@ -13,6 +13,8 @@ export function translateApplicationStatusError(msg: string): string {
   if (msg.includes('status_not_allowed_for_author')) return '공고 작성자는 이 상태로 변경할 수 없습니다.';
   if (msg.includes('status_not_allowed_for_applicant')) return '지원자는 취소만 가능합니다.';
   if (msg.includes('cannot_cancel_final_status')) return '이미 처리된 신청은 취소할 수 없습니다.';
+  if (msg.includes('cannot_change_cancelled_application')) return '취소된 지원은 상태를 변경할 수 없습니다.';
+  if (msg.includes('cannot_change_completed_deal')) return '완료된 거래는 상태를 변경할 수 없습니다.';
   if (msg.includes('not_party_to_application')) return '권한이 없습니다.';
   if (msg.includes('application_not_found')) return '신청 정보를 찾을 수 없습니다.';
   if (msg.includes('job_not_found')) return '공고를 찾을 수 없습니다.';
@@ -45,6 +47,23 @@ export const applicationService = {
       .is('applicant.deleted_at', null)
       .eq('job.author_id', profileId)
       .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data ?? []) as Application[];
+  },
+
+  async getApplicationsForJob(jobId: string): Promise<Application[]> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('applications')
+      // 서버측에서 job_id 로 필터 + job 임베드 제거(공고 본문 HTML 비용 제거).
+      // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터.
+      .select('*, applicant:profiles!inner(*)')
+      .eq('job_id', jobId)
+      .is('deleted_at', null)
+      .is('applicant.deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) throw error;
     return (data ?? []) as Application[];

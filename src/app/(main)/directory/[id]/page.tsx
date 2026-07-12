@@ -45,6 +45,11 @@ async function getData(id: string) {
       .select('*')
       .eq('author_id', id)
       .is('deleted_at', null)
+      // 관리자가 숨긴 공고(hidden_by_admin)·작성자가 내린 공고(status='hidden')는
+      // 공개 프로필의 '채용 공고' 목록/카운트에서 제외. /jobs 목록과 동일한 필터쌍.
+      // (두 컬럼 모두 NOT NULL + default 이므로 정상 공고가 누락되지 않음)
+      .eq('hidden_by_admin', false)
+      .neq('status', 'hidden')
       .order('created_at', { ascending: false }),
     supabase
       .from('portfolios')

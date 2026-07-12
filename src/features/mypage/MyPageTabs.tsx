@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import {
   getEmploymentTypeLabel,
@@ -39,7 +40,19 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
   const [jobs, setJobs] = useState(initialJobs);
   const applicationCount = sentApplications.length + receivedApplications.length;
 
-  // QA-012: 통계 카드 클릭 → URL hash → 해당 탭 자동 선택 + 스크롤
+  // QA-012: 통계 카드 클릭 → URL ?tab= → 해당 탭 자동 선택 + 스크롤.
+  // App Router의 soft navigation(history.pushState)은 hashchange를 발생시키지 않으므로
+  // 해시 대신 searchParams를 구독해야 같은 페이지 내 카드 클릭에도 반응한다.
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  useEffect(() => {
+    if (tabParam !== 'jobs' && tabParam !== 'posts' && tabParam !== 'applications') return;
+    setActiveTab(tabParam);
+    const el = document.getElementById('mypage-tabs');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [tabParam]);
+
+  // 직접 URL 진입(/mypage#received-applications 등 레거시 해시) 마운트 1회 처리.
   useEffect(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     let next: 'jobs' | 'posts' | 'applications' | null = null;

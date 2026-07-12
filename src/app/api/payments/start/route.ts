@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr';
 import { createServiceClient } from '@/lib/supabase/service';
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { preRegisterPayment } from '@/features/payments/lib/portone';
 
 export const dynamic = 'force-dynamic';
@@ -13,19 +15,34 @@ interface StartInput {
 }
 
 export async function POST(req: Request) {
-  // 인증 가드
+  // 인증 가드 — 위조 가능한 marie_profile 쿠키가 아니라, 검증된 세션에서 profileId 도출
   const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile')?.value;
-  if (!profileCookie) {
+  const ssr = createServerClient(
+    SUPABASE_SERVER_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll() {},
+      },
+    },
+  );
+  const { data: { user } } = await ssr.auth.getUser();
+  if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
-  let profileId: string;
-  try {
-    profileId = JSON.parse(profileCookie).id;
-    if (!profileId) throw new Error();
-  } catch {
-    return NextResponse.json({ error: 'invalid_session' }, { status: 401 });
+
+  const supabase = createServiceClient();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('user_id', user.id)
+    .is('deleted_at', null)
+    .maybeSingle();
+  if (!profile) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
+  const profileId = profile.id;
 
   let body: StartInput;
   try {
@@ -40,8 +57,6 @@ export async function POST(req: Request) {
   if (body.amount > 100_000_000) {
     return NextResponse.json({ error: 'amount_too_large' }, { status: 400 });
   }
-
-  const supabase = createServiceClient();
 
   // DB에 결제 세션 생성 (pending)
   const { data: payment, error } = await supabase.rpc('create_payment_session', {

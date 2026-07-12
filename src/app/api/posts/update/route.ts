@@ -50,10 +50,11 @@ export async function POST(request: Request) {
   const service = createServiceClient();
 
   const [{ data: me }, { data: post }] = await Promise.all([
-    service.from('profiles').select('id, role').eq('user_id', user.id).maybeSingle(),
+    service.from('profiles').select('id, role, banned_at').eq('user_id', user.id).maybeSingle(),
     service.from('posts').select('id, author_id, deleted_at').eq('id', id).maybeSingle(),
   ]);
   if (!me) return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
+  if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
   if (!post) return NextResponse.json({ error: '게시글을 찾을 수 없습니다.' }, { status: 404 });
   if (post.deleted_at) return NextResponse.json({ error: '이미 삭제된 게시글입니다.' }, { status: 410 });
 

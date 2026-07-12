@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Job } from '@/types/database';
@@ -31,21 +31,31 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [selectedRegion, setSelectedRegion] = useState(searchParams.get('region') ?? '');
-  const [selectedBusinessTypes, setSelectedBusinessTypes] = useState<string[]>(() => {
+  // 필터 선택 상태는 URL(searchParams)에서 파생 — URL을 단일 소스로 삼아
+  // 브라우저 뒤로/앞으로가기 시 서버가 렌더한 결과와 필터 UI가 항상 일치하도록 한다.
+  const selectedRegion = useMemo(() => searchParams.get('region') ?? '', [searchParams]);
+  const selectedBusinessTypes = useMemo<string[]>(() => {
     const bt = searchParams.get('businessType');
     return bt ? bt.split(',') : [];
-  });
-  const [selectedEmploymentType, setSelectedEmploymentType] = useState(searchParams.get('employmentType') ?? '');
-  const [search, setSearch] = useState(searchParams.get('search') ?? '');
+  }, [searchParams]);
+  const selectedEmploymentType = useMemo(() => searchParams.get('employmentType') ?? '', [searchParams]);
+  const selectedSubRegions = useMemo<string[]>(() => {
+    const sub = searchParams.get('subRegion');
+    return sub ? sub.split(',') : [];
+  }, [searchParams]);
+
+  // 검색어는 타이핑 반응성을 위해 로컬 상태로 두되, URL의 search 파라미터가 바뀌면
+  // (예: 뒤로가기) 재동기화 — 그래야 '선택 조건 N개' 카운트가 어긋나지 않는다.
+  const searchParam = searchParams.get('search') ?? '';
+  const [search, setSearch] = useState(searchParam);
+  useEffect(() => {
+    setSearch(searchParam);
+  }, [searchParam]);
+
   const [regionDropdownOpen, setRegionDropdownOpen] = useState(false);
   const [businessTypeDropdownOpen, setBusinessTypeDropdownOpen] = useState(false);
   const [employmentTypeDropdownOpen, setEmploymentTypeDropdownOpen] = useState(false);
   const [browsingRegion, setBrowsingRegion] = useState('');
-  const [selectedSubRegions, setSelectedSubRegions] = useState<string[]>(() => {
-    const sub = searchParams.get('subRegion');
-    return sub ? sub.split(',') : [];
-  });
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const verifiedOnly = searchParams.get('verified') === '1';
   const completedOnly = searchParams.get('completed') === '1';
@@ -70,10 +80,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   );
 
   const handleRegionBrowse = (value: string) => {
-    if (value !== selectedRegion) {
-      setSelectedSubRegions([]);
-    }
-    setSelectedRegion(value);
+    // 지역 변경 시 하위지역은 updateParams가 subRegion:''로 함께 비운다.
     updateParams({ region: value, subRegion: '' });
     if (value && REGION_DETAILS[value]) {
       setBrowsingRegion(value);
@@ -84,33 +91,26 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   };
 
   const handleRegionConfirm = (value: string) => {
-    setSelectedRegion(value);
-    setSelectedSubRegions([]);
     updateParams({ region: value, subRegion: '' });
     setRegionDropdownOpen(false);
     setBrowsingRegion('');
   };
 
   const handleSubRegionToggle = (subValue: string) => {
-    setSelectedSubRegions((prev) => {
-      const next = prev.includes(subValue)
-        ? prev.filter((v) => v !== subValue)
-        : [...prev, subValue];
-      updateParams({ subRegion: next.join(',') });
-      return next;
-    });
+    const next = selectedSubRegions.includes(subValue)
+      ? selectedSubRegions.filter((v) => v !== subValue)
+      : [...selectedSubRegions, subValue];
+    updateParams({ subRegion: next.join(',') });
   };
 
   const handleBusinessTypeToggle = (value: string) => {
-    setSelectedBusinessTypes((prev) => {
-      const next = prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value];
-      updateParams({ businessType: next.join(',') });
-      return next;
-    });
+    const next = selectedBusinessTypes.includes(value)
+      ? selectedBusinessTypes.filter((v) => v !== value)
+      : [...selectedBusinessTypes, value];
+    updateParams({ businessType: next.join(',') });
   };
 
   const handleEmploymentTypeSelect = (value: string) => {
-    setSelectedEmploymentType(value);
     updateParams({ employmentType: value });
     setEmploymentTypeDropdownOpen(false);
   };
@@ -160,10 +160,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   const handleRemoveFilter = (key: string) => {
     if (key === 'region') {
-      setSelectedSubRegions([]);
       updateParams({ region: '', subRegion: '' });
     } else if (key === 'businessType') {
-      setSelectedBusinessTypes([]);
       updateParams({ businessType: '' });
     } else {
       updateParams({ [key]: '' });
@@ -172,10 +170,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
   const handleResetAll = () => {
     setSearch('');
-    setSelectedRegion('');
-    setSelectedBusinessTypes([]);
-    setSelectedEmploymentType('');
-    setSelectedSubRegions([]);
     router.push('/jobs', { scroll: false });
   };
 
@@ -424,10 +418,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           <div className="border-b border-gray-200 bg-white px-4 py-3">
             <div className="flex flex-wrap gap-1.5">
               <button
-                onClick={() => {
-                  setSelectedBusinessTypes([]);
-                  updateParams({ businessType: '' });
-                }}
+                onClick={() => updateParams({ businessType: '' })}
                 className={`px-3 py-1.5 rounded text-small font-semibold transition-colors ${
                   selectedBusinessTypes.length === 0
                     ? 'bg-primary text-white'

@@ -57,13 +57,19 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const [{ data: target }, { data: me }] = await Promise.all([
     service.from('profiles').select('id, user_id, role').eq('id', id).is('deleted_at', null).maybeSingle(),
-    service.from('profiles').select('id, role').eq('user_id', user.id).is('deleted_at', null).maybeSingle(),
+    service.from('profiles').select('id, role, banned_at').eq('user_id', user.id).is('deleted_at', null).maybeSingle(),
   ]);
   const tLookup = Date.now();
 
   if (!target) {
     console.warn('[api/directory/update] 404 target missing', { profile_id: id, elapsed_ms: tLookup - t0 });
     return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 404 });
+  }
+
+  // 제재된 요청자는 본인/타인 프로필 수정 불가 (admin 제재자 포함). target 이 아닌 요청자(me) 기준.
+  if (me?.banned_at) {
+    console.warn('[api/directory/update] 403 banned requester', { profile_id: id, requester: me.id, elapsed_ms: tLookup - t0 });
+    return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
   }
 
   const isOwner = target.user_id === user.id;

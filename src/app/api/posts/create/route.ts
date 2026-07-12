@@ -59,13 +59,17 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const { data: profile } = await service
     .from('profiles')
-    .select('id, onboarded_at')
+    .select('id, onboarded_at, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .maybeSingle();
 
   if (!profile) {
     return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
+  }
+  // 제재된 계정은 service_role write 경로로도 작성 불가 (미들웨어 /api 예외 보완)
+  if (profile.banned_at) {
+    return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
   }
   if (!profile.onboarded_at) {
     return NextResponse.json({ error: '온보딩이 필요합니다.' }, { status: 403 });

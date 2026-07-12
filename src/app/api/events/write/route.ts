@@ -47,13 +47,14 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const { data: me } = await service
     .from('profiles')
-    .select('id, role')
+    .select('id, role, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .maybeSingle();
   if (!me || me.role !== 'admin') {
     return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 });
   }
+  if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
 
   if (mode === 'create') {
     const p = body.payload ?? {};

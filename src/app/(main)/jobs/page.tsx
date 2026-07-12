@@ -40,13 +40,12 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   // 카드/리스트에서 "마감" 배지로 시각 구분됨 (getJobTier + isExpired).
   query = query.neq('status', 'hidden');
 
-  // 마감일이 지난 공고도 자동 제외 (deadline IS NULL 이거나 deadline >= now).
-  // PostgREST or 필터로 표현.
+  // 마감일이 지난 공고 제외 (deadline IS NULL 이거나 deadline >= now).
+  // 서버(DB)에서 필터해야 count와 실제 반환 행이 동일한 조건을 보므로
+  // 총건수 과표시·페이지당 결손·빈 페이지 문제가 생기지 않는다.
+  // .or()는 top-level jobs 컬럼에 적용되며 기존 .eq/.neq/.in 및 author!inner 임베드와 AND로 결합된다.
   if (!searchParams.includeClosed) {
-    const nowIso = new Date(0).toISOString(); // placeholder; replaced below
-    // PostgREST or 구문에 동적 ISO를 안전하게 끼우기 위해 RPC가 아닌 ts side에서 처리.
-    // nowIso는 의미 없음 — 아래에서 실제 now()로 교체.
-    void nowIso;
+    query = query.or(`deadline.is.null,deadline.gte.${new Date().toISOString()}`);
   }
 
   if (searchParams.businessType) {
@@ -102,13 +101,7 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   query = query.range(from, to);
 
   const { data, count } = await query;
-  let jobs = (data ?? []) as Job[];
-
-  // 마감일이 지난 공고 클라이언트 측 제외 (PostgREST에서 or 구문이 복잡하므로 이중 가드).
-  if (!searchParams.includeClosed) {
-    const now = Date.now();
-    jobs = jobs.filter((j) => !j.deadline || new Date(j.deadline).getTime() >= now);
-  }
+  const jobs = (data ?? []) as Job[];
 
   return { jobs, count: count ?? 0 };
 }

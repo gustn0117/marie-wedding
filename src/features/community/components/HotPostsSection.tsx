@@ -15,7 +15,7 @@ export default async function HotPostsSection() {
   const since = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data } = await supabase
     .from('posts')
-    .select('*, author:profiles!author_id(id, company_name, contact_name)')
+    .select('id, title, category, like_count, view_count, created_at')
     .is('deleted_at', null)
     .gte('created_at', since)
     .order('like_count', { ascending: false })

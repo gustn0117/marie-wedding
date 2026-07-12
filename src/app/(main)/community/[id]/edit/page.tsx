@@ -65,7 +65,7 @@ export default async function EditPostPage({ params }: PageProps) {
 
       <div className="bg-white border-y border-gray-200 p-5">
         <PostForm
-          initialData={{ title: post.title, content: post.content, category: post.category }}
+          initialData={{ title: post.title, content: post.content, category: post.category, region: post.region ?? '' }}
           postId={params.id}
           profileId={me.id}
         />

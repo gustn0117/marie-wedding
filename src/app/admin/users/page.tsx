@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
@@ -14,7 +14,9 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(''); // 입력창 draft (요청 트리거 아님)
+  const [submittedSearch, setSubmittedSearch] = useState(''); // 실제 조회에 쓰이는 확정 검색어
+  const [reloadKey, setReloadKey] = useState(0); // 동일 조건 재검색(수동 새로고침) 트리거
   const [showDeleted, setShowDeleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -24,18 +26,23 @@ export default function AdminUsersPage() {
 
   const totalPages = Math.ceil(count / 20);
 
+  // 단조 증가 요청 ID: 마지막으로 발사된 요청의 응답만 상태에 반영해 응답 역전(stale) 방지
+  const reqSeq = useRef(0);
+
   const load = useCallback(async () => {
+    const id = ++reqSeq.current;
     setLoading(true);
     try {
-      const result = await adminService.getUsers(page, search || undefined, showDeleted);
+      const result = await adminService.getUsers(page, submittedSearch || undefined, showDeleted);
+      if (id !== reqSeq.current) return; // 더 최신 요청이 이미 나갔으면 이 응답은 버림
       setUsers(result.data);
       setCount(result.count);
     } catch (err) {
-      console.error(err);
+      if (id === reqSeq.current) console.error(err);
     } finally {
-      setLoading(false);
+      if (id === reqSeq.current) setLoading(false);
     }
-  }, [page, search, showDeleted]);
+  }, [page, submittedSearch, showDeleted, reloadKey]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -53,8 +60,11 @@ export default function AdminUsersPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // 세 setState가 같은 핸들러에서 배칭 → effect 1회만 실행(이중 fetch 제거).
+    // reloadKey 증가로 draft===submittedSearch && page===1 인 재검색도 정상 트리거.
+    setSubmittedSearch(search);
     setPage(1);
-    load();
+    setReloadKey((k) => k + 1);
   };
 
   const handleToggleRole = async (user: Profile) => {

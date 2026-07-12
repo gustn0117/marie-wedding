@@ -31,6 +31,15 @@ interface JobPayload {
   image?: string | null;
 }
 
+/**
+ * date-only 마감일('YYYY-MM-DD')을 KST 하루 끝(23:59:59+09:00)으로 정규화.
+ * DatePicker 가 넘긴 날짜가 UTC 자정(=KST 오전 9시)으로 저장돼
+ * 마감일 당일 오전에 조기 마감되던 문제 방지.
+ * 이미 시각 정보가 있는 문자열은 그대로 통과시킨다.
+ */
+const normalizeDeadline = (d?: string | null): string | null =>
+  !d ? null : (/^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T23:59:59+09:00` : d);
+
 export async function POST(request: Request) {
   let body: { mode?: 'create' | 'update'; id?: string; payload?: JobPayload };
   try { body = await request.json(); } catch {
@@ -60,13 +69,33 @@ export async function POST(request: Request) {
   const service = createServiceClient();
   const { data: me } = await service
     .from('profiles')
-    .select('id, role, account_type, company_name, business_type, region, phone, bio')
+    .select('id, role, account_type, company_name, business_type, region, phone, bio, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
     .maybeSingle();
   if (!me) return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
+  if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
   if (me.account_type !== 'business' && me.role !== 'admin') {
     return NextResponse.json({ error: '공고 등록은 업체 회원만 가능합니다.' }, { status: 403 });
+  }
+
+  // 급여 범위 · 최소 경력 검증 — INTEGER(int4) 컬럼 초과·역전 방지 (mode 분기 전)
+  // null/undefined 는 '미기재' 로 허용. update 는 부분 payload 이므로 값이 실제 전달됐을 때만 검사.
+  const MAX_SALARY = 100_000_000;
+  for (const key of ['salaryMin', 'salaryMax'] as const) {
+    const v = payload[key];
+    if (v !== undefined && v !== null && (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > MAX_SALARY)) {
+      return NextResponse.json({ error: '급여 범위 값이 올바르지 않습니다.' }, { status: 400 });
+    }
+  }
+  if (payload.salaryMin != null && payload.salaryMax != null && payload.salaryMin > payload.salaryMax) {
+    return NextResponse.json({ error: '급여 최소값이 최대값보다 클 수 없습니다.' }, { status: 400 });
+  }
+  {
+    const v = payload.experienceMin;
+    if (v !== undefined && v !== null && (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 50)) {
+      return NextResponse.json({ error: '최소 경력 값이 올바르지 않습니다.' }, { status: 400 });
+    }
   }
 
   if (mode === 'create') {
@@ -91,7 +120,7 @@ export async function POST(request: Request) {
       salary_max: payload.salaryMax ?? null,
       salary_unit: payload.salaryUnit ?? 'monthly',
       experience_min: payload.experienceMin ?? null,
-      deadline: payload.deadline || null,
+      deadline: normalizeDeadline(payload.deadline),
       image: payload.image || null,
     });
     if (insertErr) {
@@ -129,7 +158,7 @@ export async function POST(request: Request) {
   if (payload.salaryMax !== undefined) updateData.salary_max = payload.salaryMax;
   if (payload.salaryUnit !== undefined) updateData.salary_unit = payload.salaryUnit;
   if (payload.experienceMin !== undefined) updateData.experience_min = payload.experienceMin;
-  if (payload.deadline !== undefined) updateData.deadline = payload.deadline || null;
+  if (payload.deadline !== undefined) updateData.deadline = normalizeDeadline(payload.deadline);
   if (payload.image !== undefined) updateData.image = payload.image || null;
 
   const { error: updErr } = await service.from('jobs').update(updateData).eq('id', id);

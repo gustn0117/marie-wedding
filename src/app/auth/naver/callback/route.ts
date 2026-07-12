@@ -144,34 +144,21 @@ export async function GET(request: Request) {
     // 신규 가입
     const realEmail = userInfo.email?.trim().toLowerCase();
     if (realEmail) {
-      // email로 기존 user 있는지 검사 (네이버가 아닌 다른 provider로 가입)
-      const { data: existingByEmail } = await service
-        .from('profiles')
-        .select('id, signup_provider')
-        .eq('contact_name', userInfo.name ?? '') // contact_name으론 충돌 못 막음 — 아래에서 admin API로 검증
-        .maybeSingle();
-      void existingByEmail; // unused, kept for future enumeration prevention layer
-
-      // Supabase admin API로 동일 email user 직접 조회
-      const { data: usersList } = await service.auth.admin.listUsers({
-        page: 1,
-        perPage: 1000,
-      });
-      const conflict = usersList?.users?.find(
-        (u) => u.email?.toLowerCase() === realEmail,
-      );
-      if (conflict) {
-        // 다른 provider로 가입된 이메일 — generic 메시지로 차단
-        return redirectWith(origin, '/login', 'conflict');
-      }
-
+      // createUser를 곧바로 시도하고 GoTrue의 unique email 위반을 conflict로 매핑.
+      // (사전 listUsers 전수조회는 1000명 초과분을 누락시키고 비용도 큼 — 원자적·레이스 프리로 대체)
       const created = await service.auth.admin.createUser({
         email: realEmail,
         email_confirm: false, // 네이버 email은 검증 미보장 — 추후 OTP로 검증
         user_metadata: { provider: 'naver', naver_id: naverSub, name: userInfo.name },
       });
       if (created.error || !created.data.user) {
-        return redirectWith(origin, '/login', 'naver_create_failed');
+        // GoTrue unique email 위반 = 다른 provider로 이미 가입된 이메일
+        // (self-hosted GoTrue 버전에 따라 error.code 미지원일 수 있어 status 422·메시지도 병행 검사)
+        const isDup =
+          created.error?.code === 'email_exists' ||
+          created.error?.status === 422 ||
+          /already.*registered/i.test(created.error?.message ?? '');
+        return redirectWith(origin, '/login', isDup ? 'conflict' : 'naver_create_failed');
       }
       targetUserEmail = realEmail;
       await service.from('profiles').insert({

@@ -80,8 +80,15 @@ export default async function OnboardingPage({ searchParams }: PageProps) {
 
 function sanitizeReturnTo(value: string | null | undefined): string | null {
   if (!value) return null;
+  // Reject backslashes: a browser normalizes `/\evil.com` (or its encoded
+  // form `%2F%5Cevil.com`, decoded by Next.js searchParams) to the absolute
+  // URL `https://evil.com/`, enabling open redirect on the origin-less
+  // `redirect(next)` / `router.replace(next)` paths. This is load-bearing.
+  if (value.includes('\\')) return null;
   if (!value.startsWith('/')) return null;
   if (value.startsWith('//')) return null;
+  // Belt-and-suspenders for any protocol-relative style separator (// or /\).
+  if (/^\/[\\/]/.test(value)) return null;
   if (value.includes('://')) return null;
   return value;
 }

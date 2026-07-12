@@ -73,29 +73,28 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!formData.title.trim()) { setError('제목을 입력해주세요.'); return; }
     if (!formData.content.trim()) { setError('내용을 입력해주세요.'); return; }
-
-    // 신규 등록 시 동일 제목 행사가 이미 존재하면 사용자 확인
-    if (!isEdit) {
-      const sb = createClient();
-      const { data: dup } = await sb
-        .from('events')
-        .select('id, start_date')
-        .eq('title', formData.title.trim())
-        .is('deleted_at', null)
-        .limit(1)
-        .maybeSingle();
-      if (dup) {
-        if (!confirm(`동일한 제목의 행사가 이미 등록되어 있어요. 계속 등록하시겠어요?`)) {
-          return;
-        }
-      }
-    }
 
     setSubmitting(true);
     setError(null);
     try {
+      // 신규 등록 시 동일 제목 행사가 이미 존재하면 사용자 확인
+      if (!isEdit) {
+        const sb = createClient();
+        const { data: dup } = await sb
+          .from('events')
+          .select('id, start_date')
+          .eq('title', formData.title.trim())
+          .is('deleted_at', null)
+          .limit(1)
+          .maybeSingle();
+        if (dup && !confirm(`동일한 제목의 행사가 이미 등록되어 있어요. 계속 등록하시겠어요?`)) {
+          return;
+        }
+      }
+
       let imagePath = formData.image;
       if (imageFile) imagePath = await uploadImage();
       else if (!imagePreview) imagePath = null;

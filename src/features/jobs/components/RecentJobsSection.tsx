@@ -25,6 +25,7 @@ export default function RecentJobsSection() {
       .in('id', ids)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
+      .neq('status', 'hidden')
       .then(({ data }) => {
         // 입력 순서대로 정렬
         const order: Record<string, number> = {};

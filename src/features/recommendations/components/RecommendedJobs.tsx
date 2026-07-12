@@ -16,6 +16,7 @@ async function fetchRecommended(profile: Pick<Profile, 'id' | 'business_type' | 
     .select('*, author:profiles!author_id(id, company_name, contact_name)')
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
+    .neq('status', 'hidden')
     .neq('author_id', profile.id)
     .order('created_at', { ascending: false })
     .range(0, 19);
