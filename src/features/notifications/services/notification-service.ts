@@ -15,22 +15,25 @@ export const notificationService = {
     return (data ?? []) as Notification[];
   },
 
+  // 읽음 처리는 서버 라우트(service_role)로 — 클라 update 는 세션 토큰 지연/RLS 로
+  // 실패해 read_at 이 저장 안 되고 안읽음 배지가 안 줄던 문제를 회피.
   async markRead(id: string): Promise<void> {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read_at: new Date().toISOString() })
-      .eq('id', id);
-    if (error) throw error;
+    const res = await fetch('/api/notifications/read', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    if (!res.ok) throw new Error('읽음 처리에 실패했습니다.');
   },
 
   async markAllRead(): Promise<void> {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('notifications')
-      .update({ read_at: new Date().toISOString() })
-      .is('read_at', null)
-      .is('deleted_at', null);
-    if (error) throw error;
+    const res = await fetch('/api/notifications/read', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ all: true }),
+    });
+    if (!res.ok) throw new Error('읽음 처리에 실패했습니다.');
   },
 };

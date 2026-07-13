@@ -35,6 +35,11 @@ export default async function MessageDetailPage({ params }: Props) {
   }
 
   const partnerId = conv.participant_a === me.id ? conv.participant_b : conv.participant_a;
+  // 이 대화를 열었으니 관련 '새 메시지' 알림을 읽음 처리 → 헤더 안읽음 배지 정리.
+  // (service_role 이라 RLS 우회, 본인 것만 profile_id 로 한정)
+  await supabase.from('notifications').update({ read_at: new Date().toISOString() })
+    .eq('profile_id', me.id).eq('link_url', `/mypage/messages/${params.id}`).is('read_at', null);
+
   // 파트너 · 메시지 · 사이드바 대화목록을 병렬 조회(서버·내부 kong 직결이라 빠름).
   const [partnerRes, msgsRes, conversations] = await Promise.all([
     supabase.from('profiles').select('id, company_name, contact_name, deleted_at').eq('id', partnerId).maybeSingle(),

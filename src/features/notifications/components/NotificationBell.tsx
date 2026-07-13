@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { ROUTES } from '@/shared/constants';
+import { notificationService } from '@/features/notifications/services/notification-service';
 
 interface Notification {
   id: string;
@@ -111,12 +112,7 @@ export default function NotificationBell({ profileId }: { profileId: string }) {
     setItems((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: new Date().toISOString() })));
     setUnreadCount(0);
     try {
-      const sb = createClient();
-      await withTimeout(
-        sb.from('notifications').update({ read_at: new Date().toISOString() })
-          .eq('profile_id', profileId).is('read_at', null),
-        8000,
-      );
+      await withTimeout(notificationService.markAllRead(), 8000, '읽음 처리 지연');
     } catch {
       // 무시 — 낙관적 UI는 유지
     }
@@ -127,11 +123,7 @@ export default function NotificationBell({ profileId }: { profileId: string }) {
     if (!item.read_at) {
       setUnreadCount((c) => Math.max(0, c - 1));
       try {
-        const sb = createClient();
-        await withTimeout(
-          sb.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', item.id),
-          5000,
-        );
+        await withTimeout(notificationService.markRead(item.id), 5000, '읽음 처리 지연');
       } catch {
         // 무시 — 다음 진입 시 반영됨
       }
