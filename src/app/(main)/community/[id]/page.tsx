@@ -25,7 +25,7 @@ async function getPostData(id: string, viewerProfileId: string | null) {
 
   const { data: post } = await supabase
     .from('posts')
-    .select('*, author:profiles!author_id(*), comments:comments(count)')
+    .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)')
     .eq('id', id)
     .is('deleted_at', null)
     .filter('comments.deleted_at', 'is', null)

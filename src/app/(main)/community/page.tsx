@@ -30,7 +30,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
   let query = supabase
     .from('posts')
-    .select('*, author:profiles!author_id(*), comments:comments(count)', { count: 'exact' })
+    .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)', { count: 'exact' })
     .is('deleted_at', null)
     .filter('comments.deleted_at', 'is', null);
 

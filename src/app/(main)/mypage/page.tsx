@@ -37,7 +37,7 @@ async function getMyData(profileId: string) {
       .range(0, 49),
     supabase
       .from('posts')
-      .select('id, title, category, view_count, created_at, comments:comments(count)')
+      .select('id, title, category, view_count, created_at, comments:comments!comments_post_id_fkey(count)')
       .eq('author_id', profileId)
       .is('deleted_at', null)
       .filter('comments.deleted_at', 'is', null)

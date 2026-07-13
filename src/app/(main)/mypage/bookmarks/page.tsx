@@ -81,7 +81,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
     } else {
       const { data } = await supabase
         .from('posts')
-        .select('id, title, category, view_count, like_count, created_at, comments:comments(count)')
+        .select('id, title, category, view_count, like_count, created_at, comments:comments!comments_post_id_fkey(count)')
         .in('id', ids)
         .is('deleted_at', null)
         .filter('comments.deleted_at', 'is', null);

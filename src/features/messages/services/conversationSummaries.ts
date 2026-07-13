@@ -1,4 +1,5 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 export interface ConversationSummary {
   id: string;
@@ -45,7 +46,8 @@ export async function loadConversationSummaries(myId: string): Promise<Conversat
     partnerMap.set(p.id, {
       // 탈퇴 상대 실명/사진 마스킹 — 대화는 유지하되 노출은 숨김
       name: p.deleted_at ? '탈퇴한 회원' : (p.company_name || p.contact_name || '알 수 없음'),
-      image: p.deleted_at ? null : p.profile_image,
+      // profile_image 는 스토리지 키 → 공개 URL 로 변환(원본 키를 그대로 쓰면 깨진 '?' 이미지)
+      image: p.deleted_at ? null : resolveStorageUrl(p.profile_image, 'avatars'),
     });
   }
 

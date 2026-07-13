@@ -26,7 +26,7 @@ export const communityService = {
         `
         *,
         author:profiles!author_id(*),
-        comments:comments(count)
+        comments:comments!comments_post_id_fkey(count)
       `,
         { count: 'exact' },
       )

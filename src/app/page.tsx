@@ -29,7 +29,7 @@ async function getHomeData() {
   const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes] = await Promise.all([
     supabase
       .from('posts')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments(count)`, { count: 'exact' })
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
       .is('deleted_at', null)
       .filter('comments.deleted_at', 'is', null)
       .order('created_at', { ascending: false })

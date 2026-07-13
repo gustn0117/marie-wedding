@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
 
         let query = supabase
           .from('posts')
-          .select('*, author:profiles!author_id(*), comments:comments(count)', { count: 'exact' })
+          .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1);
 
