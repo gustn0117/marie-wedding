@@ -1,8 +1,13 @@
+import imageCompression from 'browser-image-compression';
+
 /**
- * 이미지 파일을 리사이즈/압축한 Blob 반환.
- * - 긴 변이 maxDimension보다 크면 축소
- * - JPEG는 quality로 압축
- * - 이미 작으면 원본 반환
+ * 이미지 파일을 리사이즈/압축한 File 반환.
+ *
+ * 1차: browser-image-compression (웹 워커) — 메인스레드를 막지 않아 대용량 사진도
+ *      빠르고 UI 프리즈 없이 처리. maxSizeMB 로 목표 크기까지 반복 압축.
+ * 2차(폴백): 라이브러리 실패(HEIC 디코드 불가 브라우저 등) 시 canvas 방식.
+ *
+ * 크기 제한은 두지 않는다 — 큰 이미지가 와도 거부 대신 압축해서 업로드.
  */
 export async function compressImage(
   file: File,
@@ -10,18 +15,44 @@ export async function compressImage(
     maxDimension?: number;
     quality?: number;
     mimeType?: 'image/jpeg' | 'image/png' | 'image/webp';
+    /** 목표 최대 용량(MB). 이 이하가 될 때까지 반복 압축. 기본 1MB. */
+    maxSizeMB?: number;
   } = {}
 ): Promise<File> {
-  const { maxDimension = 1600, quality = 0.85, mimeType = 'image/jpeg' } = options;
+  const { maxDimension = 1600, quality = 0.85, mimeType = 'image/jpeg', maxSizeMB = 1 } = options;
 
   if (!file.type.startsWith('image/')) return file;
+
+  try {
+    const compressed = await imageCompression(file, {
+      maxWidthOrHeight: maxDimension,
+      initialQuality: quality,
+      maxSizeMB,
+      useWebWorker: true,
+      fileType: mimeType,
+    });
+    const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+    const base = file.name.replace(/\.[^.]+$/, '') || 'image';
+    return new File([compressed], `${base}.${ext}`, { type: compressed.type || mimeType });
+  } catch (err) {
+    console.warn('[compressImage] worker 압축 실패, canvas 폴백:', err);
+    return canvasCompress(file, { maxDimension, quality, mimeType });
+  }
+}
+
+/** 폴백: canvas 기반 리사이즈/압축 (메인스레드). */
+function canvasCompress(
+  file: File,
+  options: { maxDimension: number; quality: number; mimeType: 'image/jpeg' | 'image/png' | 'image/webp' }
+): Promise<File> {
+  const { maxDimension, quality, mimeType } = options;
 
   return new Promise((resolve) => {
     const img = new Image();
     const reader = new FileReader();
 
-    // HEIC/AVIF/손상 이미지로 onload가 안 불리는 경우 원본 fallback + 10초 안전망
-    const safety = setTimeout(() => resolve(file), 10000);
+    // HEIC/AVIF/손상 이미지로 onload가 안 불리는 경우 원본 fallback + 12초 안전망
+    const safety = setTimeout(() => resolve(file), 12000);
     img.onerror = () => { clearTimeout(safety); resolve(file); };
     reader.onerror = () => { clearTimeout(safety); resolve(file); };
 
@@ -32,7 +63,6 @@ export async function compressImage(
         const longSide = Math.max(width, height);
 
         if (longSide <= maxDimension) {
-          // 충분히 작으면 원본 반환
           resolve(file);
           return;
         }

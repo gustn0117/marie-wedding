@@ -93,7 +93,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError('이미지 크기는 5MB 이하여야 합니다.'); return; }
+    // 크기 제한 없음 — 저장 시 자동 압축.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));

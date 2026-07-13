@@ -73,7 +73,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { setError('이미지 크기는 2MB 이하여야 합니다.'); return; }
+    // 크기 제한 없음 — 큰 이미지는 저장 시 자동 압축된다.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
@@ -89,7 +89,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError('커버 이미지는 5MB 이하여야 합니다.'); return; }
+    // 크기 제한 없음 — 저장 시 자동 압축.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
     setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
@@ -104,8 +104,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
   const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const valid = files.filter(f => f.size <= 5 * 1024 * 1024 && f.type.startsWith('image/'));
-    if (valid.length < files.length) setError('5MB 이하의 이미지만 업로드 가능합니다.');
+    // 크기 제한 없음 — 이미지 파일만 받고, 저장 시 자동 압축.
+    const valid = files.filter(f => f.type.startsWith('image/'));
+    if (valid.length < files.length) setError('이미지 파일만 업로드할 수 있습니다.');
     setGalleryFiles(prev => [...prev, ...valid]);
     setGalleryPreviews(prev => [...prev, ...valid.map(f => URL.createObjectURL(f))]);
     if (galleryInputRef.current) galleryInputRef.current.value = '';
@@ -420,7 +421,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               </svg>
               <p className="text-sm font-bold text-gray-700">커버 이미지 등록</p>
               <p className="text-[11px] text-gray-400 text-center leading-tight">
-                권장 1600×900px (16:9)<br />JPG · PNG · 최대 5MB
+                권장 1600×900px (16:9)<br />JPG · PNG · 자동 압축
               </p>
             </button>
           )}
@@ -470,13 +471,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 </svg>
                 <p className="text-sm font-bold text-gray-700">로고 등록</p>
                 <p className="text-[11px] text-gray-400 text-center leading-tight">
-                  권장 800×800px<br />JPG · PNG · 최대 2MB
+                  권장 800×800px<br />JPG · PNG · 자동 압축
                 </p>
               </button>
             )}
             <p className="text-[11px] text-gray-500 mt-2 leading-snug">
               업체 상징(로고 또는 담당자 사진)입니다.<br />
-              <b>800×800px</b> 정사각 권장 · JPG/PNG · 최대 2MB
+              <b>800×800px</b> 정사각 권장 · JPG/PNG · 자동 압축
             </p>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
           </div>
@@ -594,7 +595,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       {/* STEP 4: 갤러리 */}
       <Section step={4} title="갤러리 (선택)" description="업체 사진, 작업물, 공간 사진 등을 업로드하면 훨씬 매력적으로 보여요.">
         <div className="mb-3">
-          <ImageUploadHint ratio="1:1 (정사각형) 권장" recommendedSize="800 × 800px" maxSize="5MB" note="여러 장 동시 선택 가능" />
+          <ImageUploadHint ratio="1:1 (정사각형) 권장" recommendedSize="800 × 800px" maxSize="자동 압축" note="여러 장 동시 선택 가능" />
         </div>
         {galleryPreviews.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">

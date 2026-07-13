@@ -135,11 +135,7 @@ export default function EditProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      setError('이미지 크기는 2MB 이하여야 합니다.');
-      return;
-    }
-
+    // 크기 제한 없음 — 저장 시 자동 압축.
     if (!file.type.startsWith('image/')) {
       setError('이미지 파일만 업로드할 수 있습니다.');
       return;

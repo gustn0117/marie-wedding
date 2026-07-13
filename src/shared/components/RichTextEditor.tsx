@@ -227,10 +227,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   };
 
   const uploadAndInsertImage = async (file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      toast('이미지는 10MB 이하여야 합니다.', 'error');
-      return;
-    }
+    // 크기 제한 없음 — 큰 이미지는 압축(웹 워커)해서 업로드.
     if (!file.type.startsWith('image/')) return;
 
     setUploading(true);
