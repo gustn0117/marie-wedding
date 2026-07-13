@@ -5,6 +5,7 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import MessageThread from '@/features/messages/components/MessageThread';
 import ConversationSidebar from '@/features/messages/components/ConversationSidebar';
+import { loadConversationSummaries } from '@/features/messages/services/conversationSummaries';
 import type { Message } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
@@ -34,17 +35,14 @@ export default async function MessageDetailPage({ params }: Props) {
   }
 
   const partnerId = conv.participant_a === me.id ? conv.participant_b : conv.participant_a;
-  const { data: partner } = await supabase
-    .from('profiles')
-    .select('id, company_name, contact_name, deleted_at')
-    .eq('id', partnerId)
-    .maybeSingle();
-
-  const { data: msgs } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', params.id)
-    .order('created_at', { ascending: true });
+  // 파트너 · 메시지 · 사이드바 대화목록을 병렬 조회(서버·내부 kong 직결이라 빠름).
+  const [partnerRes, msgsRes, conversations] = await Promise.all([
+    supabase.from('profiles').select('id, company_name, contact_name, deleted_at').eq('id', partnerId).maybeSingle(),
+    supabase.from('messages').select('*').eq('conversation_id', params.id).order('created_at', { ascending: true }),
+    loadConversationSummaries(me.id),
+  ]);
+  const partner = partnerRes.data;
+  const msgs = msgsRes.data;
 
   const partnerName = partner?.deleted_at
     ? '탈퇴한 회원'
@@ -63,7 +61,7 @@ export default async function MessageDetailPage({ params }: Props) {
       {/* 2-pane: 좌측 대화 목록 (lg 이상) + 우측 현재 대화 */}
       <div className="grid gap-4 lg:grid-cols-[300px_1fr]">
         <div className="hidden lg:block">
-          <ConversationSidebar myProfileId={me.id} activeId={params.id} />
+          <ConversationSidebar conversations={conversations} activeId={params.id} />
         </div>
         <section className="platform-panel overflow-hidden">
           <MessageThread

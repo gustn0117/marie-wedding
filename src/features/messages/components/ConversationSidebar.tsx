@@ -1,91 +1,28 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
-import { withTimeout } from '@/shared/utils/withTimeout';
+import type { ConversationSummary } from '@/features/messages/services/conversationSummaries';
 
-interface Conversation {
-  id: string;
-  partnerName: string;
-  partnerImage: string | null;
-  lastBody: string | null;
-  lastMessageAt: string;
-  unread: number;
-}
-
-export default function ConversationSidebar({ myProfileId, activeId }: { myProfileId: string; activeId: string }) {
-  const [items, setItems] = useState<Conversation[]>([]);
+/**
+ * 대화 목록 사이드바 — 서버에서 집계한 요약(conversations)을 props 로 받아 즉시 렌더한다.
+ * (이전: 클라이언트에서 useEffect 로 여러 번 네트워크 왕복 → 스켈레톤이 오래 떴다.)
+ * 검색만 클라이언트에서 필터링한다.
+ */
+export default function ConversationSidebar({
+  conversations,
+  activeId,
+}: {
+  conversations: ConversationSummary[];
+  activeId: string;
+}) {
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-    const sb = createClient();
-    const { data: convs } = await withTimeout(
-      sb
-        .from('conversations')
-        .select('id, participant_a, participant_b, last_message_at')
-        .or(`participant_a.eq.${myProfileId},participant_b.eq.${myProfileId}`)
-        .order('last_message_at', { ascending: false })
-        .limit(50),
-      10000,
-      '대화 목록 조회 지연',
-    );
-
-    const list = (convs ?? []) as Array<{ id: string; participant_a: string; participant_b: string; last_message_at: string }>;
-    if (list.length === 0) { setItems([]); setLoading(false); return; }
-
-    const partnerIds = Array.from(new Set(list.map((c) => c.participant_a === myProfileId ? c.participant_b : c.participant_a)));
-    const convIds = list.map((c) => c.id);
-
-    const [partnersRes, lastMsgsRes, unreadRes] = await withTimeout(Promise.all([
-      sb.from('profiles').select('id, company_name, contact_name, profile_image').in('id', partnerIds),
-      sb.from('messages').select('conversation_id, body, created_at').in('conversation_id', convIds).order('created_at', { ascending: false }),
-      sb.from('messages').select('conversation_id').in('conversation_id', convIds).is('read_at', null).neq('sender_id', myProfileId),
-    ]), 10000, '대화 요약 조회 지연');
-
-    const partnerMap = new Map<string, { name: string; image: string | null }>();
-    for (const p of (partnersRes.data ?? []) as Array<{ id: string; company_name: string | null; contact_name: string; profile_image: string | null }>) {
-      partnerMap.set(p.id, { name: p.company_name || p.contact_name, image: p.profile_image });
-    }
-    const lastMsgMap = new Map<string, string>();
-    for (const m of (lastMsgsRes.data ?? []) as Array<{ conversation_id: string; body: string }>) {
-      if (!lastMsgMap.has(m.conversation_id)) lastMsgMap.set(m.conversation_id, m.body);
-    }
-    const unreadMap = new Map<string, number>();
-    for (const m of (unreadRes.data ?? []) as Array<{ conversation_id: string }>) {
-      unreadMap.set(m.conversation_id, (unreadMap.get(m.conversation_id) ?? 0) + 1);
-    }
-
-    const rows: Conversation[] = list.map((c) => {
-      const partnerId = c.participant_a === myProfileId ? c.participant_b : c.participant_a;
-      const partner = partnerMap.get(partnerId);
-      return {
-        id: c.id,
-        partnerName: partner?.name ?? '알 수 없음',
-        partnerImage: partner?.image ?? null,
-        lastBody: lastMsgMap.get(c.id) ?? null,
-        lastMessageAt: c.last_message_at,
-        unread: unreadMap.get(c.id) ?? 0,
-      };
-    });
-    setItems(rows);
-    } catch (err) {
-      console.error('[ConversationSidebar] load failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [myProfileId]);
-
-  useEffect(() => { load(); }, [load]);
 
   const filtered = search
-    ? items.filter((c) => c.partnerName.toLowerCase().includes(search.toLowerCase()))
-    : items;
+    ? conversations.filter((c) => c.partnerName.toLowerCase().includes(search.toLowerCase()))
+    : conversations;
 
   return (
     <aside className="surface overflow-hidden flex flex-col max-h-[700px]">
@@ -100,11 +37,7 @@ export default function ConversationSidebar({ myProfileId, activeId }: { myProfi
         />
       </header>
       <div className="overflow-y-auto flex-1">
-        {loading ? (
-          <div className="p-3 space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (<div key={i} className="h-14 bg-gray-100 rounded animate-pulse" />))}
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <p className="p-6 text-center text-xs text-gray-400">{search ? '검색 결과 없음' : '대화가 없습니다'}</p>
         ) : (
           <ul className="divide-y divide-gray-100">
