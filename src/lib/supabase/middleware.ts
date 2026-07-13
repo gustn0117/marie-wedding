@@ -168,7 +168,8 @@ export async function updateSession(request: NextRequest) {
       // (기존: 개별 페이지에서 redirect(ROUTES.LOGIN) 만 호출해 원경로 유실)
       const needsAuth =
         !isPublicBypass &&
-        (path.startsWith('/mypage') || path.startsWith('/applications') || path.startsWith('/jobs/new') || path.startsWith('/community/new'));
+        // 커뮤니티는 조회까지 로그인 필수(/community 전체). 나머지는 마이페이지·지원·공고작성.
+        (path.startsWith('/mypage') || path.startsWith('/applications') || path.startsWith('/jobs/new') || path.startsWith('/community'));
       if (needsAuth) {
         const url = request.nextUrl.clone();
         url.pathname = '/login';
