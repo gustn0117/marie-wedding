@@ -27,8 +27,19 @@ async function search(q: string) {
   const term = normalizeSearchTerm(q);
   const keyword = `%${term}%`;
 
+  // 검색어와 회사명/이름이 매칭되는 프로필 id — 그 작성자의 공고·글도 검색 결과에 포함시킨다.
+  // (예: '티웨딩' 검색 시 회사 프로필뿐 아니라 티웨딩이 올린 공고·글도 뜨게. 디렉토리 노출 여부 무관)
+  const { data: matchedProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .is('deleted_at', null)
+    .or(`company_name.ilike.${keyword},contact_name.ilike.${keyword}`)
+    .limit(50);
+  const authorIds = (matchedProfiles ?? []).map((p) => p.id as string);
+  const authorFilter = authorIds.length > 0 ? `,author_id.in.(${authorIds.join(',')})` : '';
+
   const [hiringRes, directoryRes, postsRes] = await Promise.all([
-    // 채용 공고
+    // 채용 공고 — 제목·본문 매칭 OR 작성자(회사) 매칭
     supabase
       .from('jobs')
       .select('*, author:profiles!author_id(*)')
@@ -36,9 +47,9 @@ async function search(q: string) {
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
       .eq('posting_type', 'hiring')
-      .or(`title.ilike.${keyword},description.ilike.${keyword}`)
+      .or(`title.ilike.${keyword},description.ilike.${keyword}${authorFilter}`)
       .order('created_at', { ascending: false })
-      .range(0, 4),
+      .range(0, 9),
     // 디렉토리
     supabase
       .from('profiles')
@@ -47,15 +58,15 @@ async function search(q: string) {
       .eq('is_directory_listed', true)
       .or(`company_name.ilike.${keyword},contact_name.ilike.${keyword},bio.ilike.${keyword}`)
       .order('company_name', { ascending: true })
-      .range(0, 4),
-    // 커뮤니티
+      .range(0, 9),
+    // 커뮤니티 — 제목·본문 매칭 OR 작성자 매칭
     supabase
       .from('posts')
       .select('*, author:profiles!author_id(*)')
       .is('deleted_at', null)
-      .or(`title.ilike.${keyword},content.ilike.${keyword}`)
+      .or(`title.ilike.${keyword},content.ilike.${keyword}${authorFilter}`)
       .order('created_at', { ascending: false })
-      .range(0, 4),
+      .range(0, 9),
   ]);
 
   return {
