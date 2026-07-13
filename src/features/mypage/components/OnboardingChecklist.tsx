@@ -3,7 +3,6 @@ import type { Profile } from '@/types/database';
 
 interface Props {
   profile: Profile;
-  portfolioCount: number;
   jobCount: number;
 }
 
@@ -14,7 +13,7 @@ interface Item {
   href: string;
 }
 
-export default function OnboardingChecklist({ profile, portfolioCount, jobCount }: Props) {
+export default function OnboardingChecklist({ profile, jobCount }: Props) {
   const items: Item[] = [
     {
       key: 'profile-image',
@@ -47,12 +46,6 @@ export default function OnboardingChecklist({ profile, portfolioCount, jobCount 
       done: profile.verification_status === 'verified',
       href: '/mypage/verification',
     }] : []),
-    {
-      key: 'portfolio',
-      label: '포트폴리오 1개 이상 등록',
-      done: portfolioCount >= 1,
-      href: '/mypage/portfolios',
-    },
     {
       key: 'job',
       label: '공고 1개 이상 등록',

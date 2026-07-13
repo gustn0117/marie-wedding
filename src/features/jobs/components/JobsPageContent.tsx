@@ -15,7 +15,6 @@ import FilterChip from '@/shared/components/FilterChip';
 import ViewToggle, { type ViewMode } from '@/shared/components/ViewToggle';
 import JobListRow from './JobListRow';
 import JobCard from './JobCard';
-import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import EmptyState from '@/shared/components/EmptyState';
 import PageHeader from '@/shared/components/PageHeader';
@@ -530,17 +529,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           <SortDropdown
             value={searchParams.get('sort') ?? 'recent'}
             onChange={(v) => updateParams({ sort: v === 'recent' ? '' : v })}
-          />
-          <SaveSearchButton
-            scope="jobs"
-            query={{
-              search,
-              region: selectedRegion,
-              businessType: selectedBusinessTypes.join(','),
-              employmentType: selectedEmploymentType,
-              subRegion: selectedSubRegions.join(','),
-            }}
-            defaultName={search || getRegionFilterLabel() || '공고 검색'}
           />
           <ViewToggle value={viewMode} onChange={setViewMode} />
         </div>

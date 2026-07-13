@@ -500,7 +500,7 @@ function ApplicantSnapshot({ applicant, contactPhone }: { applicant: Profile; co
   const details = [
     getPrimaryBusinessTypeLabel(applicant.business_type, 2),
     getRegionLabel(applicant.region),
-    applicant.website ? '포트폴리오 있음' : '',
+    applicant.website ? '웹사이트 있음' : '',
     contactPhone || applicant.phone ? '연락 가능' : '',
   ].filter(Boolean);
 

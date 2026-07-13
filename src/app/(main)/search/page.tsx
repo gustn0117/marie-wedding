@@ -10,7 +10,6 @@ import {
 } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Job, Post, Profile } from '@/types/database';
-import SaveSearchButton from '@/features/saved-searches/components/SaveSearchButton';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const dynamic = 'force-dynamic';
@@ -89,10 +88,6 @@ export default async function SearchPage({ searchParams }: PageProps) {
             &ldquo;{q}&rdquo; 검색 결과
           </h1>
           <p className="text-small text-gray-500 mt-0.5" aria-live="polite">총 {totalCount}건</p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <SaveSearchButton scope="jobs" query={{ search: q }} defaultName={`"${q}" 공고`} />
-          <SaveSearchButton scope="directory" query={{ search: q }} defaultName={`"${q}" 업체`} />
         </div>
       </div>
 

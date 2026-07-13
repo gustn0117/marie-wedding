@@ -12,8 +12,7 @@ import {
 import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
-import PortfolioCard from '@/features/portfolios/components/PortfolioCard';
-import type { Portfolio, Review, ReviewTag } from '@/types/database';
+import type { Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
@@ -38,8 +37,8 @@ async function getData(id: string) {
 
   if (!profile) return null;
 
-  // 2) jobs / portfolios / reviews 는 profile.id 만 알면 되므로 병렬 실행
-  const [jobsRes, portfoliosRes, reviewsRes] = await Promise.all([
+  // 2) jobs / reviews 는 profile.id 만 알면 되므로 병렬 실행
+  const [jobsRes, reviewsRes] = await Promise.all([
     supabase
       .from('jobs')
       .select('*')
@@ -50,14 +49,6 @@ async function getData(id: string) {
       // (두 컬럼 모두 NOT NULL + default 이므로 정상 공고가 누락되지 않음)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('portfolios')
-      .select('*')
-      .eq('profile_id', id)
-      .is('deleted_at', null)
-      .order('is_featured', { ascending: false })
-      .order('display_order', { ascending: true })
       .order('created_at', { ascending: false }),
     supabase
       .from('reviews')
@@ -89,7 +80,6 @@ async function getData(id: string) {
   return {
     profile: profile as Profile,
     jobs: (jobsRes.data ?? []) as Job[],
-    portfolios: (portfoliosRes.data ?? []) as Portfolio[],
     reviews,
     tagMap,
   };
@@ -99,7 +89,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const result = await getData(params.id);
   if (!result) notFound();
 
-  const { profile, jobs, portfolios, reviews, tagMap } = result;
+  const { profile, jobs, reviews, tagMap } = result;
 
   let isOwner = false;
   try {
@@ -257,23 +247,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
         </div>
       )}
 
-      {/* Portfolios */}
-      {portfolios.length > 0 && (
-        <div className="bg-white border-y border-gray-200 p-6 md:p-8">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b border-gray-200">
-            포트폴리오 <span className="text-sm text-gray-400 font-normal ml-1">{portfolios.length}</span>
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {portfolios.map((p) => (
-              <PortfolioCard key={p.id} portfolio={p} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 옛 gallery 필드 — Portfolios 컴포넌트로 대체된 deprecated 컬럼.
-          기존 데이터 보존을 위해 표시는 유지. 신규 등록은 portfolios로 유도.
-          클릭 시 새 탭 원본 이동 대신 lightbox 확대 표시. */}
+      {/* 갤러리 — 공개 프로필의 업체 사진. 클릭 시 lightbox 확대 표시. */}
       {profile.gallery && profile.gallery.length > 0 && (() => {
         const galleryUrls = profile.gallery
           .map((img) => resolveStorageUrl(img, 'avatars'))

@@ -26,7 +26,7 @@ export const dynamic = 'force-dynamic';
 async function getMyData(profileId: string) {
   const supabase = createServerQueryClient();
 
-  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes, portfoliosRes] = await Promise.all([
+  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', profileId).single(),
     supabase
       .from('jobs')
@@ -57,11 +57,6 @@ async function getMyData(profileId: string) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
-    supabase
-      .from('portfolios')
-      .select('id', { count: 'exact', head: true })
-      .eq('profile_id', profileId)
-      .is('deleted_at', null),
   ]);
 
   const profile = profileRes.data as Profile | null;
@@ -79,7 +74,6 @@ async function getMyData(profileId: string) {
     // 좁힌 select로 임베드(job/applicant)가 배열로 추론돼 Application과 직접 겹치지 않으므로 unknown 경유.
     sentApplications: (sentApplicationsRes.data ?? []) as unknown as Application[],
     receivedApplications: (receivedApplicationsRes.data ?? []) as unknown as Application[],
-    portfolioCount: portfoliosRes.count ?? 0,
   };
 }
 
@@ -100,7 +94,7 @@ export default async function MyPage() {
 
   if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
 
-  const { profile, jobs, posts, sentApplications, receivedApplications, portfolioCount } = await getMyData(cookieProfile.id);
+  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(cookieProfile.id);
 
   if (!profile) redirect(ROUTES.LOGIN);
 
@@ -238,7 +232,7 @@ export default async function MyPage() {
       <VerificationStatusPanel profile={profile} />
 
       {/* Onboarding */}
-      <OnboardingChecklist profile={profile} portfolioCount={portfolioCount} jobCount={jobs.length} />
+      <OnboardingChecklist profile={profile} jobCount={jobs.length} />
 
       {/* ────────── 본인 활동 (위쪽 우선 노출) ────────── */}
       {/* 활동 통계 — Stats Summary는 아래(필수 데이터 위) */}

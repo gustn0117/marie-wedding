@@ -122,8 +122,8 @@ export default async function HomeMyPanel({ profileId }: Props) {
       {/* Bottom: sub link row */}
       <div className="grid grid-cols-3 border-t border-gray-100 divide-x divide-gray-100">
         <SubLink href={ROUTES.MYPAGE} label="내 공고" value={m.myJobs} />
-        <SubLink href={ROUTES.MYPAGE_PORTFOLIOS} label="포트폴리오" />
-        <SubLink href={ROUTES.MYPAGE_SAVED_SEARCHES} label="저장한 검색" />
+        <SubLink href={ROUTES.MYPAGE_BOOKMARKS} label="스크랩" />
+        <SubLink href={ROUTES.MYPAGE_MESSAGES} label="쪽지" />
       </div>
     </div>
   );
