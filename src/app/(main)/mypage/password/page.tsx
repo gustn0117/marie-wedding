@@ -1,57 +1,43 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import { createClient } from '@/lib/supabase/client';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import type { Profile } from '@/types/database';
+import type { User } from '@supabase/supabase-js';
 
-// 'change' = 이메일로 가입해 비밀번호가 있는 계정 → 현재 비밀번호 확인 후 변경
-// 'social' = 소셜(카카오·네이버·구글)로만 가입해 비밀번호가 없는 계정 → 변경 불가(안내만)
-type Mode = 'loading' | 'change' | 'social';
+/** 소셜(카카오·네이버·구글) 로그인 계정인지 판별 — 비밀번호가 없어 변경 불가.
+ *  1순위: profile.signup_provider (미들웨어가 쿠키에 넣어줘 네트워크 없이 즉시 사용).
+ *  2순위(구계정 등 signup_provider 누락 시): 세션 user 의 provider 메타데이터.
+ *  둘 다 애매하면 이메일 계정으로 간주(변경 허용). */
+function isSocialAccount(profile: Profile | null, user: User | null): boolean {
+  const sp = profile?.signup_provider;
+  if (sp === 'kakao' || sp === 'google' || sp === 'naver') return true;
+  if (sp === 'email') return false;
 
-/** 로그인 방식으로 비밀번호 보유 여부를 추정한다.
- *  - 네이버(커스텀 OAuth)는 user_metadata.provider='naver' 로 생성되고 비밀번호가 없다.
- *  - 카카오·구글(Supabase 네이티브)은 app_metadata.provider 가 해당 소셜이다.
- *  - 이메일 가입만 실제 비밀번호를 가진다. */
-function detectMode(user: { app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> } | null): Mode {
-  if (!user) return 'loading';
-  const um = user.user_metadata ?? {};
-  const am = user.app_metadata ?? {};
-  if (um.provider === 'naver') return 'social';
-  const provider = am.provider as string | undefined;
-  if (provider === 'kakao' || provider === 'google' || provider === 'naver') return 'social';
-  const providers = (am.providers as string[] | undefined) ?? [];
-  if (providers.length > 0 && !providers.includes('email')) return 'social';
-  return 'change';
+  if (user) {
+    const um = (user.user_metadata ?? {}) as Record<string, unknown>;
+    const am = (user.app_metadata ?? {}) as Record<string, unknown>;
+    if (um.provider === 'naver') return true;
+    const p = am.provider as string | undefined;
+    if (p === 'kakao' || p === 'google' || p === 'naver') return true;
+    const providers = (am.providers as string[] | undefined) ?? [];
+    if (providers.length > 0 && !providers.includes('email')) return true;
+  }
+  return false;
 }
 
 export default function ChangePasswordPage() {
-  const { isLoading, isAuthenticated } = useAuth();
-  const [mode, setMode] = useState<Mode>('loading');
+  const { isLoading, isAuthenticated, profile, user } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  // 마운트 시 실제 계정을 조회해 비밀번호 보유 여부(변경 가능 vs 소셜)를 판별.
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const supabase = createClient();
-        const { data } = await withTimeout(supabase.auth.getUser(), 12000, '계정 확인 지연');
-        if (alive) setMode(detectMode(data.user));
-      } catch {
-        // 조회 실패 시 안전하게 '변경' 모드(현재 비밀번호 요구)로 둔다.
-        if (alive) setMode('change');
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +121,7 @@ export default function ChangePasswordPage() {
     );
   }
 
+  const social = isSocialAccount(profile, user);
   const newFieldsEnabled = !!currentPassword;
 
   return (
@@ -154,12 +141,7 @@ export default function ChangePasswordPage() {
         </div>
       </div>
 
-      {mode === 'loading' ? (
-        <div className="card p-6 md:p-8 space-y-4 animate-pulse">
-          <div className="h-10 rounded bg-gray-100" />
-          <div className="h-10 rounded bg-gray-100" />
-        </div>
-      ) : mode === 'social' ? (
+      {social ? (
         // 소셜 로그인 계정 — 비밀번호가 없으므로 변경 자체를 제공하지 않는다.
         <div className="card p-6 md:p-8 text-center space-y-3">
           <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
