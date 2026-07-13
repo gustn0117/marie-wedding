@@ -5,6 +5,7 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
+import { toast } from '@/shared/components/Toast';
 
 type Detail = Awaited<ReturnType<typeof adminService.getUserDetail>>;
 
@@ -101,8 +102,40 @@ export default function UserDetailModal({ userId, onClose }: Props) {
 function DetailBody({ d }: { d: Detail }) {
   const p = d.profile;
   const tier = computeTrustTier(p);
+  const [featured, setFeatured] = useState<boolean>(!!p.featured_at);
+  const [busy, setBusy] = useState(false);
+  const toggleFeatured = async () => {
+    setBusy(true);
+    try {
+      await adminService.toggleFeaturedProfile(p.id, !featured);
+      setFeatured((v) => !v);
+      toast(!featured ? '메인 추천 프로필로 지정했습니다.' : '추천에서 해제했습니다.', 'success');
+    } catch {
+      toast('처리에 실패했습니다.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <>
+      {/* 메인 추천 프로필 지정 */}
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-ink">메인 추천 프로필</p>
+          <p className="text-xs text-gray-500">지정하면 홈 &lsquo;추천 인재·업체 프로필&rsquo; 카드에 노출됩니다.</p>
+        </div>
+        <button
+          type="button"
+          onClick={toggleFeatured}
+          disabled={busy}
+          className={`shrink-0 px-3 h-9 rounded-lg text-[12.5px] font-bold border transition-colors disabled:opacity-50 ${
+            featured ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
+          }`}
+        >
+          {featured ? '★ 추천 중' : '☆ 추천 지정'}
+        </button>
+      </div>
+
       <Section title="기본 정보">
         <Field label="이름">{p.contact_name}</Field>
         <Field label="회사명">{p.company_name || '-'}</Field>

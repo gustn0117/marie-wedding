@@ -12,11 +12,13 @@ import {
 import type { Event, Job, Post, Profile } from '@/types/database';
 import BusinessTypeIcon, { CheckIcon } from '@/shared/components/icons/BusinessTypeIcon';
 import FeaturedJobsCarousel from '@/features/home/FeaturedJobsCarousel';
+import FeaturedProfilesCarousel from '@/features/home/FeaturedProfilesCarousel';
 
 interface HomeContentProps {
   posts: Post[];
   jobs: Job[];
   featuredJobs?: Job[];
+  featuredProfiles?: Profile[];
   profiles: Profile[];
   events: Event[];
   counts: {
@@ -43,7 +45,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], featuredProfiles: adminFeaturedProfiles = [], profiles }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -54,7 +56,6 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
   };
 
   const featuredJobs = useMemo(() => jobs.slice(0, 8), [jobs]);
-  const featuredProfiles = useMemo(() => profiles.slice(0, 8), [profiles]);
   const featuredPosts = useMemo(() => posts.slice(0, 6), [posts]);
 
   return (
@@ -107,21 +108,14 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
         <FeaturedJobsCarousel jobs={adminFeaturedJobs} />
       )}
 
-      {/* 추천 인재·업체 프로필 — 전체 폭 */}
-      {featuredProfiles.length > 0 && (
-        <section className="bg-white pt-10">
-          <div className="max-w-[1280px] mx-auto px-5">
-            <SectionHeader title="추천 인재·업체 프로필" subtitle="채용과 지원 전 확인할 수 있는 신뢰 프로필" href={ROUTES.DIRECTORY} />
-            <BoardList header={['업체', '지역', '거래']}>
-              {featuredProfiles.map((p) => <CompanyBoardRow key={p.id} profile={p} />)}
-            </BoardList>
-          </div>
-        </section>
+      {/* 추천 인재·업체 프로필 — 관리자 지정 카드 캐러셀 */}
+      {adminFeaturedProfiles.length > 0 && (
+        <FeaturedProfilesCarousel profiles={adminFeaturedProfiles} />
       )}
 
-      {/* 2컬럼 위젯 — 공고 / 인기글 */}
+      {/* 3컬럼 위젯 — 최근공고 / 최근 프로필 / 인기글 */}
       <section className="bg-white py-10">
-        <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-2">
+        <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-3">
           {/* 최근 등록된 공고 */}
           <BoxWidget title="최근 등록된 공고" href={ROUTES.JOBS}>
             {featuredJobs.length === 0 ? (
@@ -129,6 +123,17 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
             ) : (
               <BoardList header={['공고', '회사']}>
                 {featuredJobs.slice(0, 6).map((job) => <JobBoardRow key={job.id} job={job} compact />)}
+              </BoardList>
+            )}
+          </BoxWidget>
+
+          {/* 최근 등록된 인재·업체 프로필 */}
+          <BoxWidget title="최근 등록된 프로필" href={ROUTES.DIRECTORY}>
+            {profiles.length === 0 ? (
+              <BoxEmpty message="아직 등록된 프로필이 없습니다." />
+            ) : (
+              <BoardList header={['업체·인재', '지역']}>
+                {profiles.slice(0, 6).map((p) => <CompanyBoardRow key={p.id} profile={p} />)}
               </BoardList>
             )}
           </BoxWidget>
@@ -242,25 +247,5 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
   );
 }
 
-/**
- * 가로 스크롤 캐러셀 — 키보드/마우스/터치 모두 지원.
- * 이전: 단순 div.h-scroll — 키보드 사용자에겐 스크롤 방법 가이드 없음, 인디케이터 없음.
- * 수정: aria-label 가진 region role + 좌우 스크롤 버튼.
- *   터치는 native 스와이프, 키보드는 Tab으로 카드 포커스 후 화살표 키 작동.
- */
-function SectionHeader({ title, subtitle, href }: { title: string; subtitle?: string; href: string }) {
-  return (
-    <div className="flex items-end justify-between mb-6 pb-4 border-b border-gray-200">
-      <div className="min-w-0">
-        <h2 className="text-[24px] sm:text-[32px] font-extrabold tracking-tighter text-ink leading-tight">{title}</h2>
-        {subtitle && <p className="mt-1.5 text-[14px] text-gray-500">{subtitle}</p>}
-      </div>
-      <Link href={href} className="shrink-0 inline-flex items-center gap-1 text-[13px] font-bold text-gray-500 hover:text-ink transition-colors">
-        전체보기
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-      </Link>
-    </div>
-  );
-}
 
 

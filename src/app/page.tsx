@@ -26,7 +26,7 @@ async function getHomeData() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes] = await Promise.all([
+  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
     supabase
       .from('posts')
       .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
@@ -48,7 +48,7 @@ async function getHomeData() {
       .select(PUBLIC_PROFILE_COLS, { count: 'exact' })
       .is('deleted_at', null)
       .eq('is_directory_listed', true)
-      .order('company_name', { ascending: true })
+      .order('created_at', { ascending: false })
       .range(0, 5),
     // 홈 '다가오는 행사' — end_date 가 오늘 이후이거나, end_date 가 없고 start_date 가 오늘 이후이거나,
     // 둘 다 없는 상시 행사만 노출. 종료된 행사는 제외.
@@ -85,6 +85,16 @@ async function getHomeData() {
       .order('featured_order', { ascending: true })
       .order('featured_at', { ascending: false })
       .limit(20),
+    // 추천 프로필 — 관리자가 지정한 featured_at IS NOT NULL 프로필만
+    supabase
+      .from('profiles')
+      .select(PUBLIC_PROFILE_COLS)
+      .is('deleted_at', null)
+      .eq('is_directory_listed', true)
+      .not('featured_at', 'is', null)
+      .order('featured_order', { ascending: true })
+      .order('featured_at', { ascending: false })
+      .limit(20),
   ]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,6 +107,7 @@ async function getHomeData() {
     posts,
     jobs: (jobsRes.data ?? []) as Job[],
     featuredJobs: (featuredJobsRes.data ?? []) as Job[],
+    featuredProfiles: (featuredProfilesRes.data ?? []) as Profile[],
     profiles: (profilesRes.data ?? []) as Profile[],
     events: (eventsRes.data ?? []) as Event[],
     counts: {
@@ -112,10 +123,10 @@ async function getHomeData() {
 // 홈 데이터는 전원에게 동일한 공개 데이터(개인화 없음) → 30초 캐싱으로
 // 1,000 동시접속 시 매 요청 7쿼리 대신 30초당 1회 채움으로 DB 부하를 줄인다.
 // 개인화(로그인 헤더)는 별도 컴포넌트(쿠키 기반)라 캐싱 영향 없음.
-const getHomeDataCached = unstable_cache(getHomeData, ['home-data-v1'], { revalidate: 30, tags: ['home-data'] });
+const getHomeDataCached = unstable_cache(getHomeData, ['home-data-v2'], { revalidate: 30, tags: ['home-data'] });
 
 export default async function HomePage() {
-  const { posts, jobs, featuredJobs, profiles, events, counts } = await getHomeDataCached();
+  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events, counts } = await getHomeDataCached();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -125,6 +136,7 @@ export default async function HomePage() {
         posts={posts}
         jobs={jobs}
         featuredJobs={featuredJobs}
+        featuredProfiles={featuredProfiles}
         profiles={profiles}
         events={events}
         counts={counts}

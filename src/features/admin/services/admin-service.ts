@@ -81,6 +81,9 @@ export const adminService = {
     adminFetch('toggleFeaturedJob', { id, featured }),
   reorderFeaturedJobs: (orderedIds: string[]) =>
     adminFetch('reorderFeaturedJobs', { orderedIds }),
+  // 추천 프로필 (메인 노출)
+  toggleFeaturedProfile: (id: string, featured: boolean) =>
+    adminFetch('toggleFeaturedProfile', { id, featured }),
 
   // ── Posts ──
   getPosts: (page = 1, search?: string, showDeleted = false) =>

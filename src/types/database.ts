@@ -46,6 +46,8 @@ export interface Profile {
   avg_response_minutes: number | null;
   completed_deals_count: number;
   premium_tier: 'free' | 'basic' | 'pro';
+  featured_at?: string | null;
+  featured_order?: number | null;
   premium_until: string | null;
   banned_at: string | null;
   banned_reason: string | null;

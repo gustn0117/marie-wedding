@@ -300,6 +300,33 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true });
       }
 
+      case 'toggleFeaturedProfile': {
+        const { id, featured } = params as { id: string; featured: boolean };
+        if (featured) {
+          const { data: max } = await supabase
+            .from('profiles')
+            .select('featured_order')
+            .not('featured_order', 'is', null)
+            .order('featured_order', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const nextOrder = (max?.featured_order ?? 0) + 10;
+          const { error } = await supabase
+            .from('profiles')
+            .update({ featured_at: new Date().toISOString(), featured_order: nextOrder })
+            .eq('id', id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ featured_at: null, featured_order: null })
+            .eq('id', id);
+          if (error) throw error;
+        }
+        revalidateTag('home-data'); // 메인 추천 프로필 즉시 반영
+        return NextResponse.json({ success: true });
+      }
+
       case 'reorderFeaturedJobs': {
         const { orderedIds } = params as { orderedIds: string[] };
         if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
