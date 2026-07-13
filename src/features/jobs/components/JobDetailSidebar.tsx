@@ -49,7 +49,7 @@ export default function JobDetailSidebar({ job, blockReason }: Props) {
       </section>
 
       {/* Quick actions */}
-      <section className="surface p-4 space-y-2">
+      <section className="surface p-4 flex flex-wrap gap-2">
         <BookmarkButton targetType="job" targetId={job.id} label="공고 저장" />
         <ReportButton targetType="job" targetId={job.id} />
       </section>

@@ -224,7 +224,6 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
   const verified = profile.verification_status === 'verified';
   const bizLabel = profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너';
   const region = getRegionLabel(profile.region);
-  const deals = profile.completed_deals_count ?? 0;
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="board-row group">
       <span className="board-cat">{bizLabel}</span>
@@ -238,7 +237,6 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
       </span>
       <span className="board-row-meta">
         <span>{region}</span>
-        {deals > 0 && <span className="tabular-nums">거래 {deals}</span>}
       </span>
     </Link>
   );

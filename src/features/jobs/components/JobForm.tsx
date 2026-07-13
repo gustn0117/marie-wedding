@@ -301,18 +301,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               maxLength={100}
             />
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {['서울 웨딩플래너 신입/경력 채용', '주말 예식 진행 스태프 단기알바', '부산 스튜디오 상담 매니저 모집'].map((example) => (
-                <button
-                  key={example}
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, title: example }))}
-                  className="rounded-full border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-gray-500 hover:border-primary hover:text-primary"
-                >
-                  {example}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div>

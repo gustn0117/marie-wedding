@@ -86,16 +86,14 @@ export default function EditProfilePage() {
     //    폐기되어 업종/지역/소개/연락처가 초기화되던 문제를 원천 차단.
     (async () => {
       try {
-        const sb = createClient();
-        const { data } = await withTimeout(
-          sb
-            .from('profiles')
-            .select('contact_name, company_name, business_type, region, bio, phone, website, profile_image')
-            .eq('id', profileId)
-            .maybeSingle(),
+        // 서버 라우트(service_role)로 확실히 조회 — 클라 세션 토큰 지연/RLS 로
+        // 업종·소개 등이 안 채워져 '초기화'처럼 보이던 문제 방지.
+        const res = await withTimeout(
+          fetch('/api/profile/me', { credentials: 'include' }),
           8000,
           '프로필 조회가 지연돼요.',
         );
+        const data = res.ok ? (await res.json()).profile : null;
         if (!data) return;
         fullLoadedRef.current = true;
         // 사용자가 입력을 시작(userDirty)했으면 통째로 덮어쓰지 않고 빈 필드만 채운다.
