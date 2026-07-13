@@ -8,6 +8,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from '@/shared/components/Toast';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -110,10 +111,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const uploadImage = async (): Promise<string | null> => {
     if (!imageFile) return formData.image || null;
     const supabase = createClient();
-    const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
+    const compressed = await compressImage(imageFile, { maxDimension: 1280, quality: 0.8 });
     const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
+    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 20000, '이미지 업로드가 너무 오래 걸려요.');
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
   };
@@ -163,14 +164,28 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     setLoading(true);
     try {
       let imagePath = formData.image;
-      if (imageFile) imagePath = await uploadImage();
-      else if (!imagePreview) imagePath = null;
+      let imageFailed = false;
+      if (imageFile) {
+        // 이미지 업로드는 비치명적 — 실패해도 공고는 등록한다(기존 이미지 유지).
+        try {
+          imagePath = await uploadImage();
+        } catch (e) {
+          console.warn('[JobForm] 이미지 업로드 실패, 공고는 계속 등록:', e);
+          imageFailed = true;
+          imagePath = formData.image ?? null;
+        }
+      } else if (!imagePreview) {
+        imagePath = null;
+      }
       await onSubmit({
         ...formData,
         postingType: 'hiring',
         image: imagePath,
         description: composedDescription, // 5개 섹션을 합친 HTML
       });
+      if (imageFailed) {
+        toast('공고는 등록됐지만 이미지 업로드에 실패했어요. 수정에서 다시 시도해주세요.', 'error');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {

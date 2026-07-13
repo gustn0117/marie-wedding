@@ -45,8 +45,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   const [message, setMessage] = useState('');
   const [careerSummary, setCareerSummary] = useState('');
   const [availableSchedule, setAvailableSchedule] = useState('');
-  const [portfolioLink, setPortfolioLink] = useState('');
-  const [desiredPay, setDesiredPay] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
@@ -70,12 +68,11 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       // 폼 즉시 노출 — 스켈레톤 없음
       setLoading(false);
       // 프로필 값으로 최초 1회만 프리필. 토큰 갱신으로 effect가 재실행돼도
-      // 사용자가 입력하거나 지운 값(연락처·경력·포트폴리오)을 덮어쓰지 않는다.
+      // 사용자가 입력하거나 지운 값(연락처·경력)을 덮어쓰지 않는다.
       if (!prefilledRef.current) {
         prefilledRef.current = true;
         setContactPhone(profile.phone ?? '');
         setCareerSummary(stripHtml(profile.bio ?? '').slice(0, 180));
-        setPortfolioLink(profile.website ?? '');
       }
 
       // 백그라운드: 이미 지원했는지 체크. 결과 오면 상태 전환, 실패해도 폼 그대로 유지.
@@ -128,9 +125,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       { key: 'phone', label: '연락처', done: !!(contactPhone || profile.phone) },
       { key: 'career', label: '경력/강점', done: careerSummary.trim().length >= 10 },
       { key: 'schedule', label: '가능 일정', done: availableSchedule.trim().length >= 5 },
-      { key: 'portfolio', label: '포트폴리오', done: !!portfolioLink.trim() || !!profile.website },
     ];
-  }, [availableSchedule, careerSummary, contactPhone, portfolioLink, profile]);
+  }, [availableSchedule, careerSummary, contactPhone, profile]);
   const readinessCount = readinessItems.filter((item) => item.done).length;
   const composedMessage = useMemo(() => {
     if (!profile) return '';
@@ -144,13 +140,11 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       `- 활동 지역: ${region}`,
       `- 경력/강점: ${careerSummary.trim() || '미입력'}`,
       `- 가능 일정: ${availableSchedule.trim() || '미입력'}`,
-      `- 희망 조건: ${desiredPay.trim() || '협의 가능'}`,
-      `- 포트폴리오/참고 링크: ${portfolioLink.trim() || profile.website || '미입력'}`,
       '',
       '[지원 쪽지]',
       message.trim(),
     ].join('\n');
-  }, [availableSchedule, careerSummary, desiredPay, message, portfolioLink, profile]);
+  }, [availableSchedule, careerSummary, message, profile]);
   // 연락처는 필수 — 직접 입력했거나 프로필에 등록되어 있어야 함
   const phoneAvailable = contactPhone.trim().length >= 9 || (profile?.phone ?? '').trim().length >= 9;
   const canSubmit = !!profile && message.trim().length >= 10 && careerSummary.trim().length >= 10 && availableSchedule.trim().length >= 5 && phoneAvailable;
@@ -172,8 +166,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       setMessage('');
       setCareerSummary('');
       setAvailableSchedule('');
-      setDesiredPay('');
-      setPortfolioLink('');
     } catch (err) {
       const msg = err instanceof Error
         ? err.message.includes('duplicate') ? '이미 접수된 내역이 있습니다.'
@@ -455,26 +447,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
               onChange={(e) => setAvailableSchedule(e.target.value)}
               className="input-field"
               placeholder="예) 주말 가능, 7월부터 출근 가능"
-            />
-          </label>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">희망 조건</span>
-            <input
-              value={desiredPay}
-              onChange={(e) => setDesiredPay(e.target.value)}
-              className="input-field"
-              placeholder="예) 월 280만원 이상, 협의 가능"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">포트폴리오/참고 링크</span>
-            <input
-              value={portfolioLink}
-              onChange={(e) => setPortfolioLink(e.target.value)}
-              className="input-field"
-              placeholder="인스타그램, 포트폴리오, 홈페이지"
             />
           </label>
         </div>
