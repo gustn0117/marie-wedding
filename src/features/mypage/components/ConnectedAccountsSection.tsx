@@ -36,6 +36,24 @@ export default function ConnectedAccountsSection() {
     if (profile?.signup_provider === 'naver') setNaverConnected(true);
   }, [profile?.signup_provider]);
 
+  // 소셜 계정 연결(linkIdentity) 실패 후 콜백이 ?social_error=... 를 붙여 되돌아옴.
+  // (이미 다른 계정에 가입/연결된 소셜을 연결하려 한 경우) — 명시적으로 안내하고 URL 정리.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sp = new URLSearchParams(window.location.search);
+    const err = sp.get('social_error');
+    if (!err) return;
+    toast(
+      err === 'link_conflict'
+        ? '이미 다른 계정에 가입·연결된 소셜 계정이에요. 다른 계정으로는 연결할 수 없습니다.'
+        : '소셜 계정 연결에 실패했어요. 잠시 후 다시 시도해주세요.',
+      'error',
+    );
+    sp.delete('social_error');
+    const qs = sp.toString();
+    window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
