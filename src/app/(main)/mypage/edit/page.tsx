@@ -54,9 +54,8 @@ export default function EditProfilePage() {
   useEffect(() => {
     if (!profileId || didInitRef.current) return;
     didInitRef.current = true;
-    let cancelled = false;
 
-    // 1) 쿠키 값으로 즉시 폼 오픈 (사진 포함)
+    // 1) 쿠키 값으로 즉시 폼 오픈 (사진 포함) — 있는 필드만 우선 채움
     setFormData((prev) => ({
       contact_name: prev.contact_name || profile?.contact_name || '',
       company_name: prev.company_name || profile?.company_name || '',
@@ -71,7 +70,9 @@ export default function EditProfilePage() {
     }
     setInitialized(true);
 
-    // 2) 백그라운드: 전체 profile 조회 → 사용자가 입력 시작 전이면 채워 넣기
+    // 2) 전체 profile 을 DB 에서 조회해 확실히 채움.
+    //    cancelled 플래그를 쓰지 않는다 — effect 재실행/StrictMode 로 조회 결과가
+    //    폐기되어 업종/지역/소개/연락처가 초기화되던 문제를 원천 차단.
     (async () => {
       try {
         const sb = createClient();
@@ -84,16 +85,16 @@ export default function EditProfilePage() {
           8000,
           '프로필 조회가 지연돼요.',
         );
-        if (cancelled || !data) return;
+        if (!data) return;
         fullLoadedRef.current = true;
-        // 사용자가 입력을 시작(userDirty)했으면 통째로 덮어쓰지 않고,
-        // 쿠키에 없어 ''로 시작한 빈 필드(bio/phone/website 등)만 DB 값으로 채운다.
-        // (기존 동작: userDirty 면 조회 결과 전량 폐기 → bio/phone/website 유실)
+        // 사용자가 입력을 시작(userDirty)했으면 통째로 덮어쓰지 않고 빈 필드만 채운다.
         setFormData((prev) =>
           userDirtyRef.current
             ? {
-                ...prev,
+                contact_name: prev.contact_name || data.contact_name || '',
+                company_name: prev.company_name || data.company_name || '',
                 business_type: prev.business_type || data.business_type || '',
+                region: prev.region || data.region || '',
                 bio: prev.bio || data.bio || '',
                 phone: prev.phone || data.phone || '',
                 website: prev.website || data.website || '',
@@ -109,19 +110,16 @@ export default function EditProfilePage() {
               },
         );
         // 사진은 새 파일을 고르지 않았을 때만 DB 값으로 동기화
-        setImagePreview((prev) =>
-          imageFile ? prev : data.profile_image
+        if (!imageFile) {
+          setImagePreview(data.profile_image
             ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`
-            : prev,
-        );
+            : null);
+        }
       } catch (err) {
-        // 쿠키 값으로 이미 폼이 열려 있으므로 치명적이지 않음
-        console.warn('[mypage/edit] background profile fetch failed:', err);
+        console.warn('[mypage/edit] profile fetch failed:', err);
       }
     })();
-    return () => { cancelled = true; };
-  // profileId 만 의존 — initialized 를 넣으면 setInitialized(true) 로 effect 가 cleanup 되어
-  // 진행 중 DB 조회가 폐기됨. 1회 실행은 didInitRef 로 보장.
+  // profileId 만 의존. 1회 실행은 didInitRef 로 보장.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profileId]);
 
@@ -275,8 +273,10 @@ export default function EditProfilePage() {
     }
   };
 
-  if (isLoading) {
-    return (
+  // profile 이 없을 때만: 세션 확인 중이면 스켈레톤, 확인 끝났으면 로그인 안내.
+  // 쿠키 profile 이 있으면(=대개 즉시) 아래 폼으로 바로 진입 → 진입 지연 제거.
+  if (!profile) {
+    return isLoading ? (
       <div className="max-w-2xl mx-auto space-y-6 animate-pulse">
         <div className="h-8 w-40 bg-gray-200 rounded" />
         <div className="bg-white rounded border border-gray-200 p-8 space-y-4">
@@ -285,11 +285,7 @@ export default function EditProfilePage() {
           <div className="h-10 rounded bg-gray-200" />
         </div>
       </div>
-    );
-  }
-
-  if (!profile) {
-    return (
+    ) : (
       <div className="max-w-2xl mx-auto text-center py-16">
         <h2 className="text-xl font-bold text-gray-900 mb-3">로그인이 필요합니다</h2>
         <Link href={ROUTES.LOGIN} className="btn-primary text-sm">로그인하기</Link>

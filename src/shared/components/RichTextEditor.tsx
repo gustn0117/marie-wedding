@@ -236,10 +236,11 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     setUploading(true);
     try {
       const supabase = createClient();
-      const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+      // 본문 삽입용 이미지는 1000px 로 충분 — 압축·업로드 시간 최소화(모바일 대용량 사진 대응)
+      const compressed = await compressImage(file, { maxDimension: 1000, quality: 0.8 });
       const ext = compressed.name.split('.').pop() || 'jpg';
       const path = `content_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await withTimeout(supabase.storage.from(imageBucket).upload(path, compressed), 15000, '이미지 업로드가 너무 오래 걸려요.');
+      const { error: uploadError } = await withTimeout(supabase.storage.from(imageBucket).upload(path, compressed), 20000, '이미지 업로드가 너무 오래 걸려요. 다시 시도해주세요.');
       if (uploadError) throw new Error(uploadError.message);
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
 

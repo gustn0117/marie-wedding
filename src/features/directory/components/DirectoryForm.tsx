@@ -176,55 +176,72 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       };
 
       setSavingStep('이미지 업로드 중...');
+      let imageFailed = false;
 
-      // 프로필(로고) · 커버 · 갤러리 병렬 업로드
+      // 이미지 업로드는 비치명적 — 실패해도 텍스트(업종·지역·소개·연락처 등)는 반드시 저장한다.
+      // 실패 시 기존 이미지를 유지(null 아님)하고 imageFailed 로 표시해 저장 후 안내한다.
       const profileImagePromise: Promise<string | null> = (async () => {
         if (!imageFile) return !imagePreview ? null : profile.profile_image;
-        // 로고는 작게 표시되므로 640px 로 충분 — 업로드 크기·시간 최소화
-        const compressed = await compressImage(imageFile, { maxDimension: 640, quality: 0.8 });
-        const ext = compressed.name.split('.').pop() || 'jpg';
-        const path = stampPath('avatar', 0, ext);
-        const { error: err } = await withTimeout(
-          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-          20000,
-          '프로필 이미지 업로드가 너무 오래 걸려요.',
-        );
-        if (err) throw new Error(`프로필 이미지 업로드 실패: ${err.message}`);
-        return path;
+        try {
+          const compressed = await compressImage(imageFile, { maxDimension: 640, quality: 0.8 });
+          const ext = compressed.name.split('.').pop() || 'jpg';
+          const path = stampPath('avatar', 0, ext);
+          const { error: err } = await withTimeout(
+            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+            20000, '프로필 이미지 업로드 지연',
+          );
+          if (err) throw err;
+          return path;
+        } catch (e) {
+          console.warn('[DirectoryForm] 로고 업로드 실패, 기존 유지:', e);
+          imageFailed = true;
+          return profile.profile_image; // 기존 유지
+        }
       })();
 
       const coverImagePromise: Promise<string | null> = (async () => {
         if (!coverFile) return !coverPreview ? null : profile.cover_image;
-        const compressed = await compressImage(coverFile, { maxDimension: 1280, quality: 0.8 });
-        const ext = compressed.name.split('.').pop() || 'jpg';
-        const path = stampPath('cover', 0, ext);
-        const { error: err } = await withTimeout(
-          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-          20000,
-          '커버 이미지 업로드가 너무 오래 걸려요.',
-        );
-        if (err) throw new Error(`커버 이미지 업로드 실패: ${err.message}`);
-        return path;
+        try {
+          const compressed = await compressImage(coverFile, { maxDimension: 1280, quality: 0.8 });
+          const ext = compressed.name.split('.').pop() || 'jpg';
+          const path = stampPath('cover', 0, ext);
+          const { error: err } = await withTimeout(
+            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+            20000, '커버 이미지 업로드 지연',
+          );
+          if (err) throw err;
+          return path;
+        } catch (e) {
+          console.warn('[DirectoryForm] 커버 업로드 실패, 기존 유지:', e);
+          imageFailed = true;
+          return profile.cover_image;
+        }
       })();
 
       const galleryPromises = galleryFiles.map(async (file, i) => {
-        const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
-        const ext = compressed.name.split('.').pop() || 'jpg';
-        const path = stampPath('gallery', i, ext);
-        const { error: err } = await withTimeout(
-          supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-          20000,
-          `갤러리 ${i + 1}번째 이미지 업로드 실패`,
-        );
-        if (err) throw new Error(`갤러리 ${i + 1}번째 이미지 업로드 실패: ${err.message}`);
-        return path;
+        try {
+          const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
+          const ext = compressed.name.split('.').pop() || 'jpg';
+          const path = stampPath('gallery', i, ext);
+          const { error: err } = await withTimeout(
+            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+            20000, `갤러리 ${i + 1}번째 업로드 지연`,
+          );
+          if (err) throw err;
+          return path;
+        } catch (e) {
+          console.warn(`[DirectoryForm] 갤러리 ${i + 1} 업로드 실패, 건너뜀:`, e);
+          imageFailed = true;
+          return null; // 실패한 갤러리 이미지는 제외
+        }
       });
 
-      const [profileImage, coverImage, ...newGallery] = await Promise.all([
+      const [profileImage, coverImage, ...newGalleryRaw] = await Promise.all([
         profileImagePromise,
         coverImagePromise,
         ...galleryPromises,
       ]);
+      const newGallery = newGalleryRaw.filter((p): p is string => !!p);
 
       const uploadedGallery = [...existingGallery, ...newGallery];
       setSavingStep(galleryCount > 0 ? `프로필 정보 저장 중... (이미지 ${galleryCount + Number(!!imageFile) + Number(!!coverFile)}장 처리 완료)` : '프로필 정보 저장 중...');
@@ -278,7 +295,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       // 페이지 리로드 없이 현재 서버 컴포넌트만 갱신 + 저장 완료 토스트
       setSuccess(true);
       setSavingStep(null);
-      toast('저장되었습니다.', 'success');
+      if (imageFailed) {
+        toast('정보는 저장됐어요. 일부 이미지는 업로드에 실패했으니 다시 시도해주세요.', 'error');
+      } else {
+        toast('저장되었습니다.', 'success');
+      }
       router.refresh();
       // 저장 배너는 3초 후 자동 해제
       setTimeout(() => setSuccess(false), 3000);
