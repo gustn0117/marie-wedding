@@ -7,6 +7,7 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 import { compressImage } from '@/shared/utils/image';
 import { validatePhone } from '@/shared/utils/validation';
@@ -472,7 +473,17 @@ export default function EditProfilePage() {
           <label htmlFor="bio" className="block text-sm font-medium text-gray-800">
             소개 <span className="text-gray-400 font-normal">(선택)</span>
           </label>
-          <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} rows={4} className="input-field w-full resize-y" placeholder="간단한 소개를 입력해주세요" />
+          <RichTextEditor
+            value={formData.bio}
+            onChange={(html) => {
+              userDirtyRef.current = true;
+              setFormData((prev) => ({ ...prev, bio: html }));
+              setError(null);
+              setSuccess(false);
+            }}
+            placeholder="회사/본인 소개를 자유롭게 작성하세요. 사진도 넣을 수 있어요."
+            minHeight={160}
+          />
         </div>
 
         {/* Phone & Website */}
