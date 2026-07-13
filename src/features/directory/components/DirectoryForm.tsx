@@ -180,7 +180,8 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       // 프로필(로고) · 커버 · 갤러리 병렬 업로드
       const profileImagePromise: Promise<string | null> = (async () => {
         if (!imageFile) return !imagePreview ? null : profile.profile_image;
-        const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
+        // 로고는 작게 표시되므로 640px 로 충분 — 업로드 크기·시간 최소화
+        const compressed = await compressImage(imageFile, { maxDimension: 640, quality: 0.8 });
         const ext = compressed.name.split('.').pop() || 'jpg';
         const path = stampPath('avatar', 0, ext);
         const { error: err } = await withTimeout(
@@ -194,7 +195,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       const coverImagePromise: Promise<string | null> = (async () => {
         if (!coverFile) return !coverPreview ? null : profile.cover_image;
-        const compressed = await compressImage(coverFile, { maxDimension: 1600, quality: 0.85 });
+        const compressed = await compressImage(coverFile, { maxDimension: 1280, quality: 0.8 });
         const ext = compressed.name.split('.').pop() || 'jpg';
         const path = stampPath('cover', 0, ext);
         const { error: err } = await withTimeout(
@@ -207,7 +208,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       })();
 
       const galleryPromises = galleryFiles.map(async (file, i) => {
-        const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+        const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
         const ext = compressed.name.split('.').pop() || 'jpg';
         const path = stampPath('gallery', i, ext);
         const { error: err } = await withTimeout(
