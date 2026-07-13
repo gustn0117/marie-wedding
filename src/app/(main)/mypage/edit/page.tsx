@@ -37,6 +37,10 @@ export default function EditProfilePage() {
 
   // 사용자가 입력을 시작하면 백그라운드 DB 갱신이 입력을 덮어쓰지 않도록 가드
   const userDirtyRef = useRef(false);
+  // 초기화 1회 실행 가드 (ref) — initialized state 를 effect 의존성에 넣으면
+  // setInitialized(true) 가 effect 를 재실행/cleanup 시켜 진행 중 DB 조회가 cancelled 로
+  // 폐기됨(→ business_type/region/bio 미로딩). ref 로 가드해 재실행을 막는다.
+  const didInitRef = useRef(false);
   // 백그라운드 전체 프로필 조회가 성공했는지 여부.
   // 미로드(조회 실패/timeout) 상태에서 빈 website/business_type 을 저장 payload 에 실으면
   // 기존 DB 값이 조용히 NULL 로 덮어써지므로, 이 플래그로 해당 키를 payload 에서 제외한다.
@@ -48,7 +52,8 @@ export default function EditProfilePage() {
   //  실패 fallback 시 profile_image 미반영 → '사진 연동 안됨' 증상)
   const profileId = profile?.id;
   useEffect(() => {
-    if (!profileId || initialized) return;
+    if (!profileId || didInitRef.current) return;
+    didInitRef.current = true;
     let cancelled = false;
 
     // 1) 쿠키 값으로 즉시 폼 오픈 (사진 포함)
@@ -115,9 +120,10 @@ export default function EditProfilePage() {
       }
     })();
     return () => { cancelled = true; };
-  // profile 객체 전체를 dep에 넣으면 useAuth 내 두 번의 setState로 effect가 재실행되므로 profileId만.
+  // profileId 만 의존 — initialized 를 넣으면 setInitialized(true) 로 effect 가 cleanup 되어
+  // 진행 중 DB 조회가 폐기됨. 1회 실행은 didInitRef 로 보장.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileId, initialized]);
+  }, [profileId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

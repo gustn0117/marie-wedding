@@ -55,12 +55,19 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   if (searchParams.employmentType) {
     query = query.eq('employment_type', searchParams.employmentType);
   }
+  // region 은 콤마-구분 다중값·'전국(all)' 가능 → 완전일치(.in) 대신 ilike 부분매칭.
+  // '전국' 공고(region 에 all 포함)는 어느 지역 필터에도 노출.
   if (searchParams.subRegion) {
     const subRegions = searchParams.subRegion.split(',').map((r) => r.trim()).filter(Boolean);
-    if (subRegions.length > 0) query = query.in('region', subRegions);
+    if (subRegions.length > 0) {
+      const orPart = [...subRegions.map((r) => `region.ilike.%${r}%`), 'region.ilike.%all%'].join(',');
+      query = query.or(orPart);
+    }
   } else if (searchParams.region) {
     const details = REGION_DETAILS[searchParams.region]?.map((detail) => detail.value) ?? [];
-    query = query.in('region', [searchParams.region, ...details]);
+    const all = [searchParams.region, ...details];
+    const orPart = [...all.map((r) => `region.ilike.%${r}%`), 'region.ilike.%all%'].join(',');
+    query = query.or(orPart);
   }
   if (searchParams.search) {
     query = query.ilike('title', `%${searchParams.search}%`);

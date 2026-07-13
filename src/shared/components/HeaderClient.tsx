@@ -3,7 +3,6 @@
 import { Suspense, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
 import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
@@ -69,24 +68,17 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
       });
     } catch {}
 
-    // 서버 라우트로 supabase auth cookie + marie_profile 확실히 expire
+    // 서버 라우트가 세션 revoke + httpOnly 쿠키(sb-*, marie_profile) 만료를 모두 처리한다.
+    // 이것만 기다리고(보통 ~100ms) 즉시 이동 — 클라 supabase.auth.signOut()(GoTrue revoke)은
+    // 서버가 이미 수행하므로 생략. (이전엔 이 2초 대기 때문에 헤더 변경 후 ~1초 지연 발생)
     try {
       await Promise.race([
         fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
-      ]);
-    } catch {
-      // 무시 — full reload로 미들웨어가 다시 처리
-    }
-
-    // 클라이언트 supabase signOut도 best-effort (in-memory session 정리)
-    try {
-      const supabase = createClient();
-      await Promise.race([
-        supabase.auth.signOut(),
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 2000)),
       ]);
-    } catch {}
+    } catch {
+      // 무시 — full reload 로 미들웨어가 다시 처리
+    }
 
     window.location.href = '/';
   }, []);

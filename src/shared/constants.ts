@@ -31,6 +31,7 @@ export const POSTING_TYPES = [
 ] as const;
 
 export const REGIONS = [
+  { value: 'all', label: '전국' },
   { value: 'seoul', label: '서울' },
   { value: 'gyeonggi', label: '경기' },
   { value: 'incheon', label: '인천' },
