@@ -9,6 +9,7 @@ import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ChangePasswordPage() {
   const { isLoading, isAuthenticated } = useAuth();
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -19,6 +20,10 @@ export default function ChangePasswordPage() {
     e.preventDefault();
     setError(null);
 
+    if (!currentPassword) {
+      setError('현재 비밀번호를 입력해주세요.');
+      return;
+    }
     if (newPassword.length < 6) {
       setError('비밀번호는 6자 이상이어야 합니다.');
       return;
@@ -27,10 +32,36 @@ export default function ChangePasswordPage() {
       setError('비밀번호가 일치하지 않습니다.');
       return;
     }
+    if (newPassword === currentPassword) {
+      setError('새 비밀번호가 현재 비밀번호와 같습니다.');
+      return;
+    }
 
     setSubmitting(true);
     try {
       const supabase = createClient();
+
+      // 1) 현재 비밀번호 확인 — 재인증(signInWithPassword)으로 본인 검증.
+      //    틀린 현재 비밀번호로는 변경되지 않게 한다.
+      const { data: userData } = await withTimeout(supabase.auth.getUser(), 12000, '계정 확인 지연');
+      const email = userData.user?.email;
+      if (!email) {
+        setError('이메일로 가입한 계정에서만 비밀번호를 변경할 수 있습니다.');
+        setSubmitting(false);
+        return;
+      }
+      const { error: reauthError } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password: currentPassword }),
+        12000,
+        '현재 비밀번호 확인 지연',
+      );
+      if (reauthError) {
+        setError('현재 비밀번호가 일치하지 않습니다.');
+        setSubmitting(false);
+        return;
+      }
+
+      // 2) 새 비밀번호로 변경
       const { error: updateError } = await withTimeout(
         supabase.auth.updateUser({ password: newPassword }),
         12000,
@@ -38,6 +69,7 @@ export default function ChangePasswordPage() {
       );
       if (updateError) throw updateError;
       setSuccess(true);
+      setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
@@ -90,6 +122,24 @@ export default function ChangePasswordPage() {
         {success && <div className="p-4 rounded bg-state-new-bg border border-green-200 text-state-new text-sm">비밀번호가 변경되었습니다.</div>}
 
         <div className="space-y-1.5">
+          <label htmlFor="currentPassword" className="block text-sm font-medium text-text-primary">
+            현재 비밀번호 <span className="text-state-urgent">*</span>
+          </label>
+          <input
+            id="currentPassword"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => { setCurrentPassword(e.target.value); setError(null); setSuccess(false); }}
+            className="input-field w-full"
+            placeholder="현재 사용 중인 비밀번호"
+            autoComplete="current-password"
+          />
+          <p className="text-xs text-gray-400">본인 확인을 위해 현재 비밀번호를 먼저 입력해주세요.</p>
+        </div>
+
+        <div className="border-t border-gray-100" />
+
+        <div className="space-y-1.5">
           <label htmlFor="newPassword" className="block text-sm font-medium text-text-primary">
             새 비밀번호 <span className="text-state-urgent">*</span>
           </label>
@@ -98,9 +148,11 @@ export default function ChangePasswordPage() {
             type="password"
             value={newPassword}
             onChange={(e) => { setNewPassword(e.target.value); setError(null); setSuccess(false); }}
-            className="input-field w-full"
-            placeholder="6자 이상 입력"
+            disabled={!currentPassword}
+            className={`input-field w-full ${!currentPassword ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+            placeholder={currentPassword ? '6자 이상 입력' : '현재 비밀번호 입력 후 활성화'}
             minLength={6}
+            autoComplete="new-password"
           />
         </div>
 
@@ -113,14 +165,20 @@ export default function ChangePasswordPage() {
             type="password"
             value={confirmPassword}
             onChange={(e) => { setConfirmPassword(e.target.value); setError(null); setSuccess(false); }}
-            className="input-field w-full"
-            placeholder="비밀번호 재입력"
+            disabled={!currentPassword}
+            className={`input-field w-full ${!currentPassword ? 'opacity-50 cursor-not-allowed bg-gray-50' : ''}`}
+            placeholder={currentPassword ? '비밀번호 재입력' : '현재 비밀번호 입력 후 활성화'}
+            autoComplete="new-password"
           />
         </div>
 
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link href={ROUTES.MYPAGE} className="btn-outline text-sm">취소</Link>
-          <button type="submit" disabled={submitting} className="btn-primary text-sm">
+          <button
+            type="submit"
+            disabled={submitting || !currentPassword || !newPassword || !confirmPassword}
+            className="btn-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             {submitting ? '변경 중...' : '변경하기'}
           </button>
         </div>
