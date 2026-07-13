@@ -63,36 +63,22 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/admin') ||
       isOnboardingPath;
 
-    // Sync profile cookie
+    // Sync profile cookie — 매 요청 프로필을 fresh 하게 조회한다.
+    // (이전 hardening22 의 mp_fresh 30초 스로틀은 onboarded_at/banned_at 등을 캐시해
+    //  온보딩 완료·로그인·로그아웃 직후 미들웨어(캐시)와 페이지(fresh) 판단이 어긋나
+    //  /onboarding↔/jobs 리다이렉트 루프를 유발 → 제거. 프로필 조회는 인덱스로 가벼움.)
     if (user) {
       {
-        // 프로필 DB 조회 스로틀 — 1,000 동시접속 대비 PostgREST/PG 부하 절감.
-        // 최근 30초 내 동기화(mp_fresh 마커)됐고 marie_profile 쿠키가 있으면 DB 조회·쿠키
-        // 재설정 없이 쿠키의 프로필로 게이팅한다. getUser(세션 검증)는 위에서 매 요청 수행하므로
-        // 세션 무효화는 즉시 반영되고, 역할/제재/온보딩/탈퇴 변경은 최대 30초 내 반영된다.
-        const syncFresh = request.cookies.get('mp_fresh')?.value === '1';
-        const rawProfile = request.cookies.get('marie_profile')?.value;
-        let profile: {
-          id?: string; deleted_at?: string | null; banned_at?: string | null;
-          onboarded_at?: string | null; [k: string]: unknown;
-        } | null = null;
-        let fromCache = false;
-        if (syncFresh && rawProfile) {
-          try { profile = JSON.parse(rawProfile); fromCache = true; } catch { profile = null; }
-        }
-        if (!profile) {
-          const serviceClient = createClient(
-            SUPABASE_SERVER_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!,
-            { db: { schema: SUPABASE_SCHEMA } }
-          );
-          const { data } = await serviceClient
-            .from('profiles')
-            .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason,onboarded_at,signup_provider,deleted_at')
-            .eq('user_id', user.id)
-            .single();
-          profile = data;
-        }
+        const serviceClient = createClient(
+          SUPABASE_SERVER_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+          { db: { schema: SUPABASE_SCHEMA } }
+        );
+        const { data: profile } = await serviceClient
+          .from('profiles')
+          .select('id,contact_name,company_name,account_type,role,region,profile_image,is_directory_listed,banned_at,banned_reason,onboarded_at,signup_provider,deleted_at')
+          .eq('user_id', user.id)
+          .single();
 
         // 탈퇴된 프로필 검사 우선 — isAuthPage / '/' 무한 루프 방지.
         // /login 자체는 그대로 표시 (redirect 하면 세션이 여전히 살아있어 다시 여기로 옴).
@@ -158,9 +144,7 @@ export async function updateSession(request: NextRequest) {
           return NextResponse.redirect(url);
         }
 
-        // 방금 DB 에서 새로 조회한 경우에만 쿠키 재설정(+30초 스로틀 마커).
-        // 캐시(쿠키) 경로면 이미 최신 쿠키가 브라우저에 있으므로 재기록 불필요.
-        if (profile && !fromCache) {
+        if (profile) {
           const cookieValue = JSON.stringify(profile);
           // Set on request for downstream server components
           request.cookies.set('marie_profile', cookieValue);
@@ -176,14 +160,6 @@ export async function updateSession(request: NextRequest) {
             secure: true,
             sameSite: 'lax',
             maxAge: 60 * 60 * 24 * 7,
-          });
-          // 스로틀 마커 — 30초. 이 창 동안은 프로필 DB 조회를 건너뛴다.
-          supabaseResponse.cookies.set('mp_fresh', '1', {
-            path: '/',
-            httpOnly: true,
-            secure: true,
-            sameSite: 'lax',
-            maxAge: 30,
           });
         }
       }
