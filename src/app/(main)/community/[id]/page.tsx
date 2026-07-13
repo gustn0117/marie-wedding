@@ -165,8 +165,6 @@ export default async function PostDetailPage({ params }: PageProps) {
             목록으로
           </Link>
           <div className="flex items-center gap-3 text-xs text-gray-400">
-            <span>조회 {post.view_count.toLocaleString()}</span>
-            <span>·</span>
             <span>댓글 {commentCount}</span>
             <span>·</span>
             <span>좋아요 {post.like_count}</span>

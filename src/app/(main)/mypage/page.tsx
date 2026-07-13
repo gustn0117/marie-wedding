@@ -30,7 +30,7 @@ async function getMyData(profileId: string) {
     supabase.from('profiles').select('*').eq('id', profileId).single(),
     supabase
       .from('jobs')
-      .select('id, title, status, employment_type, region, view_count, created_at')
+      .select('id, title, status, employment_type, region, created_at')
       .eq('author_id', profileId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -113,7 +113,6 @@ export default async function MyPage() {
   const { data: { user: authUser } } = await authClient.auth.getUser();
   const userEmail = authUser?.email ?? '';
 
-  const totalJobViews = jobs.reduce((sum: number, j) => sum + (j.view_count || 0), 0);
 
   const imageUrl = profile.profile_image
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
@@ -245,14 +244,13 @@ export default async function MyPage() {
       {/* 활동 통계 — Stats Summary는 아래(필수 데이터 위) */}
 
       {/* Stats Summary — 회원 유형별 분기.
-          업체: 공고 운영(등록 공고/조회수/받은 지원/응답률)
+          업체: 공고 운영(등록 공고/받은 지원/응답률)
           개인: 노출 안 함 — 커뮤니티·지원 섹션만 표시 */}
       {isBusinessAcc && (
         <section>
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-2">공고 운영</p>
-          <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-3">
             <WorkspaceMetric label="등록한 공고" value={jobs.length} href="/mypage?tab=jobs" />
-            <WorkspaceMetric label="공고 총 조회수" value={totalJobViews} unit="회" href="/mypage/dashboard" />
             <WorkspaceMetric label="받은 지원" value={receivedApplications.length} href="/mypage?tab=applications" />
             <WorkspaceMetric
               label="응답률"

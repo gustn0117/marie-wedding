@@ -212,7 +212,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
                   <p className="text-sm font-bold text-ink group-hover:text-primary truncate flex-1">{post.title}</p>
                 </div>
                 <p className="text-xs text-gray-500">
-                  조회 {post.view_count.toLocaleString()} · 좋아요 {post.like_count.toLocaleString()} · 댓글 {post.comment_count ?? 0} · {formatRelativeTime(post.created_at)}
+                  좋아요 {post.like_count.toLocaleString()} · 댓글 {post.comment_count ?? 0} · {formatRelativeTime(post.created_at)}
                 </p>
               </Link>
             </li>

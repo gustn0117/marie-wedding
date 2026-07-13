@@ -105,8 +105,6 @@ export default async function EventDetailPage({ params }: PageProps) {
           {/* Meta */}
           <div className="flex items-center gap-2 text-xs text-gray-400 pb-6 border-b border-gray-200 mb-6">
             <time>{formatRelativeTime(event.created_at)}</time>
-            <span>·</span>
-            <span>조회 {event.view_count.toLocaleString()}</span>
           </div>
 
           {/* Event Info */}
@@ -202,7 +200,6 @@ export default async function EventDetailPage({ params }: PageProps) {
             </svg>
             목록으로
           </Link>
-          <span className="text-xs text-gray-400">조회 {event.view_count.toLocaleString()}</span>
         </div>
       </article>
     </div>

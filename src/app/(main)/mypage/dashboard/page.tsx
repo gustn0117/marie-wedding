@@ -25,7 +25,6 @@ interface HiringDashboard {
   jobs: Job[];
   receivedApplications: Application[];
   activeJobs: number;
-  totalViews: number;
   totalApplications: number;
   acceptedApplications: number;
   reviewingApplications: number;
@@ -37,7 +36,7 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
   const [jobsRes, receivedRes] = await Promise.all([
     supabase
       .from('jobs')
-      .select('id, title, status, view_count, employment_type, region, created_at')
+      .select('id, title, status, employment_type, region, created_at')
       .eq('author_id', profileId)
       .eq('posting_type', 'hiring')
       .is('deleted_at', null)
@@ -55,7 +54,6 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
   const jobs = (jobsRes.data ?? []) as Job[];
   const receivedApplications = (receivedRes.data ?? []) as unknown as Application[];
   const activeJobs = jobs.filter((job) => !['closed', 'filled', 'hidden'].includes(job.status)).length;
-  const totalViews = jobs.reduce((sum, job) => sum + (job.view_count ?? 0), 0);
   const totalApplications = receivedApplications.length;
   const acceptedApplications = receivedApplications.filter((app) => app.status === 'accepted').length;
   const reviewingApplications = receivedApplications.filter((app) => app.status === 'pending' || app.status === 'reviewing').length;
@@ -64,7 +62,6 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
     jobs,
     receivedApplications,
     activeJobs,
-    totalViews,
     totalApplications,
     acceptedApplications,
     reviewingApplications,
@@ -86,12 +83,7 @@ export default async function DashboardPage() {
   }
 
   const dashboard = await loadHiringDashboard(profileId);
-  const topJobs = [...dashboard.jobs]
-    .sort((a, b) => (b.view_count ?? 0) - (a.view_count ?? 0))
-    .slice(0, 5);
-  const applicationRate = dashboard.totalViews > 0
-    ? Math.round((dashboard.totalApplications / dashboard.totalViews) * 1000) / 10
-    : 0;
+  const topJobs = dashboard.jobs.slice(0, 5); // 최근 등록순 (쿼리에서 created_at DESC)
   const statusCounts = PIPELINE_STATUSES.map((status) => ({
     status,
     label: DASHBOARD_STATUS_LABELS[status],
@@ -106,11 +98,11 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         title="공고 성과"
-        description="등록한 채용 공고의 조회, 지원, 검토 흐름을 한눈에 확인합니다."
+        description="등록한 채용 공고의 지원, 검토 흐름을 한눈에 확인합니다."
         actions={<Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>}
       />
 
-      {/* Hero — 운영자의 다음 행동(검토 필요한 지원)을 가장 크게. 조회수는 보조 KPI로. */}
+      {/* Hero — 운영자의 다음 행동(검토 필요한 지원)을 가장 크게. 보조 KPI 는 지원/승인. */}
       <section className="surface-dark text-white p-8">
         <p className="text-[13px] font-bold text-primary-200 mb-3">지금 검토해야 할 지원</p>
         <p className="text-[48px] sm:text-[56px] font-extrabold tabular-nums leading-none tracking-tighter text-white">
@@ -128,12 +120,12 @@ export default async function DashboardPage() {
             <p className={`mt-1 text-[18px] font-bold tabular-nums ${responseBacklog > 0 ? 'text-amber-200' : 'text-white'}`}>{responseBacklog}건</p>
           </div>
           <div>
-            <p className="text-[12px] font-semibold text-white/50">전체 조회수</p>
-            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{dashboard.totalViews.toLocaleString()}회</p>
+            <p className="text-[12px] font-semibold text-white/50">받은 지원</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{dashboard.totalApplications.toLocaleString()}건</p>
           </div>
           <div>
-            <p className="text-[12px] font-semibold text-white/50">지원 전환율</p>
-            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{applicationRate}%</p>
+            <p className="text-[12px] font-semibold text-white/50">승인율</p>
+            <p className="mt-1 text-[18px] font-bold tabular-nums text-white">{acceptedRate}%</p>
           </div>
         </div>
       </section>
@@ -181,7 +173,7 @@ export default async function DashboardPage() {
       <section className="grid gap-4 lg:grid-cols-[1fr_360px]">
         <div className="surface overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-ink">조회 많은 공고</h2>
+            <h2 className="text-sm font-bold text-ink">내 공고</h2>
             <Link href={ROUTES.JOBS_NEW} className="text-xs font-bold text-primary hover:underline">공고 추가</Link>
           </div>
           {topJobs.length === 0 ? (
@@ -196,7 +188,9 @@ export default async function DashboardPage() {
                       {getEmploymentTypeLabel(job.employment_type)} · {getRegionLabel(job.region)} · {formatRelativeTime(job.created_at)}
                     </p>
                   </div>
-                  <span className="text-xs font-bold text-primary tabular-nums">조회 {(job.view_count ?? 0).toLocaleString()}</span>
+                  <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
                 </Link>
               ))}
             </div>
