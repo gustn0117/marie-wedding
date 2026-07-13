@@ -210,20 +210,20 @@ export default function AdminUsersPage() {
       {/* Table */}
       <div className="bg-white rounded border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[1120px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-5 py-3 font-medium text-gray-500">이름</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">회사</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">유형</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">업종</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">지역</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">휴대폰</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">가입경로</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">권한</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">가입일</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">상태</th>
-                <th className="text-right px-5 py-3 font-medium text-gray-500">작업</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">이름</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">회사</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">유형</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">업종</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">지역</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">휴대폰</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">가입경로</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">권한</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">가입일</th>
+                <th className="text-left px-5 py-3 font-medium text-gray-500 whitespace-nowrap">상태</th>
+                <th className="text-right px-5 py-3 font-medium text-gray-500 whitespace-nowrap">작업</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -248,7 +248,7 @@ export default function AdminUsersPage() {
                     className={`${user.deleted_at ? 'bg-state-urgent-bg/50 opacity-60' : 'hover:bg-gray-50'} cursor-pointer`}
                     onClick={() => setDetailUserId(user.id)}
                   >
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                           {user.contact_name.charAt(0)}
@@ -256,27 +256,27 @@ export default function AdminUsersPage() {
                         <span className="font-medium text-gray-800">{user.contact_name}</span>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{user.company_name || '-'}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{user.company_name || '-'}</td>
+                    <td className="px-5 py-3 whitespace-nowrap">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
                         user.account_type === 'business' ? 'bg-primary-50 text-primary-600' : 'bg-gray-100 text-gray-600'
                       }`}>
                         {user.account_type === 'business' ? '업체' : user.account_type === 'individual' ? '개인' : '미선택'}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{user.business_type ? getPrimaryBusinessTypeLabel(user.business_type, 2) : '-'}</td>
-                    <td className="px-5 py-3 text-gray-600">{getRegionLabel(user.region)}</td>
-                    <td className="px-5 py-3 text-gray-600">{user.phone || '-'}</td>
-                    <td className="px-5 py-3 text-gray-600 text-xs">{signupProviderLabel(user.signup_provider)}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{user.business_type ? getPrimaryBusinessTypeLabel(user.business_type, 2) : '-'}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{getRegionLabel(user.region)}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{user.phone || '-'}</td>
+                    <td className="px-5 py-3 text-gray-600 whitespace-nowrap text-xs">{signupProviderLabel(user.signup_provider)}</td>
+                    <td className="px-5 py-3 whitespace-nowrap">
                       <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded ${
                         user.role === 'admin' ? 'bg-state-urgent-bg text-state-urgent' : 'bg-gray-100 text-gray-500'
                       }`}>
                         {user.role === 'admin' ? '관리자' : '일반'}
                       </span>
                     </td>
-                    <td className="px-5 py-3 text-gray-500">{formatDate(user.created_at)}</td>
-                    <td className="px-5 py-3">
+                    <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{formatDate(user.created_at)}</td>
+                    <td className="px-5 py-3 whitespace-nowrap">
                       {user.deleted_at ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-urgent-bg text-state-urgent">삭제됨</span>
                       ) : user.banned_at ? (
@@ -285,8 +285,8 @@ export default function AdminUsersPage() {
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>
                       )}
                     </td>
-                    <td className="px-5 py-3 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="px-5 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                         <button
                           onClick={() => setDetailUserId(user.id)}
                           className="px-2 py-1 text-xs text-gray-700 hover:bg-gray-100 rounded transition-colors"
