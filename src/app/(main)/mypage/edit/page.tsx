@@ -7,7 +7,6 @@ import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
-import ConnectedAccountsSection from '@/features/mypage/components/ConnectedAccountsSection';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 import { compressImage } from '@/shared/utils/image';
 import { validatePhone } from '@/shared/utils/validation';
@@ -208,10 +207,7 @@ export default function EditProfilePage() {
       fail(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.', 'phone');
       return;
     }
-    if (formData.bio.trim().length < 10) {
-      fail('소개를 10자 이상 입력해주세요.', 'bio');
-      return;
-    }
+    // 소개(bio)는 선택 항목 — 필수 검사 없음.
 
     setSubmitting(true);
     setError(null);
@@ -474,9 +470,9 @@ export default function EditProfilePage() {
         {/* Bio */}
         <div className="space-y-1.5">
           <label htmlFor="bio" className="block text-sm font-medium text-gray-800">
-            소개 <span className="text-state-urgent">*</span>
+            소개 <span className="text-gray-400 font-normal">(선택)</span>
           </label>
-          <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} rows={4} className="input-field w-full resize-y" placeholder="간단한 소개를 입력해주세요" required aria-required="true" />
+          <textarea id="bio" name="bio" value={formData.bio} onChange={handleChange} rows={4} className="input-field w-full resize-y" placeholder="간단한 소개를 입력해주세요" />
         </div>
 
         {/* Phone & Website */}
@@ -501,8 +497,6 @@ export default function EditProfilePage() {
           </button>
         </div>
       </form>
-
-      <ConnectedAccountsSection />
 
       <AccountWithdrawalSection />
     </div>
