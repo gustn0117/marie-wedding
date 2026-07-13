@@ -189,7 +189,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           const path = stampPath('avatar', 0, ext);
           const { error: err } = await withTimeout(
             supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            20000, '프로필 이미지 업로드 지연',
+            30000, '프로필 이미지 업로드 지연',
           );
           if (err) throw err;
           return path;
@@ -208,7 +208,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           const path = stampPath('cover', 0, ext);
           const { error: err } = await withTimeout(
             supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            20000, '커버 이미지 업로드 지연',
+            30000, '커버 이미지 업로드 지연',
           );
           if (err) throw err;
           return path;
@@ -226,7 +226,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           const path = stampPath('gallery', i, ext);
           const { error: err } = await withTimeout(
             supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            20000, `갤러리 ${i + 1}번째 업로드 지연`,
+            30000, `갤러리 ${i + 1}번째 업로드 지연`,
           );
           if (err) throw err;
           return path;

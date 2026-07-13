@@ -23,19 +23,29 @@ export async function compressImage(
 
   if (!file.type.startsWith('image/')) return file;
 
+  const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+  const base = file.name.replace(/\.[^.]+$/, '') || 'image';
+
   try {
-    const compressed = await imageCompression(file, {
-      maxWidthOrHeight: maxDimension,
-      initialQuality: quality,
-      maxSizeMB,
-      useWebWorker: true,
-      fileType: mimeType,
-    });
-    const ext = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
-    const base = file.name.replace(/\.[^.]+$/, '') || 'image';
-    return new File([compressed], `${base}.${ext}`, { type: compressed.type || mimeType });
+    // 워커 압축 — 15초 안에 못 끝내면(worker 문제 등) 폴백. 무한 대기 방지.
+    const compressed = await Promise.race([
+      imageCompression(file, {
+        maxWidthOrHeight: maxDimension,
+        initialQuality: quality,
+        maxSizeMB,
+        useWebWorker: true,
+        fileType: mimeType,
+      }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error('compress_timeout')), 15000)),
+    ]);
+    // 결과 검증 — 비어있거나 원본보다 크면 canvas 폴백
+    if (compressed && compressed.size > 0 && compressed.size <= file.size * 1.05) {
+      return new File([compressed], `${base}.${ext}`, { type: compressed.type || mimeType });
+    }
+    console.warn('[compressImage] 워커 결과 비정상, canvas 폴백');
+    return canvasCompress(file, { maxDimension, quality, mimeType });
   } catch (err) {
-    console.warn('[compressImage] worker 압축 실패, canvas 폴백:', err);
+    console.warn('[compressImage] 워커 압축 실패, canvas 폴백:', err);
     return canvasCompress(file, { maxDimension, quality, mimeType });
   }
 }
