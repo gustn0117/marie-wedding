@@ -40,8 +40,8 @@ export default async function DirectoryRegisterPage() {
           </svg>
         </Link>
         <div>
-          <p className="text-sm font-bold text-primary">Company Directory</p>
-          <h1 className="text-2xl font-bold text-gray-900">디렉토리 등록 / 수정</h1>
+          <p className="text-sm font-bold text-primary">Public Profile</p>
+          <h1 className="text-2xl font-bold text-gray-900">공개 프로필</h1>
         </div>
       </div>
 

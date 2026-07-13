@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
@@ -17,6 +18,16 @@ import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
+  const router = useRouter();
+
+  // 업체 계정은 프로필 편집을 '공개 프로필'(디렉토리)로 통합했다.
+  // 이 페이지로 들어오면 그쪽으로 보낸다. (개인 회원은 이 페이지를 그대로 사용)
+  useEffect(() => {
+    if (profile?.account_type === 'business') {
+      router.replace(ROUTES.DIRECTORY_REGISTER);
+    }
+  }, [profile?.account_type, router]);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
@@ -286,6 +297,19 @@ export default function EditProfilePage() {
     );
   }
 
+  // 업체 계정은 '공개 프로필'로 리다이렉트 중 — 폼 플래시 방지용 스켈레톤
+  if (profile.account_type === 'business') {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6 animate-pulse">
+        <div className="h-8 w-40 bg-gray-200 rounded" />
+        <div className="bg-white rounded border border-gray-200 p-8 space-y-4">
+          <div className="h-10 rounded bg-gray-200" />
+          <div className="h-10 rounded bg-gray-200" />
+        </div>
+      </div>
+    );
+  }
+
   // DB 프로필 fetch 완료 전엔 빈 폼 노출 X — 에러가 있으면 에러 박스, 아니면 skeleton
   if (!initialized) {
     return (
@@ -395,14 +419,6 @@ export default function EditProfilePage() {
           </label>
           <input id="contact_name" name="contact_name" type="text" value={formData.contact_name} onChange={handleChange} className="input-field w-full" />
         </div>
-
-        {/* Company Name - 업체 회원만 */}
-        {profile.account_type === 'business' && (
-          <div className="space-y-1.5">
-            <label htmlFor="company_name" className="block text-sm font-medium text-gray-800">업체명</label>
-            <input id="company_name" name="company_name" type="text" value={formData.company_name} onChange={handleChange} className="input-field w-full" />
-          </div>
-        )}
 
         {/* 업종 - 모든 회원 */}
         <div className="space-y-2">

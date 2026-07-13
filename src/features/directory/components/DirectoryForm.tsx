@@ -10,6 +10,7 @@ import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
@@ -45,6 +46,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
+    contact_name: profile.contact_name || '',
     company_name: profile.company_name || '',
     business_type: profile.business_type || '',
     region: (profile.region || '') as string,
@@ -249,6 +251,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       await withTimeout(
         directoryService.updateProfile(profile.id, {
+          contact_name: formData.contact_name.trim() || undefined,
           company_name: formData.company_name.trim() || null,
           business_type: formData.business_type || null,
           region: formData.region,
@@ -493,6 +496,18 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             />
             <p className="text-xs text-gray-400 mt-1">디렉토리와 검색 결과에 표시되는 이름입니다.</p>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1.5">담당자 이름</label>
+            <input
+              type="text"
+              value={formData.contact_name}
+              onChange={(e) => setFormData(prev => ({ ...prev, contact_name: e.target.value }))}
+              placeholder="예) 김마리"
+              className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
+            />
+            <p className="text-xs text-gray-400 mt-1">문의·연락 시 표시되는 담당자명입니다.</p>
+          </div>
         </div>
       </Section>
 
@@ -629,6 +644,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </button>
         <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
       </Section>
+
+      {/* 회원 탈퇴 */}
+      <AccountWithdrawalSection />
 
       {/* Save */}
       <div
