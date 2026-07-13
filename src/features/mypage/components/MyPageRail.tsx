@@ -65,14 +65,11 @@ export default function MyPageRail({ initialAccountType = null }: MyPageRailProp
   const accountType = profile?.account_type ?? initialAccountType;
   const isBusiness = accountType === 'business';
 
-  // 개인 회원에겐 공고 운영 관련 메뉴를 숨긴다 — 구인구직 섹션에서 '공고 등록' 빠지고,
-  // 개요의 '공고 성과', 프로필의 '공개 프로필', 설정의 '사업자 인증'도 제외.
-  const visibleSections = SECTIONS
-    .map((sec) => ({
-      ...sec,
-      items: sec.items.filter((it) => (isBusiness ? !it.individualOnly : !it.businessOnly)),
-    }))
-    .filter((sec) => sec.items.length > 0);
+  // 계정 유형별 필터(업체=individualOnly 숨김, 개인=businessOnly 숨김) 후
+  // 섹션 구분 없이 하나의 평평한 목록으로 노출한다.
+  const visibleItems = SECTIONS
+    .flatMap((sec) => sec.items)
+    .filter((it) => (isBusiness ? !it.individualOnly : !it.businessOnly));
 
   // 모바일 칩도 동일한 룰
   const mobileChips = [
@@ -88,28 +85,23 @@ export default function MyPageRail({ initialAccountType = null }: MyPageRailProp
     <>
       {/* 데스크탑 sticky rail */}
       <aside className="rail" aria-label="마이페이지 메뉴">
-        {visibleSections.map((sec) => (
-          <div key={sec.title}>
-            <p className="rail-section">{sec.title}</p>
-            {sec.items.map((item) => {
-              const isActive = pathname === item.href ||
-                (item.href !== ROUTES.MYPAGE && pathname.startsWith(item.href));
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`rail-item ${isActive ? 'rail-item-active' : ''}`}
-                  aria-current={isActive ? 'page' : undefined}
-                >
-                  <svg className="rail-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                  </svg>
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+        {visibleItems.map((item) => {
+          const isActive = pathname === item.href ||
+            (item.href !== ROUTES.MYPAGE && pathname.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`rail-item ${isActive ? 'rail-item-active' : ''}`}
+              aria-current={isActive ? 'page' : undefined}
+            >
+              <svg className="rail-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+              </svg>
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </aside>
 
       {/* 모바일 가로 스크롤 칩 — 회원 유형별로 적합한 항목만 */}
