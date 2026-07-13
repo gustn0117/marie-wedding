@@ -26,10 +26,9 @@ export default function JobDescriptionView({ html }: Props) {
 
   return (
     <div className="space-y-5">
-      {filled.map((sec, idx) => (
+      {filled.map((sec) => (
         <SectionCard
           key={sec.key}
-          index={idx + 1}
           sectionKey={sec.key}
           title={sec.title}
           body={sections[sec.key]}
@@ -40,38 +39,22 @@ export default function JobDescriptionView({ html }: Props) {
 }
 
 function SectionCard({
-  index,
   sectionKey,
   title,
   body,
 }: {
-  index: number;
   sectionKey: JobSectionKey;
   title: string;
   body: string;
 }) {
   return (
-    <article className="flex gap-4">
-      {/* 좌측: 번호 + 세로 라인 */}
-      <div className="flex flex-col items-center shrink-0">
-        <span
-          className="w-8 h-8 rounded-full bg-ink text-white text-[12px] font-bold inline-flex items-center justify-center"
-          aria-hidden
-        >
-          {String(index).padStart(2, '0')}
-        </span>
-        <span className="flex-1 w-px bg-gray-200 mt-2" aria-hidden />
-      </div>
-
-      {/* 우측: 헤더 + 본문 */}
-      <div className="flex-1 min-w-0 pb-2">
-        <header className="flex items-center gap-2 mb-3">
-          <SectionIcon sectionKey={sectionKey} />
-          <h3 className="text-[15px] font-bold text-ink">{title}</h3>
-        </header>
-        <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-5 py-4">
-          <SectionBody text={body} />
-        </div>
+    <article className="min-w-0">
+      <header className="flex items-center gap-2 mb-3">
+        <SectionIcon sectionKey={sectionKey} />
+        <h3 className="text-[15px] font-bold text-ink">{title}</h3>
+      </header>
+      <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-5 py-4">
+        <SectionBody text={body} />
       </div>
     </article>
   );

@@ -104,12 +104,6 @@ export default function JobListRow({ job, index }: Props) {
               <span className="ml-1.5 text-gray-400">외</span>
             </p>
           )}
-          <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[12px] font-bold text-primary bg-primary-50 border border-primary-100">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 17l4-4 3 3 7-7 4 4M14 9l5 0 0 5" />
-            </svg>
-            {businessLabel} TOP
-          </span>
         </div>
 
         {/* ④ 메타 (지역 / 경력·고용형태 / 학력) */}
