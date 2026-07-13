@@ -4,20 +4,35 @@ import { createClient } from '@/lib/supabase/client';
 import type { Conversation, Message } from '@/types/database';
 
 export const messageService = {
+  // 대화 시작/전송은 서버 라우트(쿠키 세션)로 처리 — 클라 세션 토큰 지연·누락으로
+  // auth.uid() 가 NULL 이 되어 'unauthorized' 로 실패/지연하던 문제 회피.
   async startConversation(otherProfileId: string): Promise<Conversation> {
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc('start_conversation', { p_other_profile_id: otherProfileId });
-    if (error) throw error;
+    const res = await fetch('/api/messages/start', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetProfileId: otherProfileId }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '대화 시작에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Conversation;
   },
 
   async send(conversationId: string, body: string): Promise<Message> {
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc('send_message', {
-      p_conversation_id: conversationId,
-      p_body: body,
+    const res = await fetch('/api/messages/send', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversationId, body }),
     });
-    if (error) throw error;
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '메시지 전송에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Message;
   },
 
