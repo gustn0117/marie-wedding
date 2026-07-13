@@ -48,9 +48,13 @@ export function useAuth() {
     const supabase = supabaseRef.current;
 
     // 마운트 즉시 cookie의 profile을 우선 반영 (UI 첫 노출 빠르게)
+    // 미들웨어는 유효 세션에만 marie_profile 쿠키를 설정한다 → '쿠키 존재 = 인증됨'.
+    // 따라서 네트워크(getSession/fetchProfile) 완료를 기다리지 않고 즉시 isLoading 을 해제해
+    // 로그인 UI 를 노출한다. user 와 최신 profile 은 아래 initSession 이 백그라운드로 채운다.
+    // (이 setState 는 마운트 후 effect 에서만 실행되므로 SSR hydration 불일치와 무관)
     const cookieProfile = getCookieProfile();
     if (cookieProfile) {
-      setState((prev) => ({ ...prev, profile: cookieProfile }));
+      setState((prev) => ({ ...prev, profile: cookieProfile, isLoading: false }));
     }
 
     const initSession = async () => {

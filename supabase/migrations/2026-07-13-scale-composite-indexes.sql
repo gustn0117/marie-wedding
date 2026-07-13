@@ -51,3 +51,14 @@ CREATE INDEX IF NOT EXISTS idx_notifications_unread
 CREATE INDEX IF NOT EXISTS idx_events_upcoming
   ON marie_wedding.events (is_pinned DESC, start_date ASC)
   WHERE deleted_at IS NULL;
+
+-- ---------------------------------------------------------------
+-- hardening(40): 작성자별 공고/지원자 파이프라인
+-- ---------------------------------------------------------------
+-- 마이페이지 '공고 성과' 대시보드의 jobs 조회
+--   (author_id = ? AND posting_type = 'hiring' AND deleted_at IS NULL ORDER BY created_at DESC)
+-- 및 공고 상세의 '지원자 파이프라인'(applications ⋈ jobs.author_id = ?) 조인 lookup 을 커버.
+-- author_id 가 선두 컬럼이라 조인 필터(job.author_id = ?)에도 사용된다.
+CREATE INDEX IF NOT EXISTS idx_jobs_author_active
+  ON marie_wedding.jobs (author_id, posting_type, created_at DESC)
+  WHERE deleted_at IS NULL;
