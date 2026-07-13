@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { revalidateTag } from 'next/cache';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { createServiceClient } from '@/lib/supabase/service';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
@@ -295,6 +296,7 @@ export async function POST(request: NextRequest) {
             .eq('id', id);
           if (error) throw error;
         }
+        revalidateTag('home-data'); // 메인 인기공고 즉시 반영
         return NextResponse.json({ success: true });
       }
 

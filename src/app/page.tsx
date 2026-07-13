@@ -112,7 +112,7 @@ async function getHomeData() {
 // 홈 데이터는 전원에게 동일한 공개 데이터(개인화 없음) → 30초 캐싱으로
 // 1,000 동시접속 시 매 요청 7쿼리 대신 30초당 1회 채움으로 DB 부하를 줄인다.
 // 개인화(로그인 헤더)는 별도 컴포넌트(쿠키 기반)라 캐싱 영향 없음.
-const getHomeDataCached = unstable_cache(getHomeData, ['home-data-v1'], { revalidate: 30 });
+const getHomeDataCached = unstable_cache(getHomeData, ['home-data-v1'], { revalidate: 30, tags: ['home-data'] });
 
 export default async function HomePage() {
   const { posts, jobs, featuredJobs, profiles, events, counts } = await getHomeDataCached();

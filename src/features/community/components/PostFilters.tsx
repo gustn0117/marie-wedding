@@ -2,11 +2,6 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useCallback } from 'react';
-import { POST_CATEGORIES } from '@/shared/constants';
-
-const ALL_CATEGORY = { value: '', label: '전체' } as const;
-const TABS = [ALL_CATEGORY, ...POST_CATEGORIES];
-
 const SORT_OPTIONS = [
   { value: 'latest', label: '최신순' },
   { value: 'popular', label: '인기순' },
@@ -17,7 +12,6 @@ export default function PostFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const activeCategory = searchParams.get('category') ?? '';
   const activeSort = searchParams.get('sort') ?? 'latest';
   const [searchValue, setSearchValue] = useState(searchParams.get('search') ?? '');
 
@@ -47,23 +41,6 @@ export default function PostFilters() {
 
   return (
     <div className="platform-filter-dock">
-      {/* Category Tabs */}
-      <div className="flex border-b border-gray-200 overflow-x-auto bg-white">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => updateParams({ category: tab.value })}
-            className={`px-5 py-3 text-sm font-bold border-b-2 transition-colors whitespace-nowrap ${
-              activeCategory === tab.value
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
       {/* Search + Sort */}
       <div className="flex items-center gap-3 p-3 flex-wrap bg-white">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2 min-w-[200px]">

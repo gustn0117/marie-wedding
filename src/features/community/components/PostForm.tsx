@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { POST_CATEGORIES, REGIONS, ROUTES } from '@/shared/constants';
+import { REGIONS, ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
@@ -23,7 +23,8 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   const [formData, setFormData] = useState<PostFormData>({
     title: initialData?.title ?? '',
     content: initialData?.content ?? '',
-    category: initialData?.category ?? '',
+    // 게시판(카테고리) 폐지 — 폼에서 선택 없이 기본값으로 저장(DB category 컬럼 호환)
+    category: initialData?.category ?? 'jobtip',
     region: initialData?.region ?? '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,14 +41,12 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     titleClean.length >= 2 &&
     meaningfulChars(titleClean) >= 2 &&
     contentClean.length >= 5 &&
-    meaningfulChars(contentClean) >= 5 &&
-    formData.category.length > 0;
+    meaningfulChars(contentClean) >= 5;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isValid) {
-      if (!formData.category) setError('카테고리를 선택해주세요.');
-      else if (meaningfulChars(titleClean) < 2) setError('제목에 영문/숫자/한글을 2자 이상 입력해주세요.');
+      if (meaningfulChars(titleClean) < 2) setError('제목에 영문/숫자/한글을 2자 이상 입력해주세요.');
       else if (meaningfulChars(contentClean) < 5) setError('내용을 5자 이상 입력해주세요.');
       else setError('모든 필수 항목을 입력해주세요.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -99,28 +98,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         </div>
       )}
 
-      {/* Category */}
-      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
-        <label className="block text-sm font-semibold text-gray-800">카테고리 <span className="text-state-urgent">*</span></label>
-        <div className="flex flex-wrap gap-2">
-          {POST_CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-              className={`rounded px-4 py-2 text-sm font-bold border transition-colors ${
-                formData.category === cat.value
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-gray-700 border-gray-300 hover:border-primary hover:text-primary'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Region (선택, 지역소식 등에서 유용) */}
+      {/* Region (선택) */}
       <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
         <label className="block text-sm font-semibold text-gray-800">
           지역 <span className="text-xs font-normal text-gray-400">(선택, 지역소식·후기에 유용)</span>
