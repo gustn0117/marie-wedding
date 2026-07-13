@@ -19,11 +19,11 @@ interface Props {
  * 사람인 스타일 가로 row.
  *
  * 데스크톱 grid (모바일에선 별도 flex 레이아웃):
- * | ① 번호 (32px) | ② 회사 (180px) | ③ 제목+키워드+칩 (1fr) | ④ 메타 3행 (170px) | ⑤ CTA·D-day·등록일 (108px) |
+ * | ① 회사 (188px) | ② 제목+키워드+칩 (1fr) | ③ 메타 3행 (180px) | ④ CTA·D-day·등록일 (112px) |
  *
  * 모든 컬럼 top-align (items-start). CTA 버튼은 정적 rose outline — row hover 시 변형 없음.
  */
-export default function JobListRow({ job, index }: Props) {
+export default function JobListRow({ job }: Props) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
   const companyName = job.author?.company_name ?? job.author?.contact_name ?? '미상';
@@ -66,15 +66,8 @@ export default function JobListRow({ job, index }: Props) {
       </div>
 
       {/* ───── 데스크톱 레이아웃 ───── */}
-      <div className="hidden sm:grid sm:grid-cols-[36px_188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-center">
-        {/* ① 순위 번호 — primary 톤으로 좌측 시각 앵커 */}
-        <div>
-          <p className="text-[20px] font-extrabold text-primary tabular-nums leading-none text-center">
-            {index ?? '-'}
-          </p>
-        </div>
-
-        {/* ② 회사 */}
+      <div className="hidden sm:grid sm:grid-cols-[188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-center">
+        {/* ① 회사 */}
         <div className="min-w-0">
           <p className="text-[14.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
             {companyName}
@@ -88,7 +81,7 @@ export default function JobListRow({ job, index }: Props) {
           <p className="text-[12.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
         </div>
 
-        {/* ③ 제목 + 키워드 + 카테고리 칩 */}
+        {/* ② 제목 + 키워드 + 카테고리 칩 */}
         <div className="min-w-0">
           <h3 className="text-[16px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline underline-offset-4 decoration-primary">
             {job.title}
@@ -106,7 +99,7 @@ export default function JobListRow({ job, index }: Props) {
           )}
         </div>
 
-        {/* ④ 메타 (지역 / 경력·고용형태 / 학력) */}
+        {/* ③ 메타 (지역 / 경력·고용형태 / 학력) */}
         <div className="flex flex-col gap-1.5 text-[13px] text-gray-600">
           <div className="flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
@@ -129,7 +122,7 @@ export default function JobListRow({ job, index }: Props) {
           </div>
         </div>
 
-        {/* ⑤ CTA + D-day + 등록일 — primary fill 로 시각 앵커 */}
+        {/* ④ CTA + D-day + 등록일 — primary fill 로 시각 앵커 */}
         <div className="flex flex-col items-stretch gap-1.5">
           <span className="inline-flex items-center justify-center h-10 rounded-md bg-primary text-[13px] font-bold text-white shadow-sm group-hover:bg-primary-dark transition-colors">
             입사지원
