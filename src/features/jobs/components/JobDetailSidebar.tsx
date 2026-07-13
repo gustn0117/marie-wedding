@@ -4,8 +4,6 @@ import { ROUTES } from '@/shared/constants';
 import { formatDate } from '@/shared/utils/format';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
-import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 
 interface Props {
   job: Job;
@@ -18,44 +16,9 @@ export default function JobDetailSidebar({ job, blockReason }: Props) {
   const daysLeft = job.deadline
     ? Math.ceil((new Date(job.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
-  const deals = job.author?.completed_deals_count ?? 0;
-  const responseRate = Math.round(job.author?.response_rate ?? 0);
-  const trustTier = job.author ? computeTrustTier(job.author) : 'unverified';
-  const trustEmphasis = trustTier === 'deal_proven' || trustTier === 'business_verified';
 
   return (
     <aside className="lg:sticky lg:top-20 space-y-3">
-      {/* Trust card */}
-      <section className={`rounded-xl border ${trustEmphasis ? 'border-primary' : 'border-gray-200'} bg-white p-4`}>
-        <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">프로필 신뢰 등급</p>
-        <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-100">
-          <p className={`text-sm font-bold ${trustEmphasis ? 'text-primary' : 'text-ink'}`}>
-            {TRUST_TIER_LABELS[trustTier]}
-          </p>
-          <VerificationBadge
-            verificationStatus={job.author?.verification_status}
-            phoneVerified={job.author?.phone_verified}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">채용 성사</p>
-            <p className="text-base font-bold text-ink tabular-nums">{deals}건</p>
-          </div>
-          <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wider">응답률</p>
-            <div className="flex items-center gap-1.5">
-              <p className="text-base font-bold text-ink tabular-nums">{responseRate > 0 ? `${responseRate}%` : '-'}</p>
-            </div>
-            {responseRate > 0 && (
-              <div className="mt-1 h-1 bg-gray-100">
-                <div className="h-full bg-gray-800" style={{ width: `${responseRate}%` }} />
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
       {/* Apply CTA */}
       <section className="surface p-4">
         <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">

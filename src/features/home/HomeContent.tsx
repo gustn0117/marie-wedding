@@ -43,7 +43,7 @@ const CATEGORIES: { key: string; label: string; iconKey: string; bg: string }[] 
 ];
 
 
-export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles, events }: HomeContentProps) {
+export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJobs = [], profiles }: HomeContentProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState('');
 
@@ -55,7 +55,6 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
 
   const featuredJobs = useMemo(() => jobs.slice(0, 8), [jobs]);
   const featuredProfiles = useMemo(() => profiles.slice(0, 8), [profiles]);
-  const featuredEvents = useMemo(() => events.slice(0, 4), [events]);
   const featuredPosts = useMemo(() => posts.slice(0, 6), [posts]);
 
   return (
@@ -120,9 +119,9 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
         </section>
       )}
 
-      {/* 3컬럼 위젯 — 공고 / 행사 / 인기글 */}
+      {/* 2컬럼 위젯 — 공고 / 인기글 */}
       <section className="bg-white py-10">
-        <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-3">
+        <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-2">
           {/* 최근 등록된 공고 */}
           <BoxWidget title="최근 등록된 공고" href={ROUTES.JOBS}>
             {featuredJobs.length === 0 ? (
@@ -134,26 +133,14 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
             )}
           </BoxWidget>
 
-          {/* 다가오는 행사·박람회 */}
-          <BoxWidget title="다가오는 행사·박람회" href={ROUTES.EVENTS}>
-            {featuredEvents.length === 0 ? (
-              <BoxEmpty message="예정된 행사가 없습니다." />
-            ) : (
-              <BoardList header={['행사', '일정']}>
-                {featuredEvents.slice(0, 6).map((event) => <EventBoardRow key={event.id} event={event} compact />)}
-              </BoardList>
-            )}
-          </BoxWidget>
-
           {/* 커뮤니티 인기글 */}
           <BoxWidget title="커뮤니티 인기글" href={ROUTES.COMMUNITY}>
             {featuredPosts.length === 0 ? (
               <BoxEmpty message="첫 글의 주인공이 되어보세요." />
             ) : (
               <BoardList header={['글', '작성']}>
-                {featuredPosts.slice(0, 6).map((post, idx) => (
+                {featuredPosts.slice(0, 6).map((post) => (
                   <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
-                    <span className={`w-5 text-center font-bold tabular-nums shrink-0 ${idx < 3 ? 'text-primary' : 'text-gray-400'}`}>{idx + 1}</span>
                     <span className="board-row-title group-hover:text-primary transition-colors">{post.title}</span>
                     <span className="board-row-meta">
                       <span className="tabular-nums">{formatRelativeTime(post.created_at)}</span>
@@ -252,33 +239,6 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
       <span className="board-row-meta">
         <span>{region}</span>
         {deals > 0 && <span className="tabular-nums">거래 {deals}</span>}
-      </span>
-    </Link>
-  );
-}
-
-/* === 행사·박람회 게시판 행 — 한 줄 === */
-function EventBoardRow({ event, compact = false }: { event: Event; compact?: boolean }) {
-  const dateLabel = event.start_date
-    ? event.start_date.slice(5, 10).replace('-', '/')
-    : '상시';
-  const fullDateLabel = event.start_date
-    ? `${event.start_date.slice(5, 10).replace('-', '/')}${event.end_date ? ` - ${event.end_date.slice(5, 10).replace('-', '/')}` : ''}`
-    : '상시';
-  const typeLabel = event.type === 'event' ? '박람회' : event.type === 'news' ? '소식' : event.type === 'notice' ? '공지' : '';
-  return (
-    <Link href={ROUTES.EVENTS_DETAIL(event.id)} className="board-row group">
-      <span className="board-cat">{typeLabel}</span>
-      <span className="board-row-title group-hover:text-primary transition-colors">{event.title}</span>
-      <span className="board-row-meta">
-        {compact ? (
-          <span className="tabular-nums">{dateLabel}</span>
-        ) : (
-          <>
-            {event.location && <span className="hidden sm:inline truncate max-w-[120px]">{event.location}</span>}
-            <span className="tabular-nums">{fullDateLabel}</span>
-          </>
-        )}
       </span>
     </Link>
   );
