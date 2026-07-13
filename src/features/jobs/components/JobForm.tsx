@@ -317,7 +317,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-1">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
-            <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="5MB" note="목록에서 잘 보이도록 가로가 넓은 이미지 권장" />
+            <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="자동 압축" note="목록에서 잘 보이도록 가로가 넓은 이미지 권장" />
             <div className="mt-2">
             {imagePreview ? (
               <div className="relative overflow-hidden rounded border border-gray-300">

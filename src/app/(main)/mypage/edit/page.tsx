@@ -382,7 +382,7 @@ export default function EditProfilePage() {
               </>
             )}
           </div>
-          <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="2MB" />
+          <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="자동 압축" />
         </div>
 
         <hr className="border-gray-100" />

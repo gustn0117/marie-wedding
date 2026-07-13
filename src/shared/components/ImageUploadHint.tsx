@@ -3,8 +3,8 @@ interface ImageUploadHintProps {
   ratio: string;
   /** 권장 크기 (픽셀) */
   recommendedSize: string;
-  /** 최대 용량 */
-  maxSize: string;
+  /** 용량 안내 문구(예: '자동 압축'). 생략 시 표시 안 함 */
+  maxSize?: string;
   /** 추가 안내 */
   note?: string;
 }
@@ -24,7 +24,7 @@ export default function ImageUploadHint({ ratio, recommendedSize, maxSize, note 
       </span>
       <span>·</span>
       <span>
-        JPG / PNG, <span className="font-semibold text-gray-600">{maxSize}</span> 이하
+        JPG / PNG{maxSize ? <> · <span className="font-semibold text-gray-600">{maxSize}</span></> : null}
       </span>
       {note && (
         <>
