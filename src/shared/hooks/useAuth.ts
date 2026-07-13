@@ -58,9 +58,15 @@ export function useAuth() {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const profile = await fetchProfile(session.user.id);
-          setState({ user: session.user, profile, isLoading: false });
+          // fetchProfile 이 일시적으로 null 을 반환해도(네트워크/RLS 순간 실패)
+          // 쿠키 profile 이 있으면 그것을 유지 — 로그인 상태 유실 방지.
+          setState((prev) => ({ user: session.user, profile: profile ?? prev.profile, isLoading: false }));
         } else {
-          setState({ user: null, profile: null, isLoading: false });
+          // 클라이언트 getSession 이 세션을 못 읽어도(쿠키 리프레시 실패 등),
+          // 서버 미들웨어가 검증해 세팅한 marie_profile 쿠키가 있으면 로그인 상태로 간주한다.
+          // 미들웨어는 유효 세션에만 쿠키를 세팅하고 로그아웃/탈퇴 시 제거하므로 '쿠키 존재 = 인증됨'.
+          // (mypage/edit 등의 저장은 서버 라우트로 인증되므로 클라 세션이 없어도 정상 동작)
+          setState((prev) => ({ user: null, profile: prev.profile, isLoading: false }));
         }
       } catch {
         setState(prev => ({ ...prev, isLoading: false }));
