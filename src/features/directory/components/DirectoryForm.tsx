@@ -429,6 +429,10 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             </button>
           )}
           <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+          <p className="text-[11px] text-gray-500 mt-2 leading-snug">
+            상세 페이지 상단·디렉토리 카드에 표시되는 가로 배너입니다.<br />
+            <b>1600×900px</b> (16:9 가로) 권장 · JPG/PNG · 자동 압축
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] gap-5">
