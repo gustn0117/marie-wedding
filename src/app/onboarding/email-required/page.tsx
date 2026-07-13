@@ -2,6 +2,7 @@ import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 
@@ -26,6 +27,7 @@ export default async function EmailRequiredPage({
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
           return cookieStore.getAll();

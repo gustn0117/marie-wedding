@@ -1,5 +1,6 @@
 import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { SUPABASE_SCHEMA } from './schema';
 
@@ -10,6 +11,7 @@ export function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       db: { schema: SUPABASE_SCHEMA },
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
           return cookieStore.getAll();

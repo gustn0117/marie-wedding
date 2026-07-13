@@ -1,6 +1,7 @@
 import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
 import { resolveExternalOrigin } from '@/lib/proxy';
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
           return cookieStore.getAll();

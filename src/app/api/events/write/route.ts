@@ -1,6 +1,7 @@
 import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() { return cookieStore.getAll(); },
         setAll(list) { list.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); },

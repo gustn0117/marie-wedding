@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import {
@@ -107,7 +108,7 @@ export default async function MyPage() {
   const authClient = createServerClient(
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
+    { cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME }, cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
   );
   const { data: { user: authUser } } = await authClient.auth.getUser();
   const userEmail = authUser?.email ?? '';

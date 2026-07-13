@@ -1,5 +1,6 @@
 import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -27,6 +28,7 @@ export async function isAdminRequest(password?: string): Promise<boolean> {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
           return cookieStore.getAll();
