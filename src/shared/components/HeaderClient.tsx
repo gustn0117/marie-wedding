@@ -16,6 +16,7 @@ const CAT_NAV = [
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
   { href: ROUTES.EVENTS, label: '행사·박람회' },
+  { href: ROUTES.CONTACT, label: '고객센터' },
 ] as const;
 
 // 외부 링크 — haramevent.kr 로 새 탭 이동

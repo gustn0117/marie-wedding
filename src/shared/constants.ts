@@ -83,6 +83,7 @@ export const ROUTES = {
   EVENTS: '/events',
   EVENTS_DETAIL: (id: string) => `/events/${id}`,
   COMMUNITY: '/community',
+  CONTACT: '/contact',
   COMMUNITY_NEW: '/community/new',
   COMMUNITY_DETAIL: (id: string) => `/community/${id}`,
   COMMUNITY_EDIT: (id: string) => `/community/${id}/edit`,

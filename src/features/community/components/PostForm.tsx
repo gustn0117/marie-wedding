@@ -193,7 +193,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         </button>
         <button
           type="submit"
-          disabled={!isValid || isSubmitting}
+          disabled={isSubmitting}
           className="rounded bg-primary px-8 py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (isEdit ? '수정 중...' : '등록 중...') : (isEdit ? '수정하기' : '게시글 등록')}
