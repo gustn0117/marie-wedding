@@ -9,7 +9,7 @@ import {
   APPLICATION_STATUS_LABELS,
   applicationService,
 } from '@/features/applications/services/application-service';
-import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
+import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel, formatPhone } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
@@ -437,7 +437,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             연락처 <span className="text-rose-500">*</span>
             {profile?.phone && (
               <span className="ml-1.5 text-[11px] font-semibold text-gray-500">
-                · 프로필 등록: {profile.phone}
+                · 프로필 등록: {formatPhone(profile.phone)}
               </span>
             )}
           </label>

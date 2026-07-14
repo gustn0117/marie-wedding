@@ -126,3 +126,19 @@ export function getCategoryLabel(type: string): string {
   const found = POST_CATEGORIES.find((item) => item.value === type);
   return found?.label ?? type;
 }
+
+/**
+ * 한국 전화번호를 하이픈 형식으로 표시. (예: 01033192509 → 010-3319-2509)
+ * 형식을 못 맞추면 원본 반환.
+ */
+export function formatPhone(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const d = raw.replace(/[^0-9]/g, '');
+  if (d.startsWith('02')) {
+    if (d.length === 9) return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`;
+    if (d.length === 10) return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}`;
+  }
+  if (d.length === 11) return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  return raw;
+}
