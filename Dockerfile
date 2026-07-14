@@ -31,6 +31,9 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# nodemailer 는 동적 require 가 있어 Next standalone 파일추적이 누락한다.
+# (의존성 0개 패키지라) node_modules 로 직접 복사해 런타임 resolve 보장.
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules/nodemailer ./node_modules/nodemailer
 # 멀티코어 클러스터 래퍼 (server.js 옆에 배치)
 COPY --chown=nextjs:nodejs cluster-server.js ./
 
