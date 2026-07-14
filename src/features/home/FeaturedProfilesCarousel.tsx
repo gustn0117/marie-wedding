@@ -70,7 +70,7 @@ export default function FeaturedProfilesCarousel({ profiles }: Props) {
   if (profiles.length === 0) return null;
 
   return (
-    <section className="bg-white pt-10">
+    <section className="bg-white pt-8 sm:pt-10">
       <div
         className="max-w-[1280px] mx-auto px-5"
         onMouseEnter={() => setPaused(true)}

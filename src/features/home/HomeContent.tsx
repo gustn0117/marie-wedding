@@ -62,14 +62,14 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
     <div className="pb-16">
       {/* Hero — 가운데 정렬 */}
       <section className="bg-white">
-        <div className="max-w-[1280px] mx-auto px-5 pt-16 pb-12 sm:pt-20 sm:pb-14">
+        <div className="max-w-[1280px] mx-auto px-5 pt-10 pb-10 sm:pt-20 sm:pb-14">
           <div className="flex flex-col items-center text-center">
-            <h1 className="text-[34px] sm:text-[40px] font-bold leading-[1.2] tracking-tight text-ink">
+            <h1 className="text-[26px] sm:text-[40px] font-bold leading-[1.25] tracking-tight text-ink">
               조건에 맞는 웨딩 일자리와<br className="lg:hidden" />
               {' '}인재를 찾아보세요
             </h1>
             {/* 제목 → 검색바: 충분한 호흡 */}
-            <form onSubmit={handleSearch} className="mt-8 sm:mt-10 flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
+            <form onSubmit={handleSearch} className="mt-6 sm:mt-10 flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
@@ -85,7 +85,7 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
           </div>
 
           {/* 카테고리 아이콘 그리드 */}
-          <div className="mt-16 sm:mt-20 grid grid-cols-5 md:grid-cols-10 gap-2 sm:gap-3">
+          <div className="mt-10 sm:mt-20 grid grid-cols-5 md:grid-cols-10 gap-2 sm:gap-3">
             {CATEGORIES.map((c) => (
               <Link
                 key={c.label}
@@ -114,7 +114,7 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
       )}
 
       {/* 3컬럼 위젯 — 최근공고 / 최근 프로필 / 인기글 */}
-      <section className="bg-white py-10">
+      <section className="bg-white py-8 sm:py-10">
         <div className="max-w-[1280px] mx-auto px-5 grid gap-5 lg:grid-cols-3">
           {/* 최근 등록된 공고 */}
           <BoxWidget title="최근 등록된 공고" href={ROUTES.JOBS}>
