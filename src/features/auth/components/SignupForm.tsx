@@ -38,20 +38,71 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(STEPS.SELECT_TYPE);
 
-  // 휴대폰 인증 (SMS 활성화 시에만 강제)
+  // 인증 방법: 이메일(기본, 항상 가능) 또는 휴대폰(SMS 키 설정 시)
+  const [verifyMethod, setVerifyMethod] = useState<'email' | 'phone'>('email');
   const [smsEnabled, setSmsEnabled] = useState(false);
+
+  // 휴대폰 인증
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState('');
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
 
+  // 이메일 인증
+  const [emailOtpSent, setEmailOtpSent] = useState(false);
+  const [emailOtpCode, setEmailOtpCode] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailOtpSending, setEmailOtpSending] = useState(false);
+  const [emailOtpVerifying, setEmailOtpVerifying] = useState(false);
+
   useEffect(() => {
     fetch('/api/otp/status')
       .then((r) => r.json())
-      .then((d) => setSmsEnabled(!!d?.enabled))
+      .then((d) => setSmsEnabled(!!d?.phone))
       .catch(() => setSmsEnabled(false));
   }, []);
+
+  const sendEmailOtp = async () => {
+    const emailCheck = validateEmail(formData.email);
+    if (!emailCheck.valid) { setError(emailCheck.reason ?? '올바른 이메일을 입력해주세요.'); return; }
+    setError(null);
+    setEmailOtpSending(true);
+    try {
+      const res = await fetch('/api/email-otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
+      setEmailOtpSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+    } finally {
+      setEmailOtpSending(false);
+    }
+  };
+
+  const verifyEmailOtp = async () => {
+    if (!/^\d{6}$/.test(emailOtpCode)) { setError('인증번호 6자리를 입력해주세요.'); return; }
+    setError(null);
+    setEmailOtpVerifying(true);
+    try {
+      const res = await fetch('/api/email-otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email.trim(), code: emailOtpCode }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '인증에 실패했습니다.');
+      setEmailVerified(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증에 실패했습니다.');
+    } finally {
+      setEmailOtpVerifying(false);
+    }
+  };
 
   const sendOtp = async () => {
     const digits = formData.phone.replace(/[^0-9]/g, '');
@@ -100,6 +151,8 @@ export default function SignupForm() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // 이메일이 바뀌면 기존 인증 무효화
+    if (name === 'email') { setEmailVerified(false); setEmailOtpSent(false); }
     if (error) setError(null);
   };
 
@@ -109,12 +162,13 @@ export default function SignupForm() {
     if (!formData.password) { setError('비밀번호를 입력해주세요.'); return false; }
     if (formData.password.length < 6) { setError('비밀번호는 최소 6자 이상이어야 합니다.'); return false; }
     if (formData.password !== formData.confirmPassword) { setError('비밀번호가 일치하지 않습니다.'); return false; }
+    if (verifyMethod === 'email' && !emailVerified) { setError('이메일 인증을 완료해주세요.'); return false; }
     return true;
   };
 
   const validateProfile = (): boolean => {
     if (!formData.contactName.trim()) { setError('이름을 입력해주세요.'); return false; }
-    if (smsEnabled && !phoneVerified) { setError('휴대폰 인증을 완료해주세요.'); return false; }
+    if (verifyMethod === 'phone' && !phoneVerified) { setError('휴대폰 인증을 완료해주세요.'); return false; }
     if (formData.regions.length === 0) { setError('지역을 선택해주세요.'); return false; }
     if (formData.accountType === 'business') {
       if (formData.businessTypes.length === 0) { setError('업종을 1개 이상 선택해주세요.'); return false; }
@@ -138,6 +192,7 @@ export default function SignupForm() {
         businessTypes: formData.businessTypes.length > 0 ? formData.businessTypes : undefined,
         companyName: formData.companyName?.trim() || undefined,
         phone: formData.phone.replace(/[^0-9]/g, '') || undefined,
+        verifyMethod,
       }), 15000);
       // router.push는 client navigation이라 미들웨어를 통과하지 않아 marie_profile cookie가 set되지 않음.
       // 가입 직후엔 full reload로 헤더(profile/이름/로그아웃 메뉴)가 즉시 반영되도록 한다.
@@ -266,9 +321,55 @@ export default function SignupForm() {
           {/* Step 1: 계정 정보 */}
           {step === STEPS.ACCOUNT && (
             <>
+              {/* 인증 방법 선택 */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">본인 인증 방법</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVerifyMethod('email')}
+                    className={`py-2.5 rounded text-sm font-bold border transition-colors ${verifyMethod === 'email' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-300 hover:border-primary'}`}
+                  >
+                    이메일 인증
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!smsEnabled}
+                    onClick={() => smsEnabled && setVerifyMethod('phone')}
+                    className={`py-2.5 rounded text-sm font-bold border transition-colors ${verifyMethod === 'phone' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-300 hover:border-primary'} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300`}
+                  >
+                    휴대폰 인증{!smsEnabled && ' (준비중)'}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11.5px] text-gray-400">
+                  {verifyMethod === 'email' ? '가입 이메일로 인증번호를 보내드립니다.' : '다음 단계에서 휴대폰 번호로 인증합니다.'}
+                </p>
+              </div>
+
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">이메일</label>
-                <input id="email" name="email" type="email" autoComplete="email" autoFocus required value={formData.email} onChange={handleChange} placeholder="example@company.com" className="input-field" />
+                <div className="flex gap-2">
+                  <input id="email" name="email" type="email" autoComplete="email" autoFocus required value={formData.email} onChange={handleChange} disabled={emailVerified} placeholder="example@company.com" className="input-field flex-1 disabled:bg-gray-50 disabled:text-gray-500" />
+                  {verifyMethod === 'email' && !emailVerified && (
+                    <button type="button" onClick={sendEmailOtp} disabled={emailOtpSending} className="btn-outline whitespace-nowrap px-4">
+                      {emailOtpSending ? '전송 중…' : emailOtpSent ? '재전송' : '인증번호'}
+                    </button>
+                  )}
+                  {verifyMethod === 'email' && emailVerified && (
+                    <span className="inline-flex items-center gap-1 px-3 text-sm font-bold text-emerald-600 whitespace-nowrap">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                      인증됨
+                    </span>
+                  )}
+                </div>
+                {verifyMethod === 'email' && emailOtpSent && !emailVerified && (
+                  <div className="flex gap-2 mt-2">
+                    <input type="text" inputMode="numeric" maxLength={6} value={emailOtpCode} onChange={(e) => setEmailOtpCode(e.target.value.replace(/[^0-9]/g, ''))} placeholder="이메일 인증번호 6자리" className="input-field flex-1" />
+                    <button type="button" onClick={verifyEmailOtp} disabled={emailOtpVerifying} className="btn-primary whitespace-nowrap px-4">
+                      {emailOtpVerifying ? '확인 중…' : '확인'}
+                    </button>
+                  </div>
+                )}
               </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-1.5">비밀번호</label>
@@ -295,10 +396,10 @@ export default function SignupForm() {
                 <input id="contactName" name="contactName" type="text" required value={formData.contactName} onChange={handleChange} placeholder={formData.accountType === 'business' ? '담당자명을 입력하세요' : '이름을 입력하세요'} className="input-field" />
               </div>
 
-              {/* 휴대폰 (+ SMS 활성화 시 인증) */}
+              {/* 휴대폰 (인증 방법이 휴대폰이면 인증 필수, 아니면 선택 입력) */}
               <div>
                 <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1.5">
-                  휴대폰 번호 {smsEnabled ? <span className="text-state-urgent">*</span> : <span className="text-text-muted">(선택)</span>}
+                  휴대폰 번호 {verifyMethod === 'phone' ? <span className="text-state-urgent">*</span> : <span className="text-text-muted">(선택)</span>}
                 </label>
                 <div className="flex gap-2">
                   <input
@@ -318,7 +419,7 @@ export default function SignupForm() {
                     placeholder="01012345678"
                     className="input-field flex-1 disabled:bg-gray-50 disabled:text-gray-500"
                   />
-                  {smsEnabled && !phoneVerified && (
+                  {verifyMethod === 'phone' && !phoneVerified && (
                     <button type="button" onClick={sendOtp} disabled={otpSending} className="btn-outline whitespace-nowrap px-4">
                       {otpSending ? '전송 중…' : otpSent ? '재전송' : '인증번호'}
                     </button>
@@ -330,7 +431,7 @@ export default function SignupForm() {
                     </span>
                   )}
                 </div>
-                {smsEnabled && otpSent && !phoneVerified && (
+                {verifyMethod === 'phone' && otpSent && !phoneVerified && (
                   <div className="flex gap-2 mt-2">
                     <input
                       type="text"

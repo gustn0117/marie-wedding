@@ -5,8 +5,9 @@ import { isSmsEnabled, normalizePhone, isValidPhone } from '@/lib/otp';
 import { sendEmail } from '@/features/notifications/lib/email';
 import { welcomeEmail } from '@/features/notifications/lib/templates';
 
-// 휴대폰 인증 후 회원가입까지 허용하는 시간 (인증 완료 → 가입 폼 제출)
+// 인증 완료 후 회원가입까지 허용하는 시간 (인증 완료 → 가입 폼 제출)
 const PHONE_VERIFY_WINDOW_MS = 30 * 60 * 1000; // 30분
+const EMAIL_VERIFY_WINDOW_MS = 30 * 60 * 1000; // 30분
 
 // ---------------------------------------------------------------------------
 // In-memory 슬라이딩 윈도우 rate limiter
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, accountType, contactName, regions, businessTypes, companyName, phone } = body;
+    const { email, password, accountType, contactName, regions, businessTypes, companyName, phone, verifyMethod } = body;
 
     if (!email || !password || !contactName || !regions?.length) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
@@ -124,11 +125,17 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
-    // 0. 휴대폰 인증 확인 — SMS 가 활성화된 경우에만 강제.
-    //    (NHN 키 미설정 시 isSmsEnabled()=false → 인증번호가 실제로 안 가므로 요구하지 않는다.)
+    // 0. 본인 인증 확인 — 이메일 또는 휴대폰 중 선택한 방법을 검증한다.
     const phoneDigits = normalizePhone(phone);
     const smsOn = isSmsEnabled();
-    if (smsOn) {
+    const method = verifyMethod === 'phone' ? 'phone' : 'email';
+    let phoneWasVerified = false;
+
+    if (method === 'phone') {
+      // 휴대폰 인증 (SMS 활성화 시에만 가능)
+      if (!smsOn) {
+        return NextResponse.json({ error: '휴대폰 인증은 현재 준비중입니다. 이메일 인증을 이용해주세요.' }, { status: 400 });
+      }
       if (!isValidPhone(phoneDigits)) {
         return NextResponse.json({ error: '휴대폰 인증을 완료해주세요.' }, { status: 400 });
       }
@@ -142,6 +149,20 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
       if (!otp?.verified_at || Date.now() - new Date(otp.verified_at).getTime() > PHONE_VERIFY_WINDOW_MS) {
         return NextResponse.json({ error: '휴대폰 인증을 다시 완료해주세요.' }, { status: 400 });
+      }
+      phoneWasVerified = true;
+    } else {
+      // 이메일 인증 — 최근 verified 된 email_otps 확인
+      const { data: otp } = await supabase
+        .from('email_otps')
+        .select('verified_at')
+        .eq('email', emailKey)
+        .not('verified_at', 'is', null)
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!otp?.verified_at || Date.now() - new Date(otp.verified_at).getTime() > EMAIL_VERIFY_WINDOW_MS) {
+        return NextResponse.json({ error: '이메일 인증을 다시 완료해주세요.' }, { status: 400 });
       }
     }
 
@@ -175,10 +196,10 @@ export async function POST(request: NextRequest) {
       onboarded_at: new Date().toISOString(),
     };
 
-    // 휴대폰: 인증 완료(SMS on)면 verified 로 저장, 아니면 입력값만(선택) 저장.
+    // 휴대폰: 휴대폰 인증을 통과했으면 verified 로, 아니면 입력값만(선택) 저장.
     if (phoneDigits && isValidPhone(phoneDigits)) {
       profileData.phone = phoneDigits;
-      if (smsOn) {
+      if (phoneWasVerified) {
         profileData.phone_verified = true;
         profileData.phone_verified_at = new Date().toISOString();
       }
@@ -198,8 +219,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 사용한 인증번호 정리(재사용 방지) — 실패해도 가입엔 영향 없음.
-    if (smsOn && phoneDigits) {
+    if (method === 'phone' && phoneDigits) {
       await supabase.from('phone_otps').delete().eq('phone', phoneDigits).then(undefined, () => {});
+    } else if (method === 'email') {
+      await supabase.from('email_otps').delete().eq('email', emailKey).then(undefined, () => {});
     }
 
     // 회원가입 환영 메일 — best-effort. 실패해도 가입은 성공 처리.

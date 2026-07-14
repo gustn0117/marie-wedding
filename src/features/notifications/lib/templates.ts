@@ -17,6 +17,19 @@ function shell(bodyInner: string): string {
   </div>`;
 }
 
+/** 이메일 인증번호 메일 */
+export function emailOtpEmail(code: string): { subject: string; html: string; text: string } {
+  const subject = '[마리에] 이메일 인증번호';
+  const html = shell(`
+    <h2 style="color:${BRAND};margin:0 0 16px;font-size:20px">이메일 인증번호</h2>
+    <p style="line-height:1.7;font-size:15px;margin:0 0 16px">아래 인증번호를 회원가입 화면에 입력해주세요. (3분 이내 유효)</p>
+    <div style="font-size:32px;font-weight:800;letter-spacing:8px;color:${BRAND};background:#f6f7f9;border-radius:8px;padding:18px 0;text-align:center">${escapeHtml(code)}</div>
+    <p style="line-height:1.7;font-size:13px;color:#999;margin:16px 0 0">본인이 요청하지 않았다면 이 메일을 무시하셔도 됩니다.</p>
+  `);
+  const text = `마리에 이메일 인증번호: ${code} (3분 이내 유효)`;
+  return { subject, html, text };
+}
+
 /** 회원가입 환영 메일 */
 export function welcomeEmail(name: string): { subject: string; html: string; text: string } {
   const safeName = escapeHtml(name || '회원');

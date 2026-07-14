@@ -9,6 +9,7 @@ export const authService = {
     businessTypes?: string[];
     companyName?: string;
     phone?: string;
+    verifyMethod?: 'email' | 'phone';
   }) {
     // Use API route for signup (service_role key, bypasses RLS)
     const res = await apiFetch('/api/auth/signup', {
@@ -23,6 +24,7 @@ export const authService = {
         businessTypes: metadata.businessTypes,
         companyName: metadata.companyName,
         phone: metadata.phone,
+        verifyMethod: metadata.verifyMethod,
       }),
     });
 
