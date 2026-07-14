@@ -5,9 +5,11 @@ import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
 import StatsExportButton from '@/features/stats/components/StatsExportButton';
 import PageHeader from '@/shared/components/PageHeader';
 
-// (main) 레이아웃 Header가 cookies()를 호출해 라우트가 dynamic으로 전환되므로
-// export const revalidate(ISR/Full Route Cache)는 무효다. 대신 unstable_cache로
-// loadStats 결과를 5분간 캐싱해 요청마다 DB 스캔이 반복되는 것을 막는다.
+// Docker 빌드에는 NEXT_PUBLIC_*만 주입하고 service role은 런타임에만 주입한다.
+// 빌드 중 통계 DB 조회가 실행되지 않도록 동적 렌더링을 명시한다. 통계 결과 자체는
+// unstable_cache로 5분간 캐싱해 요청마다 DB 스캔이 반복되는 것을 막는다.
+export const dynamic = 'force-dynamic';
+
 const getStats = unstable_cache(loadStats, ['platform-stats'], { revalidate: 300 });
 
 export const metadata = {
