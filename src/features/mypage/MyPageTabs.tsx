@@ -131,7 +131,6 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
                           <span>{getEmploymentTypeLabel(job.employment_type)}</span>
                           <span>·</span>
                           <span>{getRegionLabel(job.region)}</span>
-                          {job.view_count > 0 && (<><span>·</span><span>조회 {job.view_count.toLocaleString()}</span></>)}
                           {receivedForThis.length > 0 && (
                             <>
                               <span>·</span>
@@ -171,12 +170,8 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
                       <h3 className="text-sm font-bold text-gray-800 group-hover:text-primary transition-colors truncate">{post.title}</h3>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
-                      <span>조회 {post.view_count}</span>
                       {post.comment_count !== undefined && post.comment_count > 0 && (
-                        <>
-                          <span>·</span>
-                          <span>댓글 {post.comment_count}</span>
-                        </>
+                        <span>댓글 {post.comment_count}</span>
                       )}
                     </div>
                   </div>

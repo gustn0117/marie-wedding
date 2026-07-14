@@ -290,13 +290,6 @@ function EventCard({ event }: { event: Event }) {
               <span className="truncate">{event.location}</span>
             </>
           )}
-          <span className="ml-auto flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {event.view_count}
-          </span>
         </div>
         <div className="mt-3 rounded border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 transition-colors group-hover:border-primary group-hover:text-primary">
           관련 채용공고 보기 · {staffKeyword}

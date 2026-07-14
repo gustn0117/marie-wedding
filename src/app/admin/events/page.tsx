@@ -90,7 +90,6 @@ export default function AdminEventsPage() {
                   <th className="text-left px-4 py-3 font-semibold text-gray-700">제목</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">기간</th>
                   <th className="text-center px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">고정</th>
-                  <th className="text-center px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">조회</th>
                   <th className="text-left px-4 py-3 font-semibold text-gray-700 whitespace-nowrap">등록일</th>
                   <th className="text-center px-4 py-3 font-semibold text-gray-700">관리</th>
                 </tr>
@@ -123,7 +122,6 @@ export default function AdminEventsPage() {
                         </svg>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-center text-xs text-gray-500">{event.view_count}</td>
                     <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{formatDate(event.created_at)}</td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">

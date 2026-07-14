@@ -603,7 +603,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 const SORT_OPTIONS = [
   { v: 'recent', label: '최신 등록순' },
   { v: 'deadline', label: '마감 임박순' },
-  { v: 'views', label: '조회 많은순' },
 ];
 
 function SortDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {

@@ -85,7 +85,7 @@ export default function JobDetailHero({ job }: Props) {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-0.5">
-                <time>{formatRelativeTime(job.created_at)}</time> 등록 · 조회 {job.view_count.toLocaleString()}회
+                <time>{formatRelativeTime(job.created_at)}</time> 등록
               </p>
             </div>
           </Link>

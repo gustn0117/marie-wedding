@@ -14,7 +14,6 @@ export default function JobCard({ job }: JobCardProps) {
   const initial = company.charAt(0).toUpperCase();
   const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
-  const views = job.view_count ?? 0;
   const imageUrl = resolveStorageUrl(job.image, 'job-images');
 
   return (
@@ -44,7 +43,6 @@ export default function JobCard({ job }: JobCardProps) {
         <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
         <div className="svc-card-seller">
           <span className="truncate flex-1">{company}</span>
-          {views > 0 && <span className="text-[11px] text-gray-400 tabular-nums">조회 {views.toLocaleString()}</span>}
           {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
         </div>
       </div>

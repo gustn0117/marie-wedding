@@ -96,8 +96,6 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   if (sort === 'deadline') {
     // 마감 임박순 (deadline 가까운 순, NULL은 뒤로)
     query = query.order('deadline', { ascending: true, nullsFirst: false });
-  } else if (sort === 'views') {
-    query = query.order('view_count', { ascending: false });
   } else {
     // recent (default)
     query = query

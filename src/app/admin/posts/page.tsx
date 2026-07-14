@@ -115,7 +115,6 @@ export default function AdminPostsPage() {
                 <th className="text-left px-5 py-3 font-medium text-gray-500">카테고리</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">제목</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">작성자</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-500">조회</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">댓글</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">작성일</th>
                 <th className="text-left px-5 py-3 font-medium text-gray-500">상태</th>
@@ -155,7 +154,6 @@ export default function AdminPostsPage() {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-gray-600">{post.author?.contact_name || '-'}</td>
-                    <td className="px-5 py-3 text-gray-500">{post.view_count.toLocaleString()}</td>
                     <td className="px-5 py-3 text-gray-500">{(post.comment_count ?? 0).toLocaleString()}</td>
                     <td className="px-5 py-3 text-gray-500">{formatDate(post.created_at)}</td>
                     <td className="px-5 py-3">
