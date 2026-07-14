@@ -55,6 +55,8 @@ export default function SignupForm() {
   const [emailVerified, setEmailVerified] = useState(false);
   const [emailOtpSending, setEmailOtpSending] = useState(false);
   const [emailOtpVerifying, setEmailOtpVerifying] = useState(false);
+  const [emailOtpSentAt, setEmailOtpSentAt] = useState(0); // 발송 시각(ms) — 카운트다운 기준
+  const [emailOtpLeft, setEmailOtpLeft] = useState(0);      // 남은 유효시간(초)
 
   useEffect(() => {
     fetch('/api/otp/status')
@@ -62,6 +64,18 @@ export default function SignupForm() {
       .then((d) => setSmsEnabled(!!d?.phone))
       .catch(() => setSmsEnabled(false));
   }, []);
+
+  // 이메일 인증번호 3분 카운트다운 (발송 시각 기준으로 매초 갱신)
+  useEffect(() => {
+    if (!emailOtpSentAt || emailVerified) { setEmailOtpLeft(0); return; }
+    const tick = () => {
+      const left = Math.max(0, 180 - Math.floor((Date.now() - emailOtpSentAt) / 1000));
+      setEmailOtpLeft(left);
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [emailOtpSentAt, emailVerified]);
 
   const sendEmailOtp = async () => {
     const emailCheck = validateEmail(formData.email);
@@ -77,6 +91,7 @@ export default function SignupForm() {
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
       setEmailOtpSent(true);
+      setEmailOtpSentAt(Date.now());
     } catch (err) {
       setError(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
     } finally {
@@ -363,12 +378,26 @@ export default function SignupForm() {
                   )}
                 </div>
                 {verifyMethod === 'email' && emailOtpSent && !emailVerified && (
-                  <div className="flex gap-2 mt-2">
-                    <input type="text" inputMode="numeric" maxLength={6} value={emailOtpCode} onChange={(e) => setEmailOtpCode(e.target.value.replace(/[^0-9]/g, ''))} placeholder="이메일 인증번호 6자리" className="input-field flex-1" />
-                    <button type="button" onClick={verifyEmailOtp} disabled={emailOtpVerifying} className="btn-primary whitespace-nowrap px-4">
-                      {emailOtpVerifying ? '확인 중…' : '확인'}
-                    </button>
-                  </div>
+                  <>
+                    <div className="flex gap-2 mt-2">
+                      <div className="relative flex-1">
+                        <input type="text" inputMode="numeric" maxLength={6} value={emailOtpCode} onChange={(e) => setEmailOtpCode(e.target.value.replace(/[^0-9]/g, ''))} placeholder="이메일 인증번호 6자리" className="input-field w-full pr-16" />
+                        {emailOtpLeft > 0 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold tabular-nums text-state-urgent">
+                            {Math.floor(emailOtpLeft / 60)}:{String(emailOtpLeft % 60).padStart(2, '0')}
+                          </span>
+                        )}
+                      </div>
+                      <button type="button" onClick={verifyEmailOtp} disabled={emailOtpVerifying} className="btn-primary whitespace-nowrap px-4">
+                        {emailOtpVerifying ? '확인 중…' : '확인'}
+                      </button>
+                    </div>
+                    <p className="mt-1.5 text-[11.5px] text-gray-400">
+                      {emailOtpLeft > 0
+                        ? '메일로 받은 6자리 인증번호를 입력해주세요.'
+                        : '인증번호가 만료되었습니다. 재전송을 눌러주세요.'}
+                    </p>
+                  </>
                 )}
               </div>
               <div>
