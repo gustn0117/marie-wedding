@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { formatRelativeTime } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { ROUTES } from '@/shared/constants';
 import { notificationService } from '@/features/notifications/services/notification-service';
 
@@ -36,57 +36,42 @@ const TYPE_LABELS: Record<string, string> = {
   system: '시스템',
 };
 
-export default function NotificationBell({ profileId }: { profileId: string }) {
+export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  const loadCount = useCallback(async () => {
-    const sb = createClient();
-    const { count } = await sb
-      .from('notifications')
-      .select('id', { count: 'exact', head: true })
-      .eq('profile_id', profileId)
-      .is('read_at', null)
-      .is('deleted_at', null);
-    setUnreadCount(count ?? 0);
-  }, [profileId]);
-
-  const loadItems = useCallback(async () => {
-    setLoading(true);
+  // 서버 라우트(service_role)로 목록+안읽음수 동시 조회 — 마이페이지 알림과 동일 소스.
+  // 클라이언트 supabase 의 RLS/세션토큰 대기로 인한 빈결과·hang 회피.
+  const loadData = useCallback(async (withSpinner = false) => {
+    if (withSpinner) setLoading(true);
     try {
-      const sb = createClient();
-      const { data } = await withTimeout(
-        sb
-          .from('notifications')
-          .select('id, type, title, message, link_url, read_at, created_at')
-          .eq('profile_id', profileId)
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
-          .limit(10),
-        8000,
-        '알림 조회 지연',
-      );
-      setItems((data ?? []) as Notification[]);
+      const res = await apiFetch('/api/notifications/list', { credentials: 'include' }, 8000);
+      if (res.ok) {
+        const body = await res.json();
+        setItems((body.items ?? []) as Notification[]);
+        setUnreadCount(body.unreadCount ?? 0);
+      }
     } catch (err) {
-      console.error('[NotificationBell] loadItems failed:', err);
+      console.error('[NotificationBell] loadData failed:', err);
     } finally {
-      setLoading(false);
+      if (withSpinner) setLoading(false);
     }
-  }, [profileId]);
+  }, []);
 
+  // 마운트 시 + 60초마다 안읽음수 갱신
   useEffect(() => {
-    loadCount();
-    const t = setInterval(loadCount, 60_000);
+    loadData();
+    const t = setInterval(() => loadData(), 60_000);
     return () => clearInterval(t);
-  }, [loadCount]);
+  }, [loadData]);
 
-  // 열 때 fresh load
+  // 열 때 fresh load (스피너 표시)
   useEffect(() => {
-    if (open) loadItems();
-  }, [open, loadItems]);
+    if (open) loadData(true);
+  }, [open, loadData]);
 
   // outside click + esc
   useEffect(() => {

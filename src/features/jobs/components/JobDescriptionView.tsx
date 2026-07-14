@@ -1,4 +1,4 @@
-import { JOB_SECTIONS, parseSections, type JobSectionKey } from '@/features/jobs/lib/parse-job-description';
+import { JOB_SECTIONS, parseSections, sectionHasContent, type JobSectionKey } from '@/features/jobs/lib/parse-job-description';
 import RichTextView from '@/shared/components/RichTextView';
 
 interface Props {
@@ -19,7 +19,7 @@ export default function JobDescriptionView({ html }: Props) {
     return <RichTextView html={html ?? ''} className="text-[15px] text-gray-700 leading-relaxed" />;
   }
 
-  const filled = JOB_SECTIONS.filter((s) => sections[s.key].trim().length > 0);
+  const filled = JOB_SECTIONS.filter((s) => sectionHasContent(sections[s.key]));
   if (filled.length === 0) {
     return <RichTextView html={html} className="text-[15px] text-gray-700 leading-relaxed" />;
   }
@@ -54,38 +54,10 @@ function SectionCard({
         <h3 className="text-[15px] font-bold text-ink">{title}</h3>
       </header>
       <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-5 py-4">
-        <SectionBody text={body} />
+        {/* 섹션 본문은 리치 에디터 HTML(문단·이미지·서식) — RichTextView 로 렌더 */}
+        <RichTextView html={body} className="text-[14.5px] text-gray-700 leading-relaxed" />
       </div>
     </article>
-  );
-}
-
-function SectionBody({ text }: { text: string }) {
-  // 줄 단위 분해 — '- ', '· ', '• ' 같은 글머리 기호로 시작하면 bullet item으로
-  const lines = text.split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  if (lines.length === 0) return null;
-
-  const isBulletish = lines.every((l) => /^[-·•▪▶◆※*]/.test(l)) && lines.length >= 2;
-
-  if (isBulletish) {
-    return (
-      <ul className="space-y-1.5">
-        {lines.map((line, i) => (
-          <li key={i} className="flex gap-2.5 text-[14.5px] text-gray-700 leading-relaxed">
-            <span className="shrink-0 mt-2 w-1.5 h-1.5 rounded-full bg-ink/60" aria-hidden />
-            <span className="min-w-0">{line.replace(/^[-·•▪▶◆※*]\s*/, '')}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  }
-
-  return (
-    <div className="space-y-2">
-      {lines.map((line, i) => (
-        <p key={i} className="text-[14.5px] text-gray-700 leading-relaxed">{line}</p>
-      ))}
-    </div>
   );
 }
 
