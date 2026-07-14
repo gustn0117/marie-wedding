@@ -47,11 +47,15 @@ export default function AdminCommentsPage() {
 
   const handleDelete = async (comment: Comment) => {
     if (!(await toastConfirm('이 댓글을 삭제하시겠습니까?'))) return;
+    const prev = comments;
+    setComments((list) => showDeleted
+      ? list.map((c) => (c.id === comment.id ? { ...c, deleted_at: new Date().toISOString() } : c))
+      : list.filter((c) => c.id !== comment.id));
     setActionLoading(comment.id);
     try {
       await withTimeout(adminService.softDeleteComment(comment.id), 10000, '댓글 삭제 지연');
-      await load();
     } catch (err) {
+      setComments(prev);
       toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
@@ -60,11 +64,13 @@ export default function AdminCommentsPage() {
   };
 
   const handleRestore = async (comment: Comment) => {
+    const prev = comments;
+    setComments((list) => list.map((c) => (c.id === comment.id ? { ...c, deleted_at: null } : c)));
     setActionLoading(comment.id);
     try {
       await withTimeout(adminService.restoreComment(comment.id), 10000, '댓글 복원 지연');
-      await load();
     } catch (err) {
+      setComments(prev);
       toast('복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {

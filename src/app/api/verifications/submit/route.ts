@@ -33,8 +33,8 @@ export async function POST(req: NextRequest) {
   if (!/^[0-9-]{10,14}$/.test(businessNumber)) {
     return new NextResponse('사업자번호 형식이 올바르지 않습니다.', { status: 400 });
   }
-  if (doc.size > 5 * 1024 * 1024) {
-    return new NextResponse('파일이 5MB를 초과합니다.', { status: 400 });
+  if (doc.size > 15 * 1024 * 1024) {
+    return new NextResponse('파일이 15MB를 초과합니다.', { status: 400 });
   }
 
   const adminSb = createServiceClient();

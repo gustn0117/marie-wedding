@@ -47,11 +47,16 @@ export default function AdminPostsPage() {
 
   const handleDelete = async (post: Post) => {
     if (!(await toastConfirm(`"${post.title}" 게시글을 삭제하시겠습니까?`))) return;
+    // 낙관적 업데이트 — 클릭 즉시 화면 반영, 실패 시 롤백
+    const prev = posts;
+    setPosts((list) => showDeleted
+      ? list.map((p) => (p.id === post.id ? { ...p, deleted_at: new Date().toISOString() } : p))
+      : list.filter((p) => p.id !== post.id));
     setActionLoading(post.id);
     try {
       await withTimeout(adminService.softDeletePost(post.id), 10000, '게시글 삭제 지연');
-      await load();
     } catch (err) {
+      setPosts(prev);
       toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
@@ -60,11 +65,13 @@ export default function AdminPostsPage() {
   };
 
   const handleRestore = async (post: Post) => {
+    const prev = posts;
+    setPosts((list) => list.map((p) => (p.id === post.id ? { ...p, deleted_at: null } : p)));
     setActionLoading(post.id);
     try {
       await withTimeout(adminService.restorePost(post.id), 10000, '게시글 복원 지연');
-      await load();
     } catch (err) {
+      setPosts(prev);
       toast('복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {

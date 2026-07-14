@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { submitVerification } from '@/features/verification/services/verificationService';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { compressImage } from '@/shared/utils/image';
 
 // 사업자번호 000-00-00000 자동 하이픈
 function formatBizNo(raw: string): string {
@@ -31,10 +32,13 @@ export default function VerificationForm() {
     e.preventDefault();
     if (bizDigits.length !== 10) { setError('사업자번호 10자리를 정확히 입력해 주세요.'); return; }
     if (!file) { setError('사업자등록증 이미지를 첨부해 주세요.'); return; }
-    if (file.size > 5 * 1024 * 1024) { setError('파일이 5MB를 초과합니다. 더 작은 파일로 다시 시도해 주세요.'); return; }
     setBusy(true); setError(null);
     try {
-      const result = await withTimeout(submitVerification({ businessNumber, documentFile: file }), 20000);
+      // 큰 이미지는 업로드 전에 압축 → 대용량도 즉시 처리 (PDF 는 원본 유지)
+      const doc = file.type.startsWith('image/')
+        ? await compressImage(file, { maxDimension: 2200, quality: 0.8 })
+        : file;
+      const result = await withTimeout(submitVerification({ businessNumber, documentFile: doc }), 20000);
       if (!result.ok) { setError(result.error); return; }
       setDone(true);
     } catch (err) {

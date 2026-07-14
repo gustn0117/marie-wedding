@@ -43,11 +43,15 @@ export default function AdminJobsPage() {
 
   const handleDelete = async (job: Job) => {
     if (!(await toastConfirm(`"${job.title}" 공고를 삭제하시겠습니까?`))) return;
+    const prev = jobs;
+    setJobs((list) => showDeleted
+      ? list.map((j) => (j.id === job.id ? { ...j, deleted_at: new Date().toISOString() } : j))
+      : list.filter((j) => j.id !== job.id));
     setActionLoading(job.id);
     try {
       await withTimeout(adminService.softDeleteJob(job.id), 10000, '공고 삭제 지연');
-      await load();
     } catch (err) {
+      setJobs(prev);
       toast('삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
@@ -56,11 +60,13 @@ export default function AdminJobsPage() {
   };
 
   const handleRestore = async (job: Job) => {
+    const prev = jobs;
+    setJobs((list) => list.map((j) => (j.id === job.id ? { ...j, deleted_at: null } : j)));
     setActionLoading(job.id);
     try {
       await withTimeout(adminService.restoreJob(job.id), 10000, '공고 복원 지연');
-      await load();
     } catch (err) {
+      setJobs(prev);
       toast('복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {
@@ -69,6 +75,9 @@ export default function AdminJobsPage() {
   };
 
   const handleToggleFeatured = async (job: Job) => {
+    const prev = jobs;
+    const nextFeatured = job.featured_at ? null : new Date().toISOString();
+    setJobs((list) => list.map((j) => (j.id === job.id ? { ...j, featured_at: nextFeatured } : j)));
     setActionLoading(job.id);
     try {
       await withTimeout(
@@ -76,8 +85,8 @@ export default function AdminJobsPage() {
         10000,
         '인기공고 설정 지연',
       );
-      await load();
     } catch (err) {
+      setJobs(prev);
       toast('인기공고 설정에 실패했습니다.', 'error');
       console.error(err);
     } finally {
