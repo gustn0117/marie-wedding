@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 async function getProfiles(searchParams: Record<string, string | undefined>) {
@@ -85,8 +85,9 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
 }
 
 export default async function DirectoryPage({ searchParams }: PageProps) {
-  const { profiles, count } = await getProfiles(searchParams);
-  const activeFilterCount = ['businessType', 'region', 'search'].filter((key) => searchParams[key]).length;
+  const resolvedSearchParams = await searchParams;
+  const { profiles, count } = await getProfiles(resolvedSearchParams);
+  const activeFilterCount = ['businessType', 'region', 'search'].filter((key) => resolvedSearchParams[key]).length;
 
   return (
     <div className="space-y-4">

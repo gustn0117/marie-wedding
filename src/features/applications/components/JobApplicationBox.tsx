@@ -14,6 +14,7 @@ import { withTimeout } from '@/shared/utils/withTimeout';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -158,11 +159,11 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       setCareerSummary('');
       setAvailableSchedule('');
       // 채용자에게 새 지원자 알림 이메일 — best-effort (실패해도 지원 접수엔 영향 없음)
-      fetch('/api/notify/application', {
+      void apiFetch('/api/notify/application', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ applicationId: created.id }),
-      }).catch(() => {});
+      }, 10_000).catch(() => {});
     } catch (err) {
       const msg = err instanceof Error
         ? err.message.includes('duplicate') ? '이미 접수된 내역이 있습니다.'

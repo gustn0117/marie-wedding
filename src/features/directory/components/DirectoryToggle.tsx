@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
@@ -13,22 +14,25 @@ interface DirectoryToggleProps {
 }
 
 export default function DirectoryToggle({ profileId, initialListed, missingInfo }: DirectoryToggleProps) {
+  const router = useRouter();
   const [listed, setListed] = useState(initialListed);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleToggle = async () => {
+    const previous = listed;
+    const next = !previous;
+    setListed(next);
     setSubmitting(true);
     setError(null);
     try {
-      const next = !listed;
       await directoryService.toggleDirectoryListing(profileId, next);
-      setListed(next);
-      // 쿠키 갱신을 위해 새로고침
       clearMarieProfileCookie();
-      window.location.reload();
+      router.refresh();
     } catch (err) {
+      setListed(previous);
       setError(err instanceof Error ? err.message : '처리에 실패했습니다. 다시 시도해주세요.');
+    } finally {
       setSubmitting(false);
     }
   };

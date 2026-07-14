@@ -28,6 +28,14 @@ const EMAIL_MAX = 2; // 동일 이메일 분당 2회
 
 const CONTACT_NAME_MAX = 50;
 const COMPANY_NAME_MAX = 100;
+const REQUEST_TIMEOUT_MS = 20_000;
+const OTP_CLAIM_SECONDS = 60;
+
+type SignupOtpClaim = {
+  method: 'phone' | 'email';
+  otpId: string;
+  token: string;
+};
 
 const ipHits = new Map<string, number[]>();
 const emailHits = new Map<string, number[]>();
@@ -74,7 +82,79 @@ function getClientIp(request: NextRequest): string {
   return 'unknown';
 }
 
+async function consumeSignupOtp(claim: SignupOtpClaim): Promise<boolean> {
+  // 응답 유실 뒤 같은 token으로 재호출해도 DB 함수가 idempotent하게 true를
+  // 반환한다. 요청 전체 deadline과 분리해 이미 만든 계정의 OTP 소비를 끝낸다.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const client = createServiceClient(AbortSignal.timeout(5_000));
+      const { data, error } = await client.rpc('consume_signup_otp_atomic', {
+        p_method: claim.method,
+        p_otp_id: claim.otpId,
+        p_claim_token: claim.token,
+      });
+      if (!error) return data === true;
+      console.error('[signup] OTP consume failed:', error.message);
+    } catch (error) {
+      console.error('[signup] OTP consume request failed:', error);
+    }
+  }
+  return false;
+}
+
+async function releaseSignupOtp(claim: SignupOtpClaim) {
+  try {
+    const client = createServiceClient(AbortSignal.timeout(5_000));
+    const { error } = await client.rpc('release_signup_otp_claim', {
+      p_method: claim.method,
+      p_otp_id: claim.otpId,
+      p_claim_token: claim.token,
+    });
+    if (error) console.error('[signup] OTP claim release failed:', error.message);
+  } catch (error) {
+    console.error('[signup] OTP claim release request failed:', error);
+  }
+}
+
+async function deleteSignupUser(userId: string): Promise<boolean> {
+  try {
+    const client = createServiceClient(AbortSignal.timeout(5_000));
+    const { error } = await client.auth.admin.deleteUser(userId);
+    if (!error) return true;
+    console.error('[signup] orphan auth user cleanup failed:', error.message);
+  } catch (error) {
+    console.error('[signup] orphan auth user cleanup request failed:', error);
+  }
+  return false;
+}
+
+async function signupProfileStillExists(userId: string): Promise<boolean | null> {
+  try {
+    const client = createServiceClient(AbortSignal.timeout(5_000));
+    const { data, error } = await client
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) {
+      console.error('[signup] compensation state lookup failed:', error.message);
+      return null;
+    }
+    return Boolean(data);
+  } catch (error) {
+    console.error('[signup] compensation state lookup request failed:', error);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
+  const signal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
+  let createdUserId: string | null = null;
+  let profileCreated = false;
+  let otpClaim: SignupOtpClaim | null = null;
+  let otpConsumed = false;
+  let releaseOtpOnExit = true;
+
   try {
     maybeSweep(Date.now());
 
@@ -123,13 +203,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createServiceClient();
+    const supabase = createServiceClient(signal);
 
     // 0. 본인 인증 확인 — 이메일 또는 휴대폰 중 선택한 방법을 검증한다.
     const phoneDigits = normalizePhone(phone);
     const smsOn = isSmsEnabled();
     const method = verifyMethod === 'phone' ? 'phone' : 'email';
     let phoneWasVerified = false;
+    const otpIdentifier = method === 'phone' ? phoneDigits : emailKey;
 
     if (method === 'phone') {
       // 휴대폰 인증 (SMS 활성화 시에만 가능)
@@ -139,33 +220,32 @@ export async function POST(request: NextRequest) {
       if (!isValidPhone(phoneDigits)) {
         return NextResponse.json({ error: '휴대폰 인증을 완료해주세요.' }, { status: 400 });
       }
-      const { data: otp } = await supabase
-        .from('phone_otps')
-        .select('verified_at')
-        .eq('phone', phoneDigits)
-        .not('verified_at', 'is', null)
-        .order('verified_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!otp?.verified_at || Date.now() - new Date(otp.verified_at).getTime() > PHONE_VERIFY_WINDOW_MS) {
-        return NextResponse.json({ error: '휴대폰 인증을 다시 완료해주세요.' }, { status: 400 });
-      }
-      phoneWasVerified = true;
-    } else {
-      // 이메일 인증 — 최근 verified 된 email_otps 확인
-      const { data: otp } = await supabase
-        .from('email_otps')
-        .select('verified_at')
-        .eq('email', emailKey)
-        .eq('purpose', 'signup')
-        .not('verified_at', 'is', null)
-        .order('verified_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (!otp?.verified_at || Date.now() - new Date(otp.verified_at).getTime() > EMAIL_VERIFY_WINDOW_MS) {
-        return NextResponse.json({ error: '이메일 인증을 다시 완료해주세요.' }, { status: 400 });
-      }
     }
+
+    const claimToken = crypto.randomUUID();
+    const verifyWindowMs = method === 'phone' ? PHONE_VERIFY_WINDOW_MS : EMAIL_VERIFY_WINDOW_MS;
+    const { data: claimData, error: claimError } = await supabase.rpc('claim_signup_otp_atomic', {
+      p_method: method,
+      p_identifier: otpIdentifier,
+      p_claim_token: claimToken,
+      p_verify_window_seconds: Math.floor(verifyWindowMs / 1000),
+      p_claim_seconds: OTP_CLAIM_SECONDS,
+    });
+    if (claimError) {
+      if (signal.aborted) throw claimError;
+      console.error('[signup] OTP claim failed:', claimError.message);
+      return NextResponse.json({ error: '인증 상태 확인에 실패했습니다. 잠시 후 다시 시도해주세요.' }, { status: 500 });
+    }
+    const claimResult = Array.isArray(claimData) ? claimData[0] : null;
+    if (!claimResult?.otp_id || claimResult.claim_status !== 'claimed') {
+      const inProgress = claimResult?.claim_status === 'in_progress';
+      return NextResponse.json(
+        { error: inProgress ? '동일한 인증 정보로 회원가입을 처리 중입니다.' : `${method === 'phone' ? '휴대폰' : '이메일'} 인증을 다시 완료해주세요.` },
+        { status: inProgress ? 409 : 400 },
+      );
+    }
+    otpClaim = { method, otpId: claimResult.otp_id, token: claimToken };
+    phoneWasVerified = method === 'phone';
 
     // 1. Create auth user (auto-confirmed with admin API)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
@@ -175,6 +255,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError) {
+      if (signal.aborted) throw authError;
       if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
         return NextResponse.json({ error: '이미 가입된 이메일입니다.' }, { status: 409 });
       }
@@ -184,6 +265,7 @@ export async function POST(request: NextRequest) {
     if (!authData.user) {
       return NextResponse.json({ error: '회원가입에 실패했습니다.' }, { status: 500 });
     }
+    createdUserId = authData.user.id;
 
     // 2. Create profile (bypasses RLS with service_role)
     //    이메일 회원가입은 폼에서 이미 account_type / regions를 받았으므로 곧장 onboarded 상태로 저장.
@@ -211,32 +293,62 @@ export async function POST(request: NextRequest) {
       profileData.company_name = companyName;
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert(profileData);
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert(profileData)
+      .abortSignal(signal);
 
     if (profileError) {
-      // Cleanup: delete the auth user if profile creation fails
-      await supabase.auth.admin.deleteUser(authData.user.id);
-      return NextResponse.json({ error: `프로필 생성 실패: ${profileError.message}` }, { status: 500 });
+      throw new Error(`프로필 생성 실패: ${profileError.message}`);
     }
-
-    // 사용한 인증번호 정리(재사용 방지) — 실패해도 가입엔 영향 없음.
-    if (method === 'phone' && phoneDigits) {
-      await supabase.from('phone_otps').delete().eq('phone', phoneDigits).then(undefined, () => {});
-    } else if (method === 'email') {
-      await supabase.from('email_otps').delete().eq('email', emailKey).then(undefined, () => {});
+    // 프로필까지 만들어진 뒤 claim한 OTP를 원자적으로 소비한다. 단순 DELETE와
+    // 달리 동시 요청이 같은 verified 행을 재사용할 수 없고 감사 흔적도 남는다.
+    if (!otpClaim || !await consumeSignupOtp(otpClaim)) {
+      throw new Error('인증 상태 저장에 실패했습니다. 잠시 후 다시 시도해주세요.');
     }
+    otpConsumed = true;
+    profileCreated = true;
 
-    // 회원가입 환영 메일 — best-effort. 실패해도 가입은 성공 처리.
-    try {
+    // 환영 메일은 회원가입 응답을 막지 않는다. 자체 호스팅 Node 프로세스에서
+    // best-effort로 보내며 실패는 로그만 남긴다.
+    void (async () => {
       const { subject, html, text } = welcomeEmail(contactName);
-      await sendEmail({ to: email, subject, html, text });
-    } catch (mailErr) {
-      console.error('[signup] welcome email failed:', mailErr);
-    }
+      const result = await sendEmail({ to: email, subject, html, text });
+      if (!result.ok) console.error('[signup] welcome email failed:', result.error);
+    })().catch((mailErr) => console.error('[signup] welcome email failed:', mailErr));
 
     return NextResponse.json({ success: true, userId: authData.user.id });
   } catch (err) {
+    // Auth 생성 뒤 프로필 저장이 끊겼다면 고아 계정을 독립된 짧은 deadline으로 정리한다.
+    if (createdUserId && !profileCreated) {
+      const userId = createdUserId;
+      const deleted = await deleteSignupUser(userId);
+      if (deleted) {
+        createdUserId = null;
+      } else {
+        // deleteUser는 오류를 throw하지 않고 { error }로 반환할 수도 있다. 이때
+        // claim을 풀면 계정/프로필이 남은 채 OTP가 재사용된다. 먼저 OTP를 terminal
+        // 소비하고, 실제 profile도 남아 있으면 이미 만들어진 가입을 성공으로 복구한다.
+        releaseOtpOnExit = false;
+        if (otpClaim && !otpConsumed) otpConsumed = await consumeSignupOtp(otpClaim);
+        // INSERT 응답이 timeout으로 유실됐을 수도 있으므로 로컬 플래그를 믿지
+        // 않고 DB에서 실제 profile 생존 여부를 다시 확인한다.
+        const profileSurvived = await signupProfileStillExists(userId);
+        if (profileSurvived && otpConsumed) {
+          profileCreated = true;
+          return NextResponse.json({ success: true, userId, recovered: true });
+        }
+      }
+    }
+    if (signal.aborted) {
+      return NextResponse.json(
+        { error: '회원가입 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 504 },
+      );
+    }
     const message = err instanceof Error ? err.message : '서버 오류가 발생했습니다.';
     return NextResponse.json({ error: message }, { status: 500 });
+  } finally {
+    if (otpClaim && !otpConsumed && releaseOtpOnExit) await releaseSignupOtp(otpClaim);
   }
 }

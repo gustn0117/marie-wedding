@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useState, useTransition } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
+import { adminService } from '@/features/admin/services/admin-service';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import type { ModerationKeyword, ModerationScope, ModerationAction } from '@/types/database';
-import { withTimeout } from '@/shared/utils/withTimeout';
 
 const SCOPE_LABELS: Record<ModerationScope, string> = {
   job: '공고',
@@ -21,67 +20,66 @@ const ACTION_LABELS: Record<ModerationAction, string> = {
 export default function ModerationKeywordsManager() {
   const [rows, setRows] = useState<ModerationKeyword[]>([]);
   const [loading, setLoading] = useState(true);
-  const [pending, startTransition] = useTransition();
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [scope, setScope] = useState<ModerationScope>('all');
   const [action, setAction] = useState<ModerationAction>('hide');
 
   async function load() {
-    const sb = createClient();
+    setLoading(true);
+    setLoadError(null);
     try {
-      const { data } = await withTimeout(
-        sb.from('moderation_keywords').select('*').order('created_at', { ascending: false }),
-        10000,
-        '키워드 조회 지연',
-      );
-      setRows((data ?? []) as ModerationKeyword[]);
+      setRows(await adminService.getModerationKeywords());
     } catch (err) {
-      console.error(err);
+      setLoadError(err instanceof Error ? err.message : '키워드를 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
 
-  function onAdd(e: React.FormEvent) {
+  async function onAdd(e: React.FormEvent) {
     e.preventDefault();
+    if (pending) return;
     if (!keyword.trim()) { toast('키워드를 입력해 주세요.', 'error'); return; }
-    startTransition(async () => {
-      const sb = createClient();
-      const { error } = await withTimeout(
-        sb.from('moderation_keywords').insert({
-          keyword: keyword.trim(),
-          scope,
-          action,
-        }),
-        10000,
-        '키워드 추가 지연',
-      );
-      if (error) {
-        toast(error.message.includes('duplicate') ? '이미 등록된 키워드입니다.' : '추가에 실패했습니다.', 'error');
-        return;
-      }
+    setPending(true);
+    try {
+      const added = await adminService.addModerationKeyword(keyword.trim(), scope, action);
+      setLoadError(null);
+      setRows((current) => [added, ...current.filter((row) => row.id !== added.id)]);
       setKeyword('');
       toast('키워드를 추가했습니다.', 'success');
-      load();
-    });
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '키워드 추가에 실패했습니다.', 'error');
+    } finally {
+      setPending(false);
+    }
   }
 
   async function onDelete(id: string, kw: string) {
+    if (pending) return;
     const ok = await toastConfirm(`"${kw}" 키워드를 삭제하시겠습니까?`);
     if (!ok) return;
-    startTransition(async () => {
-      const sb = createClient();
-      const { error } = await withTimeout(
-        sb.from('moderation_keywords').delete().eq('id', id),
-        10000,
-        '키워드 삭제 지연',
-      );
-      if (error) { toast('삭제에 실패했습니다.', 'error'); return; }
+    const removed = rows.find((row) => row.id === id);
+    setRows((current) => current.filter((row) => row.id !== id));
+    setPending(true);
+    try {
+      await adminService.deleteModerationKeyword(id);
       toast('삭제되었습니다.', 'success');
-      load();
-    });
+    } catch (err) {
+      if (removed) {
+        setRows((current) => (
+          current.some((row) => row.id === removed.id)
+            ? current
+            : [...current, removed].sort((a, b) => b.created_at.localeCompare(a.created_at))
+        ));
+      }
+      toast(err instanceof Error ? err.message : '키워드 삭제에 실패했습니다.', 'error');
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -123,6 +121,17 @@ export default function ModerationKeywordsManager() {
         </div>
         {loading ? (
           <p className="px-4 py-10 text-center text-sm text-gray-500">불러오는 중…</p>
+        ) : loadError ? (
+          <div className="px-4 py-8 text-center">
+            <p className="text-sm text-rose-600">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-3 rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary"
+            >
+              다시 시도
+            </button>
+          </div>
         ) : rows.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-gray-500">등록된 키워드가 없습니다.</p>
         ) : (

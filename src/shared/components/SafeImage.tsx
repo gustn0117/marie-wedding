@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ImgHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useState, type ImgHTMLAttributes, type ReactNode } from 'react';
 
 /**
  * 외부/Supabase Storage 이미지 안정 표시.
@@ -24,6 +24,11 @@ export default function SafeImage({
   ...rest
 }: Props) {
   const [errored, setErrored] = useState(false);
+
+  // 이전 URL의 로드 실패 상태가 새 이미지 URL까지 가리지 않도록 초기화한다.
+  useEffect(() => {
+    setErrored(false);
+  }, [src]);
 
   if (!src || errored) {
     return (

@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import Logo from '@/shared/components/Logo';
+import { toast } from '@/shared/components/Toast';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 const NAV_ITEMS = [
   { href: ROUTES.ADMIN, label: '대시보드', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -26,6 +28,7 @@ const NAV_ITEMS = [
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [locking, setLocking] = useState(false);
 
   // 인증 게이트는 부모 server-component(src/app/admin/layout.tsx)가 marie_admin_unlock 쿠키로 처리.
   // 여기까지 도달했다면 비밀번호 통과 상태. 별도 spinner 안 띄움.
@@ -89,15 +92,30 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
           <button
             type="button"
             onClick={async () => {
-              await fetch('/api/admin/lock', { method: 'POST', credentials: 'include' });
-              window.location.href = '/';
+              setLocking(true);
+              try {
+                const res = await apiFetch(
+                  '/api/admin/lock',
+                  { method: 'POST', credentials: 'include' },
+                  8000,
+                );
+                if (!res.ok) {
+                  const body = await res.json().catch(() => ({} as { error?: string }));
+                  throw new Error(body.error || '관리자 잠금에 실패했습니다.');
+                }
+                window.location.href = '/';
+              } catch (err) {
+                toast(err instanceof Error ? err.message : '관리자 잠금에 실패했습니다.', 'error');
+                setLocking(false);
+              }
             }}
+            disabled={locking}
             className="flex items-center justify-center gap-2 w-full rounded bg-ink px-3 py-2 text-xs font-bold text-white hover:bg-gray-900 transition-colors"
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
-            잠그기
+            {locking ? '잠그는 중…' : '잠그기'}
           </button>
           <Link
             href={ROUTES.HOME}

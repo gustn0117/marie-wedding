@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { getVerifiedProfile } from '@/lib/supabase/verified-profile';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const REQUEST_TIMEOUT_MS = 8_000;
 
 /**
  * 알림 읽음 처리 — 서버(service_role)로 확실히 저장.
@@ -13,31 +15,51 @@ export const dynamic = 'force-dynamic';
  * Body: { id } → 해당 알림 1건 읽음 | { all: true } → 내 안읽음 전체 읽음
  */
 export async function POST(req: Request) {
+  const requestSignal = AbortSignal.any([req.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
   try {
-    const cookieStore = cookies();
-    const pc = cookieStore.get('marie_profile');
-    if (!pc?.value) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
-    let me: { id?: string } | null = null;
-    try { me = JSON.parse(pc.value); } catch { me = null; }
-    if (!me?.id) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+    const caller = await getVerifiedProfile(requestSignal);
+    if (!caller.ok) {
+      if (caller.reason === 'timeout') {
+        return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다.' }, { status: 504 });
+      }
+      if (caller.reason === 'server_error') {
+        return NextResponse.json({ error: '로그인 정보를 확인하지 못했습니다.' }, { status: 503 });
+      }
+      return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+    }
 
     const { id, all } = await req.json().catch(() => ({}));
-    const supabase = createServiceClient();
+    const supabase = createServiceClient(requestSignal);
     const now = new Date().toISOString();
+    let updateError: { message: string } | null = null;
 
     if (all) {
-      await supabase.from('notifications').update({ read_at: now })
-        .eq('profile_id', me.id).is('read_at', null).is('deleted_at', null);
+      const { error } = await supabase.from('notifications').update({ read_at: now })
+        .eq('profile_id', caller.profileId).is('read_at', null).is('deleted_at', null)
+        .abortSignal(requestSignal);
+      updateError = error;
     } else if (id && typeof id === 'string') {
       // 본인 알림만 — profile_id 조건으로 타인 알림 변경 차단
-      await supabase.from('notifications').update({ read_at: now })
-        .eq('id', id).eq('profile_id', me.id).is('read_at', null);
+      const { error } = await supabase.from('notifications').update({ read_at: now })
+        .eq('id', id).eq('profile_id', caller.profileId).is('read_at', null)
+        .abortSignal(requestSignal);
+      updateError = error;
     } else {
       return NextResponse.json({ error: '대상이 없습니다.' }, { status: 400 });
+    }
+    if (updateError) {
+      console.error('[api/notifications/read] update failed:', updateError.message);
+      return NextResponse.json(
+        { error: requestSignal.aborted ? '읽음 처리 시간이 초과되었습니다. 다시 시도해주세요.' : '처리에 실패했습니다.' },
+        { status: requestSignal.aborted ? 504 : 500 },
+      );
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('[api/notifications/read] failed:', err);
-    return NextResponse.json({ error: '처리에 실패했습니다.' }, { status: 500 });
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '읽음 처리 시간이 초과되었습니다. 다시 시도해주세요.' : '처리에 실패했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
   }
 }

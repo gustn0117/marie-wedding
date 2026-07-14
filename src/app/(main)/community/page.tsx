@@ -7,6 +7,7 @@ import PostList from '@/features/community/components/PostList';
 import type { Post } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 async function getPosts(searchParams: Record<string, string | undefined>) {
@@ -29,7 +30,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
   let query = supabase
     .from('posts')
-    .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)', { count: 'exact' })
+    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
     .is('deleted_at', null)
     .filter('comments.deleted_at', 'is', null);
 
@@ -70,8 +71,9 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 }
 
 export default async function CommunityPage({ searchParams }: PageProps) {
-  const { posts, count } = await getPosts(searchParams);
-  const activeFilterCount = ['category', 'search', 'sort', 'region'].filter((key) => searchParams[key]).length;
+  const resolvedSearchParams = await searchParams;
+  const { posts, count } = await getPosts(resolvedSearchParams);
+  const activeFilterCount = ['category', 'search', 'sort', 'region'].filter((key) => resolvedSearchParams[key]).length;
 
   return (
     <div className="space-y-4">

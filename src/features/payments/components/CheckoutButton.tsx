@@ -4,13 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from '@/shared/components/Toast';
 import { ROUTES } from '@/shared/constants';
+import { apiFetch } from '@/shared/utils/apiFetch';
+import type { PaymentSku } from '@/features/payments/lib/payment-catalog';
 
 interface CheckoutInput {
-  productType: 'premium_tier' | 'job_promotion' | 'event_listing' | 'directory_boost';
-  productId?: string;
-  amount: number;
-  orderName: string;
-  metadata?: Record<string, unknown>;
+  sku: PaymentSku;
 }
 
 export default function CheckoutButton({
@@ -33,12 +31,12 @@ export default function CheckoutButton({
     const timer = setTimeout(() => ctrl.abort(), 15000);
     try {
       // 1. 서버에 결제 세션 생성 요청
-      const res = await fetch('/api/payments/start', {
+      const res = await apiFetch('/api/payments/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(input),
         signal: ctrl.signal,
-      });
+      }, 15000);
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'failed' }));
@@ -50,7 +48,7 @@ export default function CheckoutButton({
         throw new Error(err.error || '결제 시작 실패');
       }
 
-      const { paymentId, storeId, channelKey } = await res.json();
+      const { paymentId, storeId, channelKey, amount, orderName } = await res.json();
 
       if (!storeId || !channelKey || storeId.includes('xxxxxxxx')) {
         toast('결제 GW가 아직 설정되지 않았습니다. 운영팀에 문의해 주세요.', 'error');
@@ -63,8 +61,8 @@ export default function CheckoutButton({
         storeId,
         channelKey,
         paymentId,
-        orderName: input.orderName,
-        totalAmount: input.amount,
+        orderName,
+        totalAmount: amount,
         currency: 'CURRENCY_KRW',
         payMethod: 'CARD',
         customer: undefined, // 추후 프로필 정보 매핑

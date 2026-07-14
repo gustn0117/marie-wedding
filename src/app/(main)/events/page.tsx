@@ -16,7 +16,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 type StatusFilter = 'all' | 'upcoming' | 'ongoing' | 'ended' | 'always';
@@ -119,9 +119,10 @@ function buildStatusHref(status: StatusFilter, type: string, q: string): string 
 }
 
 export default async function EventsPage({ searchParams }: PageProps) {
-  const { events, count, statusFilter } = await getEvents(searchParams);
-  const activeType = searchParams.type ?? '';
-  const q = searchParams.q ?? '';
+  const resolvedSearchParams = await searchParams;
+  const { events, count, statusFilter } = await getEvents(resolvedSearchParams);
+  const activeType = resolvedSearchParams.type ?? '';
+  const q = resolvedSearchParams.q ?? '';
 
   // 상단 고정 이벤트와 일반 이벤트 분리
   const pinned = events.filter(e => e.is_pinned);

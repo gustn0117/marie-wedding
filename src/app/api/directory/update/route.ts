@@ -8,6 +8,10 @@ import { createServiceClient } from '@/lib/supabase/service';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// 클라이언트 저장 요청(15초)보다 먼저 실패를 돌려줘 UI가 무한 대기하지 않게 한다.
+// 같은 signal을 인증/조회/수정 전체에 사용하므로 단계마다 timeout이 새로 시작되지 않는다.
+const WRITE_TIMEOUT_MS = 10_000;
+
 /**
  * 디렉토리/프로필 업데이트 API (service_role).
  *
@@ -20,6 +24,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: Request) {
   const t0 = Date.now();
+  const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(WRITE_TIMEOUT_MS)]);
   let body: { id?: string; updates?: Record<string, unknown> };
   try {
     body = await request.json();
@@ -37,6 +42,14 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal
+            ? AbortSignal.any([init.signal, requestSignal])
+            : requestSignal,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -49,19 +62,38 @@ export async function POST(request: Request) {
     },
   );
 
-  const { data: { user } } = await ssr.auth.getUser();
+  const { data: { user }, error: authError } = await ssr.auth.getUser();
   const tAuth = Date.now();
+  if (authError && requestSignal.aborted) {
+    console.error('[api/directory/update] auth timeout', { profile_id: id, elapsed_ms: tAuth - t0 });
+    return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' }, { status: 504 });
+  }
   if (!user) {
     console.warn('[api/directory/update] 401 no session', { profile_id: id, elapsed_ms: tAuth - t0 });
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const service = createServiceClient();
-  const [{ data: target }, { data: me }] = await Promise.all([
-    service.from('profiles').select('id, user_id, role').eq('id', id).is('deleted_at', null).maybeSingle(),
-    service.from('profiles').select('id, role, banned_at').eq('user_id', user.id).is('deleted_at', null).maybeSingle(),
+  const service = createServiceClient(requestSignal);
+  const [targetResult, meResult] = await Promise.all([
+    service.from('profiles').select('id, user_id, role, phone').eq('id', id).is('deleted_at', null).abortSignal(requestSignal).maybeSingle(),
+    service.from('profiles').select('id, role, banned_at').eq('user_id', user.id).is('deleted_at', null).abortSignal(requestSignal).maybeSingle(),
   ]);
   const tLookup = Date.now();
+  const { data: target, error: targetError } = targetResult;
+  const { data: me, error: meError } = meResult;
+
+  if (targetError || meError) {
+    console.error('[api/directory/update] profile lookup failed', {
+      profile_id: id,
+      elapsed_ms: tLookup - t0,
+      target_error: targetError,
+      requester_error: meError,
+    });
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '프로필 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
 
   if (!target) {
     console.warn('[api/directory/update] 404 target missing', { profile_id: id, elapsed_ms: tLookup - t0 });
@@ -93,52 +125,46 @@ export async function POST(request: Request) {
     if (ALLOWED.has(k)) payload[k] = v;
   }
 
-  // 1) UPDATE — .select() 없이. RETURNING 직렬화로 인해 trigger/RLS 이슈 발생 가능
+  if (Object.prototype.hasOwnProperty.call(updates, 'phone')) {
+    if (updates.phone !== null && typeof updates.phone !== 'string') {
+      return NextResponse.json({ error: '연락처 형식이 올바르지 않습니다.' }, { status: 400 });
+    }
+    const nextPhone = typeof updates.phone === 'string' ? updates.phone.trim() || null : null;
+    payload.phone = nextPhone;
+    if (nextPhone !== (target.phone ?? null)) {
+      // 인증된 번호 자체가 바뀌면 배지를 원자적으로 해제한다. phone_verified는
+      // 검증된 OTP 경로에서만 다시 true가 된다.
+      payload.phone_verified = false;
+      payload.phone_verified_at = null;
+    }
+  }
+
+  // UPDATE — .select() 없이. RETURNING 직렬화로 인해 trigger/RLS 이슈 발생 가능
   const { error: updateErr } = await service
     .from('profiles')
     .update(payload)
-    .eq('id', id);
+    .eq('id', id)
+    .abortSignal(requestSignal);
   const tUpdate = Date.now();
 
   if (updateErr) {
     console.error('[api/directory/update] UPDATE failed', { profile_id: id, elapsed_ms: tUpdate - t0, err: updateErr });
     return NextResponse.json(
-      { error: `저장에 실패했습니다: ${updateErr.message}` },
-      { status: 500 },
+      { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : `저장에 실패했습니다: ${updateErr.message}` },
+      { status: requestSignal.aborted ? 504 : 500 },
     );
   }
 
-  // 2) 별도 SELECT — service_role 는 RLS 우회하므로 항상 row 조회 가능
-  const { data, error: selectErr } = await service
-    .from('profiles')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
-  const tSelect = Date.now();
-
-  if (selectErr) {
-    console.error('[api/directory/update] post-update SELECT failed', { profile_id: id, elapsed_ms: tSelect - t0, err: selectErr });
-    return NextResponse.json(
-      { error: `저장은 되었지만 다시 읽지 못했습니다: ${selectErr.message}` },
-      { status: 500 },
-    );
-  }
-  if (!data) {
-    console.error('[api/directory/update] post-update row missing', { profile_id: id, elapsed_ms: tSelect - t0 });
-    return NextResponse.json(
-      { error: '저장 후 프로필을 찾을 수 없습니다.' },
-      { status: 500 },
-    );
-  }
-  const total = tSelect - t0;
+  const total = tUpdate - t0;
   console.info('[api/directory/update] ok', {
     profile_id: id,
     total_ms: total,
     auth_ms: tAuth - t0,
     lookup_ms: tLookup - tAuth,
     update_ms: tUpdate - tLookup,
-    select_ms: tSelect - tUpdate,
     fields: Object.keys(payload).length,
   });
-  return NextResponse.json({ success: true, data });
+  // 호출부는 전체 row를 사용하지 않는다. id만 돌려 불필요한 post-update SELECT와
+  // 민감한 프로필 컬럼의 과도한 직렬화를 없애되 기존 응답 shape는 유지한다.
+  return NextResponse.json({ success: true, data: { id } });
 }

@@ -1,4 +1,6 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { hasValidAdminSession } from '@/lib/admin-session';
+import { redirect } from 'next/navigation';
 import VerificationAdminTable from '@/features/admin/components/VerificationAdminTable';
 import type { VerificationRow } from '@/features/verification/types';
 import PageHeader from '@/shared/components/PageHeader';
@@ -6,6 +8,10 @@ import PageHeader from '@/shared/components/PageHeader';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminVerificationsPage() {
+  // 상위 layout이 클라이언트 이동 중 재사용돼도 만료된 관리자 세션으로
+  // 사업자번호·비공개 인증서 경로를 읽을 수 없게 페이지에서 다시 검증한다.
+  if (!await hasValidAdminSession()) redirect('/admin');
+
   const supabase = createServerQueryClient();
   const { data: rows } = await supabase
     .from('profiles')

@@ -4,6 +4,7 @@ import type { Job } from '@/types/database';
 import type { JobFormData, JobFilters } from '../types';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import { REGION_DETAILS } from '@/shared/constants/regions';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 const PAGE_SIZE_DEFAULT = 12;
 
@@ -25,7 +26,7 @@ export const jobService = {
     let query = supabase
       .from('jobs')
       // author.deleted_at IS NULL — 탈퇴 업체 공고 은닉
-      .select('*, author:profiles!author_id!inner(*)', { count: 'exact' })
+      .select(`*, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`, { count: 'exact' })
       .is('deleted_at', null)
       .is('author.deleted_at', null)
       .eq('posting_type', 'hiring')
@@ -77,7 +78,7 @@ export const jobService = {
     const { data, error } = await supabase
       .from('jobs')
       // author.deleted_at IS NULL — 탈퇴 업체의 공고 상세도 은닉
-      .select('*, author:profiles!author_id!inner(*)')
+      .select(`*, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .is('deleted_at', null)
       .is('author.deleted_at', null)
@@ -102,25 +103,25 @@ export const jobService = {
    * QA-010 재발 방지 (auto_moderate + protect_job_admin_cols 트리거 우회).
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createJob(formData: JobFormData, _authorId: string): Promise<Job> {
+  async createJob(formData: JobFormData, _authorId: string, createId: string): Promise<Pick<Job, 'id'>> {
     const res = await apiFetch('/api/jobs/write', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode: 'create', payload: formData }),
+      body: JSON.stringify({ mode: 'create', id: createId, payload: formData }),
     }, 60000);
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' }));
       throw new Error(body.error || `등록에 실패했습니다 (HTTP ${res.status}).`);
     }
     const { job } = await res.json();
-    return job as Job;
+    return job as Pick<Job, 'id'>;
   },
 
   /**
    * Update an existing job posting — service_role 서버 라우트 경유.
    */
-  async updateJob(id: string, formData: Partial<JobFormData>): Promise<Job> {
+  async updateJob(id: string, formData: Partial<JobFormData>): Promise<Pick<Job, 'id'>> {
     const res = await apiFetch('/api/jobs/write', {
       method: 'POST',
       credentials: 'include',
@@ -132,7 +133,7 @@ export const jobService = {
       throw new Error(body.error || `수정에 실패했습니다 (HTTP ${res.status}).`);
     }
     const { job } = await res.json();
-    return job as Job;
+    return job as Pick<Job, 'id'>;
   },
 
   /**

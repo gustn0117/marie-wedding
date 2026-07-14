@@ -1,10 +1,11 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import type { Profile } from '@/types/database';
 import DirectoryForm from '@/features/directory/components/DirectoryForm';
+import { SELF_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,23 +13,17 @@ async function getProfile(profileId: string): Promise<Profile | null> {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('profiles')
-    .select('*')
+    .select(SELF_PROFILE_COLUMNS)
     .eq('id', profileId)
     .single();
   return data as Profile | null;
 }
 
 export default async function DirectoryRegisterPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
-
-  let cookieProfile: { id: string } | null = null;
-  try { cookieProfile = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
-
-  const profile = await getProfile(cookieProfile.id);
+  const profile = await getProfile(viewer.profileId);
   if (!profile) redirect(ROUTES.LOGIN);
 
   return (

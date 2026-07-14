@@ -1,4 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/service';
+import { hasValidAdminSession } from '@/lib/admin-session';
+import { redirect } from 'next/navigation';
 import { formatRelativeTime } from '@/shared/utils/format';
 import InquiryStatusToggle from './InquiryStatusToggle';
 
@@ -17,6 +19,10 @@ interface Inquiry {
 }
 
 export default async function AdminInquiriesPage() {
+  // App Router는 클라이언트 이동 중 상위 layout을 재사용할 수 있다. 페이지에서도
+  // 세션을 다시 확인해 만료된 관리자 화면이 service-role로 문의 PII를 읽지 못하게 한다.
+  if (!await hasValidAdminSession()) redirect('/admin');
+
   const supabase = createServiceClient();
   const { data } = await supabase
     .from('support_inquiries')

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Post, Comment } from '@/types/database';
 import type { PostFormData, PostFilters } from '../types';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 const PAGE_SIZE_DEFAULT = 10;
 
@@ -25,7 +26,7 @@ export const communityService = {
       .select(
         `
         *,
-        author:profiles!author_id(*),
+        author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS}),
         comments:comments!comments_post_id_fkey(count)
       `,
         { count: 'exact' },
@@ -80,7 +81,7 @@ export const communityService = {
 
     const { data, error } = await supabase
       .from('posts')
-      .select('*, author:profiles!author_id(*)')
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .is('deleted_at', null)
       .single();
@@ -99,12 +100,13 @@ export const communityService = {
    * authorId 인자는 호출자 시그니처 호환을 위해 받지만 실제 author는 서버에서 인증 쿠키로 재도출.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createPost(data: PostFormData, _authorId: string): Promise<Post> {
+  async createPost(data: PostFormData, _authorId: string, createId: string): Promise<Pick<Post, 'id'>> {
     const res = await apiFetch('/api/posts/create', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        id: createId,
         title: data.title,
         content: data.content,
         category: data.category,
@@ -117,14 +119,14 @@ export const communityService = {
     }
     const { post } = await res.json();
     if (!post) throw new Error('게시글이 저장되었지만 응답이 비어 있어요. 게시판에서 확인해 주세요.');
-    return post as Post;
+    return post as Pick<Post, 'id'>;
   },
 
   /**
    * Update an existing post via service_role server route.
    * QA-010 재발 방지 — moderation 트리거 RETURNING null 이슈 우회.
    */
-  async updatePost(id: string, data: Partial<PostFormData>): Promise<Post> {
+  async updatePost(id: string, data: Partial<PostFormData>): Promise<Pick<Post, 'id'>> {
     const res = await apiFetch('/api/posts/update', {
       method: 'POST',
       credentials: 'include',
@@ -142,7 +144,7 @@ export const communityService = {
       throw new Error(body.error || `수정에 실패했습니다 (HTTP ${res.status}).`);
     }
     const { post } = await res.json();
-    return post as Post;
+    return post as Pick<Post, 'id'>;
   },
 
   /**
@@ -168,7 +170,7 @@ export const communityService = {
 
     const { data, error } = await supabase
       .from('comments')
-      .select('*, author:profiles!author_id(*)')
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('post_id', postId)
       .is('deleted_at', null)
       .order('created_at', { ascending: true });
@@ -183,13 +185,14 @@ export const communityService = {
   async createComment(
     postId: string,
     content: string,
+    createId: string,
   ): Promise<Comment> {
     // service_role 서버 라우트 경유 — 클라이언트 insert hang 회피.
     const res = await apiFetch('/api/comments/create', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ postId, content }),
+      body: JSON.stringify({ id: createId, postId, content }),
     });
     if (!res.ok) {
       const b = await res.json().catch(() => ({ error: '' }));

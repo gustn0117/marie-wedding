@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 export default function ForgotPasswordForm() {
   const [step, setStep] = useState<'request' | 'reset' | 'done'>('request');
@@ -30,11 +31,11 @@ export default function ForgotPasswordForm() {
     setError(null);
     setSending(true);
     try {
-      const res = await fetch('/api/password-reset/send', {
+      const res = await apiFetch('/api/password-reset/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),
-      });
+      }, 20000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
       setStep('reset');
@@ -54,11 +55,11 @@ export default function ForgotPasswordForm() {
     setError(null);
     setSubmitting(true);
     try {
-      const res = await fetch('/api/password-reset/confirm', {
+      const res = await apiFetch('/api/password-reset/confirm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), code, password }),
-      });
+      }, 15000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '비밀번호 변경에 실패했습니다.');
       setStep('done');

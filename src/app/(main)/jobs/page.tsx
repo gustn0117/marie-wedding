@@ -3,6 +3,7 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import JobsPageContent from '@/features/jobs/components/JobsPageContent';
 import type { Job } from '@/types/database';
 import { REGION_DETAILS } from '@/shared/constants/regions';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,7 +13,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 async function getJobs(searchParams: Record<string, string | undefined>) {
@@ -26,7 +27,9 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   // outer-join으로 fallback되지 않고 실제 행을 걸러냄. inner join 마커는 `!inner`.
   // 그 외 일반 표시용 임베드는 LEFT join이라도 무방.
   const needsInnerAuthor = searchParams.verified === '1' || searchParams.completed === '1';
-  const authorEmbed = needsInnerAuthor ? 'author:profiles!author_id!inner(*)' : 'author:profiles!author_id(*)';
+  const authorEmbed = needsInnerAuthor
+    ? `author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`
+    : `author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`;
 
   let query = supabase
     .from('jobs')
@@ -106,13 +109,16 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   query = query.range(from, to);
 
   const { data, count } = await query;
-  const jobs = (data ?? []) as Job[];
+  // 동적 !inner 임베드 문자열은 supabase-js 타입 파서가 런타임에 유효한
+  // PostgREST select도 ParserError로 추론하므로 실제 응답 타입으로 좁힌다.
+  const jobs = (data ?? []) as unknown as Job[];
 
   return { jobs, count: count ?? 0 };
 }
 
 export default async function JobsPage({ searchParams }: PageProps) {
-  const { jobs, count } = await getJobs(searchParams);
+  const resolvedSearchParams = await searchParams;
+  const { jobs, count } = await getJobs(resolvedSearchParams);
 
   return (
     <Suspense

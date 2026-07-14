@@ -1,6 +1,6 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import PageHeader from '@/shared/components/PageHeader';
 import EmptyState from '@/shared/components/EmptyState';
@@ -32,29 +32,21 @@ const STATUS_LABELS: Record<string, string> = {
   refunded: '환불',
 };
 
-export default async function PaymentsHistoryPage({ searchParams }: { searchParams: { paid?: string } }) {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile')?.value;
-  if (!profileCookie) redirect(ROUTES.LOGIN);
-
-  let profileId: string;
-  try {
-    profileId = JSON.parse(profileCookie).id;
-    if (!profileId) throw new Error();
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
+export default async function PaymentsHistoryPage({ searchParams }: { searchParams: Promise<{ paid?: string }> }) {
+  const resolvedSearchParams = await searchParams;
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('payments')
     .select('*')
-    .eq('profile_id', profileId)
+    .eq('profile_id', viewer.profileId)
     .order('created_at', { ascending: false })
     .limit(50);
 
   const payments = data ?? [];
-  const justPaid = searchParams.paid;
+  const justPaid = resolvedSearchParams.paid;
   const fmt = (n: number) => new Intl.NumberFormat('ko-KR').format(n);
 
   return (

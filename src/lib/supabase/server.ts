@@ -4,8 +4,8 @@ import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { SUPABASE_SCHEMA } from './schema';
 
-export function createClient() {
-  const cookieStore = cookies();
+export async function createClient() {
+  const cookieStore = await cookies();
   return createServerClient(
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

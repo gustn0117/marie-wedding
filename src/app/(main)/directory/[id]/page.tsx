@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import {
   getBusinessTypeLabel,
@@ -18,11 +18,12 @@ import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewLi
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import GalleryLightbox from '@/shared/components/GalleryLightbox';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getData(id: string) {
@@ -31,7 +32,7 @@ async function getData(id: string) {
   // 1) profile 먼저 확인 (없으면 즉시 종료)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PUBLIC_PROFILE_COLUMNS)
     .eq('id', id)
     .is('deleted_at', null)
     .single();
@@ -87,20 +88,14 @@ async function getData(id: string) {
 }
 
 export default async function CompanyDetailPage({ params }: PageProps) {
-  const result = await getData(params.id);
+  const { id } = await params;
+  const result = await getData(id);
   if (!result) notFound();
 
   const { profile, jobs, reviews, tagMap } = result;
 
-  let isOwner = false;
-  try {
-    const cookieStore = await cookies();
-    const profileCookie = cookieStore.get('marie_profile');
-    if (profileCookie?.value) {
-      const me = JSON.parse(profileCookie.value);
-      isOwner = me.id === profile.id;
-    }
-  } catch {}
+  const viewer = await getCurrentVerifiedProfile();
+  const isOwner = viewer.ok && viewer.profileId === profile.id;
 
   const displayName = profile.company_name || profile.contact_name;
 
@@ -310,4 +305,3 @@ function InfoCell({ label, value, wide = false }: { label: string; value: string
     </div>
   );
 }
-

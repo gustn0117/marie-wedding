@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { createServiceClient } from '@/lib/supabase/service';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import JobNewSubmit from '@/features/jobs/components/JobNewSubmit';
 import { checkBusinessProfileCompleteness, REQUIRED_BUSINESS_FIELDS } from '@/features/jobs/lib/business-profile-completeness';
 import { getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
@@ -12,23 +12,10 @@ import { getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
 export const dynamic = 'force-dynamic';
 
 export default async function NewJobPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  if (!profileCookie?.value) {
-    redirect(ROUTES.LOGIN);
-  }
-
-  let cookieProfile: { id: string; account_type: string } | null = null;
-  try {
-    cookieProfile = JSON.parse(profileCookie.value);
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
-
-  if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
-
-  if (cookieProfile.account_type === 'individual') {
+  if (viewer.accountType === 'individual') {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
@@ -45,7 +32,7 @@ export default async function NewJobPage() {
   const { data: profile } = await service
     .from('profiles')
     .select('id, account_type, company_name, business_type, region, phone, bio')
-    .eq('id', cookieProfile.id)
+    .eq('id', viewer.profileId)
     .maybeSingle();
 
   if (!profile) redirect(ROUTES.LOGIN);
@@ -168,4 +155,3 @@ export default async function NewJobPage() {
     </div>
   );
 }
-

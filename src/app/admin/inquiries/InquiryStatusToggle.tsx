@@ -1,25 +1,41 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiFetch } from '@/shared/utils/apiFetch';
+import { toast } from '@/shared/components/Toast';
 
 export default function InquiryStatusToggle({ id, status }: { id: string; status: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const resolved = status === 'resolved';
+  const [currentStatus, setCurrentStatus] = useState(status);
+  const resolved = currentStatus === 'resolved';
+
+  useEffect(() => {
+    if (!busy) setCurrentStatus(status);
+  }, [busy, status]);
 
   const toggle = async () => {
+    if (busy) return;
+    const previous = currentStatus;
+    const next = resolved ? 'open' : 'resolved';
+    setCurrentStatus(next);
     setBusy(true);
     try {
-      await fetch('/api/admin/inquiries/status', {
+      const response = await apiFetch('/api/admin/inquiries/status', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: resolved ? 'open' : 'resolved' }),
-      });
+        body: JSON.stringify({ id, status: next }),
+      }, 12_000);
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || '상태를 변경하지 못했습니다.');
+      }
       router.refresh();
-    } catch {
-      /* noop */
+    } catch (error) {
+      setCurrentStatus(previous);
+      toast(error instanceof Error ? error.message : '상태를 변경하지 못했습니다.', 'error');
     } finally {
       setBusy(false);
     }

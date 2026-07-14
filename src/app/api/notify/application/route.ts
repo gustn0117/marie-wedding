@@ -1,38 +1,41 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { getVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { sendEmail } from '@/features/notifications/lib/email';
 import { newApplicationEmail } from '@/features/notifications/lib/templates';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+const REQUEST_TIMEOUT_MS = 15_000;
 
 /**
  * 새 지원자 도착 알림 이메일 — 지원 접수 직후 클라이언트가 호출.
  * 채용 공고 작성자(author)의 auth 이메일로 발송한다.
- * 남용 방지: 호출자(marie_profile 쿠키)의 프로필 id 가 해당 지원서의 지원자와 일치해야 한다.
+ * 남용 방지: 검증된 Supabase 세션의 프로필 id가 해당 지원서의 지원자와 일치해야 한다.
  * Body: { applicationId }
  */
 export async function POST(req: Request) {
+  const signal = AbortSignal.any([req.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
   try {
     const { applicationId } = await req.json().catch(() => ({}));
     if (!applicationId) return NextResponse.json({ error: 'applicationId required' }, { status: 400 });
 
-    // 호출자 프로필 id (지원자 본인 확인용)
-    let callerId: string | null = null;
-    try {
-      const pc = cookies().get('marie_profile');
-      if (pc?.value) callerId = JSON.parse(pc.value)?.id ?? null;
-    } catch { /* noop */ }
-    if (!callerId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    const caller = await getVerifiedProfile(signal);
+    if (!caller.ok) {
+      if (caller.reason === 'timeout') return NextResponse.json({ error: 'auth_timeout' }, { status: 504 });
+      if (caller.reason === 'server_error') return NextResponse.json({ error: 'auth_failed' }, { status: 503 });
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+    const callerId = caller.profileId;
 
-    const supabase = createServiceClient();
+    const supabase = createServiceClient(signal);
 
     // 지원서 → 공고 → 작성자
     const { data: app } = await supabase
       .from('applications')
       .select('id, applicant_id, job:jobs!inner(id, title, author_id)')
       .eq('id', applicationId)
+      .abortSignal(signal)
       .single();
 
     if (!app) return NextResponse.json({ error: 'not found' }, { status: 404 });
@@ -44,8 +47,8 @@ export async function POST(req: Request) {
 
     // 작성자 프로필 → user_id, 지원자 이름
     const [{ data: author }, { data: applicant }] = await Promise.all([
-      supabase.from('profiles').select('user_id').eq('id', job.author_id).maybeSingle(),
-      supabase.from('profiles').select('company_name, contact_name').eq('id', callerId).maybeSingle(),
+      supabase.from('profiles').select('user_id').eq('id', job.author_id).abortSignal(signal).maybeSingle(),
+      supabase.from('profiles').select('company_name, contact_name').eq('id', callerId).abortSignal(signal).maybeSingle(),
     ]);
     if (!author?.user_id) return NextResponse.json({ ok: true, sent: false });
 
@@ -64,6 +67,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, sent: r.ok });
   } catch (err) {
     console.error('[notify/application] failed:', err);
-    return NextResponse.json({ error: 'failed' }, { status: 500 });
+    return NextResponse.json({ error: signal.aborted ? 'timeout' : 'failed' }, { status: signal.aborted ? 504 : 500 });
   }
 }

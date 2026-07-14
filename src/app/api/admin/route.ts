@@ -2,19 +2,39 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { createServiceClient } from '@/lib/supabase/service';
+import { removeVerificationDocument } from '@/lib/verification-document';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import { isUuid } from '@/shared/utils/uuid';
+import { sameNullableTimestamp } from '@/shared/utils/idempotency';
+
+const ADMIN_REQUEST_TIMEOUT_MS = 12_000;
 
 function unauthorized() {
   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const { password, action, ...params } = body;
+  const requestSignal = AbortSignal.any([
+    request.signal,
+    AbortSignal.timeout(ADMIN_REQUEST_TIMEOUT_MS),
+  ]);
+  const body = await request.json().catch(() => null);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+  const { action, ...rawParams } = body;
+  // 과거 호환용 body.password는 의도적으로 무시한다. 비밀번호 검증은 unlock 한 곳뿐이다.
+  const params = { ...rawParams };
+  delete params.password;
 
-  if (!(await isAdminRequest(password))) return unauthorized();
+  if (!(await isAdminRequest(requestSignal))) {
+    return requestSignal.aborted
+      ? NextResponse.json({ error: '관리자 인증 시간이 초과되었습니다.' }, { status: 504 })
+      : unauthorized();
+  }
 
-  const supabase = createServiceClient();
+  // 이 클라이언트의 REST/Auth fetch 전체가 같은 요청 deadline을 공유한다.
+  const supabase = createServiceClient(requestSignal);
 
   try {
     switch (action) {
@@ -202,8 +222,14 @@ export async function POST(request: NextRequest) {
 
       case 'softDeleteUser': {
         // withdraw 라우트와 동일 정책 — purge_profile_cascade 로 관련 콘텐츠 전체 soft delete
+        const { data: target } = await supabase
+          .from('profiles')
+          .select('verification_document')
+          .eq('id', params.id)
+          .maybeSingle();
         const { error } = await supabase.rpc('purge_profile_cascade', { p_profile_id: params.id });
         if (error) throw error;
+        await removeVerificationDocument(target?.verification_document);
         return NextResponse.json({ success: true });
       }
 
@@ -332,7 +358,10 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
           return NextResponse.json({ success: true });
         }
-        await Promise.all(
+        if (orderedIds.some((id) => !isUuid(id)) || new Set(orderedIds).size !== orderedIds.length) {
+          return NextResponse.json({ error: '공고 순서 목록이 올바르지 않습니다.' }, { status: 400 });
+        }
+        const results = await Promise.all(
           orderedIds.map((id, idx) =>
             supabase
               .from('jobs')
@@ -340,6 +369,9 @@ export async function POST(request: NextRequest) {
               .eq('id', id),
           ),
         );
+        const failed = results.find((result) => result.error);
+        if (failed?.error) throw failed.error;
+        revalidateTag('home-data');
         return NextResponse.json({ success: true });
       }
 
@@ -486,23 +518,60 @@ export async function POST(request: NextRequest) {
       }
 
       case 'createEvent': {
-        const { data, error } = await supabase
+        const signal = AbortSignal.any([request.signal, AbortSignal.timeout(10_000)]);
+        const eventId = typeof params.id === 'string' ? params.id.trim() : '';
+        if (!isUuid(eventId)) {
+          return NextResponse.json({ error: '유효한 생성 ID가 필요합니다.' }, { status: 400 });
+        }
+        const createInput = {
+          id: eventId,
+          title: params.title,
+          content: params.content,
+          type: params.type || 'event',
+          image: params.image || null,
+          start_date: params.start_date || null,
+          end_date: params.end_date || null,
+          location: params.location || null,
+          link_url: params.link_url || null,
+          is_pinned: !!params.is_pinned,
+        };
+        const { error } = await supabase
           .from('events')
-          .insert({
-            title: params.title,
-            content: params.content,
-            type: params.type,
-            image: params.image || null,
-            start_date: params.start_date || null,
-            end_date: params.end_date || null,
-            location: params.location || null,
-            link_url: params.link_url || null,
-            is_pinned: !!params.is_pinned,
-          })
-          .select()
-          .single();
-        if (error) throw error;
-        return NextResponse.json(data);
+          .insert(createInput)
+          .abortSignal(signal);
+        if (error) {
+          if (error.code === '23505') {
+            const { data: existing, error: replayError } = await supabase
+              .from('events')
+              .select('id, title, content, type, image, start_date, end_date, location, link_url, is_pinned, deleted_at')
+              .eq('id', eventId)
+              .abortSignal(signal)
+              .maybeSingle();
+            if (replayError) throw replayError;
+            const sameContext = !!existing && !existing.deleted_at;
+            const exactReplay = sameContext
+              && existing.title === createInput.title
+              && existing.content === createInput.content
+              && existing.type === createInput.type
+              && existing.image === createInput.image
+              && sameNullableTimestamp(existing.start_date, createInput.start_date)
+              && sameNullableTimestamp(existing.end_date, createInput.end_date)
+              && existing.location === createInput.location
+              && existing.link_url === createInput.link_url
+              && existing.is_pinned === createInput.is_pinned;
+            if (exactReplay) {
+              return NextResponse.json({ id: eventId, replayed: true });
+            }
+            if (sameContext) {
+              return NextResponse.json({
+                error: '같은 생성 ID로 이미 다른 내용의 행사가 등록되었습니다. 기존에 생성된 행사를 확인한 뒤 해당 항목을 수정해주세요.',
+              }, { status: 409 });
+            }
+            return NextResponse.json({ error: '이미 사용된 생성 ID입니다.' }, { status: 409 });
+          }
+          throw error;
+        }
+        return NextResponse.json({ id: eventId });
       }
 
       case 'updateEvent': {
@@ -517,14 +586,14 @@ export async function POST(request: NextRequest) {
         if (params.link_url !== undefined) payload.link_url = params.link_url || null;
         if (params.is_pinned !== undefined) payload.is_pinned = !!params.is_pinned;
 
-        const { data, error } = await supabase
+        const signal = AbortSignal.any([request.signal, AbortSignal.timeout(10_000)]);
+        const { error } = await supabase
           .from('events')
           .update(payload)
           .eq('id', params.id)
-          .select()
-          .single();
+          .abortSignal(signal);
         if (error) throw error;
-        return NextResponse.json(data);
+        return NextResponse.json({ id: params.id });
       }
 
       case 'softDeleteEvent': {
@@ -543,6 +612,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
   } catch (err) {
+    if (requestSignal.aborted) {
+      return NextResponse.json(
+        { error: '관리자 요청 시간이 초과되었습니다. 현재 상태를 다시 확인해 주세요.' },
+        { status: 504 },
+      );
+    }
     const message = err instanceof Error ? err.message : 'Server error';
     return NextResponse.json({ error: message }, { status: 500 });
   }

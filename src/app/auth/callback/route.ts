@@ -17,6 +17,7 @@ export const runtime = 'nodejs';
  * 동일 이메일 충돌은 Supabase가 자체 처리 (exchangeCodeForSession 에러 → /login?error=conflict).
  */
 export async function GET(request: Request) {
+  const deadline = AbortSignal.any([request.signal, AbortSignal.timeout(20_000)]);
   const { searchParams } = new URL(request.url);
   const origin = resolveExternalOrigin(request);
   const code = searchParams.get('code');
@@ -32,6 +33,12 @@ export async function GET(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
@@ -68,7 +75,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=auth_failed`);
   }
 
-  const serviceClient = createServiceClient();
+  const serviceClient = createServiceClient(deadline);
 
   // Header(SSR)가 redirect 직후 첫 페이지에서 즉시 사용자를 인지하도록
   // marie_profile cookie를 redirect 응답에 함께 set한다.

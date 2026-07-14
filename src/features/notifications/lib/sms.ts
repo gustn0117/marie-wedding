@@ -17,6 +17,10 @@ export async function sendSms(input: SendSmsInput): Promise<{ ok: boolean; id?: 
   const sendNo = process.env.NHN_SMS_SEND_NO;
 
   if (!appKey || !secretKey || !sendNo || appKey.includes('your-')) {
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[sms] NHN credentials are not configured');
+      return { ok: false, error: 'sms_provider_not_configured' };
+    }
     console.log('[sms:dev]', { to: input.to, body: input.body.slice(0, 50) });
     return { ok: true, id: 'dev-skip' };
   }
@@ -40,6 +44,7 @@ export async function sendSms(input: SendSmsInput): Promise<{ ok: boolean; id?: 
         'X-Secret-Key': secretKey,
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
     });
     const json = await res.json().catch(() => ({}));
     if (!res.ok || !json.header?.isSuccessful) {

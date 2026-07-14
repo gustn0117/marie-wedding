@@ -7,15 +7,16 @@ export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function Image({ params }: Props) {
+  const { id } = await params;
   const supabase = createServerQueryClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('company_name, contact_name, business_type, region, verification_status, completed_deals_count')
-    .eq('id', params.id)
+    .eq('id', id)
     .is('deleted_at', null)
     .single();
 

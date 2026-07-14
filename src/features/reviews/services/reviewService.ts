@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import type { Review, ReviewTag } from '@/types/database';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const reviewService = {
   async listActiveTags(): Promise<ReviewTag[]> {
@@ -38,7 +39,7 @@ export const reviewService = {
     const { data, error } = await supabase
       .from('reviews')
       // reviewer.deleted_at IS NULL — 탈퇴 리뷰어 실명 노출 방지
-      .select('*, reviewer:profiles!reviewer_id!inner(*)')
+      .select(`*, reviewer:profiles!reviewer_id!inner(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('reviewee_id', revieweeId)
       .eq('is_public', true)
       .eq('is_hidden_by_admin', false)

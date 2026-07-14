@@ -8,6 +8,8 @@ import { createServiceClient } from '@/lib/supabase/service';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 const VALID = ['open', 'closed', 'filled', 'hidden'] as const;
 type JobStatus = (typeof VALID)[number];
 
@@ -18,6 +20,7 @@ type JobStatus = (typeof VALID)[number];
  * Body: { id, status }
  */
 export async function POST(request: Request) {
+  const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
   let body: { id?: string; status?: JobStatus };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: '잘못된 요청 본문입니다.' }, { status: 400 });
@@ -32,6 +35,14 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal
+            ? AbortSignal.any([init.signal, requestSignal])
+            : requestSignal,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -39,25 +50,42 @@ export async function POST(request: Request) {
       },
     },
   );
-  const { data: { user } } = await ssr.auth.getUser();
+  const { data: { user }, error: authError } = await ssr.auth.getUser();
+  if (authError && requestSignal.aborted) {
+    return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' }, { status: 504 });
+  }
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
 
-  const service = createServiceClient();
-  const { data: me } = await service
+  const service = createServiceClient(requestSignal);
+  const { data: me, error: profileError } = await service
     .from('profiles')
     .select('id, role, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
+    .abortSignal(requestSignal)
     .maybeSingle();
+  if (profileError) {
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '상태 변경 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '프로필 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   if (!me) return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
   if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
 
-  const { data: job } = await service
+  const { data: job, error: jobError } = await service
     .from('jobs')
     .select('id, author_id')
     .eq('id', id)
     .is('deleted_at', null)
+    .abortSignal(requestSignal)
     .maybeSingle();
+  if (jobError) {
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '상태 변경 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '공고 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   if (!job) return NextResponse.json({ error: '공고를 찾을 수 없습니다.' }, { status: 404 });
   if (job.author_id !== me.id && me.role !== 'admin') {
     return NextResponse.json({ error: '본인 공고만 변경할 수 있습니다.' }, { status: 403 });
@@ -68,8 +96,14 @@ export async function POST(request: Request) {
     .update({ status })
     .eq('id', id)
     .select('*')
+    .abortSignal(requestSignal)
     .single();
-  if (error) return NextResponse.json({ error: `상태 변경 실패: ${error.message}` }, { status: 500 });
+  if (error) {
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '상태 변경 시간이 초과되었습니다. 현재 공고 상태를 다시 확인해주세요.' : `상태 변경 실패: ${error.message}` },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
 
   return NextResponse.json({ data });
 }

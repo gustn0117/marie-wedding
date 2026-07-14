@@ -5,16 +5,21 @@ import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
 import { checkBusinessProfileCompleteness } from '@/features/jobs/lib/business-profile-completeness';
+import { isUuid } from '@/shared/utils/uuid';
+import { sameNullableTimestamp } from '@/shared/utils/idempotency';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+// 단계별 timeout 누적을 막기 위해 인증/조회/쓰기 전체가 하나의 deadline을 공유한다.
+const WRITE_TIMEOUT_MS = 10_000;
 
 /**
  * 채용 공고 create/update API (service_role).
  * QA-010 재발 방지 — auto_moderate_job + protect_job_admin_cols 트리거 조합 우회.
  *
  * Body:
- *  { mode: 'create', payload: JobFormData }
+ *  { mode: 'create', id: UUID, payload: JobFormData }
  *  { mode: 'update', id: string, payload: Partial<JobFormData> }
  */
 interface JobPayload {
@@ -42,6 +47,7 @@ const normalizeDeadline = (d?: string | null): string | null =>
   !d ? null : (/^\d{4}-\d{2}-\d{2}$/.test(d) ? `${d}T23:59:59+09:00` : d);
 
 export async function POST(request: Request) {
+  const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(WRITE_TIMEOUT_MS)]);
   let body: { mode?: 'create' | 'update'; id?: string; payload?: JobPayload };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: '잘못된 요청 본문입니다.' }, { status: 400 });
@@ -58,6 +64,14 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal
+            ? AbortSignal.any([init.signal, requestSignal])
+            : requestSignal,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -65,16 +79,27 @@ export async function POST(request: Request) {
       },
     },
   );
-  const { data: { user } } = await ssr.auth.getUser();
+  const { data: { user }, error: authError } = await ssr.auth.getUser();
+  if (authError && requestSignal.aborted) {
+    return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' }, { status: 504 });
+  }
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
 
   const service = createServiceClient();
-  const { data: me } = await service
+  const { data: me, error: profileError } = await service
     .from('profiles')
     .select('id, role, account_type, company_name, business_type, region, phone, bio, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
+    .abortSignal(requestSignal)
     .maybeSingle();
+  if (profileError) {
+    console.error('[jobs/write] requester lookup failed:', profileError);
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '프로필 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   if (!me) return NextResponse.json({ error: '프로필을 찾을 수 없습니다.' }, { status: 403 });
   if (me.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
   if (me.account_type !== 'business' && me.role !== 'admin') {
@@ -101,6 +126,10 @@ export async function POST(request: Request) {
   }
 
   if (mode === 'create') {
+    const jobId = body.id?.trim();
+    if (!isUuid(jobId)) {
+      return NextResponse.json({ error: '유효한 생성 ID가 필요합니다.' }, { status: 400 });
+    }
     const check = checkBusinessProfileCompleteness(me);
     if (!check.isComplete) {
       const missing = check.missing.map((m) => m.label).join(', ');
@@ -109,9 +138,10 @@ export async function POST(request: Request) {
     if (!payload.title || !payload.description || !payload.businessType || !payload.employmentType || !payload.region) {
       return NextResponse.json({ error: '필수 항목을 입력해주세요.' }, { status: 400 });
     }
-    const { error: insertErr } = await service.from('jobs').insert({
+    const createInput = {
+      id: jobId,
       author_id: me.id,
-      posting_type: 'hiring',
+      posting_type: 'hiring' as const,
       title: payload.title,
       description: payload.description,
       business_type: payload.businessType,
@@ -124,26 +154,84 @@ export async function POST(request: Request) {
       experience_min: payload.experienceMin ?? null,
       deadline: normalizeDeadline(payload.deadline),
       image: payload.image || null,
-    });
+    };
+    // 클라이언트가 폼 생명주기 동안 유지하는 ID를 그대로 INSERT한다. commit 뒤 응답만
+    // 유실되어 같은 요청이 재시도돼도 PK 충돌을 성공 replay로 복구할 수 있다.
+    const { error: insertErr } = await service.from('jobs').insert(createInput).abortSignal(requestSignal);
     if (insertErr) {
+      if (insertErr.code === '23505') {
+        const { data: existing, error: replayError } = await service
+          .from('jobs')
+          .select('id, author_id, posting_type, title, description, business_type, employment_type, region, salary_info, salary_min, salary_max, salary_unit, experience_min, deadline, image, deleted_at')
+          .eq('id', jobId)
+          .abortSignal(requestSignal)
+          .maybeSingle();
+        if (replayError) {
+          console.error('[jobs/write:create] replay lookup failed:', replayError);
+          return NextResponse.json(
+            { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '등록 결과를 확인하지 못했습니다.' },
+            { status: requestSignal.aborted ? 504 : 500 },
+          );
+        }
+        const sameContext = !!existing
+          && existing.author_id === createInput.author_id
+          && existing.posting_type === createInput.posting_type
+          && !existing.deleted_at;
+        const exactReplay = sameContext
+          && existing.title === createInput.title
+          && existing.description === createInput.description
+          && existing.business_type === createInput.business_type
+          && existing.employment_type === createInput.employment_type
+          && existing.region === createInput.region
+          && existing.salary_info === createInput.salary_info
+          && existing.salary_min === createInput.salary_min
+          && existing.salary_max === createInput.salary_max
+          && existing.salary_unit === createInput.salary_unit
+          && existing.experience_min === createInput.experience_min
+          && sameNullableTimestamp(existing.deadline, createInput.deadline)
+          && existing.image === createInput.image;
+        if (exactReplay) {
+          return NextResponse.json({ success: true, job: { id: jobId }, replayed: true });
+        }
+        if (sameContext) {
+          return NextResponse.json({
+            error: '같은 생성 ID로 이미 다른 내용의 공고가 등록되었습니다. 기존에 생성된 공고를 확인한 뒤 해당 항목을 수정해주세요.',
+          }, { status: 409 });
+        }
+        if (
+          existing
+          && existing.author_id === createInput.author_id
+          && existing.posting_type === createInput.posting_type
+        ) {
+          return NextResponse.json({ error: '이미 삭제된 생성 요청입니다. 새 작성 화면에서 다시 등록해주세요.' }, { status: 409 });
+        }
+        return NextResponse.json({ error: '이미 사용된 생성 ID입니다.' }, { status: 409 });
+      }
       console.error('[jobs/write:create] failed:', insertErr);
-      return NextResponse.json({ error: `등록에 실패했습니다: ${insertErr.message}` }, { status: 500 });
+      return NextResponse.json(
+        { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : `등록에 실패했습니다: ${insertErr.message}` },
+        { status: requestSignal.aborted ? 504 : 500 },
+      );
     }
-    // insert 후 별도 select — trigger RETURNING null 회피
-    const { data: latest } = await service
-      .from('jobs')
-      .select('*')
-      .eq('author_id', me.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    return NextResponse.json({ success: true, job: latest });
+    return NextResponse.json({ success: true, job: { id: jobId } });
   }
 
   // update
   const id = body.id?.trim();
   if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
-  const { data: existing } = await service.from('jobs').select('id, author_id, deleted_at').eq('id', id).maybeSingle();
+  const { data: existing, error: existingError } = await service
+    .from('jobs')
+    .select('id, author_id, deleted_at')
+    .eq('id', id)
+    .abortSignal(requestSignal)
+    .maybeSingle();
+  if (existingError) {
+    console.error('[jobs/write:update] existing lookup failed:', existingError);
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '공고 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   if (!existing) return NextResponse.json({ error: '공고를 찾을 수 없습니다.' }, { status: 404 });
   if (existing.deleted_at) return NextResponse.json({ error: '이미 삭제된 공고입니다.' }, { status: 410 });
   const canManage = me.id === existing.author_id || me.role === 'admin';
@@ -163,11 +251,17 @@ export async function POST(request: Request) {
   if (payload.deadline !== undefined) updateData.deadline = normalizeDeadline(payload.deadline);
   if (payload.image !== undefined) updateData.image = payload.image || null;
 
-  const { error: updErr } = await service.from('jobs').update(updateData).eq('id', id);
+  const { error: updErr } = await service
+    .from('jobs')
+    .update(updateData)
+    .eq('id', id)
+    .abortSignal(requestSignal);
   if (updErr) {
     console.error('[jobs/write:update] failed:', updErr);
-    return NextResponse.json({ error: `수정에 실패했습니다: ${updErr.message}` }, { status: 500 });
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '저장 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : `수정에 실패했습니다: ${updErr.message}` },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
   }
-  const { data: refreshed } = await service.from('jobs').select('*').eq('id', id).maybeSingle();
-  return NextResponse.json({ success: true, job: refreshed });
+  return NextResponse.json({ success: true, job: { id } });
 }

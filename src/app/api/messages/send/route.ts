@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.rpc('send_message', {
       p_conversation_id: conversationId,
       p_body: text,

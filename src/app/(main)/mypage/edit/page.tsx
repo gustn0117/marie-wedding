@@ -4,17 +4,20 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
+import { useImageUpload } from '@/shared/hooks/useImageUpload';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
-import { createClient } from '@/lib/supabase/client';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
-import { compressImage } from '@/shared/utils/image';
 import { validatePhone } from '@/shared/utils/validation';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
+import { apiFetch } from '@/shared/utils/apiFetch';
+
+type ProfileFormField = 'contact_name' | 'company_name' | 'business_type' | 'region' | 'bio' | 'phone' | 'website';
 
 export default function EditProfilePage() {
   const { profile, isLoading } = useAuth();
@@ -39,24 +42,38 @@ export default function EditProfilePage() {
     phone: '',
     website: '',
   });
-  // upload-on-select: newImagePath = undefined(변경 안 함) | null(삭제) | string(새 업로드 경로)
-  const [newImagePath, setNewImagePath] = useState<string | null | undefined>(undefined);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
+  const [fullProfileStatus, setFullProfileStatus] = useState<'loading' | 'loaded' | 'failed'>('loading');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const imageDirtyRef = useRef(false);
+  const bioRef = useRef(formData.bio);
+  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
+  const imageUpload = useImageUpload({
+    initialPath: null,
+    initialUrl: null,
+    bucket: 'avatars',
+    maxDimension: 800,
+    maxSizeMB: 0.55,
+    quality: 0.84,
+    buildPath: (compressed) => `${profile?.user_id}/avatar_${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
+  });
 
-  // 사용자가 입력을 시작하면 백그라운드 DB 갱신이 입력을 덮어쓰지 않도록 가드
-  const userDirtyRef = useRef(false);
+  useEffect(() => {
+    bioRef.current = formData.bio;
+  }, [formData.bio]);
+
+  // 사용자가 수정한 필드는 늦게 도착한 백그라운드 DB 조회가 덮어쓰지 않는다.
+  const dirtyFieldsRef = useRef(new Set<ProfileFormField>());
   // 초기화 1회 실행 가드 (ref) — initialized state 를 effect 의존성에 넣으면
   // setInitialized(true) 가 effect 를 재실행/cleanup 시켜 진행 중 DB 조회가 cancelled 로
   // 폐기됨(→ business_type/region/bio 미로딩). ref 로 가드해 재실행을 막는다.
   const didInitRef = useRef(false);
   // 백그라운드 전체 프로필 조회가 성공했는지 여부.
-  // 미로드(조회 실패/timeout) 상태에서 빈 website/business_type 을 저장 payload 에 실으면
-  // 기존 DB 값이 조용히 NULL 로 덮어써지므로, 이 플래그로 해당 키를 payload 에서 제외한다.
+  // 미로드(조회 실패/timeout) 상태에서는 사용자가 직접 바꾼 필드만 보내 기존 DB 값을
+  // 빈 값으로 덮어쓰지 않는다. 성공 시에는 전체 폼을 정상적으로 저장한다.
   const fullLoadedRef = useRef(false);
 
   // 렌더 전략: 쿠키 profile(즉시 사용 가능)로 폼·사진을 곧바로 노출하고,
@@ -79,7 +96,10 @@ export default function EditProfilePage() {
       website: prev.website,
     }));
     if (profile?.profile_image) {
-      setImagePreview(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`);
+      imageUpload.setExisting(
+        profile.profile_image,
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`,
+      );
     }
     setInitialized(true);
 
@@ -90,43 +110,41 @@ export default function EditProfilePage() {
       try {
         // 서버 라우트(service_role)로 확실히 조회 — 클라 세션 토큰 지연/RLS 로
         // 업종·소개 등이 안 채워져 '초기화'처럼 보이던 문제 방지.
-        const res = await withTimeout(
-          fetch('/api/profile/me', { credentials: 'include' }),
-          8000,
-          '프로필 조회가 지연돼요.',
-        );
+        const res = await apiFetch('/api/profile/me', { credentials: 'include' }, 8000);
         const data = res.ok ? (await res.json()).profile : null;
-        if (!data) return;
+        if (!data) {
+          setFullProfileStatus('failed');
+          return;
+        }
         fullLoadedRef.current = true;
-        // 사용자가 입력을 시작(userDirty)했으면 통째로 덮어쓰지 않고 빈 필드만 채운다.
-        setFormData((prev) =>
-          userDirtyRef.current
-            ? {
-                contact_name: prev.contact_name || data.contact_name || '',
-                company_name: prev.company_name || data.company_name || '',
-                business_type: prev.business_type || data.business_type || '',
-                region: prev.region || data.region || '',
-                bio: prev.bio || data.bio || '',
-                phone: prev.phone || data.phone || '',
-                website: prev.website || data.website || '',
-              }
-            : {
-                contact_name: data.contact_name || '',
-                company_name: data.company_name || '',
-                business_type: data.business_type || '',
-                region: data.region || '',
-                bio: data.bio || '',
-                phone: data.phone || '',
-                website: data.website || '',
-              },
-        );
+        setFullProfileStatus('loaded');
+        // 필드별 dirty 상태를 보존한다. 사용자가 의도적으로 빈 값으로 만든 필드도
+        // 늦게 도착한 조회 결과가 다시 채우지 않게 한다.
+        setFormData((prev) => {
+          const dirty = dirtyFieldsRef.current;
+          const next = {
+            contact_name: dirty.has('contact_name') ? prev.contact_name : data.contact_name || '',
+            company_name: dirty.has('company_name') ? prev.company_name : data.company_name || '',
+            business_type: dirty.has('business_type') ? prev.business_type : data.business_type || '',
+            region: dirty.has('region') ? prev.region : data.region || '',
+            bio: dirty.has('bio') ? prev.bio : data.bio || '',
+            phone: dirty.has('phone') ? prev.phone : data.phone || '',
+            website: dirty.has('website') ? prev.website : data.website || '',
+          };
+          bioRef.current = next.bio;
+          return next;
+        });
         // 사진은 새로 바꾸지 않았을 때만 DB 값으로 동기화
-        if (newImagePath === undefined) {
-          setImagePreview(data.profile_image
-            ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`
-            : null);
+        if (!imageDirtyRef.current) {
+          imageUpload.setExisting(
+            data.profile_image ?? null,
+            data.profile_image
+              ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`
+              : null,
+          );
         }
       } catch (err) {
+        setFullProfileStatus('failed');
         console.warn('[mypage/edit] profile fetch failed:', err);
       }
     })();
@@ -136,50 +154,38 @@ export default function EditProfilePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    userDirtyRef.current = true;
+    dirtyFieldsRef.current.add(name as ProfileFormField);
     setFormData((prev) => ({ ...prev, [name]: value }));
     setError(null);
     setSuccess(false);
   };
 
   // 파일 고르는 즉시 백그라운드 업로드 → 저장은 텍스트만이라 즉시 완료.
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (submittingRef.current) {
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
     if (!profile?.user_id) { setError('프로필 정보를 불러오는 중이에요. 잠시 후 다시 시도해주세요.'); return; }
-    setImagePreview(URL.createObjectURL(file));
+    imageDirtyRef.current = true;
     setError(null);
-    setImageUploading(true);
-    try {
-      const supabase = createClient();
-      const compressed = await compressImage(file, { maxDimension: 800, quality: 0.85 });
-      const ext = compressed.name.split('.').pop() || 'jpg';
-      const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
-      const { error: uploadError } = await withTimeout(
-        supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-        60000, '이미지 업로드가 너무 오래 걸려요.',
-      );
-      if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
-      setNewImagePath(path);
-    } catch {
-      setError('이미지 업로드에 실패했어요. 다시 시도해주세요.');
-      setImagePreview(profile?.profile_image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}` : null);
-    } finally {
-      setImageUploading(false);
-    }
+    imageUpload.selectFile(file);
+    e.target.value = '';
   };
 
   const handleRemoveImage = () => {
-    setNewImagePath(null);
-    setImagePreview(null);
+    if (submittingRef.current) return;
+    imageDirtyRef.current = true;
+    imageUpload.remove();
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profile) return;
+    if (!profile || submittingRef.current) return;
 
     const fail = (msg: string, focusId?: string) => {
       setError(msg);
@@ -193,54 +199,58 @@ export default function EditProfilePage() {
       }
     };
 
-    if (!formData.contact_name.trim()) {
+    if (fullProfileStatus === 'loading') {
+      fail('프로필 전체 정보를 확인 중입니다. 잠시 후 다시 저장해주세요.');
+      return;
+    }
+
+    const shouldWrite = (field: ProfileFormField) => fullLoadedRef.current || dirtyFieldsRef.current.has(field);
+
+    if (shouldWrite('contact_name') && !formData.contact_name.trim()) {
       fail('이름을 입력해주세요.', 'contact_name');
       return;
     }
-    if (!formData.region || formData.region.split(',').filter(Boolean).length === 0) {
+    if (shouldWrite('region') && (!formData.region || formData.region.split(',').filter(Boolean).length === 0)) {
       fail('지역을 1개 이상 선택해주세요.');
       return;
     }
-    const phoneCheck = validatePhone(formData.phone);
-    if (!phoneCheck.valid) {
-      fail(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.', 'phone');
-      return;
+    if (shouldWrite('phone')) {
+      const phoneCheck = validatePhone(formData.phone);
+      if (!phoneCheck.valid) {
+        fail(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.', 'phone');
+        return;
+      }
     }
     // 소개(bio)는 선택 항목 — 필수 검사 없음.
 
+    submittingRef.current = true;
     setSubmitting(true);
     setError(null);
     try {
-      // 이미지는 파일 선택 시 이미 업로드됨. newImagePath: undefined=변경없음 / null=삭제 / string=새 경로
-      const profileImage = newImagePath === undefined ? profile.profile_image : newImagePath;
+      const [profileImage] = await Promise.all([
+        imageUpload.waitForUpload(),
+        waitForUploads(),
+      ]);
 
-      // 백그라운드 전체 조회가 아직 안 끝났고(fullLoadedRef=false) 값이 비어 있으면,
-      // 기존 DB 값을 NULL 로 덮어쓰지 않도록 payload 에서 키 자체를 제외(undefined).
-      // JSON.stringify 가 undefined 키를 버리고 route.ts 의 Object.entries 루프가 자동 스킵한다.
-      const websiteTrimmed = formData.website.trim();
-      const business_type = formData.business_type
-        ? formData.business_type
-        : (fullLoadedRef.current ? null : undefined);
-      const website = websiteTrimmed
-        ? websiteTrimmed
-        : (fullLoadedRef.current ? null : undefined);
+      // 전체 조회 실패 상태에서는 직접 수정하지 않은 키를 undefined로 두고,
+      // JSON.stringify/API 화이트리스트가 해당 필드를 건너뛰게 한다.
+      const nullable = (field: ProfileFormField, value: string) =>
+        shouldWrite(field) ? (value.trim() || null) : undefined;
 
-      // 15초 timeout — 어떤 이유로든 update가 hang하면 사용자에게 에러를 보여주고 다시 시도할 수 있게
-      const updatePromise = directoryService.updateProfile(profile.id, {
-        contact_name: formData.contact_name.trim(),
-        company_name: formData.company_name.trim() || null,
-        business_type,
-        region: formData.region,
-        bio: formData.bio.trim() || null,
-        phone: formData.phone.trim() || null,
-        website,
-        profile_image: profileImage,
-      });
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('저장이 너무 오래 걸려요. 다시 시도해주세요.')), 15000),
+      await withTimeout(
+        directoryService.updateProfile(profile.id, {
+          contact_name: shouldWrite('contact_name') ? formData.contact_name.trim() : undefined,
+          company_name: nullable('company_name', formData.company_name),
+          business_type: nullable('business_type', formData.business_type),
+          region: shouldWrite('region') ? formData.region : undefined,
+          bio: nullable('bio', bioRef.current),
+          phone: nullable('phone', formData.phone),
+          website: nullable('website', formData.website),
+          profile_image: fullLoadedRef.current || imageDirtyRef.current ? profileImage : undefined,
+        }),
+        15000,
+        '저장이 너무 오래 걸려요. 다시 시도해주세요.',
       );
-      await Promise.race([updatePromise, timeoutPromise]);
-
       // ?next= 지원 — 동일 origin path만 허용
       const sp = new URLSearchParams(window.location.search);
       const rawNext = sp.get('next');
@@ -249,8 +259,12 @@ export default function EditProfilePage() {
       // cookie clear는 redirect 직전에 (이전 setTimeout 패턴에서 race 가능성을 없앰)
       clearMarieProfileCookie();
       setSuccess(true);
-      window.location.href = next; // 즉시 이동 (setTimeout 1초 대기 제거)
+      router.push(next);
+      router.refresh();
+      submittingRef.current = false;
+      setSubmitting(false);
     } catch (err) {
+      submittingRef.current = false;
       console.error('[mypage/edit] save failed:', err);
       const msg = err instanceof Error ? err.message : '프로필 수정에 실패했습니다.';
       setError(msg);
@@ -339,15 +353,21 @@ export default function EditProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white rounded border border-gray-200 p-6 md:p-8 space-y-6">
+        <fieldset disabled={submitting} className="contents">
         {error && <div className="p-4 rounded bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">{error}</div>}
         {success && <div className="p-4 rounded bg-state-new-bg border border-green-200 text-state-new text-sm">프로필이 수정되었습니다.</div>}
+        {fullProfileStatus === 'failed' && (
+          <div className="p-3 rounded bg-amber-50 border border-amber-200 text-amber-800 text-xs">
+            일부 기존 정보를 불러오지 못했습니다. 지금 직접 변경한 항목만 안전하게 저장됩니다.
+          </div>
+        )}
 
         {/* Profile Image */}
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-24 h-24 rounded overflow-hidden border-2 border-gray-200 bg-gray-100">
-              {imagePreview ? (
-                <img src={imagePreview} alt="프로필" className="w-full h-full object-cover" />
+              {imageUpload.preview ? (
+                <img src={imageUpload.preview} alt="프로필" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-primary/10 flex items-center justify-center">
                   <span className="text-primary font-bold text-3xl">
@@ -380,7 +400,7 @@ export default function EditProfilePage() {
             <button type="button" onClick={() => fileInputRef.current?.click()} className="text-sm text-primary hover:underline">
               사진 변경
             </button>
-            {imagePreview && (
+            {imageUpload.preview && (
               <>
                 <span className="text-gray-300">|</span>
                 <button type="button" onClick={handleRemoveImage} className="text-sm text-state-urgent hover:underline">
@@ -390,6 +410,15 @@ export default function EditProfilePage() {
             )}
           </div>
           <ImageUploadHint ratio="1:1 (정사각형)" recommendedSize="400 × 400px" maxSize="자동 압축" />
+          {imageUpload.uploading && (
+            <div className="w-full max-w-xs" aria-live="polite">
+              <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full bg-primary transition-[width]" style={{ width: `${imageUpload.progress?.percent ?? 1}%` }} />
+              </div>
+              <p className="mt-1 text-center text-xs font-medium text-primary">{imageUpload.statusText}</p>
+            </div>
+          )}
+          {imageUpload.error && <p className="text-xs text-state-urgent">{imageUpload.error}</p>}
         </div>
 
         <hr className="border-gray-100" />
@@ -413,6 +442,7 @@ export default function EditProfilePage() {
                   key={t.value}
                   type="button"
                   onClick={() => {
+                    dirtyFieldsRef.current.add('business_type');
                     const current = formData.business_type.split(',').filter(Boolean);
                     const next = selected ? current.filter(v => v !== t.value) : [...current, t.value];
                     setFormData(prev => ({ ...prev, business_type: next.join(',') }));
@@ -446,6 +476,7 @@ export default function EditProfilePage() {
                   key={r.value}
                   type="button"
                   onClick={() => {
+                    dirtyFieldsRef.current.add('region');
                     const next = selected
                       ? regions.filter(v => v !== r.value)
                       : [...regions, r.value];
@@ -474,13 +505,16 @@ export default function EditProfilePage() {
           <RichTextEditor
             value={formData.bio}
             onChange={(html) => {
-              userDirtyRef.current = true;
+              dirtyFieldsRef.current.add('bio');
+              bioRef.current = html;
               setFormData((prev) => ({ ...prev, bio: html }));
               setError(null);
               setSuccess(false);
             }}
             placeholder="회사/본인 소개를 자유롭게 작성하세요. 사진도 넣을 수 있어요."
             minHeight={160}
+            onUploadPromise={trackUpload}
+            disabled={submitting}
           />
         </div>
 
@@ -490,7 +524,17 @@ export default function EditProfilePage() {
             <label htmlFor="phone" className="block text-sm font-medium text-gray-800">
               연락처 <span className="text-state-urgent">*</span>
             </label>
-            <input id="phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} className="input-field w-full" placeholder="010-0000-0000" required aria-required="true" />
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={handleChange}
+              className="input-field w-full"
+              placeholder="010-0000-0000"
+              required={fullProfileStatus === 'loaded'}
+              aria-required={fullProfileStatus === 'loaded'}
+            />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="website" className="block text-sm font-medium text-gray-800">웹사이트</label>
@@ -501,10 +545,19 @@ export default function EditProfilePage() {
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-5 py-2.5 text-sm font-bold hover:border-primary hover:text-primary transition-colors">취소</Link>
-          <button type="submit" disabled={submitting || imageUploading} className="btn-primary text-sm px-5 py-2.5">
-            {submitting ? '저장 중...' : imageUploading ? '이미지 올리는 중…' : '저장하기'}
+          <button type="submit" disabled={submitting || fullProfileStatus === 'loading'} className="btn-primary text-sm px-5 py-2.5">
+            {fullProfileStatus === 'loading'
+              ? '정보 확인 중…'
+              : submitting
+                ? (imageUpload.uploading
+                  ? imageUpload.statusText
+                  : pendingCount > 0
+                    ? `본문 사진 ${pendingCount}건 마무리 중...`
+                    : '저장 중...')
+                : '저장하기'}
           </button>
         </div>
+        </fieldset>
       </form>
 
       <AccountWithdrawalSection />

@@ -1,10 +1,10 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { compressImage } from '@/shared/utils/image';
-import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
+import { isAbortError, mapWithConcurrency, uploadOptimizedImage } from '@/shared/utils/upload';
+import { uploadOptimizedImageToEndpoint } from '@/shared/utils/uploadEndpoint';
+import { MAX_IMAGE_INPUT_BYTES } from '@/shared/utils/image';
 
 interface RichTextEditorProps {
   value: string;
@@ -12,8 +12,13 @@ interface RichTextEditorProps {
   placeholder?: string;
   minHeight?: number;
   className?: string;
+  disabled?: boolean;
   /** 이미지 업로드에 사용할 Supabase Storage 버킷 */
   imageBucket?: string;
+  /** 비밀번호 관리자처럼 브라우저 Storage 세션이 없는 화면의 same-origin 업로드 API. */
+  imageUploadEndpoint?: string;
+  /** 부모 폼이 저장 직전에 진행 중인 본문 이미지 업로드를 기다릴 수 있게 한다. */
+  onUploadPromise?: (promise: Promise<unknown>) => void;
 }
 
 // 허용 태그 (img 포함)
@@ -25,6 +30,10 @@ const ALLOWED_STYLES = [
   'display', 'margin', 'margin-left', 'margin-right', 'float',
 ];
 const IMG_ALLOWED_ATTRS = ['src', 'alt', 'style'];
+const MAX_ACTIVE_SOURCE_BYTES = 60 * 1024 * 1024;
+const IMAGE_BATCH_TIMEOUT_MS = 60_000;
+const QUEUED_IMAGE_PLACEHOLDER =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22450%22 viewBox=%220 0 800 450%22%3E%3Crect width=%22800%22 height=%22450%22 fill=%22%23f3f4f6%22/%3E%3Cpath d=%22M330 245l45-50 38 42 25-28 52 61H310z%22 fill=%22%23d1d5db%22/%3E%3Ccircle cx=%22435%22 cy=%22175%22 r=%2218%22 fill=%22%23d1d5db%22/%3E%3C/svg%3E';
 
 function sanitize(html: string): string {
   if (typeof document === 'undefined') return html;
@@ -118,18 +127,29 @@ function caretBlockFromPoint(x: number, y: number, editor: HTMLElement): { block
   return { block: el, before: y < rect.top + rect.height / 2 };
 }
 
-export default function RichTextEditor({ value, onChange, placeholder, minHeight = 160, className = '', imageBucket = 'job-images' }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, minHeight = 160, className = '', disabled = false, imageBucket = 'job-images', imageUploadEndpoint, onUploadPromise }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const draggedImgRef = useRef<HTMLImageElement | null>(null);
   const [activeFormats, setActiveFormats] = useState<Record<string, boolean>>({});
-  const [uploading, setUploading] = useState(false);
+  const [pendingUploads, setPendingUploads] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const mountedRef = useRef(true);
+  const activeUploadsRef = useRef(new Map<string, {
+    controller: AbortController;
+    previewUrl: string | null;
+    progress: number;
+    sourceBytes: number;
+  }>());
   // 이미지 툴바 상태 — 선택된 이미지 요소와 뷰포트 기준 위치
   const [imgToolbar, setImgToolbar] = useState<{ el: HTMLImageElement; top: number; left: number } | null>(null);
 
   useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== value) {
-      editorRef.current.innerHTML = value || '';
+    if (activeUploadsRef.current.size > 0) return;
+    const safeValue = sanitize(value || '');
+    if (editorRef.current && editorRef.current.innerHTML !== safeValue) {
+      // API를 직접 호출해 저장한 비정상 HTML도 편집 화면 DOM에 그대로 주입하지 않는다.
+      editorRef.current.innerHTML = safeValue;
     }
   }, [value]);
 
@@ -137,6 +157,19 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   // → 저장 후 sanitizer 가 유지하는 text-align 정책과 일치
   useEffect(() => {
     try { document.execCommand('styleWithCSS', false, 'true'); } catch {}
+  }, []);
+
+  useEffect(() => {
+    const uploads = activeUploadsRef.current;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      uploads.forEach(({ controller, previewUrl }) => {
+        controller.abort();
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+      });
+      uploads.clear();
+    };
   }, []);
 
   // 스크롤/리사이즈 시 툴바 위치 재계산
@@ -178,12 +211,22 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
 
   const handleInput = () => {
     if (!editorRef.current) return;
-    const html = sanitize(editorRef.current.innerHTML);
+    // Backspace/Ctrl+A/모바일 키보드로 업로드 자리표시자가 지워진 경우에도 실제
+    // 압축·전송을 즉시 취소한다. 툴바 삭제 버튼만 취소하던 race를 닫는다.
+    activeUploadsRef.current.forEach(({ controller }, id) => {
+      if (!editorRef.current?.querySelector(`img[data-upload-id="${id}"]`)) {
+        controller.abort();
+      }
+    });
+    const clone = editorRef.current.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll('img[data-upload-id]').forEach((img) => img.remove());
+    const html = sanitize(clone.innerHTML);
     onChange(html);
   };
 
   // 편집 영역 클릭 시 이미지 감지 → 툴바 표시
   const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (disabled) return;
     const target = e.target as HTMLElement;
     if (target.tagName === 'IMG') {
       const img = target as HTMLImageElement;
@@ -235,6 +278,8 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
 
   const deleteImg = () => {
     if (!imgToolbar) return;
+    const uploadId = imgToolbar.el.dataset.uploadId;
+    if (uploadId) activeUploadsRef.current.get(uploadId)?.controller.abort();
     imgToolbar.el.remove();
     handleInput();
     setImgToolbar(null);
@@ -263,6 +308,11 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
 
   // 이미지 드래그&드롭으로 재배치 (데스크톱). 모바일은 툴바 ↑/↓ 버튼 사용.
   const handleDragStart = (e: React.DragEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      draggedImgRef.current = null;
+      return;
+    }
     const target = e.target as HTMLElement;
     if (target.tagName === 'IMG' && target.classList.contains('rich-text-image')) {
       draggedImgRef.current = target as HTMLImageElement;
@@ -275,6 +325,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (disabled) return;
     if (draggedImgRef.current) {
       e.preventDefault(); // 드롭 허용
       e.dataTransfer.dropEffect = 'move';
@@ -282,6 +333,11 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      draggedImgRef.current = null;
+      return;
+    }
     const img = draggedImgRef.current;
     const editor = editorRef.current;
     draggedImgRef.current = null;
@@ -304,6 +360,10 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    if (disabled) {
+      e.preventDefault();
+      return;
+    }
     // 붙여넣기 이미지(클립보드 이미지)를 업로드
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
@@ -311,7 +371,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         const file = items[i].getAsFile();
         if (file) {
           e.preventDefault();
-          uploadAndInsertImage(file);
+          queueImages([file]);
           return;
         }
       }
@@ -322,44 +382,174 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     document.execCommand('insertText', false, text);
   };
 
-  const uploadAndInsertImage = async (file: File) => {
-    // 크기 제한 없음 — 큰 이미지는 압축(웹 워커)해서 업로드.
-    if (!file.type.startsWith('image/')) return;
-
-    setUploading(true);
-    try {
-      const supabase = createClient();
-      // 본문 삽입용 이미지는 1000px 로 충분 — 압축·업로드 시간 최소화(모바일 대용량 사진 대응)
-      const compressed = await compressImage(file, { maxDimension: 1000, quality: 0.8 });
-      const ext = compressed.name.split('.').pop() || 'jpg';
-      const path = `content_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error: uploadError } = await withTimeout(supabase.storage.from(imageBucket).upload(path, compressed), 60000, '이미지 업로드가 너무 오래 걸려요. 다시 시도해주세요.');
-      if (uploadError) throw new Error(uploadError.message);
-      const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
-
-      editorRef.current?.focus();
-      // 기본을 '자기 줄(블록) + 가운데'로 삽입 → 줄바꿈·정렬·이동이 자연스럽게 동작.
-      document.execCommand('insertHTML', false, `<img src="${url}" alt="" class="rich-text-image" style="display:block;margin:10px auto;max-width:100%" /><p><br></p>`);
-      handleInput();
-    } catch (err) {
-      toast(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.', 'error');
-    } finally {
-      setUploading(false);
-    }
+  const refreshAggregateProgress = () => {
+    if (!mountedRef.current) return;
+    const uploads = Array.from(activeUploadsRef.current.values());
+    setPendingUploads(uploads.length);
+    setUploadProgress(uploads.length
+      ? Math.round(uploads.reduce((sum, upload) => sum + upload.progress, 0) / uploads.length)
+      : 0);
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    for (const file of files) {
-      await uploadAndInsertImage(file);
+  const queueImages = (selectedFiles: File[]) => {
+    if (disabled) return;
+    const available = Math.max(0, 12 - activeUploadsRef.current.size);
+    const imageFiles = selectedFiles.filter((file) => file.type.startsWith('image/'));
+    const validFiles = imageFiles.filter((file) => file.size > 0 && file.size <= MAX_IMAGE_INPUT_BYTES);
+    const activeSourceBytes = Array.from(activeUploadsRef.current.values())
+      .reduce((sum, upload) => sum + upload.sourceBytes, 0);
+    let remainingBytes = Math.max(0, MAX_ACTIVE_SOURCE_BYTES - activeSourceBytes);
+    const files: File[] = [];
+    for (const file of validFiles) {
+      if (files.length >= available) break;
+      if (file.size > remainingBytes) continue;
+      files.push(file);
+      remainingBytes -= file.size;
     }
+    if (validFiles.length < imageFiles.length) {
+      toast('사진은 비어 있지 않은 30MB 이하 이미지만 올릴 수 있습니다.', 'error');
+    }
+    if (files.length === 0) {
+      if (validFiles.length > 0) toast('동시에 올릴 수 있는 사진은 최대 12장입니다.', 'error');
+      return;
+    }
+    if (files.length < validFiles.length) {
+      toast('사진은 최대 12장, 처리 중 원본 합계 60MB까지 추가할 수 있습니다.', 'error');
+    }
+
+    const jobs = files.map((file) => {
+      const id = crypto.randomUUID();
+      const controller = new AbortController();
+      // 원본 Blob은 미리보기로 디코드하지 않고 작은 SVG를 즉시 렌더한다.
+      // 업로드가 끝난 뒤에만 작은 압축본/공개 URL로 교체한다.
+      activeUploadsRef.current.set(id, {
+        controller,
+        previewUrl: null,
+        progress: 0,
+        sourceBytes: file.size,
+      });
+
+      editorRef.current?.focus();
+      document.execCommand(
+        'insertHTML',
+        false,
+        `<img src="${QUEUED_IMAGE_PLACEHOLDER}" alt="업로드 중" data-upload-id="${id}" class="rich-text-image" style="display:block;margin:10px auto;max-width:100%;opacity:.65" /><p><br></p>`,
+      );
+      return { id, file, controller };
+    });
+    refreshAggregateProgress();
+
+    const batch = (async () => {
+      let batchTimedOut = false;
+      const batchTimer = window.setTimeout(() => {
+        batchTimedOut = true;
+        jobs.forEach(({ controller }) => controller.abort(
+          new DOMException('사진 일괄 업로드 시간이 초과되었습니다.', 'AbortError'),
+        ));
+      }, IMAGE_BATCH_TIMEOUT_MS);
+      let results: PromiseSettledResult<void>[];
+      try {
+        results = await mapWithConcurrency(jobs, 3, async ({ id, file, controller }) => {
+        try {
+          if (controller.signal.aborted || !activeUploadsRef.current.has(id)) {
+            throw controller.signal.reason
+              ?? new DOMException('사진 업로드가 취소되었습니다.', 'AbortError');
+          }
+          const placeholder = editorRef.current?.querySelector<HTMLImageElement>(`img[data-upload-id="${id}"]`);
+          if (!placeholder) {
+            controller.abort();
+            return;
+          }
+          const progressHandler = ({ percent }: { percent: number }) => {
+            const current = activeUploadsRef.current.get(id);
+            if (!current) return;
+            current.progress = percent;
+            refreshAggregateProgress();
+          };
+          const compressedPreviewHandler = (compressed: File) => {
+            const current = activeUploadsRef.current.get(id);
+            const image = editorRef.current?.querySelector<HTMLImageElement>(`img[data-upload-id="${id}"]`);
+            if (!current || !image || controller.signal.aborted) return;
+            if (current.previewUrl) URL.revokeObjectURL(current.previewUrl);
+            const url = URL.createObjectURL(compressed);
+            current.previewUrl = url;
+            image.src = url;
+          };
+          const result = imageUploadEndpoint
+            ? await uploadOptimizedImageToEndpoint(file, {
+                endpoint: imageUploadEndpoint,
+                maxDimension: 1200,
+                maxSizeMB: 0.75,
+                quality: 0.8,
+                signal: controller.signal,
+                onUploadProgress: progressHandler,
+                onCompressedPreview: compressedPreviewHandler,
+              })
+            : await uploadOptimizedImage(file, {
+                bucket: imageBucket,
+                buildPath: (compressed) => {
+                  const extension = compressed.type === 'image/jpeg' ? 'jpg' : 'webp';
+                  return `content/${Date.now()}_${crypto.randomUUID()}.${extension}`;
+                },
+                maxDimension: 1200,
+                maxSizeMB: 0.75,
+                quality: 0.8,
+                signal: controller.signal,
+                onUploadProgress: progressHandler,
+                onCompressedPreview: compressedPreviewHandler,
+              });
+          const image = editorRef.current?.querySelector<HTMLImageElement>(`img[data-upload-id="${id}"]`);
+          if (!image || controller.signal.aborted) return;
+          image.src = 'url' in result && typeof result.url === 'string'
+            ? result.url
+            : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${result.path}`;
+          image.alt = '';
+          image.style.opacity = '';
+          delete image.dataset.uploadId;
+        } catch (error) {
+          editorRef.current?.querySelector<HTMLImageElement>(`img[data-upload-id="${id}"]`)?.remove();
+          if (!isAbortError(error)) {
+            toast(error instanceof Error ? error.message : '이미지 업로드에 실패했습니다.', 'error');
+            throw error instanceof Error ? error : new Error('이미지 업로드에 실패했습니다.');
+          }
+        } finally {
+          const active = activeUploadsRef.current.get(id);
+          if (active?.previewUrl) URL.revokeObjectURL(active.previewUrl);
+          activeUploadsRef.current.delete(id);
+          refreshAggregateProgress();
+          if (mountedRef.current) handleInput();
+        }
+        });
+      } finally {
+        window.clearTimeout(batchTimer);
+      }
+      if (batchTimedOut) {
+        const timeoutError = new Error('사진 일괄 업로드가 1분을 초과해 취소했습니다. 다시 시도해주세요.');
+        toast(timeoutError.message, 'error');
+        throw timeoutError;
+      }
+      const failure = results.find((result) => result.status === 'rejected');
+      if (failure?.status === 'rejected') throw failure.reason;
+    })();
+    onUploadPromise?.(batch);
+    // 부모 tracker가 없는 재사용 화면에서도 rejected batch가 전역
+    // unhandledrejection으로 번지지 않게 하되, 원본 Promise의 실패 상태는 유지한다.
+    void batch.catch(() => undefined);
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    queueImages(Array.from(e.target.files || []));
     if (imgInputRef.current) imgInputRef.current.value = '';
   };
 
   return (
-    <div className={`border border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${className}`}>
+    <div
+      aria-disabled={disabled || undefined}
+      className={`border border-gray-300 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary ${disabled ? 'opacity-70' : ''} ${className}`}
+    >
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50">
+      <fieldset disabled={disabled} className="m-0 min-w-0 border-0 p-0">
+        <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50">
         <ToolbarButton active={activeFormats.bold} onClick={() => exec('bold')} title="굵게 (Cmd+B)">
           <span className="font-bold text-sm">B</span>
         </ToolbarButton>
@@ -419,42 +609,48 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <button
           type="button"
           onClick={() => imgInputRef.current?.click()}
-          disabled={uploading}
+          disabled={pendingUploads >= 12}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
           </svg>
-          {uploading ? '업로드 중...' : '사진 추가'}
+          {pendingUploads > 0 ? `사진 ${pendingUploads}장 ${uploadProgress}%` : '사진 추가'}
         </button>
-        <input
-          ref={imgInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageSelect}
-          className="hidden"
-        />
-      </div>
+          <input
+            ref={imgInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageSelect}
+            className="hidden"
+          />
+        </div>
+      </fieldset>
 
       {/* Editor */}
       <div
         className="relative"
-        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
-        onDrop={async (e) => {
+        onDragOver={(e) => {
           e.preventDefault();
+          if (disabled) return;
+          e.dataTransfer.dropEffect = 'copy';
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          if (disabled) return;
           const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
-          for (const file of files) await uploadAndInsertImage(file);
+          queueImages(files);
         }}
       >
-        {!value && placeholder && (
+        {!value && pendingUploads === 0 && placeholder && (
           <div className="absolute top-3 left-4 text-gray-400 pointer-events-none text-[15px]">
             {placeholder}
           </div>
         )}
         <div
           ref={editorRef}
-          contentEditable
+          contentEditable={!disabled}
           suppressContentEditableWarning
           onInput={handleInput}
           onPaste={handlePaste}
@@ -470,7 +666,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         />
 
         {/* 이미지 플로팅 툴바 — 이미지 클릭 시 위에 뜨는 크기/정렬/삭제 컨트롤 */}
-        {imgToolbar && (
+        {imgToolbar && !disabled && (
           <div
             className="fixed z-50 -translate-x-1/2 -translate-y-full mt-[-8px] flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1 shadow-lg pointer-events-auto"
             style={{ top: imgToolbar.top, left: imgToolbar.left }}
@@ -530,7 +726,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <span>·</span>
         <span>권장 가로 <span className="font-semibold text-gray-600">1200px 이하</span></span>
         <span>·</span>
-        <span>JPG / PNG, <span className="font-semibold text-gray-600">10MB</span> 이하</span>
+        <span>JPG / PNG / WebP, <span className="font-semibold text-gray-600">30MB</span> 이하</span>
       </div>
     </div>
   );

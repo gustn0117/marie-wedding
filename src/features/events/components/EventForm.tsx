@@ -6,9 +6,10 @@ import Link from 'next/link';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
-import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
+import { useImageUpload } from '@/shared/hooks/useImageUpload';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { adminService } from '@/features/admin/services/admin-service';
 import { EVENT_TYPES, EVENT_TYPE_DESCRIPTIONS } from '../types';
 import type { EventFormData } from '../types';
@@ -35,53 +36,63 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const isEdit = !!eventId;
 
   const [formData, setFormData] = useState<EventFormData>({ ...EMPTY, ...initialData });
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${initialData.image}` : null
-  );
+  const contentRef = useRef(formData.content);
+  // 응답만 유실된 생성 요청을 동일 PK로 안전하게 재시도한다.
+  const createIdRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
+  const imageUpload = useImageUpload({
+    initialPath: initialData?.image ?? null,
+    initialUrl: initialData?.image
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${initialData.image}`
+      : null,
+    bucket: 'event-images',
+    uploadEndpoint: '/api/admin/upload-image?target=event-cover',
+    maxDimension: 1600,
+    maxSizeMB: 0.9,
+    quality: 0.84,
+    buildPath: (compressed) => `covers/${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
+  });
+  const { trackUpload, waitForUploads, hasPendingUploads, pendingCount } = usePendingUploads();
+
+  const handleContentChange = (html: string) => {
+    contentRef.current = html;
+    setFormData((prev) => ({ ...prev, content: html }));
+  };
 
   // 파일 고르는 즉시 백그라운드 업로드 → 저장은 텍스트만.
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (submittingRef.current) {
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 가능합니다.'); return; }
-    setImagePreview(URL.createObjectURL(file));
     setError(null);
-    setImageUploading(true);
-    try {
-      const supabase = createClient();
-      const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
-      const ext = compressed.name.split('.').pop() || 'jpg';
-      const path = `${Date.now()}.${ext}`;
-      const { error: uploadError } = await withTimeout(
-        supabase.storage.from('event-images').upload(path, compressed, { upsert: true }),
-        60000, '이미지 업로드가 너무 오래 걸려요.',
-      );
-      if (uploadError) throw new Error('이미지 업로드 실패');
-      setFormData(prev => ({ ...prev, image: path }));
-    } catch {
-      setError('이미지 업로드에 실패했어요. 다시 시도해주세요.');
-      setImagePreview(formData.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${formData.image}` : null);
-    } finally {
-      setImageUploading(false);
-    }
+    imageUpload.selectFile(file);
+    e.target.value = '';
   };
 
   const handleRemoveImage = () => {
-    setImagePreview(null);
+    if (submittingRef.current) return;
+    imageUpload.remove();
     setFormData(prev => ({ ...prev, image: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submittingRef.current) return;
     if (!formData.title.trim()) { setError('제목을 입력해주세요.'); return; }
-    if (!formData.content.trim()) { setError('내용을 입력해주세요.'); return; }
+    if (!contentRef.current.trim() && !hasPendingUploads()) {
+      setError('내용을 입력해주세요.');
+      return;
+    }
 
+    submittingRef.current = true;
     setSubmitting(true);
     setError(null);
     try {
@@ -100,27 +111,43 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
         } catch { /* 중복확인 실패해도 등록은 진행 */ }
       }
 
-      // 이미지는 파일 선택 시 이미 업로드됨 → formData.image(path) 그대로 사용
-      const payload = { ...formData, image: imagePreview ? formData.image ?? null : null };
+      const [imagePath] = await Promise.all([
+        imageUpload.waitForUpload(),
+        waitForUploads(),
+      ]);
+      const latestContent = contentRef.current;
+      if (!latestContent.trim()) {
+        setError('내용을 입력해주세요.');
+        return;
+      }
+      const payload = {
+        ...formData,
+        content: latestContent,
+        image: imageUpload.preview ? imagePath : null,
+      };
 
       if (isEdit && eventId) {
         await adminService.updateEvent(eventId, payload);
         router.push(`/admin/events`);
         router.refresh();
       } else {
-        await adminService.createEvent(payload);
+        const createId = createIdRef.current ?? crypto.randomUUID();
+        createIdRef.current = createId;
+        await adminService.createEvent(payload, createId);
         router.push(`/admin/events`);
         router.refresh();
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : '저장에 실패했습니다.');
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={submitting} className="contents">
       {error && (
         <div className="p-3 bg-state-urgent-bg border-l-4 border-state-urgent text-sm text-state-urgent">{error}</div>
       )}
@@ -181,9 +208,9 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       <div className="space-y-2">
         <label className="block text-sm font-semibold text-gray-800">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
         <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="자동 압축" note="목록 카드에 크게 노출됩니다" />
-        {imagePreview ? (
+        {imageUpload.preview ? (
           <div className="relative border border-gray-200">
-            <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
+            <img src={imageUpload.preview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
             <div className="absolute top-2 right-2 flex gap-1.5">
               <button type="button" onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-xs font-medium">변경</button>
               <button type="button" onClick={handleRemoveImage} className="px-3 py-1.5 bg-white/95 border border-gray-200 text-state-urgent text-xs font-medium">삭제</button>
@@ -202,6 +229,15 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
           </button>
         )}
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+        {imageUpload.uploading && (
+          <div aria-live="polite">
+            <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+              <div className="h-full bg-primary transition-[width]" style={{ width: `${imageUpload.progress?.percent ?? 1}%` }} />
+            </div>
+            <p className="mt-1 text-xs font-medium text-primary">{imageUpload.statusText}</p>
+          </div>
+        )}
+        {imageUpload.error && <p className="text-xs text-state-urgent">{imageUpload.error}</p>}
       </div>
 
       {/* Content */}
@@ -209,10 +245,13 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
         <label className="block text-sm font-semibold text-gray-800">상세 내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
-          onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+          onChange={handleContentChange}
           placeholder="- 행사 개요&#10;- 참가 업체/분야&#10;- 필요한 인력 또는 연결될 채용 수요&#10;- 신청 방법과 유의사항"
           minHeight={300}
           imageBucket="event-images"
+          imageUploadEndpoint="/api/admin/upload-image?target=event-content"
+          onUploadPromise={trackUpload}
+          disabled={submitting}
         />
       </div>
 
@@ -276,12 +315,19 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
         <Link href="/admin/events" className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</Link>
         <button
           type="submit"
-          disabled={submitting || imageUploading}
+          disabled={submitting}
           className="px-8 py-2.5 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
-          {submitting ? '저장 중...' : imageUploading ? '이미지 올리는 중…' : isEdit ? '수정하기' : '등록하기'}
+          {submitting
+            ? (imageUpload.uploading
+              ? imageUpload.statusText
+              : pendingCount > 0
+                ? `본문 사진 ${pendingCount}건 마무리 중...`
+                : '저장 중...')
+            : isEdit ? '수정하기' : '등록하기'}
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

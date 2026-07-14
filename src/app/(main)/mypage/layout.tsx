@@ -1,23 +1,14 @@
 import type { ReactNode } from 'react';
-import { cookies } from 'next/headers';
 import MyPageRail from '@/features/mypage/components/MyPageRail';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 
 /**
  * mypage 워크스페이스 셸 — 좌측 rail + 우측 본문 (lg 이상).
- * 서버에서 marie_profile 쿠키를 읽어 MyPageRail 에 `initialAccountType` prop 주입 →
- * SSR/첫 hydration 부터 업체/개인 메뉴가 확정된 상태로 렌더 (CLS 방지).
+ * 검증된 세션에서 계정 유형을 읽어 SSR/첫 hydration부터 메뉴를 확정한다.
  */
 export default async function MyPageLayout({ children }: { children: ReactNode }) {
-  const cookieStore = await cookies();
-  let initialAccountType: 'business' | 'individual' | null = null;
-  try {
-    const raw = cookieStore.get('marie_profile')?.value;
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const at = parsed?.account_type;
-      if (at === 'business' || at === 'individual') initialAccountType = at;
-    }
-  } catch {}
+  const viewer = await getCurrentVerifiedProfile();
+  const initialAccountType = viewer.ok ? viewer.accountType : null;
 
   return (
     <div className="lg:grid lg:grid-cols-[var(--rail-w)_1fr] lg:gap-8">

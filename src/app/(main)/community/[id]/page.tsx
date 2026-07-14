@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
@@ -12,11 +12,12 @@ import CommentSection from '@/features/community/components/CommentSection';
 import LikeButton from '@/features/community/components/LikeButton';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getPostData(id: string, viewerProfileId: string | null) {
@@ -24,7 +25,7 @@ async function getPostData(id: string, viewerProfileId: string | null) {
 
   const { data: post } = await supabase
     .from('posts')
-    .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)')
+    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS}), comments:comments!comments_post_id_fkey(count)`)
     .eq('id', id)
     .is('deleted_at', null)
     .filter('comments.deleted_at', 'is', null)
@@ -50,19 +51,12 @@ async function getPostData(id: string, viewerProfileId: string | null) {
 }
 
 export default async function PostDetailPage({ params }: PageProps) {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  let viewerProfileId: string | null = null;
-  let viewerRole: string | null = null;
-  try {
-    if (profileCookie?.value) {
-      const parsed = JSON.parse(profileCookie.value);
-      viewerProfileId = parsed?.id ?? null;
-      viewerRole = parsed?.role ?? null;
-    }
-  } catch {}
+  const { id } = await params;
+  const viewer = await getCurrentVerifiedProfile();
+  const viewerProfileId = viewer.ok ? viewer.profileId : null;
+  const viewerRole = viewer.ok ? viewer.role : null;
 
-  const result = await getPostData(params.id, viewerProfileId);
+  const result = await getPostData(id, viewerProfileId);
   if (!result) notFound();
 
   const { post, commentCount } = result;

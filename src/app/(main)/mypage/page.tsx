@@ -1,10 +1,7 @@
-import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { createServerClient } from '@supabase/ssr';
-import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import {
   getPrimaryBusinessTypeLabel,
@@ -21,6 +18,7 @@ import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSe
 import RecentJobsSection from '@/features/jobs/components/RecentJobsSection';
 import BookmarkedJobsSection from '@/features/mypage/components/BookmarkedJobsSection';
 import PageHeader from '@/shared/components/PageHeader';
+import { SELF_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +26,7 @@ async function getMyData(profileId: string) {
   const supabase = createServerQueryClient();
 
   const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', profileId).single(),
+    supabase.from('profiles').select(SELF_PROFILE_COLUMNS).eq('id', profileId).single(),
     supabase
       .from('jobs')
       .select('id, title, status, employment_type, region, created_at')
@@ -79,34 +77,15 @@ async function getMyData(profileId: string) {
 }
 
 export default async function MyPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  if (!profileCookie?.value) {
-    redirect(ROUTES.LOGIN);
-  }
-
-  let cookieProfile: { id: string } | null = null;
-  try {
-    cookieProfile = JSON.parse(profileCookie.value);
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
-
-  if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
-
-  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(cookieProfile.id);
+  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(viewer.profileId);
 
   if (!profile) redirect(ROUTES.LOGIN);
 
   // 본인 이메일 조회 (네이버 검수: 이메일 활용 화면 노출용)
-  const authClient = createServerClient(
-    SUPABASE_SERVER_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME }, cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
-  );
-  const { data: { user: authUser } } = await authClient.auth.getUser();
-  const userEmail = authUser?.email ?? '';
+  const userEmail = viewer.email ?? '';
 
 
   const imageUrl = profile.profile_image

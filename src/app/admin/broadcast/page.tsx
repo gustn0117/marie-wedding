@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from '@/shared/components/Toast';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 type Target = 'all' | 'business' | 'individual';
 
@@ -10,7 +11,12 @@ export default function AdminBroadcastPage() {
   const [message, setMessage] = useState('');
   const [target, setTarget] = useState<Target>('all');
   const [sending, setSending] = useState(false);
-  const [result, setResult] = useState<{ sent: number; total: number } | null>(null);
+  const [result, setResult] = useState<{
+    sent: number;
+    confirmedFailed: number;
+    uncertain: number;
+    total: number;
+  } | null>(null);
 
   const send = async () => {
     if (!subject.trim() || !message.trim()) {
@@ -20,17 +26,31 @@ export default function AdminBroadcastPage() {
     if (!confirm(`${target === 'all' ? '전체' : target === 'business' ? '업체' : '개인'} 회원에게 공지 메일을 발송할까요?`)) return;
     setSending(true);
     setResult(null);
+    const campaignId = crypto.randomUUID();
     try {
-      const res = await fetch('/api/admin/broadcast', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject, message, target }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body.error || '발송에 실패했습니다.');
-      setResult({ sent: body.sent ?? 0, total: body.total ?? 0 });
-      toast(`${body.sent}/${body.total}명에게 발송했습니다.`, 'success');
+      for (;;) {
+        const res = await apiFetch('/api/admin/broadcast', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ campaignId, subject, message, target }),
+        }, 55_000);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body.error || '발송에 실패했습니다.');
+        const uncertain = body.uncertain ?? 0;
+        const confirmedFailed = body.confirmedFailed ?? Math.max(0, (body.failed ?? 0) - uncertain);
+        setResult({ sent: body.sent ?? 0, confirmedFailed, uncertain, total: body.total ?? 0 });
+        if (body.done) {
+          const failed = confirmedFailed + uncertain;
+          toast(failed > 0
+            ? `${body.sent}/${body.total}명 발송 · 실패 ${confirmedFailed}명 · 결과 불명 ${uncertain}명`
+            : `${body.sent}/${body.total}명에게 발송했습니다.`, failed > 0 ? 'error' : 'success');
+          break;
+        }
+        if ((body.retryAfterMs ?? 0) > 0) {
+          await new Promise((resolve) => setTimeout(resolve, Math.min(body.retryAfterMs, 5_000)));
+        }
+      }
     } catch (err) {
       toast(err instanceof Error ? err.message : '발송에 실패했습니다.', 'error');
     } finally {
@@ -42,7 +62,7 @@ export default function AdminBroadcastPage() {
     <div className="max-w-2xl space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">공지 메일 발송</h1>
-        <p className="mt-1 text-sm text-gray-500">회원에게 안내 이메일을 일괄 발송합니다. (Resend 연동 · 미설정 시 콘솔 기록)</p>
+        <p className="mt-1 text-sm text-gray-500">회원에게 안내 이메일을 일괄 발송합니다. 운영 메일 제공자가 없으면 발송하지 않고 실패로 기록합니다.</p>
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-5 space-y-4">
@@ -77,7 +97,9 @@ export default function AdminBroadcastPage() {
 
         {result && (
           <div className="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            발송 완료: {result.sent}/{result.total}명
+            발송 결과: 성공 {result.sent}/{result.total}명
+            {result.confirmedFailed > 0 ? ` · 실패 ${result.confirmedFailed}명` : ''}
+            {result.uncertain > 0 ? ` · 결과 불명 ${result.uncertain}명(중복 방지를 위해 재발송 안 함)` : ''}
           </div>
         )}
 

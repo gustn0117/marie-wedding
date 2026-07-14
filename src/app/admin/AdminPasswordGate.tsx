@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Logo from '@/shared/components/Logo';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 /**
  * /admin 진입 시 비밀번호 입력 게이트.
@@ -17,13 +18,12 @@ export default function AdminPasswordGate() {
     e.preventDefault();
     setBusy(true); setError(null);
     try {
-      const res = await fetch('/api/admin/unlock', {
+      const res = await apiFetch('/api/admin/unlock', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
-        signal: AbortSignal.timeout(8000),
-      });
+      }, 10_000);
       if (!res.ok) {
         const body = await res.json().catch(() => ({ error: '' }));
         setError(body.error || `잠금 해제 실패 (HTTP ${res.status})`);
@@ -32,11 +32,7 @@ export default function AdminPasswordGate() {
       // 페이지 새로고침 — server layout이 쿠키 보고 children 렌더링
       window.location.reload();
     } catch (err) {
-      if (err instanceof DOMException && err.name === 'TimeoutError') {
-        setError('요청 시간이 초과되었습니다. 다시 시도해주세요.');
-      } else {
-        setError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
-      }
+      setError(err instanceof Error ? err.message : '네트워크 오류가 발생했습니다. 다시 시도해주세요.');
     } finally {
       setBusy(false);
     }

@@ -1,4 +1,6 @@
-FROM node:18-alpine AS base
+# syntax=docker/dockerfile:1.7
+
+FROM node:22-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -16,7 +18,10 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+# .env.production은 build context에 넣지 않는다. BuildKit secret으로 잠깐
+# 마운트하고 NEXT_PUBLIC_* 값만 별도 build 프로세스에 전달한다.
+RUN --mount=type=secret,id=env_production,required=true \
+    node scripts/build-with-public-env.mjs /run/secrets/env_production
 
 # Production image
 FROM base AS runner

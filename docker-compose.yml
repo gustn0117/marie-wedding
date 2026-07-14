@@ -1,12 +1,15 @@
-version: '3.8'
+name: marie
 
 services:
   web:
     build:
       context: .
       dockerfile: Dockerfile
+      secrets:
+        - env_production
     ports:
-      - "${PORT:-3000}:3000"
+      # 외부 트래픽은 nginx/cloudflared만 받고 Next.js 포트는 호스트 로컬에만 공개.
+      - "127.0.0.1:${PORT:-3000}:3000"
     env_file:
       - .env.production
     environment:
@@ -29,3 +32,9 @@ networks:
   supabase:
     external: true
     name: supabase_default
+
+secrets:
+  # 빌드 중에만 /run/secrets/env_production으로 마운트된다. 이미지 레이어에는
+  # 저장되지 않으며, 런타임 설정은 위 env_file이 별도로 주입한다.
+  env_production:
+    file: .env.production

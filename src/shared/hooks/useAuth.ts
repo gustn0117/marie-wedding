@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
+import { apiFetch, apiFetchJson } from '@/shared/utils/apiFetch';
 
 interface AuthState {
   user: User | null;
@@ -34,14 +35,13 @@ export function useAuth() {
 
   const supabaseRef = useRef(createClient());
 
-  const fetchProfile = useCallback(async (userId: string): Promise<Profile | null> => {
-    const { data } = await supabaseRef.current
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .single();
-    return data as Profile | null;
+  const fetchProfile = useCallback(async (): Promise<Profile | null> => {
+    const result = await apiFetchJson<{ profile: Profile | null }>(
+      '/api/profile/me',
+      { credentials: 'include', cache: 'no-store' },
+      { timeoutMs: 10_000, fallbackError: '프로필을 불러오지 못했습니다.' },
+    );
+    return result.profile;
   }, []);
 
   useEffect(() => {
@@ -61,7 +61,7 @@ export function useAuth() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const profile = await fetchProfile(session.user.id);
+          const profile = await fetchProfile();
           // fetchProfile 이 일시적으로 null 을 반환해도(네트워크/RLS 순간 실패)
           // 쿠키 profile 이 있으면 그것을 유지 — 로그인 상태 유실 방지.
           setState((prev) => ({ user: session.user, profile: profile ?? prev.profile, isLoading: false }));
@@ -92,7 +92,7 @@ export function useAuth() {
         if (event === 'INITIAL_SESSION') return;
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           if (session?.user) {
-            const profile = await fetchProfile(session.user.id);
+            const profile = await fetchProfile();
             setState({ user: session.user, profile, isLoading: false });
           }
         } else if (event === 'SIGNED_OUT') {
@@ -124,10 +124,7 @@ export function useAuth() {
 
     // 서버 라우트로 supabase auth cookie 확실히 expire
     try {
-      await Promise.race([
-        fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 3000)),
-      ]);
+      await apiFetch('/api/auth/signout', { method: 'POST', credentials: 'include' }, 3000);
     } catch {}
 
     // 클라이언트 supabase signOut (in-memory session 정리)

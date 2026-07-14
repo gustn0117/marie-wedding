@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useCallback } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
@@ -9,6 +9,7 @@ import NotificationBell from '@/features/notifications/components/NotificationBe
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import MobileNavPanel from './MobileNavPanel';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 // 헤더 2단 nav — 좌측: 구인구직 중심 정보 구조 / 우측: 외부 제휴업체 1건만
 const CAT_NAV = [
@@ -37,6 +38,13 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Server Component가 최신 프로필로 다시 렌더되면 로컬 상태도 즉시 동기화한다.
+  // useState의 초깃값은 첫 마운트에만 반영되므로 이 동기화가 없으면 저장 후에도
+  // 헤더 이름·프로필 이미지가 이전 값에 머물 수 있다.
+  useEffect(() => {
+    setProfile(initialProfile);
+  }, [initialProfile]);
 
   // 옛 패턴 (<div className="fixed inset-0 z-10" onClick={close} />)은 본문 첫 클릭을 흡수.
   // ref-based outside-click으로 본문 카드/링크 클릭을 정상 통과시킴.
@@ -72,10 +80,7 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
     // 이것만 기다리고(보통 ~100ms) 즉시 이동 — 클라 supabase.auth.signOut()(GoTrue revoke)은
     // 서버가 이미 수행하므로 생략. (이전엔 이 2초 대기 때문에 헤더 변경 후 ~1초 지연 발생)
     try {
-      await Promise.race([
-        fetch('/api/auth/signout', { method: 'POST', credentials: 'include' }),
-        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('signout_timeout')), 2000)),
-      ]);
+      await apiFetch('/api/auth/signout', { method: 'POST', credentials: 'include' }, 2000);
     } catch {
       // 무시 — full reload 로 미들웨어가 다시 처리
     }

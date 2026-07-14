@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import { directoryService } from '@/features/directory/services/directory-service';
-import { createClient } from '@/lib/supabase/client';
-import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
+import { useImageUpload } from '@/shared/hooks/useImageUpload';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
+import { isAbortError, mapWithConcurrency, uploadOptimizedImage } from '@/shared/utils/upload';
+import { MAX_IMAGE_INPUT_BYTES } from '@/shared/utils/image';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
@@ -15,7 +17,6 @@ import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { friendlyError } from '@/shared/utils/errorMessages';
-import { revalidate } from '@/shared/utils/revalidate';
 import { toast } from '@/shared/components/Toast';
 import type { Profile } from '@/types/database';
 
@@ -29,8 +30,24 @@ const COMPANY_SIZES = [
   { value: '100+', label: '100명 이상' },
 ];
 
+const MAX_GALLERY_ACTIVE_SOURCE_BYTES = 60 * 1024 * 1024;
+const GALLERY_BATCH_TIMEOUT_MS = 60_000;
+const GALLERY_QUEUE_PLACEHOLDER =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22 viewBox=%220 0 800 600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23f3f4f6%22/%3E%3Cpath d=%22M300 330l75-85 65 72 42-48 88 101H260z%22 fill=%22%23d1d5db%22/%3E%3Ccircle cx=%22475%22 cy=%22215%22 r=%2230%22 fill=%22%23d1d5db%22/%3E%3C/svg%3E';
+
 interface DirectoryFormProps {
   profile: Profile;
+}
+
+interface GalleryUploadItem {
+  id: string;
+  path: string | null;
+  preview: string;
+  status: 'done' | 'uploading' | 'error';
+  progress: number;
+  file?: File;
+  error?: string;
+  localUrl?: boolean;
 }
 
 export default function DirectoryForm({ profile }: DirectoryFormProps) {
@@ -38,6 +55,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const [listed, setListed] = useState(profile.is_directory_listed);
   const [submitting, setSubmitting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const saveLockRef = useRef(false);
   const [savingStep, setSavingStep] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -57,109 +75,270 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     established_year: profile.established_year || '',
     address: profile.address || '',
   });
+  const bioRef = useRef(formData.bio);
+  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
 
-  // upload-on-select: 파일 고르는 즉시 백그라운드 업로드 → path 만 상태에 보관.
-  // 저장 클릭 시엔 이미 업로드돼 있어 텍스트만 전송하므로 즉시 완료.
-  const [profileImagePath, setProfileImagePath] = useState<string | null>(profile.profile_image);
-  const [imagePreview, setImagePreview] = useState<string | null>(resolveStorageUrl(profile.profile_image, 'avatars'));
-  const [imgUploading, setImgUploading] = useState(false);
-  const [coverImagePath, setCoverImagePath] = useState<string | null>(profile.cover_image);
-  const [coverPreview, setCoverPreview] = useState<string | null>(resolveStorageUrl(profile.cover_image, 'avatars'));
-  const [coverUploading, setCoverUploading] = useState(false);
-  const [galleryPaths, setGalleryPaths] = useState<string[]>(profile.gallery || []);
-  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
-    (profile.gallery || []).map(g => resolveStorageUrl(g, 'avatars') ?? '').filter(Boolean)
-  );
-  const [galleryUploading, setGalleryUploading] = useState(0);
+  const avatarUpload = useImageUpload({
+    initialPath: profile.profile_image,
+    initialUrl: resolveStorageUrl(profile.profile_image, 'avatars'),
+    bucket: 'avatars',
+    maxDimension: 640,
+    maxSizeMB: 0.45,
+    quality: 0.84,
+    buildPath: (file) => `${profile.user_id}/avatar_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+  });
+  const coverUpload = useImageUpload({
+    initialPath: profile.cover_image,
+    initialUrl: resolveStorageUrl(profile.cover_image, 'avatars'),
+    bucket: 'avatars',
+    maxDimension: 1280,
+    maxSizeMB: 0.8,
+    quality: 0.82,
+    buildPath: (file) => `${profile.user_id}/cover_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+  });
+  const initialGalleryItems: GalleryUploadItem[] = (profile.gallery || []).map<GalleryUploadItem>((path) => ({
+    id: `existing:${path}`,
+    path,
+    preview: resolveStorageUrl(path, 'avatars') ?? '',
+    status: 'done',
+    progress: 100,
+  })).filter((item) => !!item.preview);
+  const [galleryItems, setGalleryItemsState] = useState<GalleryUploadItem[]>(initialGalleryItems);
+  const galleryItemsRef = useRef(initialGalleryItems);
+  const galleryControllersRef = useRef(new Map<string, AbortController>());
+  const galleryObjectUrlsRef = useRef(new Set<string>());
+  const galleryBatchesRef = useRef(new Set<Promise<void>>());
+  const galleryMountedRef = useRef(true);
 
-  const anyUploading = imgUploading || coverUploading || galleryUploading > 0;
-
-  // 단일 파일 압축+업로드 → storage path 반환
-  const uploadOne = async (file: File, kind: 'avatar' | 'cover' | 'gallery', maxDim: number): Promise<string> => {
-    const supabase = createClient();
-    const compressed = await compressImage(file, { maxDimension: maxDim, quality: 0.8 });
-    const ext = compressed.name.split('.').pop() || 'jpg';
-    const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const path = `${profile.user_id}/${kind}_${stamp}.${ext}`;
-    const { error: upErr } = await withTimeout(
-      supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-      60000, '이미지 업로드 지연',
-    );
-    if (upErr) throw upErr;
-    return path;
+  const setGalleryItems = (updater: (previous: GalleryUploadItem[]) => GalleryUploadItem[]) => {
+    // 업로드 콜백·삭제·저장이 같은 tick에 겹쳐도 저장은 항상 최신 목록을 읽는다.
+    const next = updater(galleryItemsRef.current);
+    galleryItemsRef.current = next;
+    setGalleryItemsState(next);
   };
 
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const patchGalleryItem = (id: string, patch: Partial<GalleryUploadItem>) => {
+    if (!galleryMountedRef.current) return;
+    setGalleryItems((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (saveLockRef.current) {
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setImagePreview(URL.createObjectURL(file));
     setError(null);
-    setImgUploading(true);
-    try {
-      setProfileImagePath(await uploadOne(file, 'avatar', 640));
-    } catch {
-      setError('프로필 이미지 업로드에 실패했어요. 다시 시도해주세요.');
-      setImagePreview(resolveStorageUrl(profileImagePath, 'avatars'));
-    } finally {
-      setImgUploading(false);
-    }
+    avatarUpload.selectFile(file);
+    e.target.value = '';
   };
 
   const handleRemoveImage = () => {
-    setProfileImagePath(null);
-    setImagePreview(null);
+    if (saveLockRef.current) return;
+    avatarUpload.remove();
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (saveLockRef.current) {
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setCoverPreview(URL.createObjectURL(file));
     setError(null);
-    setCoverUploading(true);
-    try {
-      setCoverImagePath(await uploadOne(file, 'cover', 1280));
-    } catch {
-      setError('커버 이미지 업로드에 실패했어요. 다시 시도해주세요.');
-      setCoverPreview(resolveStorageUrl(coverImagePath, 'avatars'));
-    } finally {
-      setCoverUploading(false);
-    }
+    coverUpload.selectFile(file);
+    e.target.value = '';
   };
 
   const handleRemoveCover = () => {
-    setCoverImagePath(null);
-    setCoverPreview(null);
+    if (saveLockRef.current) return;
+    coverUpload.remove();
     if (coverInputRef.current) coverInputRef.current.value = '';
   };
 
   const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    if (saveLockRef.current) {
+      e.target.value = '';
+      return;
+    }
+    const available = Math.max(0, 12 - galleryItemsRef.current.length);
+    const candidates = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+    const selected = candidates.filter((file) => file.size > 0 && file.size <= MAX_IMAGE_INPUT_BYTES);
+    const activeSourceBytes = galleryItemsRef.current.reduce(
+      (sum, item) => sum + (item.file?.size ?? 0),
+      0,
+    );
+    let remainingBytes = Math.max(0, MAX_GALLERY_ACTIVE_SOURCE_BYTES - activeSourceBytes);
+    const files: File[] = [];
+    for (const file of selected) {
+      if (files.length >= available) break;
+      if (file.size > remainingBytes) continue;
+      files.push(file);
+      remainingBytes -= file.size;
+    }
     if (galleryInputRef.current) galleryInputRef.current.value = '';
+    const selectionError = selected.length < candidates.length
+      ? '갤러리 사진은 비어 있지 않은 30MB 이하 이미지만 올릴 수 있어요.'
+      : files.length < selected.length
+        ? '갤러리는 최대 12장, 처리 중 원본 합계 60MB까지 추가할 수 있어요.'
+        : null;
+    setError(selectionError);
     if (files.length === 0) return;
-    setError(null);
-    setGalleryUploading(c => c + files.length);
-    // 순차 업로드 — path·preview 를 같은 인덱스로 함께 추가(삭제 정합성 보장). 끝나는 대로 썸네일 표시.
-    for (const file of files) {
+    const newItems = files.map<GalleryUploadItem>((file) => ({
+      id: crypto.randomUUID(),
+      path: null,
+      // 원본은 미리보기로 디코드하지 않고 작은 자리표시자를 즉시 렌더한다.
+      // 업로드 완료 뒤에만 실제 전송된 작은 압축본으로 교체한다.
+      preview: GALLERY_QUEUE_PLACEHOLDER,
+      localUrl: false,
+      status: 'uploading',
+      progress: 1,
+      file,
+    }));
+    // 삭제/페이지 이탈이 worker 시작 전이어도 취소되도록 controller를 큐 등록 전에 만든다.
+    newItems.forEach((item) => galleryControllersRef.current.set(item.id, new AbortController()));
+    setGalleryItems((items) => [...items, ...newItems]);
+
+    const batch = (async () => {
+      let batchTimedOut = false;
+      const timeoutMessage = '갤러리 사진 일괄 업로드가 1분을 초과해 취소되었습니다.';
+      const batchTimer = window.setTimeout(() => {
+        batchTimedOut = true;
+        newItems.forEach((item) => galleryControllersRef.current.get(item.id)?.abort(
+          new DOMException(timeoutMessage, 'AbortError'),
+        ));
+      }, GALLERY_BATCH_TIMEOUT_MS);
+      let results: PromiseSettledResult<void>[];
       try {
-        const path = await uploadOne(file, 'gallery', 1280);
-        const url = resolveStorageUrl(path, 'avatars') ?? URL.createObjectURL(file);
-        setGalleryPaths(prev => [...prev, path]);
-        setGalleryPreviews(prev => [...prev, url]);
-      } catch {
-        setError('일부 갤러리 이미지 업로드에 실패했어요.');
+        results = await mapWithConcurrency(newItems, 3, async (item) => {
+        const controller = galleryControllersRef.current.get(item.id);
+        if (!controller) return;
+        try {
+          if (controller.signal.aborted) {
+            throw controller.signal.reason
+              ?? new DOMException('사진 업로드가 취소되었습니다.', 'AbortError');
+          }
+          const queuedItem = galleryItemsRef.current.find((candidate) => candidate.id === item.id);
+          if (!queuedItem) {
+            controller.abort();
+            throw new DOMException('사진 업로드가 취소되었습니다.', 'AbortError');
+          }
+          patchGalleryItem(item.id, { status: 'uploading', progress: 1, error: undefined });
+          const result = await uploadOptimizedImage(item.file!, {
+            bucket: 'avatars',
+            maxDimension: 1280,
+            maxSizeMB: 0.75,
+            quality: 0.82,
+            signal: controller.signal,
+            buildPath: (file) => `${profile.user_id}/gallery_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+            onUploadProgress: (progress) => patchGalleryItem(item.id, { progress: progress.percent }),
+            onCompressedPreview: (compressed) => {
+              if (!galleryMountedRef.current || controller.signal.aborted) return;
+              const current = galleryItemsRef.current.find((candidate) => candidate.id === item.id);
+              if (!current) return;
+              if (current.localUrl) {
+                URL.revokeObjectURL(current.preview);
+                galleryObjectUrlsRef.current.delete(current.preview);
+              }
+              const optimizedUrl = URL.createObjectURL(compressed);
+              galleryObjectUrlsRef.current.add(optimizedUrl);
+              patchGalleryItem(item.id, { preview: optimizedUrl, localUrl: true });
+            },
+          });
+          if (!galleryMountedRef.current || controller.signal.aborted) return;
+          const current = galleryItemsRef.current.find((candidate) => candidate.id === item.id);
+          if (!current) return;
+          let optimizedPreview = current.preview;
+          let localUrl = current.localUrl ?? false;
+          if (!localUrl) {
+            optimizedPreview = URL.createObjectURL(result.file);
+            galleryObjectUrlsRef.current.add(optimizedPreview);
+            localUrl = true;
+          }
+          patchGalleryItem(item.id, {
+            path: result.path,
+            preview: optimizedPreview,
+            localUrl,
+            status: 'done',
+            progress: 100,
+            // 재시도에 필요 없는 대용량 원본 File 참조를 즉시 놓는다. 화면에는
+            // 실제 전송된 작은 압축본 Blob만 유지한다.
+            file: undefined,
+          });
+        } catch (uploadError) {
+          if (!isAbortError(uploadError) || batchTimedOut) {
+            patchGalleryItem(item.id, {
+              status: 'error',
+              error: batchTimedOut
+                ? timeoutMessage
+                : uploadError instanceof Error ? uploadError.message : '업로드 실패',
+            });
+          }
+          if (!isAbortError(uploadError)) throw uploadError;
+        } finally {
+          galleryControllersRef.current.delete(item.id);
+        }
+        });
       } finally {
-        setGalleryUploading(c => c - 1);
+        window.clearTimeout(batchTimer);
       }
+      results.forEach((result, index) => {
+        if (result.status !== 'rejected') return;
+        patchGalleryItem(newItems[index].id, {
+          status: 'error',
+          error: result.reason instanceof Error ? result.reason.message : '업로드 실패',
+        });
+      });
+      if (batchTimedOut && galleryMountedRef.current) setError(timeoutMessage);
+    })();
+    galleryBatchesRef.current.add(batch);
+    try {
+      await batch;
+    } finally {
+      galleryBatchesRef.current.delete(batch);
     }
   };
 
-  const handleRemoveGalleryItem = (idx: number) => {
-    setGalleryPaths(prev => prev.filter((_, i) => i !== idx));
-    setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
+  const retryGalleryItem = (id: string) => {
+    if (saveLockRef.current) return;
+    const item = galleryItemsRef.current.find((candidate) => candidate.id === id);
+    if (!item?.file) return;
+    const fakeInput = { target: { files: [item.file], value: '' } };
+    // 실패 항목을 제거한 뒤 동일 파일을 일반 큐에 다시 넣는다.
+    handleRemoveGalleryItem(galleryItemsRef.current.findIndex((candidate) => candidate.id === id));
+    void handleGallerySelect(fakeInput as unknown as React.ChangeEvent<HTMLInputElement>);
   };
+
+  const handleRemoveGalleryItem = (idx: number) => {
+    if (saveLockRef.current) return;
+    const item = galleryItemsRef.current[idx];
+    if (!item) return;
+    galleryControllersRef.current.get(item.id)?.abort();
+    galleryControllersRef.current.delete(item.id);
+    if (item.localUrl) {
+      URL.revokeObjectURL(item.preview);
+      galleryObjectUrlsRef.current.delete(item.preview);
+    }
+    setGalleryItems((items) => items.filter((candidate) => candidate.id !== item.id));
+  };
+
+  useEffect(() => {
+    const controllers = galleryControllersRef.current;
+    const objectUrls = galleryObjectUrlsRef.current;
+    galleryMountedRef.current = true;
+    return () => {
+      galleryMountedRef.current = false;
+      controllers.forEach((controller) => controller.abort());
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
+    };
+  }, []);
+
+  const galleryUploading = galleryItems.filter((item) => item.status === 'uploading').length;
 
   const handleToggle = async () => {
     if (!listed && !formData.region) { setError('지역을 1개 이상 선택해주세요.'); return; }
@@ -181,6 +360,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   };
 
   const handleSave = async () => {
+    if (saveLockRef.current) return;
     // 클라이언트 유효성 검사 — 서버 왕복 없이 즉시 피드백
     if (!formData.region) {
       setError('지역을 1개 이상 선택해주세요. 지역 카드를 눌러 활성화하세요.');
@@ -201,20 +381,37 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       }
     }
 
+    saveLockRef.current = true;
     setSaving(true);
     setError(null);
     setSuccess(false);
     const startedAt = performance.now();
     try {
-      // 이미지는 파일 선택 시 이미 업로드됨(path 보관) → 저장은 텍스트만이라 즉시 완료.
-      setSavingStep('저장 중...');
+      setSavingStep(
+        avatarUpload.uploading || coverUpload.uploading || galleryUploading > 0 || pendingCount > 0
+          ? '사진 마무리 중...'
+          : '저장 중...',
+      );
+      const [profileImagePath, coverImagePath] = await Promise.all([
+        avatarUpload.waitForUpload(),
+        coverUpload.waitForUpload(),
+        Promise.all(Array.from(galleryBatchesRef.current)),
+        waitForUploads(),
+      ]);
+      const failedGalleryItem = galleryItemsRef.current.find((item) => item.status === 'error');
+      if (failedGalleryItem) {
+        throw new Error('업로드에 실패한 갤러리 사진이 있습니다. 다시 시도하거나 삭제한 뒤 저장해주세요.');
+      }
+      const galleryPaths = galleryItemsRef.current
+        .filter((item) => item.status === 'done' && item.path)
+        .map((item) => item.path as string);
       await withTimeout(
         directoryService.updateProfile(profile.id, {
           contact_name: formData.contact_name.trim() || undefined,
           company_name: formData.company_name.trim() || null,
           business_type: formData.business_type || null,
           region: formData.region,
-          bio: formData.bio.trim() || null,
+          bio: bioRef.current.trim() || null,
           phone: formData.phone.trim() || null,
           website: formData.website.trim() || null,
           profile_image: profileImagePath,
@@ -232,10 +429,6 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       console.info('[DirectoryForm] save success in', elapsed, 'ms');
       clearMarieProfileCookie();
 
-      // 다른 페이지 서버 캐시 무효화 — 저장 직후 페이지 보기로 이동 시 옛 데이터 뜨는 문제 방지.
-      // /directory/[id] · /directory (목록) · /mypage 는 모두 이 프로필의 캐시된 렌더 대상.
-      revalidate(ROUTES.DIRECTORY_DETAIL(profile.id), ROUTES.DIRECTORY, ROUTES.MYPAGE).catch(() => {});
-
       // 페이지 리로드 없이 현재 서버 컴포넌트만 갱신 + 저장 완료 토스트
       setSuccess(true);
       setSavingStep(null);
@@ -251,6 +444,8 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setSaving(false);
       setSavingStep(null);
+    } finally {
+      saveLockRef.current = false;
     }
   };
 
@@ -275,9 +470,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <svg className="w-5 h-5 text-state-new shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <p className="text-sm text-state-new">저장되었습니다. 페이지 이동 중...</p>
+          <p className="text-sm text-state-new">저장되었습니다. 변경 내용이 바로 반영됐습니다.</p>
         </div>
       )}
+
+      <fieldset disabled={saving} className="contents">
 
       {/* Status Card — 기본 비공개(opt-in). 공개해야 디렉토리·검색에 노출. */}
       <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-state-new-bg/30' : 'border-gray-200 bg-gray-50'}`}>
@@ -323,9 +520,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <label className="block text-sm font-semibold text-gray-800 mb-2">
             커버 이미지 <span className="text-gray-400 font-normal">(가로 배너)</span>
           </label>
-          {coverPreview ? (
+          {coverUpload.preview ? (
             <div className="relative w-full aspect-[16/9] max-h-64 overflow-hidden rounded border border-gray-300 bg-gray-50">
-              <img src={coverPreview} alt="" className="w-full h-full object-cover" />
+              <img src={coverUpload.preview} alt="" className="w-full h-full object-cover" />
               <div className="absolute top-2 right-2 flex items-center gap-1.5">
                 <button
                   type="button"
@@ -365,6 +562,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             </button>
           )}
           <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverSelect} className="hidden" />
+          {coverUpload.uploading && (
+            <div className="mt-2" aria-live="polite">
+              <div className="h-1.5 overflow-hidden rounded-full bg-gray-100"><div className="h-full bg-primary transition-[width]" style={{ width: `${coverUpload.progress?.percent ?? 1}%` }} /></div>
+              <p className="mt-1 text-xs font-medium text-primary">{coverUpload.statusText}</p>
+            </div>
+          )}
+          {coverUpload.error && <p className="mt-1 text-xs text-state-urgent">{coverUpload.error}</p>}
           <p className="text-[11px] text-gray-500 mt-2 leading-snug">
             상세 페이지 상단·디렉토리 카드에 표시되는 가로 배너입니다.<br />
             <b>1600×900px</b> (16:9 가로) 권장 · JPG/PNG · 자동 압축
@@ -376,9 +580,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             <label className="block text-sm font-semibold text-gray-800 mb-2">
               로고 <span className="text-gray-400 font-normal">(정사각)</span>
             </label>
-            {imagePreview ? (
+            {avatarUpload.preview ? (
               <div className="relative w-full aspect-square overflow-hidden rounded border border-gray-300 bg-gray-50">
-                <img src={imagePreview} alt="" className="w-full h-full object-cover" />
+                <img src={avatarUpload.preview} alt="" className="w-full h-full object-cover" />
                 {/* 액션은 모바일에서도 항상 보이도록 우상단 아이콘 버튼으로. 큰 hover overlay 는 desktop 만 */}
                 <div className="absolute top-2 right-2 flex items-center gap-1.5">
                   <button
@@ -423,6 +627,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               <b>800×800px</b> 정사각 권장 · JPG/PNG · 자동 압축
             </p>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            {avatarUpload.uploading && (
+              <div className="mt-2" aria-live="polite">
+                <div className="h-1.5 overflow-hidden rounded-full bg-gray-100"><div className="h-full bg-primary transition-[width]" style={{ width: `${avatarUpload.progress?.percent ?? 1}%` }} /></div>
+                <p className="mt-1 text-xs font-medium text-primary">{avatarUpload.statusText}</p>
+              </div>
+            )}
+            {avatarUpload.error && <p className="mt-1 text-xs text-state-urgent">{avatarUpload.error}</p>}
           </div>
 
           <div>
@@ -539,9 +750,14 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <FieldRow label="업체 소개" hint="글자 굵기, 크기, 목록 등 서식을 사용할 수 있어요">
             <RichTextEditor
               value={formData.bio}
-              onChange={(html) => setFormData(prev => ({ ...prev, bio: html }))}
+              onChange={(html) => {
+                bioRef.current = html;
+                setFormData((prev) => ({ ...prev, bio: html }));
+              }}
               placeholder="업체 소개, 특장점, 운영 철학 등을 자유롭게 작성해주세요."
               minHeight={180}
+              onUploadPromise={trackUpload}
+              disabled={saving}
             />
           </FieldRow>
         </div>
@@ -552,11 +768,22 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         <div className="mb-3">
           <ImageUploadHint ratio="1:1 (정사각형) 권장" recommendedSize="800 × 800px" maxSize="자동 압축" note="여러 장 동시 선택 가능" />
         </div>
-        {galleryPreviews.length > 0 && (
+        {galleryItems.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 mb-3">
-            {galleryPreviews.map((src, i) => (
-              <div key={i} className="relative aspect-square overflow-hidden rounded border border-gray-200">
-                <img src={src} alt="" className="w-full h-full object-cover" />
+            {galleryItems.map((item, i) => (
+              <div key={item.id} className="relative aspect-square overflow-hidden rounded border border-gray-200">
+                <img src={item.preview} alt="" className={`w-full h-full object-cover ${item.status === 'uploading' ? 'opacity-75' : ''}`} />
+                {item.status === 'uploading' && (
+                  <div className="absolute inset-x-1 bottom-1 rounded bg-black/70 px-1.5 py-1 text-[10px] font-bold text-white">
+                    <div className="mb-0.5 h-1 overflow-hidden rounded-full bg-white/30"><div className="h-full bg-white" style={{ width: `${item.progress}%` }} /></div>
+                    {item.progress}%
+                  </div>
+                )}
+                {item.status === 'error' && (
+                  <button type="button" onClick={() => retryGalleryItem(item.id)} className="absolute inset-x-1 bottom-1 rounded bg-state-urgent px-1.5 py-1 text-[10px] font-bold text-white">
+                    실패 · 다시 시도
+                  </button>
+                )}
                 {/* 항상 상시 노출 — 모바일 hover 없음 대응 */}
                 <button
                   type="button"
@@ -575,12 +802,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         <button
           type="button"
           onClick={() => galleryInputRef.current?.click()}
-          className="w-full rounded border-2 border-dashed border-gray-300 py-8 text-center hover:border-primary hover:bg-primary-50/30 transition-colors"
+          disabled={galleryUploading > 0 || galleryItems.length >= 12}
+          className="w-full rounded border-2 border-dashed border-gray-300 py-8 text-center hover:border-primary hover:bg-primary-50/30 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
         >
           <svg className="w-8 h-8 text-gray-300 mx-auto mb-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
           </svg>
-          <p className="text-sm font-medium text-gray-700">사진 추가 (여러 장 가능)</p>
+          <p className="text-sm font-medium text-gray-700">{galleryUploading > 0 ? `${galleryUploading}장 업로드 중` : galleryItems.length >= 12 ? '최대 12장 등록됨' : '사진 추가 (여러 장 가능)'}</p>
         </button>
         <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
       </Section>
@@ -605,14 +833,19 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving || anyUploading}
-            aria-busy={saving || anyUploading}
+            disabled={saving}
+            aria-busy={saving}
             className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
-            {saving ? '저장 중...' : anyUploading ? '이미지 올리는 중…' : '저장하기'}
+            {saving
+              ? (avatarUpload.uploading || coverUpload.uploading || galleryUploading > 0 || pendingCount > 0
+                ? '사진 마무리 중…'
+                : '저장 중...')
+              : '저장하기'}
           </button>
         </div>
       </div>
+      </fieldset>
     </div>
   );
 }

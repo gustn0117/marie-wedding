@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES, BUSINESS_TYPES } from '@/shared/constants';
 import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
 import {
@@ -13,11 +13,12 @@ import {
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import type { Application, Job, Profile } from '@/types/database';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 /**
@@ -29,19 +30,15 @@ interface Props {
  *  - 그 외: /mypage 로 redirect
  */
 export default async function ApplicationDetailPage({ params }: Props) {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
-
-  let me: { id: string } | null = null;
-  try { me = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!me?.id) redirect(ROUTES.LOGIN);
+  const { id } = await params;
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
   const supabase = createServerQueryClient();
   const { data: appData } = await supabase
     .from('applications')
-    .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
-    .eq('id', params.id)
+    .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+    .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
 
@@ -55,8 +52,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
   const applicant = application.applicant;
   if (!job || !applicant) notFound();
 
-  const isHiring = me.id === job.author_id;
-  const isApplicant = me.id === application.applicant_id;
+  const isHiring = viewer.profileId === job.author_id;
+  const isApplicant = viewer.profileId === application.applicant_id;
   if (!isHiring && !isApplicant) redirect(ROUTES.MYPAGE);
 
   const applicantAvatar = resolveStorageUrl(applicant.profile_image, 'avatars');

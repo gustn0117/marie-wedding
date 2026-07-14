@@ -90,6 +90,7 @@ export async function exchangeCodeForToken(
   origin: string,
   code: string,
   signedState: string,
+  signal: AbortSignal = AbortSignal.timeout(10_000),
 ): Promise<{ access_token: string; refresh_token?: string; expires_in?: number }> {
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
@@ -102,6 +103,7 @@ export async function exchangeCodeForToken(
 
   const res = await fetch(`${NAVER_TOKEN_URL}?${params.toString()}`, {
     method: 'GET',
+    signal,
   });
 
   if (!res.ok) {
@@ -124,10 +126,14 @@ export async function exchangeCodeForToken(
   };
 }
 
-export async function fetchUserInfo(accessToken: string): Promise<NaverUserInfo> {
+export async function fetchUserInfo(
+  accessToken: string,
+  signal: AbortSignal = AbortSignal.timeout(10_000),
+): Promise<NaverUserInfo> {
   const res = await fetch(NAVER_USERINFO_URL, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: 'no-store',
+    signal,
   });
   if (!res.ok) {
     throw new Error(`Naver userinfo failed (status=${res.status})`);

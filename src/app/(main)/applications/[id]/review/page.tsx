@@ -1,32 +1,29 @@
-import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
 import type { Application, Job, Profile } from '@/types/database';
 import PageHeader from '@/shared/components/PageHeader';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function ReviewPage({ params }: Props) {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
-
-  let me: { id: string } | null = null;
-  try { me = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!me?.id) redirect(ROUTES.LOGIN);
+  const { id } = await params;
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
   const supabase = createServerQueryClient();
   const { data: appData } = await supabase
     .from('applications')
-    .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
-    .eq('id', params.id)
+    .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+    .eq('id', id)
     .is('deleted_at', null)
     .maybeSingle();
 
@@ -37,8 +34,8 @@ export default async function ReviewPage({ params }: Props) {
   };
 
   const job = application.job!;
-  const isHiring = me.id === job.author_id;
-  const isApplicant = me.id === application.applicant_id;
+  const isHiring = viewer.profileId === job.author_id;
+  const isApplicant = viewer.profileId === application.applicant_id;
   if (!isHiring && !isApplicant) redirect(ROUTES.MYPAGE);
 
   if (!application.hiring_completed_at || !application.applicant_completed_at) {

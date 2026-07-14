@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import PageHeader from '@/shared/components/PageHeader';
 import { formatRelativeTime, getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
@@ -70,19 +70,10 @@ async function loadHiringDashboard(profileId: string): Promise<HiringDashboard> 
 }
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile')?.value;
-  if (!profileCookie) redirect(ROUTES.LOGIN);
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  let profileId: string;
-  try {
-    profileId = JSON.parse(profileCookie).id;
-    if (!profileId) throw new Error();
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
-
-  const dashboard = await loadHiringDashboard(profileId);
+  const dashboard = await loadHiringDashboard(viewer.profileId);
   const topJobs = dashboard.jobs.slice(0, 5); // 최근 등록순 (쿼리에서 created_at DESC)
   const statusCounts = PIPELINE_STATUSES.map((status) => ({
     status,

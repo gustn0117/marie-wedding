@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import VerificationForm from '@/features/verification/components/VerificationForm';
 import PageHeader from '@/shared/components/PageHeader';
 import { VERIFICATION_STATUS_LABELS, ROUTES } from '@/shared/constants';
@@ -10,19 +10,14 @@ import type { VerificationStatus } from '@/types/database';
 export const dynamic = 'force-dynamic';
 
 export default async function VerificationPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
-
-  let cookieProfile: { id: string } | null = null;
-  try { cookieProfile = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!cookieProfile?.id) redirect(ROUTES.LOGIN);
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
   const supabase = createServerQueryClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('id, account_type, verification_status, verification_submitted_at, verification_reviewed_at, verification_reject_reason, business_number, verified_at')
-    .eq('id', cookieProfile.id)
+    .eq('id', viewer.profileId)
     .is('deleted_at', null)
     .single();
 

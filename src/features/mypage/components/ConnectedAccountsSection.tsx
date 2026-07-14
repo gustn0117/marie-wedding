@@ -76,24 +76,11 @@ export default function ConnectedAccountsSection() {
         identity_id: i.identity_id ?? undefined,
       }));
       setIdentities(rows);
-      // 네이버 연결 여부 — 신호 3종 중 하나라도 참이면 연결로 판정:
-      //  1) user_metadata.provider/naver_id (네이버 가입 시 기록)
-      //  2) profiles.naver_sub (네이버 계정 연동 키)
+      // 네이버 연결 여부 — auth metadata의 provider/naver_id를 확인한다.
       const provider = (user.app_metadata?.provider as string | undefined)
         || (user.user_metadata?.provider as string | undefined);
       if (provider === 'naver' || user.user_metadata?.naver_id) {
         setNaverConnected(true);
-      } else {
-        try {
-          const { data: p } = await withTimeout(
-            supabase.from('profiles').select('naver_sub, signup_provider').eq('user_id', user.id).maybeSingle(),
-            8000,
-            '프로필 조회 지연',
-          );
-          if (!cancelled && (p?.naver_sub || p?.signup_provider === 'naver')) {
-            setNaverConnected(true);
-          }
-        } catch { /* 쿠키 신호가 이미 반영돼 있으므로 무시 */ }
       }
       setLoading(false);
     })();

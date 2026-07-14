@@ -1,23 +1,18 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import PageHeader from '@/shared/components/PageHeader';
 import { loadConversationSummaries } from '@/features/messages/services/conversationSummaries';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 
 export const dynamic = 'force-dynamic';
 
 export default async function MessagesPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  let me: { id: string } | null = null;
-  try { me = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!me?.id) redirect(ROUTES.LOGIN);
-
-  const conversations = await loadConversationSummaries(me.id);
+  const conversations = await loadConversationSummaries(viewer.profileId);
 
   return (
     <main className="space-y-4">

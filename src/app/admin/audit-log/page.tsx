@@ -1,24 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { adminService, type AuditLogRow } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import AuditLogDiff from '@/features/admin/components/AuditLogDiff';
-import { withTimeout } from '@/shared/utils/withTimeout';
-
-interface AuditRow {
-  id: number;
-  table_name: string;
-  record_id: string;
-  action: 'insert' | 'update' | 'delete';
-  changed_by: string | null;
-  old_data: Record<string, unknown> | null;
-  new_data: Record<string, unknown> | null;
-  changed_columns: string[] | null;
-  changed_at: string;
-  changer?: { id: string; company_name: string | null; contact_name: string; profile_image: string | null } | null;
-}
 
 const TABLE_LABELS: Record<string, string> = {
   profiles: '회원/프로필',
@@ -48,45 +34,52 @@ const ACTION_OPTIONS = [
 ];
 
 const PAGE_SIZE = 30;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function AdminAuditLogPage() {
-  const [rows, setRows] = useState<AuditRow[]>([]);
+  const [rows, setRows] = useState<AuditLogRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tableFilter, setTableFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [recordIdFilter, setRecordIdFilter] = useState('');
   const [page, setPage] = useState(1);
-  const [selected, setSelected] = useState<AuditRow | null>(null);
+  const [selected, setSelected] = useState<AuditLogRow | null>(null);
+  const requestSequence = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++requestSequence.current;
     setLoading(true);
     setError(null);
-    try {
-      const supabase = createClient();
-      const from = (page - 1) * PAGE_SIZE;
-      const to = from + PAGE_SIZE - 1;
-      let query = supabase
-        .from('audit_log')
-        .select('*, changer:profiles!changed_by(id, company_name, contact_name, profile_image)')
-        .order('changed_at', { ascending: false })
-        .range(from, to);
-
-      if (tableFilter) query = query.eq('table_name', tableFilter);
-      if (actionFilter) query = query.eq('action', actionFilter);
-      if (recordIdFilter && recordIdFilter.length >= 8) query = query.eq('record_id', recordIdFilter.trim());
-
-      const { data, error: e } = await withTimeout(query, 10000, '감사 로그 조회 지연');
-      if (e) throw e;
-      setRows((data ?? []) as AuditRow[]);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '로그 로드 실패');
-    } finally {
+    const recordId = recordIdFilter.trim();
+    if (recordId && !UUID_RE.test(recordId)) {
+      setRows([]);
+      setError('레코드 ID는 전체 UUID 형식으로 입력해 주세요.');
       setLoading(false);
+      return;
+    }
+    try {
+      const data = await adminService.getAuditLog({
+        page,
+        table: tableFilter || undefined,
+        changeAction: actionFilter || undefined,
+        recordId: recordId || undefined,
+      });
+      if (requestId !== requestSequence.current) return;
+      setRows(data);
+    } catch (err) {
+      if (requestId === requestSequence.current) {
+        setError(err instanceof Error ? err.message : '로그 로드 실패');
+      }
+    } finally {
+      if (requestId === requestSequence.current) setLoading(false);
     }
   }, [tableFilter, actionFilter, recordIdFilter, page]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, recordIdFilter ? 250 : 0);
+    return () => window.clearTimeout(timer);
+  }, [load, recordIdFilter]);
 
   const linkForRecord = (table: string, id: string) => {
     switch (table) {
@@ -141,7 +134,16 @@ export default function AdminAuditLogPage() {
           ))}
         </div>
       ) : error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</div>
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+          <p>{error}</p>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="mt-3 rounded border border-rose-300 px-3 py-1.5 text-xs font-bold hover:bg-rose-100"
+          >
+            다시 시도
+          </button>
+        </div>
       ) : rows.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-gray-200 p-12 text-center text-sm text-gray-400">
           로그가 없습니다.

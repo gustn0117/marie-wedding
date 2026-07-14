@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AccountType } from '@/shared/constants';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 interface Props {
   initialName: string;
@@ -39,7 +40,7 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
       const ctrl = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 15000);
       try {
-        const res = await fetch('/api/onboarding', {
+        const res = await apiFetch('/api/onboarding', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -48,8 +49,8 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
             phone: phone.trim().replace(/-/g, ''),
           }),
           signal: ctrl.signal,
-        });
-        const body = await res.json();
+        }, 15000);
+        const body = await res.json().catch(() => ({} as { error?: string }));
         if (!res.ok) {
           throw new Error(body?.error || '저장에 실패했습니다.');
         }

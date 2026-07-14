@@ -11,11 +11,12 @@ import { EVENT_TYPES } from '@/features/events/types';
 import type { Event, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
 import { ROUTES } from '@/shared/constants';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getEvent(id: string): Promise<Event | null> {
@@ -43,7 +44,7 @@ async function getRelatedJobs(event: Event): Promise<Job[]> {
   const keyword = event.type === 'event' ? '박람회' : event.type === 'news' ? '채용' : '웨딩';
   const { data } = await supabase
     .from('jobs')
-    .select('*, author:profiles!author_id(*)')
+    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
     .eq('posting_type', 'hiring')
@@ -60,7 +61,8 @@ function getTypeLabel(type: string): string {
 }
 
 export default async function EventDetailPage({ params }: PageProps) {
-  const event = await getEvent(params.id);
+  const { id } = await params;
+  const event = await getEvent(id);
   if (!event) notFound();
   const relatedJobs = await getRelatedJobs(event);
   const staffKeyword = getStaffSearchKeyword(event);

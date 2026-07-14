@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from '@/shared/components/Toast';
+import { apiFetch } from '@/shared/utils/apiFetch';
 
 export default function SupportInquiryForm() {
   const [name, setName] = useState('');
@@ -10,6 +11,7 @@ export default function SupportInquiryForm() {
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const createIdRef = useRef<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,17 +19,20 @@ export default function SupportInquiryForm() {
     if (!phone.trim() && !email.trim()) { toast('연락받을 전화번호나 이메일 중 하나는 입력해주세요.', 'error'); return; }
     setSubmitting(true);
     try {
-      const res = await fetch('/api/support/create', {
+      const createId = createIdRef.current ?? crypto.randomUUID();
+      createIdRef.current = createId;
+      const res = await apiFetch('/api/support/create', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email, message }),
-      });
+        body: JSON.stringify({ id: createId, name, phone, email, message }),
+      }, 12000);
       if (!res.ok) {
         const b = await res.json().catch(() => ({ error: '' }));
         throw new Error(b.error || '문의 접수에 실패했습니다.');
       }
       setDone(true);
+      createIdRef.current = null;
       setName(''); setPhone(''); setEmail(''); setMessage('');
     } catch (err) {
       toast(err instanceof Error ? err.message : '문의 접수에 실패했습니다.', 'error');

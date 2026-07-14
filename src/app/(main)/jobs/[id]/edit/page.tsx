@@ -1,23 +1,24 @@
-import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import type { Job } from '@/types/database';
 import type { JobFormData } from '@/features/jobs/types';
 import JobEditForm from '@/features/jobs/components/JobEditForm';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getJob(id: string): Promise<Job | null> {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('jobs')
-    .select('*, author:profiles!author_id(*)')
+    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
     .eq('id', id)
     .is('deleted_at', null)
     .single();
@@ -25,24 +26,19 @@ async function getJob(id: string): Promise<Job | null> {
 }
 
 export default async function EditJobPage({ params }: PageProps) {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
+  const { id } = await params;
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  if (!profileCookie?.value) redirect(ROUTES.LOGIN);
-
-  let me: { id: string } | null = null;
-  try { me = JSON.parse(profileCookie.value); } catch { redirect(ROUTES.LOGIN); }
-  if (!me?.id) redirect(ROUTES.LOGIN);
-
-  const job = await getJob(params.id);
+  const job = await getJob(id);
   if (!job) notFound();
 
-  if (me.id !== job.author_id) {
+  if (viewer.profileId !== job.author_id) {
     return (
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded border border-gray-200 p-8 text-center space-y-4">
           <h2 className="text-lg font-bold text-gray-900">수정 권한이 없습니다</h2>
-          <Link href={ROUTES.JOBS_DETAIL(params.id)} className="btn-outline text-sm inline-block">돌아가기</Link>
+          <Link href={ROUTES.JOBS_DETAIL(id)} className="btn-outline text-sm inline-block">돌아가기</Link>
         </div>
       </div>
     );
@@ -67,7 +63,7 @@ export default async function EditJobPage({ params }: PageProps) {
   return (
     <div className="max-w-[860px] mx-auto space-y-4">
       <div className="saramin-section p-5 flex items-center gap-3">
-        <Link href={ROUTES.JOBS_DETAIL(params.id)} className="p-2 rounded hover:bg-primary-50 transition-colors">
+        <Link href={ROUTES.JOBS_DETAIL(id)} className="p-2 rounded hover:bg-primary-50 transition-colors">
           <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
@@ -78,7 +74,7 @@ export default async function EditJobPage({ params }: PageProps) {
         </div>
       </div>
 
-      <JobEditForm jobId={params.id} initialData={initialData} />
+      <JobEditForm jobId={id} initialData={initialData} />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
-import { createClient } from '@/lib/supabase/client';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import UserDetailModal from '@/features/admin/components/UserDetailModal';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -30,6 +29,8 @@ export default function AdminUsersPage() {
   const reqSeq = useRef(0);
 
   const load = useCallback(async () => {
+    // 수동 새로고침 키를 callback 입력으로 소비해 동일 검색 조건도 다시 조회한다.
+    void reloadKey;
     const id = ++reqSeq.current;
     setLoading(true);
     try {
@@ -86,13 +87,11 @@ export default function AdminUsersPage() {
     if (!ok) return;
     setActionLoading(user.id);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('purge_profile_cascade', { p_profile_id: user.id }), 15000);
-      if (error) throw error;
+      await adminService.purgeUser(user.id);
       toast('회원과 관련 데이터를 모두 삭제했습니다.', 'success');
       await load();
     } catch (err) {
-      toast('삭제에 실패했습니다.', 'error');
+      toast(err instanceof Error ? err.message : '삭제에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -103,13 +102,11 @@ export default function AdminUsersPage() {
     const restoreContent = await toastConfirm(`${user.contact_name}님을 복원합니다. 작성했던 공고·게시글·댓글·지원·리뷰·포트폴리오도 함께 복원하시겠습니까? (취소: 회원 계정만 복원)`);
     setActionLoading(user.id);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('restore_profile_cascade', { p_profile_id: user.id, p_restore_content: restoreContent }), 15000);
-      if (error) throw error;
+      await adminService.restoreUserCascade(user.id, restoreContent);
       toast(restoreContent ? '회원과 콘텐츠를 모두 복원했습니다.' : '회원 계정만 복원했습니다.', 'success');
       await load();
     } catch (err) {
-      toast('복원에 실패했습니다.', 'error');
+      toast(err instanceof Error ? err.message : '복원에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -122,14 +119,12 @@ export default function AdminUsersPage() {
     if (!reason.trim()) { toast('제재 사유를 입력해 주세요.', 'error'); return; }
     setActionLoading(user.id);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('ban_user', { p_id: user.id, p_reason: reason.trim() }), 10000);
-      if (error) throw error;
+      await adminService.banUser(user.id, reason.trim());
       toast(`${user.contact_name}님을 제재했습니다.`, 'success');
       setBanModal(null);
       await load();
     } catch (err) {
-      toast('제재 처리에 실패했습니다.', 'error');
+      toast(err instanceof Error ? err.message : '제재 처리에 실패했습니다.', 'error');
       console.error(err);
     } finally {
       setActionLoading(null);
@@ -141,14 +136,12 @@ export default function AdminUsersPage() {
     const { user, note } = noteModal;
     setActionLoading(user.id);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('set_admin_note', { p_id: user.id, p_note: note.trim() || null }), 10000);
-      if (error) throw error;
+      await adminService.setAdminNote(user.id, note.trim() || null);
       toast('관리자 메모를 저장했습니다.', 'success');
       setNoteModal(null);
       await load();
-    } catch {
-      toast('저장에 실패했습니다.', 'error');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '저장에 실패했습니다.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -159,13 +152,11 @@ export default function AdminUsersPage() {
     if (!ok) return;
     setActionLoading(user.id);
     try {
-      const sb = createClient();
-      const { error } = await withTimeout(sb.rpc('unban_user', { p_id: user.id }), 10000);
-      if (error) throw error;
+      await adminService.unbanUser(user.id);
       toast('제재가 해제되었습니다.', 'success');
       await load();
-    } catch {
-      toast('해제에 실패했습니다.', 'error');
+    } catch (err) {
+      toast(err instanceof Error ? err.message : '해제에 실패했습니다.', 'error');
     } finally {
       setActionLoading(null);
     }

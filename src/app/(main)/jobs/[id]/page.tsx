@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
-import { createClient } from '@/lib/supabase/server';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
-import type { Job, Profile } from '@/types/database';
+import type { Job } from '@/types/database';
 import JobDescriptionView from '@/features/jobs/components/JobDescriptionView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
@@ -13,69 +12,46 @@ import JobDetailHero from '@/features/jobs/components/JobDetailHero';
 import JobDetailSidebar from '@/features/jobs/components/JobDetailSidebar';
 import JobMobileApplyBar from '@/features/jobs/components/JobMobileApplyBar';
 import RelatedJobs from '@/features/jobs/components/RelatedJobs';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 async function getJob(id: string): Promise<Job | null> {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('jobs')
-    .select('*, author:profiles!author_id(*)')
+    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
     .eq('id', id)
     .is('deleted_at', null)
     .single();
   return data as Job | null;
 }
 
-function readCookieProfile(): Pick<Profile, 'id' | 'account_type' | 'role'> | null {
-  try {
-    const raw = cookies().get('marie_profile')?.value;
-    if (!raw) return null;
-    const parsed = JSON.parse(decodeURIComponent(raw));
-    return {
-      id: parsed.id ?? null,
-      account_type: parsed.account_type ?? null,
-      role: parsed.role ?? null,
-    };
-  } catch {
-    return null;
-  }
-}
-
 export default async function JobDetailPage({ params }: PageProps) {
-  const job = await getJob(params.id);
+  const { id } = await params;
+  const job = await getJob(id);
   if (!job) notFound();
+  const viewerResult = await getCurrentVerifiedProfile();
+  const viewer = viewerResult.ok ? viewerResult : null;
 
   // 숨김 공고(관리자 숨김 / 작성자 숨김)는 목록·연관공고에서 걸러지지만 상세는 service_role 이라
   // RLS 가 없다. URL 직접 접근·북마크·인덱싱으로 노출되므로 작성자 본인/관리자만 열람 허용.
   if (job.hidden_by_admin || job.status === 'hidden') {
-    // marie_profile 쿠키는 비로그인 요청에서 위조 가능하므로 세션(getUser)으로 검증한다.
-    const auth = createClient();
-    const {
-      data: { user },
-    } = await auth.auth.getUser();
-    if (!user) notFound();
-    const { data: viewerProfile } = await createServerQueryClient()
-      .from('profiles')
-      .select('id, role')
-      .eq('user_id', user.id)
-      .single();
     const allowed =
-      !!viewerProfile &&
-      (viewerProfile.id === job.author_id || viewerProfile.role === 'admin');
+      !!viewer &&
+      (viewer.profileId === job.author_id || viewer.role === 'admin');
     if (!allowed) notFound();
   }
 
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   // 마감(마감일 경과 또는 수동 closed/filled/hidden) — 지원 폼 대신 마감 안내를 노출
   const isClosed = isExpired || ['closed', 'filled', 'hidden'].includes(job.status);
-  const viewer = readCookieProfile();
-  const isAuthorViewer = !!viewer?.id && viewer.id === job.author_id;
-  const isBusinessViewer = viewer?.account_type === 'business' && !isAuthorViewer;
+  const isAuthorViewer = !!viewer && viewer.profileId === job.author_id;
+  const isBusinessViewer = viewer?.accountType === 'business' && !isAuthorViewer;
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-4 pb-24 lg:pb-8">
@@ -101,7 +77,7 @@ export default async function JobDetailPage({ params }: PageProps) {
             jobId={job.id}
             authorId={job.author_id}
             initialCanManage={
-              !!viewer?.id && (viewer.id === job.author_id || viewer.role === 'admin')
+              !!viewer && (viewer.profileId === job.author_id || viewer.role === 'admin')
             }
           />
 

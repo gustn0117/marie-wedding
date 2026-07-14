@@ -1,6 +1,6 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,19 +9,14 @@ export const metadata = {
 };
 
 export default async function BannedPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-  if (!profileCookie?.value) redirect('/login');
-
-  let me: { id: string } | null = null;
-  try { me = JSON.parse(profileCookie.value); } catch { redirect('/login'); }
-  if (!me?.id) redirect('/login');
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect('/login');
 
   const supabase = createServerQueryClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('contact_name, banned_at, banned_reason')
-    .eq('id', me.id)
+    .eq('id', viewer.profileId)
     .single();
 
   // 제재 해제된 사용자는 홈으로

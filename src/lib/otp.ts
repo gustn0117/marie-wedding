@@ -17,7 +17,10 @@ export function isValidPhone(digits: string): boolean {
 
 /** phone+code 를 HMAC-SHA256 으로 해시 (평문 코드 미저장). */
 export function hashOtp(phone: string, code: string): string {
-  const secret = process.env.OTP_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || 'marie-otp-secret';
+  const secret = process.env.OTP_HASH_SALT
+    || process.env.OTP_SECRET
+    || process.env.SUPABASE_SERVICE_ROLE_KEY
+    || 'marie-otp-secret';
   return crypto.createHmac('sha256', secret).update(`${phone}:${code}`).digest('hex');
 }
 

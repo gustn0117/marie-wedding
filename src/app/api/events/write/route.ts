@@ -8,6 +8,8 @@ import { createServiceClient } from '@/lib/supabase/service';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const REQUEST_TIMEOUT_MS = 10_000;
+
 /**
  * Event CRUD API (service_role). 관리자 전용.
  */
@@ -24,6 +26,7 @@ interface EventPayload {
 }
 
 export async function POST(request: Request) {
+  const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
   let body: { mode?: 'create' | 'update' | 'delete'; id?: string; payload?: EventPayload };
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: '잘못된 요청 본문입니다.' }, { status: 400 });
@@ -36,6 +39,14 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal
+            ? AbortSignal.any([init.signal, requestSignal])
+            : requestSignal,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -43,16 +54,26 @@ export async function POST(request: Request) {
       },
     },
   );
-  const { data: { user } } = await ssr.auth.getUser();
+  const { data: { user }, error: authError } = await ssr.auth.getUser();
+  if (authError && requestSignal.aborted) {
+    return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' }, { status: 504 });
+  }
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
 
-  const service = createServiceClient();
-  const { data: me } = await service
+  const service = createServiceClient(requestSignal);
+  const { data: me, error: profileError } = await service
     .from('profiles')
     .select('id, role, banned_at')
     .eq('user_id', user.id)
     .is('deleted_at', null)
+    .abortSignal(requestSignal)
     .maybeSingle();
+  if (profileError) {
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '이벤트 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' : '프로필 정보를 확인하지 못했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   if (!me || me.role !== 'admin') {
     return NextResponse.json({ error: '관리자 권한이 필요합니다.' }, { status: 403 });
   }
@@ -73,8 +94,13 @@ export async function POST(request: Request) {
       location: p.location ?? null,
       link_url: p.link_url ?? null,
       is_pinned: !!p.is_pinned,
-    }).select('*').single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }).select('*').abortSignal(requestSignal).single();
+    if (error) {
+      return NextResponse.json(
+        { error: requestSignal.aborted ? '이벤트 등록 시간이 초과되었습니다. 목록을 확인한 뒤 다시 시도해주세요.' : error.message },
+        { status: requestSignal.aborted ? 504 : 500 },
+      );
+    }
     return NextResponse.json({ success: true, event: data });
   }
 
@@ -82,8 +108,17 @@ export async function POST(request: Request) {
   if (!id) return NextResponse.json({ error: 'id 필수' }, { status: 400 });
 
   if (mode === 'delete') {
-    const { error } = await service.from('events').update({ deleted_at: new Date().toISOString() }).eq('id', id);
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error } = await service
+      .from('events')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
+      .abortSignal(requestSignal);
+    if (error) {
+      return NextResponse.json(
+        { error: requestSignal.aborted ? '이벤트 삭제 시간이 초과되었습니다. 현재 상태를 다시 확인해주세요.' : error.message },
+        { status: requestSignal.aborted ? 504 : 500 },
+      );
+    }
     return NextResponse.json({ success: true });
   }
 
@@ -100,7 +135,18 @@ export async function POST(request: Request) {
   if (p.link_url !== undefined) payload.link_url = p.link_url;
   if (p.is_pinned !== undefined) payload.is_pinned = p.is_pinned;
 
-  const { data, error } = await service.from('events').update(payload).eq('id', id).select('*').maybeSingle();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const { data, error } = await service
+    .from('events')
+    .update(payload)
+    .eq('id', id)
+    .select('*')
+    .abortSignal(requestSignal)
+    .maybeSingle();
+  if (error) {
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '이벤트 수정 시간이 초과되었습니다. 현재 상태를 다시 확인해주세요.' : error.message },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
+  }
   return NextResponse.json({ success: true, event: data });
 }

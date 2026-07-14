@@ -4,6 +4,7 @@ import type { Profile } from '@/types/database';
 import type { DirectoryFilters } from '../types';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import { REGION_DETAILS } from '@/shared/constants/regions';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -73,7 +74,7 @@ export const directoryService = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select(PUBLIC_PROFILE_COLUMNS)
       .eq('id', id)
       .is('deleted_at', null)
       .single();
@@ -87,21 +88,12 @@ export const directoryService = {
   },
 
   async getProfileByUserId(userId: string): Promise<Profile | null> {
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', userId)
-      .is('deleted_at', null)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') return null;
-      throw error;
-    }
-
-    return data as Profile;
+    const res = await apiFetch('/api/profile/me', { credentials: 'include', cache: 'no-store' });
+    if (res.status === 401) return null;
+    const body = await res.json().catch(() => ({ error: '프로필을 불러오지 못했습니다.' }));
+    if (!res.ok) throw new Error(body.error || '프로필을 불러오지 못했습니다.');
+    const profile = body.profile as Profile | null;
+    return profile?.user_id === userId ? profile : null;
   },
 
   async updateProfile(id: string, updates: {
@@ -118,7 +110,7 @@ export const directoryService = {
     established_year?: string | null;
     address?: string | null;
     gallery?: string[] | null;
-  }): Promise<Profile> {
+  }): Promise<Pick<Profile, 'id'>> {
     // service_role 서버 라우트 경유 — 클라이언트 .update().select().maybeSingle() 가
     // RLS readback / moderation trigger 영향으로 hang 또는 null 반환되는 케이스 우회.
     const res = await apiFetch('/api/directory/update', {
@@ -133,10 +125,10 @@ export const directoryService = {
     }
     const { data } = await res.json();
     if (!data) throw new Error('프로필이 저장되었지만 응답이 비어 있어요.');
-    return data as Profile;
+    return data as Pick<Profile, 'id'>;
   },
 
-  async toggleDirectoryListing(id: string, listed: boolean): Promise<Profile> {
+  async toggleDirectoryListing(id: string, listed: boolean): Promise<Pick<Profile, 'id'>> {
     // updateProfile 와 동일하게 service_role 서버 라우트 경유 (is_directory_listed 도 화이트리스트에 포함됨)
     const res = await apiFetch('/api/directory/update', {
       method: 'POST',
@@ -150,6 +142,6 @@ export const directoryService = {
     }
     const { data } = await res.json();
     if (!data) throw new Error('상태가 변경되었지만 응답이 비어 있어요.');
-    return data as Profile;
+    return data as Pick<Profile, 'id'>;
   },
 };

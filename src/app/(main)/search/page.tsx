@@ -11,6 +11,7 @@ import {
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Job, Post, Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export const metadata = {
 };
 
 interface PageProps {
-  searchParams: Record<string, string | undefined>;
+  searchParams: Promise<Record<string, string | undefined>>;
 }
 
 async function search(q: string) {
@@ -42,7 +43,7 @@ async function search(q: string) {
     // 채용 공고 — 제목·본문 매칭 OR 작성자(회사) 매칭
     supabase
       .from('jobs')
-      .select('*, author:profiles!author_id(*)')
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
@@ -53,7 +54,7 @@ async function search(q: string) {
     // 디렉토리
     supabase
       .from('profiles')
-      .select('*')
+      .select(PUBLIC_PROFILE_COLUMNS)
       .is('deleted_at', null)
       .eq('is_directory_listed', true)
       .or(`company_name.ilike.${keyword},contact_name.ilike.${keyword},bio.ilike.${keyword}`)
@@ -62,7 +63,7 @@ async function search(q: string) {
     // 커뮤니티 — 제목·본문 매칭 OR 작성자 매칭
     supabase
       .from('posts')
-      .select('*, author:profiles!author_id(*)')
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .or(`title.ilike.${keyword},content.ilike.${keyword}${authorFilter}`)
       .order('created_at', { ascending: false })
@@ -77,7 +78,8 @@ async function search(q: string) {
 }
 
 export default async function SearchPage({ searchParams }: PageProps) {
-  const q = normalizeSearchTerm(searchParams.q?.trim() || '');
+  const resolvedSearchParams = await searchParams;
+  const q = normalizeSearchTerm(resolvedSearchParams.q?.trim() || '');
 
   if (!q) {
     return (

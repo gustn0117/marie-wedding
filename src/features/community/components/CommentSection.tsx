@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
@@ -29,6 +29,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createIdRef = useRef<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [adoptedId, setAdoptedId] = useState<string | null>(initialAdopted ?? null);
   const [adoptingId, setAdoptingId] = useState<string | null>(null);
@@ -78,9 +79,12 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     if (!content.trim() || !profile) return;
     setIsSubmitting(true);
     try {
-      const newComment = await withTimeout(communityService.createComment(postId, content.trim()), 10000);
+      const createId = createIdRef.current ?? crypto.randomUUID();
+      createIdRef.current = createId;
+      const newComment = await withTimeout(communityService.createComment(postId, content.trim(), createId), 12000);
       setComments((prev) => [...prev, newComment]);
       setContent('');
+      createIdRef.current = null;
     } catch (err) {
       console.error(err);
       toast('댓글 작성에 실패했습니다.', 'error');

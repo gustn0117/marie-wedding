@@ -1,7 +1,7 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import {
   formatRelativeTime,
@@ -25,31 +25,22 @@ const TABS: { key: TabKey; label: string; targetType: 'job' | 'profile' | 'post'
 ];
 
 interface PageProps {
-  searchParams: { tab?: TabKey };
+  searchParams: Promise<{ tab?: TabKey }>;
 }
 
 export default async function BookmarksPage({ searchParams }: PageProps) {
-  // 인증 가드
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile')?.value;
-  if (!profileCookie) redirect(ROUTES.LOGIN);
+  const resolvedSearchParams = await searchParams;
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  let profileId: string;
-  try {
-    profileId = JSON.parse(profileCookie).id;
-    if (!profileId) throw new Error();
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
-
-  const activeTab: TabKey = searchParams.tab && TABS.some((t) => t.key === searchParams.tab) ? searchParams.tab : 'jobs';
+  const activeTab: TabKey = resolvedSearchParams.tab && TABS.some((t) => t.key === resolvedSearchParams.tab) ? resolvedSearchParams.tab : 'jobs';
   const activeMeta = TABS.find((t) => t.key === activeTab)!;
 
   const supabase = createServerQueryClient();
   const { data: bookmarks } = await supabase
     .from('bookmarks')
     .select('target_id, created_at')
-    .eq('profile_id', profileId)
+    .eq('profile_id', viewer.profileId)
     .eq('target_type', activeMeta.targetType)
     .order('created_at', { ascending: false })
     .limit(50);

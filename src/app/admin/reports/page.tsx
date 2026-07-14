@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { adminService } from '@/features/admin/services/admin-service';
+import { adminService, type ReportStatusStats } from '@/features/admin/services/admin-service';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import type { Profile, Report } from '@/types/database';
-import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/shared/components/Toast';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
@@ -51,27 +50,22 @@ function targetHref(report: Report): string {
   return ROUTES.ADMIN_COMMENTS;
 }
 
-interface StatusStats {
-  open: number;
-  reviewing: number;
-  resolved: number;
-  dismissed: number;
-  today: number;
-}
-
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<(Report & { reporter?: Profile })[]>([]);
   const [status, setStatus] = useState<Report['status'] | ''>('open');
   const [count, setCount] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [stats, setStats] = useState<StatusStats | null>(null);
+  const [stats, setStats] = useState<ReportStatusStats | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   const totalPages = Math.ceil(count / 20);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const result = await withTimeout(
         adminService.getReports(page, status || undefined),
@@ -81,39 +75,23 @@ export default function AdminReportsPage() {
       setReports(result.data);
       setCount(result.count);
     } catch (err) {
-      console.error(err);
+      setLoadError(err instanceof Error ? err.message : '신고를 불러오지 못했습니다.');
     } finally {
       setLoading(false);
     }
   }, [status, page]);
 
   const loadStats = useCallback(async () => {
-    const sb = createClient();
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const todayIso = startOfDay.toISOString();
-    const [openRes, reviewingRes, resolvedRes, dismissedRes, todayRes] = await withTimeout(
-      Promise.all([
-        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'reviewing'),
-        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'resolved'),
-        sb.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'dismissed'),
-        sb.from('reports').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
-      ]),
-      10000,
-      '신고 통계 조회 지연',
-    );
-    setStats({
-      open: openRes.count ?? 0,
-      reviewing: reviewingRes.count ?? 0,
-      resolved: resolvedRes.count ?? 0,
-      dismissed: dismissedRes.count ?? 0,
-      today: todayRes.count ?? 0,
-    });
+    setStatsError(null);
+    try {
+      setStats(await adminService.getReportStats());
+    } catch (err) {
+      setStatsError(err instanceof Error ? err.message : '신고 통계를 불러오지 못했습니다.');
+    }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
-  useEffect(() => { loadStats(); }, [loadStats]);
+  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void loadStats(); }, [loadStats]);
 
   const updateStatus = async (report: Report, next: Report['status']) => {
     setActionLoading(report.id);
@@ -121,7 +99,7 @@ export default function AdminReportsPage() {
       const updated = await adminService.updateReportStatus(report.id, next);
       setReports((prev) => prev.map((item) => (item.id === report.id ? { ...item, ...updated } : item)));
       toast('상태를 변경했습니다.', 'success');
-      loadStats();
+      void loadStats();
     } catch {
       toast('상태 변경에 실패했습니다.', 'error');
     } finally {
@@ -147,6 +125,14 @@ export default function AdminReportsPage() {
           <StatTile label="오늘 신규" value={stats.today} />
         </div>
       )}
+      {statsError && (
+        <div className="flex items-center justify-between gap-3 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <span>{statsError}</span>
+          <button type="button" onClick={() => void loadStats()} className="shrink-0 text-xs font-bold underline">
+            다시 시도
+          </button>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {STATUS_OPTIONS.map((option) => (
@@ -168,6 +154,17 @@ export default function AdminReportsPage() {
       <div className="overflow-hidden rounded border border-gray-200 bg-white">
         {loading ? (
           <div className="p-12 text-center text-sm text-gray-400">신고를 불러오는 중...</div>
+        ) : loadError ? (
+          <div className="p-12 text-center">
+            <p className="text-sm text-rose-600">{loadError}</p>
+            <button
+              type="button"
+              onClick={() => void load()}
+              className="mt-3 rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary"
+            >
+              다시 시도
+            </button>
+          </div>
         ) : reports.length === 0 ? (
           <div className="p-12 text-center text-sm text-gray-400">신고 내역이 없습니다.</div>
         ) : (

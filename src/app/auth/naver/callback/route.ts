@@ -33,6 +33,7 @@ export const dynamic = 'force-dynamic';
  * 에러는 항상 generic 메시지로 /login?error=...로 보내 enumeration 방지.
  */
 export async function GET(request: Request) {
+  const deadline = AbortSignal.any([request.signal, AbortSignal.timeout(25_000)]);
   const { searchParams } = new URL(request.url);
   // reverse proxy 뒤의 실제 외부 origin 검출 (X-Forwarded-Host 우선)
   const origin = resolveExternalOrigin(request);
@@ -79,7 +80,7 @@ export async function GET(request: Request) {
   // ② code → access_token
   let accessToken: string;
   try {
-    const tokenResp = await exchangeCodeForToken(origin, code, signedState);
+    const tokenResp = await exchangeCodeForToken(origin, code, signedState, deadline);
     accessToken = tokenResp.access_token;
   } catch {
     return redirectWith(origin, '/login', 'naver_token_failed');
@@ -88,7 +89,7 @@ export async function GET(request: Request) {
   // ③ /v1/nid/me
   let userInfo;
   try {
-    userInfo = await fetchUserInfo(accessToken);
+    userInfo = await fetchUserInfo(accessToken, deadline);
   } catch {
     return redirectWith(origin, '/login', 'naver_profile_failed');
   }
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
     return redirectWith(origin, '/login', 'naver_no_id');
   }
 
-  const service = createServiceClient();
+  const service = createServiceClient(deadline);
 
   // /signup STEP 0에서 cookie로 전달된 계정 유형 preset
   const presetRaw = cookieStore.get('signup_account_type')?.value;
@@ -281,4 +282,3 @@ function sanitizeReturnTo(value: string | null | undefined): string | null {
   if (value.includes('://')) return null;
   return value;
 }
-

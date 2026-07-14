@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
-import { withTimeout } from '@/shared/utils/withTimeout';
+import { apiFetch } from '@/shared/utils/apiFetch';
 import { validateEmail } from '@/shared/utils/validation';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
@@ -75,11 +75,11 @@ export default function SignupForm() {
     setError(null);
     setEmailOtpSending(true);
     try {
-      const res = await fetch('/api/email-otp/send', {
+      const res = await apiFetch('/api/email-otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email.trim() }),
-      });
+      }, 20000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
       setEmailOtpSent(true);
@@ -96,11 +96,11 @@ export default function SignupForm() {
     setError(null);
     setEmailOtpVerifying(true);
     try {
-      const res = await fetch('/api/email-otp/verify', {
+      const res = await apiFetch('/api/email-otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: formData.email.trim(), code: emailOtpCode }),
-      });
+      }, 15000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증에 실패했습니다.');
       setEmailVerified(true);
@@ -117,11 +117,11 @@ export default function SignupForm() {
     setError(null);
     setOtpSending(true);
     try {
-      const res = await fetch('/api/otp/send', {
+      const res = await apiFetch('/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: digits }),
-      });
+      }, 20000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
       setOtpSent(true);
@@ -138,11 +138,11 @@ export default function SignupForm() {
     setError(null);
     setOtpVerifying(true);
     try {
-      const res = await fetch('/api/otp/verify', {
+      const res = await apiFetch('/api/otp/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: digits, code: otpCode }),
-      });
+      }, 15000);
       const d = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(d.error || '인증에 실패했습니다.');
       setPhoneVerified(true);
@@ -192,7 +192,7 @@ export default function SignupForm() {
 
     setLoading(true);
     try {
-      await withTimeout(authService.signUp(formData.email, formData.password, {
+      await authService.signUp(formData.email, formData.password, {
         accountType: formData.accountType,
         contactName: formData.contactName.trim(),
         regions: formData.regions,
@@ -200,7 +200,7 @@ export default function SignupForm() {
         companyName: formData.companyName?.trim() || undefined,
         phone: formData.phone.replace(/[^0-9]/g, '') || undefined,
         verifyMethod,
-      }), 15000);
+      });
       // router.push는 client navigation이라 미들웨어를 통과하지 않아 marie_profile cookie가 set되지 않음.
       // 가입 직후엔 full reload로 헤더(profile/이름/로그아웃 메뉴)가 즉시 반영되도록 한다.
       window.location.href = ROUTES.HOME;

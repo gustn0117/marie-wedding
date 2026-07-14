@@ -37,6 +37,9 @@ function getSmtp(): Transporter | null {
         : undefined,
       // 내부망(컨테이너→호스트) 릴레이. Postfix snakeoil 자체서명 인증서라 STARTTLS 검증 완화.
       tls: { rejectUnauthorized: false },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
     });
   }
   return smtp;
@@ -92,7 +95,11 @@ export async function sendEmail(input: SendInput): Promise<{ ok: boolean; id?: s
     }
   }
 
-  // 3) dev 콘솔 폴백
+  // 3) dev 콘솔 폴백. 운영에서는 '발송 성공'으로 가장하지 않는다.
+  if (process.env.NODE_ENV === 'production') {
+    console.error('[email] no SMTP or Resend provider configured');
+    return { ok: false, error: 'email_provider_not_configured' };
+  }
   console.log('[email:dev]', { to: input.to, subject: input.subject });
   return { ok: true, id: 'dev-skip' };
 }

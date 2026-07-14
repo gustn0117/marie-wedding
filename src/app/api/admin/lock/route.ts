@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { ADMIN_SESSION_COOKIE_NAME } from '@/lib/admin-session';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-const COOKIE_NAME = 'marie_admin_unlock';
 
 /**
  * 관리자 잠금 해제 쿠키 만료 처리.
@@ -12,7 +11,7 @@ const COOKIE_NAME = 'marie_admin_unlock';
  */
 export async function POST() {
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAME, '', {
+  cookieStore.set(ADMIN_SESSION_COOKIE_NAME, '', {
     httpOnly: true,
     secure: true,
     sameSite: 'lax',

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { REGIONS, ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { communityService } from '../services/community-service';
 import type { PostFormData } from '../types';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -27,7 +28,12 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     category: initialData?.category ?? 'jobtip',
     region: initialData?.region ?? '',
   });
+  const contentRef = useRef(formData.content);
+  // 같은 작성 폼의 재시도는 동일 ID를 사용해 응답 유실 시 중복 글을 만들지 않는다.
+  const createIdRef = useRef<string | null>(null);
+  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   // 의미있는 문자(영문/숫자/한글)가 최소 2자 이상 포함되어야 함
@@ -45,6 +51,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     if (!isValid) {
       if (meaningfulChars(titleClean) < 2) setError('제목에 영문/숫자/한글을 2자 이상 입력해주세요.');
       else if (meaningfulChars(contentClean) < 5) setError('내용을 5자 이상 입력해주세요.');
@@ -57,28 +64,37 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
     setError(null);
 
     try {
+      await waitForUploads();
+      const latestFormData = { ...formData, content: contentRef.current };
       if (isEdit && postId) {
         await withTimeout(
-          communityService.updatePost(postId, formData),
+          communityService.updatePost(postId, latestFormData),
           12000,
           '게시글 수정 지연',
         );
         if (onSubmitSuccess) onSubmitSuccess(postId);
-        else router.push(ROUTES.COMMUNITY_DETAIL(postId));
-        router.refresh();
+        else {
+          router.push(ROUTES.COMMUNITY_DETAIL(postId));
+          router.refresh();
+        }
       } else {
+        const createId = createIdRef.current ?? crypto.randomUUID();
+        createIdRef.current = createId;
         const post = await withTimeout(
-          communityService.createPost(formData, profileId!),
+          communityService.createPost(latestFormData, profileId!, createId),
           12000,
           '게시글 등록 지연',
         );
         if (onSubmitSuccess) onSubmitSuccess(post.id);
-        else router.push(ROUTES.COMMUNITY_DETAIL(post.id));
-        router.refresh();
+        else {
+          router.push(ROUTES.COMMUNITY_DETAIL(post.id));
+          router.refresh();
+        }
       }
     } catch (err) {
       console.error('[PostForm] submit failed:', err);
@@ -86,12 +102,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       setError(friendlyError(err, base));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
+      submittingRef.current = false;
       setIsSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      <fieldset disabled={isSubmitting} className="contents">
       {error && (
         <div className="p-3 bg-state-urgent-bg border-l-4 border-state-urgent text-sm text-state-urgent">
           {error}
@@ -154,9 +172,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
         <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
-          onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+          onChange={(html) => {
+            contentRef.current = html;
+            setFormData((prev) => ({ ...prev, content: html }));
+          }}
           placeholder="내용을 입력해주세요. 이미지, 굵기, 제목 등 다양한 서식을 사용할 수 있어요."
           minHeight={300}
+          onUploadPromise={trackUpload}
+          disabled={isSubmitting}
         />
       </div>
 
@@ -174,9 +197,14 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           disabled={isSubmitting}
           className="rounded bg-primary px-8 py-2.5 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? (isEdit ? '수정 중...' : '등록 중...') : (isEdit ? '수정하기' : '게시글 등록')}
+          {isSubmitting
+            ? (pendingCount > 0
+              ? `본문 사진 ${pendingCount}건 마무리 중...`
+              : isEdit ? '수정 중...' : '등록 중...')
+            : (isEdit ? '수정하기' : '게시글 등록')}
         </button>
       </div>
+      </fieldset>
     </form>
   );
 }

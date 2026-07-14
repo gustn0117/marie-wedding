@@ -6,9 +6,8 @@ import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import RichTextEditor from '@/shared/components/RichTextEditor';
-import { compressImage } from '@/shared/utils/image';
-import { withTimeout } from '@/shared/utils/withTimeout';
-import { createClient } from '@/lib/supabase/client';
+import { useImageUpload } from '@/shared/hooks/useImageUpload';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -76,62 +75,67 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const [sections, setSections] = useState<JobSectionMap>(() =>
     initialData?.description ? parseSections(initialData.description).sections : { ...EMPTY_JOB_SECTIONS }
   );
+  const sectionsRef = useRef(sections);
   const [loading, setLoading] = useState(false);
+  const savingRef = useRef(false);
+  const pendingSectionsRef = useRef(new Map<JobSectionKey, number>());
   const [error, setError] = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}` : null
-  );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageUpload = useImageUpload({
+    initialPath: initialData?.image ?? null,
+    initialUrl: initialData?.image
+      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}`
+      : null,
+    bucket: 'job-images',
+    maxDimension: 1280,
+    maxSizeMB: 0.8,
+    quality: 0.82,
+    buildPath: (compressed) => `covers/${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
+  });
+  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
+
+  const trackSectionUpload = (key: JobSectionKey, promise: Promise<unknown>) => {
+    pendingSectionsRef.current.set(key, (pendingSectionsRef.current.get(key) ?? 0) + 1);
+    void promise.then(
+      () => pendingSectionsRef.current.set(key, Math.max(0, (pendingSectionsRef.current.get(key) ?? 1) - 1)),
+      () => pendingSectionsRef.current.set(key, Math.max(0, (pendingSectionsRef.current.get(key) ?? 1) - 1)),
+    );
+    trackUpload(promise);
+  };
 
   // 합쳐진 description (검증·미리보기·submit용)
   const composedDescription = serializeSections(sections);
   const plainComposed = stripHtml(composedDescription);
 
   const setSection = (key: JobSectionKey, value: string) => {
-    setSections((prev) => ({ ...prev, [key]: value }));
+    const next = { ...sectionsRef.current, [key]: value };
+    sectionsRef.current = next;
+    setSections(next);
   };
 
-  // 파일 고르는 즉시 백그라운드 업로드 → 저장 시엔 이미 올라가 있어 즉시 완료.
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 선택 즉시 로컬 미리보기. 이전 요청은 취소하고 최신 파일만 백그라운드 업로드한다.
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (savingRef.current) {
+      e.target.value = '';
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setImagePreview(URL.createObjectURL(file)); // 즉시 미리보기
     setError(null);
-    setImageUploading(true);
-    try {
-      const supabase = createClient();
-      const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
-      const ext = compressed.name.split('.').pop() || 'jpg';
-      const path = `${Date.now()}.${ext}`;
-      const { error: uploadError } = await withTimeout(
-        supabase.storage.from('job-images').upload(path, compressed, { upsert: true }),
-        60000, '이미지 업로드가 너무 오래 걸려요.',
-      );
-      if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
-      setFormData(prev => ({ ...prev, image: path })); // 업로드 완료 → 경로 저장
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
-      setImagePreview(formData.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${formData.image}` : null);
-    } finally {
-      setImageUploading(false);
-    }
+    imageUpload.selectFile(file);
+    e.target.value = '';
   };
 
   const handleRemoveImage = () => {
-    setImagePreview(null);
+    if (savingRef.current) return;
+    imageUpload.remove();
     setFormData(prev => ({ ...prev, image: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const validate = (): string | null => {
+  const validateFields = (): string | null => {
     if (!formData.title.trim()) return '제목을 입력해주세요.';
-    for (const sec of JOB_SECTIONS) {
-      if (FORM_SECTION_META[sec.key].required && !sectionHasContent(sections[sec.key])) {
-        return `${sec.title}를 입력해주세요.`;
-      }
-    }
     if (!formData.businessType) return '업종을 선택해주세요.';
     if (!formData.employmentType) return '고용형태를 선택해주세요.';
     if (!formData.region) return '지역을 선택해주세요.';
@@ -157,28 +161,55 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     return null;
   };
 
+  const validateSections = (currentSections: JobSectionMap, deferPendingSection = false): string | null => {
+    for (const sec of JOB_SECTIONS) {
+      if (FORM_SECTION_META[sec.key].required && !sectionHasContent(currentSections[sec.key])) {
+        if (deferPendingSection && (pendingSectionsRef.current.get(sec.key) ?? 0) > 0) continue;
+        return `${sec.title}를 입력해주세요.`;
+      }
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingRef.current) return;
     setError(null);
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const fieldError = validateFields();
+    const currentSectionError = validateSections(sectionsRef.current, true);
+    // 업로드 중인 바로 그 섹션만 검증을 유예한다. 다른 필수 섹션 오류는 즉시 보여준다.
+    const immediateError = fieldError || currentSectionError;
+    if (immediateError) {
+      setError(immediateError);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-
+    savingRef.current = true;
     setLoading(true);
     try {
-      // 이미지는 파일 선택 시 이미 업로드됨(formData.image=path) → 저장은 텍스트만이라 즉시 완료.
+      // 대표 이미지와 본문 이미지를 함께 기다린 뒤, 업로드 완료 콜백이 반영한
+      // 최신 섹션 ref로 검증·직렬화한다.
+      const [imagePath] = await Promise.all([
+        imageUpload.waitForUpload(),
+        waitForUploads(),
+      ]);
+      const latestSections = sectionsRef.current;
+      const validationError = validateSections(latestSections);
+      if (validationError) {
+        setError(validationError);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       await onSubmit({
         ...formData,
         postingType: 'hiring',
-        image: imagePreview ? formData.image ?? null : null,
-        description: composedDescription, // 5개 섹션을 합친 HTML
+        image: imageUpload.preview ? imagePath : null,
+        description: serializeSections(latestSections), // 5개 섹션을 합친 최신 HTML
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {
+      savingRef.current = false;
       setLoading(false);
     }
   };
@@ -212,13 +243,14 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     {
       key: 'image',
       label: '근무지/브랜드 이미지 추가',
-      done: !!imagePreview || !!formData.image,
+      done: !!imageUpload.preview || !!formData.image,
     },
   ];
   const qualityCount = qualityItems.filter((item) => item.done).length;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <fieldset disabled={loading} className="contents">
       {/* Progress Bar */}
       <div className="sticky top-[138px] z-10 rounded border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between mb-1.5">
@@ -297,9 +329,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             <label className="block text-sm font-semibold text-gray-800 mb-1">대표 이미지 <span className="text-xs text-gray-400 font-normal">(선택)</span></label>
             <ImageUploadHint ratio="16:9 (가로형)" recommendedSize="1200 × 675px" maxSize="자동 압축" note="목록에서 잘 보이도록 가로가 넓은 이미지 권장" />
             <div className="mt-2">
-            {imagePreview ? (
+            {imageUpload.preview ? (
               <div className="relative overflow-hidden rounded border border-gray-300">
-                <img src={imagePreview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
+                <img src={imageUpload.preview} alt="" className="w-full max-h-[320px] object-contain bg-gray-50" />
                 <div className="absolute top-2 right-2 flex gap-1.5">
                   <button type="button" onClick={() => fileInputRef.current?.click()} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-gray-700 text-xs font-bold hover:bg-white">변경</button>
                   <button type="button" onClick={handleRemoveImage} className="rounded bg-white/95 border border-gray-200 px-3 py-1.5 text-state-urgent text-xs font-bold hover:bg-white">삭제</button>
@@ -318,6 +350,19 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               </button>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+            {(imageUpload.uploading || imageUpload.error) && (
+              <div className="mt-2" aria-live="polite">
+                {imageUpload.uploading && (
+                  <>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
+                      <div className="h-full bg-primary transition-[width]" style={{ width: `${imageUpload.progress?.percent ?? 1}%` }} />
+                    </div>
+                    <p className="mt-1 text-xs font-medium text-primary">{imageUpload.statusText}</p>
+                  </>
+                )}
+                {imageUpload.error && <p className="text-xs text-state-urgent">{imageUpload.error}</p>}
+              </div>
+            )}
             </div>
           </div>
         </div>
@@ -344,6 +389,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 placeholder={meta.placeholder}
                 minHeight={sec.key === 'extra' ? 90 : 120}
                 imageBucket="job-images"
+                onUploadPromise={(promise) => trackSectionUpload(sec.key, promise)}
+                disabled={loading}
               />
             </div>
             );
@@ -470,13 +517,20 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           </button>
           <button
             type="submit"
-            disabled={loading || imageUploading}
+            disabled={loading}
             className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '처리 중...' : imageUploading ? '이미지 올리는 중…' : submitLabel}
+            {loading
+              ? (imageUpload.uploading
+                ? imageUpload.statusText
+                : pendingCount > 0
+                  ? `본문 사진 ${pendingCount}건 마무리 중...`
+                  : '저장 중...')
+              : submitLabel}
           </button>
         </div>
       </div>
+      </fieldset>
     </form>
   );
 }

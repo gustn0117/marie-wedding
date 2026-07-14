@@ -9,9 +9,11 @@ import { ACCOUNT_TYPES, type AccountType } from '@/shared/constants';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+const REQUEST_TIMEOUT_MS = 10_000;
 const VALID_ACCOUNT_TYPES: AccountType[] = ACCOUNT_TYPES.map((t) => t.value);
 
 export async function POST(request: Request) {
+  const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
   let body: { accountType?: string; name?: string; phone?: string };
   try {
     body = await request.json();
@@ -38,6 +40,14 @@ export async function POST(request: Request) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal
+            ? AbortSignal.any([init.signal, requestSignal])
+            : requestSignal,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
@@ -52,12 +62,15 @@ export async function POST(request: Request) {
     },
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError && requestSignal.aborted) {
+    return NextResponse.json({ error: '인증 서버 응답이 지연되고 있습니다. 다시 시도해주세요.' }, { status: 504 });
+  }
   if (!user) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 
-  const service = createServiceClient();
+  const service = createServiceClient(requestSignal);
   const updates: Record<string, unknown> = {
     account_type: accountType,
     phone,
@@ -73,10 +86,14 @@ export async function POST(request: Request) {
   const { error } = await service
     .from('profiles')
     .update(updates)
-    .eq('user_id', user.id);
+    .eq('user_id', user.id)
+    .abortSignal(requestSignal);
 
   if (error) {
-    return NextResponse.json({ error: '저장에 실패했습니다.' }, { status: 500 });
+    return NextResponse.json(
+      { error: requestSignal.aborted ? '온보딩 저장 시간이 초과되었습니다. 다시 시도해주세요.' : '저장에 실패했습니다.' },
+      { status: requestSignal.aborted ? 504 : 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });

@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '대상이 올바르지 않습니다.' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data, error } = await supabase.rpc('start_conversation', { p_other_profile_id: targetProfileId });
     if (error) {
       console.error('[api/messages/start] rpc error:', error.message);

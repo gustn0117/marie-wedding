@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import type { Application, ApplicationStatus } from '@/types/database';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   pending: '접수',
@@ -28,7 +29,7 @@ export const applicationService = {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('applications')
-      .select('*, job:jobs(*, author:profiles!author_id(*)), applicant:profiles(*)')
+      .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('job_id', jobId)
       .eq('applicant_id', applicantId)
       .is('deleted_at', null)
@@ -43,7 +44,7 @@ export const applicationService = {
     const { data, error } = await supabase
       .from('applications')
       // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터
-      .select('*, job:jobs!inner(*), applicant:profiles!inner(*)')
+      .select(`*, job:jobs!inner(*), applicant:profiles!inner(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .is('applicant.deleted_at', null)
       .eq('job.author_id', profileId)
@@ -59,7 +60,7 @@ export const applicationService = {
       .from('applications')
       // 서버측에서 job_id 로 필터 + job 임베드 제거(공고 본문 HTML 비용 제거).
       // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터.
-      .select('*, applicant:profiles!inner(*)')
+      .select(`*, applicant:profiles!inner(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('job_id', jobId)
       .is('deleted_at', null)
       .is('applicant.deleted_at', null)
@@ -75,7 +76,7 @@ export const applicationService = {
     const { data, error } = await supabase
       .from('applications')
       // 삭제된 공고 / 탈퇴한 공고 작성자 표시 X
-      .select('*, job:jobs!inner(*), applicant:profiles(*)')
+      .select(`*, job:jobs!inner(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .is('job.deleted_at', null)
       .eq('applicant_id', profileId)
@@ -117,7 +118,7 @@ export const applicationService = {
 
     const { data, error: fetchError } = await supabase
       .from('applications')
-      .select('*, job:jobs(*), applicant:profiles(*)')
+      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .single();
 
@@ -131,7 +132,7 @@ export const applicationService = {
     if (error) throw error;
     const { data, error: fetchErr } = await supabase
       .from('applications')
-      .select('*, job:jobs(*), applicant:profiles(*)')
+      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .single();
     if (fetchErr) throw fetchErr;
@@ -144,7 +145,7 @@ export const applicationService = {
     if (error) throw error;
     const { data, error: fetchErr } = await supabase
       .from('applications')
-      .select('*, job:jobs(*), applicant:profiles(*)')
+      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .single();
     if (fetchErr) throw fetchErr;

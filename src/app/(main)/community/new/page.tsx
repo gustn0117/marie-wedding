@@ -1,8 +1,8 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import PostForm from '@/features/community/components/PostForm';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,21 +11,10 @@ export const metadata = {
 };
 
 export default async function NewPostPage() {
-  const cookieStore = await cookies();
-  const profileCookie = cookieStore.get('marie_profile');
-
-  if (!profileCookie?.value) {
+  const viewer = await getCurrentVerifiedProfile();
+  if (!viewer.ok) {
     redirect(`${ROUTES.LOGIN}?redirect=${encodeURIComponent(ROUTES.COMMUNITY_NEW)}`);
   }
-
-  let profile: { id: string } | null = null;
-  try {
-    profile = JSON.parse(profileCookie.value);
-  } catch {
-    redirect(ROUTES.LOGIN);
-  }
-
-  if (!profile?.id) redirect(ROUTES.LOGIN);
 
   return (
     <div className="max-w-[860px] mx-auto space-y-4">
@@ -44,7 +33,7 @@ export default async function NewPostPage() {
       </div>
 
       <div className="bg-white border-y border-gray-200 p-5">
-        <PostForm profileId={profile.id} />
+        <PostForm profileId={viewer.profileId} />
       </div>
     </div>
   );

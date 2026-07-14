@@ -1,3 +1,5 @@
+import 'server-only';
+
 /**
  * PortOne V2 REST API wrapper (server-side).
  *
@@ -9,6 +11,8 @@
  *
  * 참고: https://developers.portone.io/api/rest-v2
  */
+
+import { Webhook } from '@portone/server-sdk';
 
 const PORTONE_API_BASE = 'https://api.portone.io';
 
@@ -47,6 +51,7 @@ export async function getPayment(paymentId: string): Promise<PortOnePayment> {
     method: 'GET',
     headers: { Authorization: `PortOne ${secret}` },
     cache: 'no-store',
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     const body = await res.text();
@@ -65,6 +70,7 @@ export async function preRegisterPayment(input: {
   totalAmount: number;
   taxFreeAmount?: number;
   currency?: 'KRW' | 'USD';
+  signal?: AbortSignal;
 }): Promise<void> {
   const secret = getApiSecret();
   const body = {
@@ -80,6 +86,7 @@ export async function preRegisterPayment(input: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+    signal: input.signal ?? AbortSignal.timeout(10_000),
   });
   if (!res.ok && res.status !== 409) {
     // 409 = 이미 등록됨 (idempotent OK)
@@ -97,6 +104,7 @@ export async function cancelPayment(paymentId: string, reason: string): Promise<
     method: 'POST',
     headers: { Authorization: `PortOne ${secret}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ reason }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -106,23 +114,26 @@ export async function cancelPayment(paymentId: string, reason: string): Promise<
 
 /**
  * webhook 서명 검증.
- * PortOne V2 webhook은 X-PortOne-Signature 헤더로 HMAC-SHA256 서명 전송.
- * 참고: https://developers.portone.io/api/rest-v2/webhook
+ * PortOne V2 Standard Webhooks의 id/timestamp/signature를 공식 SDK로 검증한다.
  */
-export async function verifyWebhookSignature(rawBody: string, signature: string | null): Promise<boolean> {
-  if (!signature) return false;
+export async function verifyWebhook(
+  rawBody: string,
+  headers: Headers,
+): Promise<{ type: string; paymentId: string | null } | null> {
   const secret = process.env.PORTONE_WEBHOOK_SECRET;
-  if (!secret || secret.includes('your-portone')) {
-    // 개발 환경에서는 검증 우회 (운영 배포 전 secret 등록 필수)
-    console.warn('[portone] PORTONE_WEBHOOK_SECRET not set — signature verification skipped');
-    return true;
-  }
-  // Node.js 환경 crypto
-  const { createHmac, timingSafeEqual } = await import('crypto');
-  const expected = createHmac('sha256', secret).update(rawBody).digest('hex');
+  if (!secret || secret.includes('your-portone')) return null;
   try {
-    return timingSafeEqual(Buffer.from(expected, 'hex'), Buffer.from(signature, 'hex'));
-  } catch {
-    return false;
+    const webhook = await Webhook.verify(secret, rawBody, Object.fromEntries(headers.entries()));
+    if (Webhook.isUnrecognizedWebhook(webhook)) {
+      return { type: 'Unrecognized', paymentId: null };
+    }
+    const data = webhook.data as unknown as Record<string, unknown>;
+    return {
+      type: webhook.type,
+      paymentId: typeof data.paymentId === 'string' ? data.paymentId : null,
+    };
+  } catch (error) {
+    console.warn('[portone] webhook verification failed:', error instanceof Error ? error.message : error);
+    return null;
   }
 }

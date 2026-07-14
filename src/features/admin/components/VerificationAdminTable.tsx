@@ -19,16 +19,18 @@ interface RejectModal {
 export default function VerificationAdminTable({ rows }: { rows: VerificationRow[] }) {
   const [items, setItems] = useState(rows);
   const [pending, startTransition] = useTransition();
-  const [docUrls, setDocUrls] = useState<Record<string, string>>({});
+  const [docUrls, setDocUrls] = useState<Record<string, string | null>>({});
   const [rejectModal, setRejectModal] = useState<RejectModal | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     rows.forEach(async (r) => {
       if (r.verification_document) {
         const url = await getDocumentSignedUrl(r.verification_document);
-        if (url) setDocUrls((p) => ({ ...p, [r.id]: url }));
+        if (!cancelled) setDocUrls((p) => ({ ...p, [r.id]: url }));
       }
     });
+    return () => { cancelled = true; };
   }, [rows]);
 
   function handle(id: string, decision: 'verified' | 'rejected') {
@@ -121,13 +123,15 @@ export default function VerificationAdminTable({ rows }: { rows: VerificationRow
               <td className="px-3 py-2">
                 {docUrls[r.id] ? (
                   <a
-                    href={docUrls[r.id]}
+                    href={docUrls[r.id]!}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary underline"
                   >
                     보기
                   </a>
+                ) : Object.prototype.hasOwnProperty.call(docUrls, r.id) ? (
+                  <span className="text-rose-500">불러오기 실패</span>
                 ) : (
                   <span className="text-gray-400">로딩…</span>
                 )}

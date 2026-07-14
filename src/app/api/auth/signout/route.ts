@@ -17,12 +17,19 @@ export const dynamic = 'force-dynamic';
  * signOut을 호출해 SDK가 supabase auth cookie를 정확히 expire 처리하도록 한다.
  * 추가로 marie_profile cookie도 명시적으로 제거.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  const deadline = AbortSignal.any([request.signal, AbortSignal.timeout(2_000)]);
   const cookieStore = await cookies();
   const supabase = createServerClient(
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      global: {
+        fetch: (input, init) => fetch(input, {
+          ...init,
+          signal: init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline,
+        }),
+      },
       cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
       cookies: {
         getAll() {
