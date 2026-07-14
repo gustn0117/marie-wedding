@@ -35,7 +35,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const isEdit = !!eventId;
 
   const [formData, setFormData] = useState<EventFormData>({ ...EMPTY, ...initialData });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${initialData.image}` : null
   );
@@ -43,32 +43,37 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일 고르는 즉시 백그라운드 업로드 → 저장은 텍스트만.
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { setError('이미지는 5MB 이하여야 합니다.'); return; }
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 가능합니다.'); return; }
-    setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     setError(null);
+    setImageUploading(true);
+    try {
+      const supabase = createClient();
+      const compressed = await compressImage(file, { maxDimension: 1600, quality: 0.85 });
+      const ext = compressed.name.split('.').pop() || 'jpg';
+      const path = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await withTimeout(
+        supabase.storage.from('event-images').upload(path, compressed, { upsert: true }),
+        60000, '이미지 업로드가 너무 오래 걸려요.',
+      );
+      if (uploadError) throw new Error('이미지 업로드 실패');
+      setFormData(prev => ({ ...prev, image: path }));
+    } catch {
+      setError('이미지 업로드에 실패했어요. 다시 시도해주세요.');
+      setImagePreview(formData.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${formData.image}` : null);
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
     setImagePreview(null);
     setFormData(prev => ({ ...prev, image: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return formData.image || null;
-    const supabase = createClient();
-    const compressed = await compressImage(imageFile, { maxDimension: 1600, quality: 0.85 });
-    const ext = compressed.name.split('.').pop() || 'jpg';
-    const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await withTimeout(supabase.storage.from('event-images').upload(path, compressed, { upsert: true }), 15000, '이미지 업로드가 너무 오래 걸려요.');
-    if (uploadError) throw new Error('이미지 업로드 실패');
-    return path;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,26 +85,23 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
     setSubmitting(true);
     setError(null);
     try {
-      // 신규 등록 시 동일 제목 행사가 이미 존재하면 사용자 확인
+      // 신규 등록 시 동일 제목 행사가 이미 존재하면 사용자 확인 (hang 방지 타임아웃)
       if (!isEdit) {
-        const sb = createClient();
-        const { data: dup } = await sb
-          .from('events')
-          .select('id, start_date')
-          .eq('title', formData.title.trim())
-          .is('deleted_at', null)
-          .limit(1)
-          .maybeSingle();
-        if (dup && !confirm(`동일한 제목의 행사가 이미 등록되어 있어요. 계속 등록하시겠어요?`)) {
-          return;
-        }
+        try {
+          const sb = createClient();
+          const { data: dup } = await withTimeout(
+            sb.from('events').select('id').eq('title', formData.title.trim()).is('deleted_at', null).limit(1).maybeSingle(),
+            8000, '중복 확인 지연',
+          );
+          if (dup && !confirm(`동일한 제목의 행사가 이미 등록되어 있어요. 계속 등록하시겠어요?`)) {
+            setSubmitting(false);
+            return;
+          }
+        } catch { /* 중복확인 실패해도 등록은 진행 */ }
       }
 
-      let imagePath = formData.image;
-      if (imageFile) imagePath = await uploadImage();
-      else if (!imagePreview) imagePath = null;
-
-      const payload = { ...formData, image: imagePath };
+      // 이미지는 파일 선택 시 이미 업로드됨 → formData.image(path) 그대로 사용
+      const payload = { ...formData, image: imagePreview ? formData.image ?? null : null };
 
       if (isEdit && eventId) {
         await adminService.updateEvent(eventId, payload);
@@ -274,10 +276,10 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
         <Link href="/admin/events" className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</Link>
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || imageUploading}
           className="px-8 py-2.5 bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
         >
-          {submitting ? '저장 중...' : isEdit ? '수정하기' : '등록하기'}
+          {submitting ? '저장 중...' : imageUploading ? '이미지 올리는 중…' : isEdit ? '수정하기' : '등록하기'}
         </button>
       </div>
     </form>

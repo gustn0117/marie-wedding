@@ -58,84 +58,123 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     address: profile.address || '',
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    resolveStorageUrl(profile.profile_image, 'avatars')
-  );
-  const [coverFile, setCoverFile] = useState<File | null>(null);
-  const [coverPreview, setCoverPreview] = useState<string | null>(
-    resolveStorageUrl(profile.cover_image, 'avatars')
-  );
-  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  // upload-on-select: 파일 고르는 즉시 백그라운드 업로드 → path 만 상태에 보관.
+  // 저장 클릭 시엔 이미 업로드돼 있어 텍스트만 전송하므로 즉시 완료.
+  const [profileImagePath, setProfileImagePath] = useState<string | null>(profile.profile_image);
+  const [imagePreview, setImagePreview] = useState<string | null>(resolveStorageUrl(profile.profile_image, 'avatars'));
+  const [imgUploading, setImgUploading] = useState(false);
+  const [coverImagePath, setCoverImagePath] = useState<string | null>(profile.cover_image);
+  const [coverPreview, setCoverPreview] = useState<string | null>(resolveStorageUrl(profile.cover_image, 'avatars'));
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [galleryPaths, setGalleryPaths] = useState<string[]>(profile.gallery || []);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(
     (profile.gallery || []).map(g => resolveStorageUrl(g, 'avatars') ?? '').filter(Boolean)
   );
-  const [existingGallery, setExistingGallery] = useState<string[]>(profile.gallery || []);
+  const [galleryUploading, setGalleryUploading] = useState(0);
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const anyUploading = imgUploading || coverUploading || galleryUploading > 0;
+
+  // 단일 파일 압축+업로드 → storage path 반환
+  const uploadOne = async (file: File, kind: 'avatar' | 'cover' | 'gallery', maxDim: number): Promise<string> => {
+    const supabase = createClient();
+    const compressed = await compressImage(file, { maxDimension: maxDim, quality: 0.8 });
+    const ext = compressed.name.split('.').pop() || 'jpg';
+    const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const path = `${profile.user_id}/${kind}_${stamp}.${ext}`;
+    const { error: upErr } = await withTimeout(
+      supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+      60000, '이미지 업로드 지연',
+    );
+    if (upErr) throw upErr;
+    return path;
+  };
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // 크기 제한 없음 — 큰 이미지는 저장 시 자동 압축된다.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
     setError(null);
+    setImgUploading(true);
+    try {
+      setProfileImagePath(await uploadOne(file, 'avatar', 640));
+    } catch {
+      setError('프로필 이미지 업로드에 실패했어요. 다시 시도해주세요.');
+      setImagePreview(resolveStorageUrl(profileImagePath, 'avatars'));
+    } finally {
+      setImgUploading(false);
+    }
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
+    setProfileImagePath(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleCoverSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // 크기 제한 없음 — 저장 시 자동 압축.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setCoverFile(file);
     setCoverPreview(URL.createObjectURL(file));
     setError(null);
+    setCoverUploading(true);
+    try {
+      setCoverImagePath(await uploadOne(file, 'cover', 1280));
+    } catch {
+      setError('커버 이미지 업로드에 실패했어요. 다시 시도해주세요.');
+      setCoverPreview(resolveStorageUrl(coverImagePath, 'avatars'));
+    } finally {
+      setCoverUploading(false);
+    }
   };
 
   const handleRemoveCover = () => {
-    setCoverFile(null);
+    setCoverImagePath(null);
     setCoverPreview(null);
     if (coverInputRef.current) coverInputRef.current.value = '';
   };
 
-  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    // 크기 제한 없음 — 이미지 파일만 받고, 저장 시 자동 압축.
-    const valid = files.filter(f => f.type.startsWith('image/'));
-    if (valid.length < files.length) setError('이미지 파일만 업로드할 수 있습니다.');
-    setGalleryFiles(prev => [...prev, ...valid]);
-    setGalleryPreviews(prev => [...prev, ...valid.map(f => URL.createObjectURL(f))]);
+  const handleGallerySelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
     if (galleryInputRef.current) galleryInputRef.current.value = '';
+    if (files.length === 0) return;
+    setError(null);
+    setGalleryUploading(c => c + files.length);
+    // 순차 업로드 — path·preview 를 같은 인덱스로 함께 추가(삭제 정합성 보장). 끝나는 대로 썸네일 표시.
+    for (const file of files) {
+      try {
+        const path = await uploadOne(file, 'gallery', 1280);
+        const url = resolveStorageUrl(path, 'avatars') ?? URL.createObjectURL(file);
+        setGalleryPaths(prev => [...prev, path]);
+        setGalleryPreviews(prev => [...prev, url]);
+      } catch {
+        setError('일부 갤러리 이미지 업로드에 실패했어요.');
+      } finally {
+        setGalleryUploading(c => c - 1);
+      }
+    }
   };
 
   const handleRemoveGalleryItem = (idx: number) => {
-    const isExisting = idx < existingGallery.length;
-    if (isExisting) {
-      setExistingGallery(prev => prev.filter((_, i) => i !== idx));
-      setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
-    } else {
-      const fileIdx = idx - existingGallery.length;
-      setGalleryFiles(prev => prev.filter((_, i) => i !== fileIdx));
-      setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
-    }
+    setGalleryPaths(prev => prev.filter((_, i) => i !== idx));
+    setGalleryPreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleToggle = async () => {
     if (!listed && !formData.region) { setError('지역을 1개 이상 선택해주세요.'); return; }
+    // 낙관적: 즉시 토글 반영, 서버는 백그라운드. 실패 시 롤백.
+    const nextListed = !listed;
+    setListed(nextListed);
     setSubmitting(true);
     setError(null);
     try {
-      await directoryService.toggleDirectoryListing(profile.id, !listed);
-      setListed(!listed);
+      await directoryService.toggleDirectoryListing(profile.id, nextListed);
       clearMarieProfileCookie();
-      window.location.reload();
+      router.refresh();
+      setSubmitting(false);
     } catch (err) {
+      setListed(!nextListed);
       setError(friendlyError(err, '처리에 실패했습니다.'));
       setSubmitting(false);
     }
@@ -167,88 +206,8 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     setSuccess(false);
     const startedAt = performance.now();
     try {
-      const supabase = createClient();
-      const galleryCount = galleryFiles.length;
-
-      // 캐시버스팅: URL 이 항상 동일하면 Cloudflare/브라우저가 옛 이미지를 계속 노출.
-      // 매 업로드마다 timestamp+random 접미사로 새 경로 → 새 URL 로 저장.
-      // 이전 파일은 저장 성공 후 best-effort remove.
-      const stampPath = (kind: 'avatar' | 'cover' | 'gallery', i = 0, ext: string) => {
-        const stamp = `${Date.now()}_${i}_${Math.random().toString(36).slice(2, 8)}`;
-        return `${profile.user_id}/${kind}_${stamp}.${ext}`;
-      };
-
-      setSavingStep('이미지 업로드 중...');
-      let imageFailed = false;
-
-      // 이미지 업로드는 비치명적 — 실패해도 텍스트(업종·지역·소개·연락처 등)는 반드시 저장한다.
-      // 실패 시 기존 이미지를 유지(null 아님)하고 imageFailed 로 표시해 저장 후 안내한다.
-      const profileImagePromise: Promise<string | null> = (async () => {
-        if (!imageFile) return !imagePreview ? null : profile.profile_image;
-        try {
-          const compressed = await compressImage(imageFile, { maxDimension: 640, quality: 0.8 });
-          const ext = compressed.name.split('.').pop() || 'jpg';
-          const path = stampPath('avatar', 0, ext);
-          const { error: err } = await withTimeout(
-            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            60000,'프로필 이미지 업로드 지연',
-          );
-          if (err) throw err;
-          return path;
-        } catch (e) {
-          console.warn('[DirectoryForm] 로고 업로드 실패, 기존 유지:', e);
-          imageFailed = true;
-          return profile.profile_image; // 기존 유지
-        }
-      })();
-
-      const coverImagePromise: Promise<string | null> = (async () => {
-        if (!coverFile) return !coverPreview ? null : profile.cover_image;
-        try {
-          const compressed = await compressImage(coverFile, { maxDimension: 1280, quality: 0.8 });
-          const ext = compressed.name.split('.').pop() || 'jpg';
-          const path = stampPath('cover', 0, ext);
-          const { error: err } = await withTimeout(
-            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            60000,'커버 이미지 업로드 지연',
-          );
-          if (err) throw err;
-          return path;
-        } catch (e) {
-          console.warn('[DirectoryForm] 커버 업로드 실패, 기존 유지:', e);
-          imageFailed = true;
-          return profile.cover_image;
-        }
-      })();
-
-      const galleryPromises = galleryFiles.map(async (file, i) => {
-        try {
-          const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
-          const ext = compressed.name.split('.').pop() || 'jpg';
-          const path = stampPath('gallery', i, ext);
-          const { error: err } = await withTimeout(
-            supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-            60000,`갤러리 ${i + 1}번째 업로드 지연`,
-          );
-          if (err) throw err;
-          return path;
-        } catch (e) {
-          console.warn(`[DirectoryForm] 갤러리 ${i + 1} 업로드 실패, 건너뜀:`, e);
-          imageFailed = true;
-          return null; // 실패한 갤러리 이미지는 제외
-        }
-      });
-
-      const [profileImage, coverImage, ...newGalleryRaw] = await Promise.all([
-        profileImagePromise,
-        coverImagePromise,
-        ...galleryPromises,
-      ]);
-      const newGallery = newGalleryRaw.filter((p): p is string => !!p);
-
-      const uploadedGallery = [...existingGallery, ...newGallery];
-      setSavingStep(galleryCount > 0 ? `프로필 정보 저장 중... (이미지 ${galleryCount + Number(!!imageFile) + Number(!!coverFile)}장 처리 완료)` : '프로필 정보 저장 중...');
-
+      // 이미지는 파일 선택 시 이미 업로드됨(path 보관) → 저장은 텍스트만이라 즉시 완료.
+      setSavingStep('저장 중...');
       await withTimeout(
         directoryService.updateProfile(profile.id, {
           contact_name: formData.contact_name.trim() || undefined,
@@ -258,12 +217,12 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           bio: formData.bio.trim() || null,
           phone: formData.phone.trim() || null,
           website: formData.website.trim() || null,
-          profile_image: profileImage,
-          cover_image: coverImage,
+          profile_image: profileImagePath,
+          cover_image: coverImagePath,
           company_size: formData.company_size || null,
           established_year: formData.established_year || null,
           address: formData.address.trim() || null,
-          gallery: uploadedGallery.length > 0 ? uploadedGallery : null,
+          gallery: galleryPaths.length > 0 ? galleryPaths : null,
         }),
         15000,
         '프로필 저장이 너무 오래 걸려요.',
@@ -271,25 +230,6 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       const elapsed = Math.round(performance.now() - startedAt);
       console.info('[DirectoryForm] save success in', elapsed, 'ms');
-
-      // 이전 이미지 정리 (best-effort — 실패해도 저장 성공에 영향 없음)
-      const oldPaths = [
-        imageFile && profile.profile_image && profile.profile_image !== profileImage ? profile.profile_image : null,
-        coverFile && profile.cover_image && profile.cover_image !== coverImage ? profile.cover_image : null,
-      ].filter((v): v is string => !!v);
-      if (oldPaths.length > 0) {
-        supabase.storage
-          .from('avatars')
-          .remove(oldPaths)
-          .catch((cleanupErr) => console.warn('[DirectoryForm] old image cleanup failed:', cleanupErr));
-      }
-
-      // 새 파일 상태 초기화 → 재저장 시 재업로드 안됨
-      setImageFile(null);
-      setCoverFile(null);
-      setGalleryFiles([]);
-      // 갤러리 새 항목이 있었다면 existingGallery 를 새 리스트로 교체
-      if (newGallery.length > 0) setExistingGallery(uploadedGallery);
       clearMarieProfileCookie();
 
       // 다른 페이지 서버 캐시 무효화 — 저장 직후 페이지 보기로 이동 시 옛 데이터 뜨는 문제 방지.
@@ -299,11 +239,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       // 페이지 리로드 없이 현재 서버 컴포넌트만 갱신 + 저장 완료 토스트
       setSuccess(true);
       setSavingStep(null);
-      if (imageFailed) {
-        toast('정보는 저장됐어요. 일부 이미지는 업로드에 실패했으니 다시 시도해주세요.', 'error');
-      } else {
-        toast('저장되었습니다.', 'success');
-      }
+      toast('저장되었습니다.', 'success');
       router.refresh();
       // 저장 배너는 3초 후 자동 해제
       setTimeout(() => setSuccess(false), 3000);
@@ -669,11 +605,11 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           <button
             type="button"
             onClick={handleSave}
-            disabled={saving}
-            aria-busy={saving}
+            disabled={saving || anyUploading}
+            aria-busy={saving || anyUploading}
             className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50"
           >
-            {saving ? '저장 중...' : '저장하기'}
+            {saving ? '저장 중...' : anyUploading ? '이미지 올리는 중…' : '저장하기'}
           </button>
         </div>
       </div>

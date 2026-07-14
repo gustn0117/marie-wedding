@@ -39,7 +39,9 @@ export default function EditProfilePage() {
     phone: '',
     website: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  // upload-on-select: newImagePath = undefined(변경 안 함) | null(삭제) | string(새 업로드 경로)
+  const [newImagePath, setNewImagePath] = useState<string | null | undefined>(undefined);
+  const [imageUploading, setImageUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -118,8 +120,8 @@ export default function EditProfilePage() {
                 website: data.website || '',
               },
         );
-        // 사진은 새 파일을 고르지 않았을 때만 DB 값으로 동기화
-        if (!imageFile) {
+        // 사진은 새로 바꾸지 않았을 때만 DB 값으로 동기화
+        if (newImagePath === undefined) {
           setImagePreview(data.profile_image
             ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.profile_image}`
             : null);
@@ -140,52 +142,39 @@ export default function EditProfilePage() {
     setSuccess(false);
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일 고르는 즉시 백그라운드 업로드 → 저장은 텍스트만이라 즉시 완료.
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // 크기 제한 없음 — 저장 시 자동 압축.
-    if (!file.type.startsWith('image/')) {
-      setError('이미지 파일만 업로드할 수 있습니다.');
-      return;
-    }
-
-    setImageFile(file);
+    if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
+    if (!profile?.user_id) { setError('프로필 정보를 불러오는 중이에요. 잠시 후 다시 시도해주세요.'); return; }
     setImagePreview(URL.createObjectURL(file));
     setError(null);
+    setImageUploading(true);
+    try {
+      const supabase = createClient();
+      const compressed = await compressImage(file, { maxDimension: 800, quality: 0.85 });
+      const ext = compressed.name.split('.').pop() || 'jpg';
+      const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
+      const { error: uploadError } = await withTimeout(
+        supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
+        60000, '이미지 업로드가 너무 오래 걸려요.',
+      );
+      if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
+      setNewImagePath(path);
+    } catch {
+      setError('이미지 업로드에 실패했어요. 다시 시도해주세요.');
+      setImagePreview(profile?.profile_image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}` : null);
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
+    setNewImagePath(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile || !profile) return profile?.profile_image || null;
-
-    // 쿠키 lite profile 엔 user_id 가 없음 — useAuth 의 DB fetch 완료 전이면 재시도 안내
-    if (!profile.user_id) throw new Error('프로필 정보를 불러오는 중이에요. 잠시 후 다시 시도해주세요.');
-
-    const supabase = createClient();
-    const compressed = await compressImage(imageFile, { maxDimension: 800, quality: 0.85 });
-    const ext = compressed.name.split('.').pop() || 'jpg';
-    // 캐시버스팅: 고정 경로 재사용 시 Cloudflare 가 옛 이미지를 계속 반환 (DirectoryForm 과 동일 정책)
-    const stamp = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const path = `${profile.user_id}/avatar_${stamp}.${ext}`;
-
-    const { error: uploadError } = await withTimeout(
-      supabase.storage.from('avatars').upload(path, compressed, { upsert: false }),
-      15000,
-      '이미지 업로드가 너무 오래 걸려요.',
-    );
-
-    if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
-    // 이전 파일 정리 (best-effort)
-    if (profile.profile_image && profile.profile_image !== path) {
-      supabase.storage.from('avatars').remove([profile.profile_image]).catch(() => {});
-    }
-    return path;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -222,13 +211,8 @@ export default function EditProfilePage() {
     setSubmitting(true);
     setError(null);
     try {
-      let profileImage = profile.profile_image;
-
-      if (imageFile) {
-        profileImage = await uploadImage();
-      } else if (!imagePreview && profile.profile_image) {
-        profileImage = null;
-      }
+      // 이미지는 파일 선택 시 이미 업로드됨. newImagePath: undefined=변경없음 / null=삭제 / string=새 경로
+      const profileImage = newImagePath === undefined ? profile.profile_image : newImagePath;
 
       // 백그라운드 전체 조회가 아직 안 끝났고(fullLoadedRef=false) 값이 비어 있으면,
       // 기존 DB 값을 NULL 로 덮어쓰지 않도록 payload 에서 키 자체를 제외(undefined).
@@ -517,8 +501,8 @@ export default function EditProfilePage() {
         {/* Actions */}
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-5 py-2.5 text-sm font-bold hover:border-primary hover:text-primary transition-colors">취소</Link>
-          <button type="submit" disabled={submitting} className="btn-primary text-sm px-5 py-2.5">
-            {submitting ? '저장 중...' : '저장하기'}
+          <button type="submit" disabled={submitting || imageUploading} className="btn-primary text-sm px-5 py-2.5">
+            {submitting ? '저장 중...' : imageUploading ? '이미지 올리는 중…' : '저장하기'}
           </button>
         </div>
       </form>
