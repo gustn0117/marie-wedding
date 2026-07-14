@@ -30,7 +30,7 @@ export default function PageHeader({
     : 'page-title';
 
   return (
-    <header className={`mb-8 ${className}`}>
+    <header className={`mb-5 sm:mb-8 ${className}`}>
       {breadcrumb && <div className="mb-3">{breadcrumb}</div>}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 flex-1">
