@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://marie.co.kr'),
   title: "Marié - 웨딩 업계 구인구직 플랫폼",
   description: "웨딩 업계 종사자를 위한 채용, 프로필, 커뮤니티 플랫폼",
-  // 카카오톡·페이스북 등 링크 미리보기 이미지. public/og-image.png (1200×630) 사용.
+  // 카카오톡·페이스북 등 링크 미리보기 이미지. public/og-marie.png (1200×630) 사용.
   openGraph: {
     type: "website",
     siteName: "마리에 Marié",
@@ -27,13 +27,13 @@ export const metadata: Metadata = {
     description: "웨딩 업계 종사자를 위한 채용, 프로필, 커뮤니티 플랫폼",
     url: "/",
     locale: "ko_KR",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "마리에 Marié" }],
+    images: [{ url: "/og-marie.png", width: 1200, height: 630, alt: "마리에 Marié" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Marié - 웨딩 업계 구인구직 플랫폼",
     description: "웨딩 업계 종사자를 위한 채용, 프로필, 커뮤니티 플랫폼",
-    images: ["/og-image.png"],
+    images: ["/og-marie.png"],
   },
   icons: {
     icon: [

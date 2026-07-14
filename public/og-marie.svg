@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630">
+  <image xlink:href="og-marie-background.png" width="1200" height="630" preserveAspectRatio="xMidYMid slice"/>
+
+  <g transform="translate(76 66)">
+    <rect width="48" height="48" rx="11" fill="#051049"/>
+    <path d="M12 33.6V15.3L24 27l12-11.7v18.3" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M24 27v6.6" stroke="#F2C879" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="34.8" cy="11.7" r="2.5" fill="#F2C879"/>
+  </g>
+
+  <text x="76" y="278" fill="#051049" font-family="Arial, Helvetica, sans-serif" font-size="128" font-weight="800" letter-spacing="8">MARIE</text>
+  <rect x="80" y="312" width="86" height="5" rx="2.5" fill="#D9A94A"/>
+
+  <text x="78" y="381" fill="#151B36" font-family="Apple SD Gothic Neo, Spoqa Han Sans, sans-serif" font-size="31" font-weight="600" letter-spacing="-1">웨딩 업계의 일과 사람을 잇다</text>
+  <text x="78" y="430" fill="#626779" font-family="Apple SD Gothic Neo, Spoqa Han Sans, sans-serif" font-size="21" font-weight="400" letter-spacing="-.4">웨딩 구인구직부터 인재·업체 정보까지, 한곳에서</text>
+
+  <g transform="translate(78 493)">
+    <rect width="176" height="48" rx="24" fill="#051049"/>
+    <text x="88" y="31" text-anchor="middle" fill="#fff" font-family="Apple SD Gothic Neo, Spoqa Han Sans, sans-serif" font-size="16" font-weight="600">웨딩 커리어 플랫폼</text>
+  </g>
+</svg>
