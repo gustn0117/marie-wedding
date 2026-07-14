@@ -28,6 +28,7 @@ export default function MobileNavPanel({
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const isAuthenticated = !!profile;
   const isBusiness = profile?.account_type === 'business';
+  const isIndividual = profile?.account_type === 'individual';
 
   // body scroll lock (iOS 호환)
   useEffect(() => {
@@ -172,7 +173,7 @@ export default function MobileNavPanel({
           {/* 1. 프로필 카드 / 로그인 CTA */}
           {isAuthenticated ? (
             <Link
-              href={ROUTES.MYPAGE_DASHBOARD}
+              href={isBusiness ? ROUTES.MYPAGE_DASHBOARD : ROUTES.MYPAGE_RESUMES}
               onClick={onClose}
               className="flex items-center gap-3 px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
             >
@@ -206,17 +207,17 @@ export default function MobileNavPanel({
           {/* 2. 채용 핵심 액션 */}
           <div className="px-5 py-3 border-b border-gray-100 flex flex-col gap-2">
             <Link
-              href={ROUTES.JOBS_NEW}
+              href={isBusiness ? ROUTES.JOBS_NEW : isIndividual ? ROUTES.MYPAGE_RESUMES : ROUTES.JOBS}
               onClick={onClose}
               className="flex items-center justify-between h-14 rounded-xl bg-primary text-white px-4 hover:bg-primary-dark transition-colors"
             >
               <span className="inline-flex items-center gap-2.5">
                 <span className="inline-flex w-7 h-7 rounded-full bg-white/15 items-center justify-center">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d={isIndividual ? 'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H6.75A2.25 2.25 0 004.5 4.5v15.75A1.5 1.5 0 006 21.75h12a1.5 1.5 0 001.5-1.5v-6z' : 'M12 4.5v15m7.5-7.5h-15'} /></svg>
                 </span>
-                <span className="font-bold text-[15px]">공고 등록</span>
+                <span className="font-bold text-[15px]">{isBusiness ? '공고 등록' : isIndividual ? '이력서 관리' : '채용정보 둘러보기'}</span>
               </span>
-              <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded">무료</span>
+              {isBusiness && <span className="text-[10px] font-bold bg-white/20 px-1.5 py-0.5 rounded">무료</span>}
             </Link>
             {isBusiness && (
               <Link href={ROUTES.MYPAGE_DASHBOARD} onClick={onClose} className="row-link">
@@ -243,7 +244,10 @@ export default function MobileNavPanel({
           {isAuthenticated && (
             <div className="px-5 pt-4 pb-2 border-t border-gray-100">
               <p className="text-[11px] font-bold uppercase tracking-wider text-gray-400 px-1 mb-1.5">내 정보</p>
-              <NavRow href={ROUTES.MYPAGE_DASHBOARD} label="대시보드" iconPath="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" pathname={pathname} onClose={onClose} />
+              {isBusiness && <NavRow href={ROUTES.MYPAGE_DASHBOARD} label="대시보드" iconPath="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" pathname={pathname} onClose={onClose} />}
+              {isIndividual && (
+                <NavRow href={ROUTES.MYPAGE_RESUMES} label="이력서 관리" iconPath="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H6.75A2.25 2.25 0 004.5 4.5v15.75A1.5 1.5 0 006 21.75h12a1.5 1.5 0 001.5-1.5v-6zM9 13.5h6m-6 3.75h6" pathname={pathname} onClose={onClose} />
+              )}
               <NavRow href={ROUTES.MYPAGE_BOOKMARKS} label="북마크" iconPath="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" pathname={pathname} onClose={onClose} />
               <NavRow href={ROUTES.MYPAGE_NOTIFICATIONS} label="알림" iconPath="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" pathname={pathname} onClose={onClose} />
               <NavRow href={ROUTES.MYPAGE_MESSAGES} label="쪽지" iconPath="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" pathname={pathname} onClose={onClose} />

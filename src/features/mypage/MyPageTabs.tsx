@@ -29,14 +29,16 @@ const APP_FILTERS: { value: AppFilter; label: string }[] = [
 ];
 
 interface MyPageTabsProps {
+  accountType: 'business' | 'individual';
   jobs: Job[];
   posts: Post[];
   sentApplications: Application[];
   receivedApplications: Application[];
 }
 
-export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications, receivedApplications }: MyPageTabsProps) {
-  const [activeTab, setActiveTab] = useState<'jobs' | 'posts' | 'applications'>('jobs');
+export default function MyPageTabs({ accountType, jobs: initialJobs, posts, sentApplications, receivedApplications }: MyPageTabsProps) {
+  const isBusiness = accountType === 'business';
+  const [activeTab, setActiveTab] = useState<'jobs' | 'posts' | 'applications'>(isBusiness ? 'jobs' : 'applications');
   const [jobs, setJobs] = useState(initialJobs);
   const applicationCount = sentApplications.length + receivedApplications.length;
 
@@ -47,16 +49,17 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
   const tabParam = searchParams.get('tab');
   useEffect(() => {
     if (tabParam !== 'jobs' && tabParam !== 'posts' && tabParam !== 'applications') return;
+    if (tabParam === 'jobs' && !isBusiness) return;
     setActiveTab(tabParam);
     const el = document.getElementById('mypage-tabs');
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [tabParam]);
+  }, [isBusiness, tabParam]);
 
   // 직접 URL 진입(/mypage#received-applications 등 레거시 해시) 마운트 1회 처리.
   useEffect(() => {
     const hash = typeof window !== 'undefined' ? window.location.hash : '';
     let next: 'jobs' | 'posts' | 'applications' | null = null;
-    if (hash === '#registered-jobs') next = 'jobs';
+    if (hash === '#registered-jobs' && isBusiness) next = 'jobs';
     else if (hash === '#my-posts') next = 'posts';
     else if (hash === '#sent-applications' || hash === '#received-applications') next = 'applications';
     if (next) {
@@ -64,20 +67,22 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
       const el = document.getElementById('mypage-tabs');
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, []);
+  }, [isBusiness]);
 
   return (
     <div id="mypage-tabs" className="platform-panel scroll-mt-20">
       <div className="border-b border-gray-200">
         <div className="flex overflow-x-auto bg-white">
-          <button
-            onClick={() => setActiveTab('jobs')}
-            className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
-              activeTab === 'jobs' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-            }`}
-          >
-            내 공고 ({jobs.length})
-          </button>
+          {isBusiness && (
+            <button
+              onClick={() => setActiveTab('jobs')}
+              className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
+                activeTab === 'jobs' ? 'bg-white text-ink border-b-2 border-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+              }`}
+            >
+              내 공고 ({jobs.length})
+            </button>
+          )}
           <button
             onClick={() => setActiveTab('posts')}
             className={`min-w-[150px] flex-1 px-5 py-3.5 text-sm font-bold transition-colors ${
@@ -181,8 +186,8 @@ export default function MyPageTabs({ jobs: initialJobs, posts, sentApplications,
             </div>
           )
         ) : (
-          <div className="grid gap-5 lg:grid-cols-2">
-            <FilterableApplicationList title="받은 지원" empty="내 공고에 접수된 지원이 없습니다." items={receivedApplications} mode="received" />
+          <div className={`grid gap-5 ${isBusiness ? 'lg:grid-cols-2' : ''}`}>
+            {isBusiness && <FilterableApplicationList title="받은 지원" empty="내 공고에 접수된 지원이 없습니다." items={receivedApplications} mode="received" />}
             <FilterableApplicationList title="보낸 지원" empty="아직 지원한 공고가 없습니다." items={sentApplications} mode="sent" />
           </div>
         )}

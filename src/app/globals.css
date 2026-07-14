@@ -607,3 +607,23 @@
     @apply lg:sticky lg:top-[120px] lg:self-start lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  .resume-sheet,
+  .resume-sheet * {
+    visibility: visible !important;
+  }
+
+  .resume-sheet {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+}

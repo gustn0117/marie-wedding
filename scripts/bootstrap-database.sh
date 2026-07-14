@@ -91,6 +91,7 @@ MIGRATIONS=(
   "20260714000300_password_admin_service_operations.sql"
   "20260714000400_payment_catalog_hardening.sql"
   "20260714000500_security_boundaries.sql"
+  "20260715000100_resume_system.sql"
 )
 
 psql_value() {
@@ -168,6 +169,10 @@ VALUES
     ARRAY[
       'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
       'image/heic', 'image/avif'
+    ]::TEXT[]),
+  ('resume-files', 'resume-files', FALSE, 10485760,
+    ARRAY[
+      'application/pdf', 'image/jpeg', 'image/png', 'image/webp'
     ]::TEXT[])
 ON CONFLICT (id) DO UPDATE
 SET name = EXCLUDED.name,
@@ -364,8 +369,11 @@ missing_final_objects="$(psql_value "
       ('table', 'email_otps', to_regclass('marie_wedding.email_otps') IS NOT NULL),
       ('table', 'admin_broadcast_campaigns', to_regclass('marie_wedding.admin_broadcast_campaigns') IS NOT NULL),
       ('table', 'support_inquiries', to_regclass('marie_wedding.support_inquiries') IS NOT NULL),
+      ('table', 'resumes', to_regclass('marie_wedding.resumes') IS NOT NULL),
+      ('table', 'application_resume_snapshots', to_regclass('marie_wedding.application_resume_snapshots') IS NOT NULL),
       ('function', 'current_profile_id()', to_regprocedure('marie_wedding.current_profile_id()') IS NOT NULL),
-      ('function', 'mark_payment_completed(uuid,text,jsonb)', to_regprocedure('marie_wedding.mark_payment_completed(uuid,text,jsonb)') IS NOT NULL)
+      ('function', 'mark_payment_completed(uuid,text,jsonb)', to_regprocedure('marie_wedding.mark_payment_completed(uuid,text,jsonb)') IS NOT NULL),
+      ('function', 'submit_application_with_resume(uuid,uuid,uuid,text,text)', to_regprocedure('marie_wedding.submit_application_with_resume(uuid,uuid,uuid,text,text)') IS NOT NULL)
   )
   SELECT coalesce(string_agg(kind || ':' || object_name, ',' ORDER BY kind, object_name), '')
   FROM required
@@ -394,6 +402,10 @@ invalid_storage_buckets="$(psql_value "
         ARRAY[
           'application/pdf', 'image/jpeg', 'image/png', 'image/webp',
           'image/heic', 'image/avif'
+        ]::TEXT[]),
+      ('resume-files', FALSE, 10485760::BIGINT,
+        ARRAY[
+          'application/pdf', 'image/jpeg', 'image/png', 'image/webp'
         ]::TEXT[])
   )
   SELECT coalesce(string_agg(e.id, ',' ORDER BY e.id), '')

@@ -175,6 +175,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
                     <p className="text-xs text-gray-500 mt-0.5">{profile.account_type === 'business' ? '기업회원' : '개인회원'}</p>
                   </Link>
                   <Link href={ROUTES.MYPAGE_EDIT} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">프로필 관리</Link>
+                  {profile.account_type === 'individual' && (
+                    <Link href={ROUTES.MYPAGE_RESUMES} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">이력서 관리</Link>
+                  )}
                   <Link href={ROUTES.MYPAGE} onClick={() => setProfileMenuOpen(false)} className="block px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
                     {profile.account_type === 'business' ? '받은 지원 / 내 활동' : '내 지원 / 활동'}
                   </Link>

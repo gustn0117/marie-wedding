@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { ROUTES } from '@/shared/constants';
 import type { Application, ApplicationStatus, Profile } from '@/types/database';
 import {
   APPLICATION_STATUS_LABELS,
   applicationService,
+  type HiringApplicationPage,
 } from '@/features/applications/services/application-service';
 import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel, formatPhone } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -15,6 +17,12 @@ import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 import { apiFetch } from '@/shared/utils/apiFetch';
+import {
+  isResumeContentSubmittable,
+  isValidResumePhone,
+  type ResumeRecord,
+} from '@/features/resumes/types';
+import { isUuid } from '@/shared/utils/uuid';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -25,6 +33,7 @@ interface JobApplicationBoxProps {
 
 const NEXT_STATUSES: ApplicationStatus[] = ['reviewing', 'accepted', 'rejected'];
 const APPLICATION_FILTERS: Array<ApplicationStatus | 'all'> = ['all', 'pending', 'reviewing', 'accepted', 'rejected', 'cancelled'];
+const MAX_APPLICATION_MESSAGE_LENGTH = 5_000;
 
 const FILTER_LABELS: Record<ApplicationStatus | 'all', string> = {
   all: '전체',
@@ -43,6 +52,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   const { profile, isLoading } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
   const [received, setReceived] = useState<Application[]>([]);
+  const [receivedError, setReceivedError] = useState('');
+  const [receivedReloadKey, setReceivedReloadKey] = useState(0);
   const [message, setMessage] = useState('');
   const [careerSummary, setCareerSummary] = useState('');
   const [availableSchedule, setAvailableSchedule] = useState('');
@@ -50,59 +61,194 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [mutatingApplicationIds, setMutatingApplicationIds] = useState<Set<string>>(() => new Set());
+  const [resumes, setResumes] = useState<ResumeRecord[]>([]);
+  const [selectedResumeId, setSelectedResumeId] = useState('');
+  const [resumesLoading, setResumesLoading] = useState(true);
+  const [resumesError, setResumesError] = useState('');
+  const [resumeReloadKey, setResumeReloadKey] = useState(0);
+  const [draftHydratedKey, setDraftHydratedKey] = useState('');
   // 프로필 값 프리필을 최초 1회로 제한 (토큰 갱신 시 profile 재생성으로 인한 입력값 덮어쓰기 방지)
   const prefilledRef = useRef(false);
+  const applicationIdRef = useRef<string | null>(null);
+  const mutationSequenceRef = useRef(new Map<string, number>());
+  const searchParams = useSearchParams();
 
   const isAuthor = !!profile && profile.id === authorId;
+  const profileId = profile?.id;
+  const profileBio = profile?.bio;
+  const profileAccountType = profile?.account_type;
   const actionLabel = '지원';
+  const requestedResumeId = searchParams.get('resumeId');
+  const safeRequestedResumeId = requestedResumeId && isUuid(requestedResumeId) ? requestedResumeId : '';
+  const returnToApplication = selectedResumeId
+    ? `/jobs/${jobId}?resumeId=${encodeURIComponent(selectedResumeId)}#apply`
+    : `/jobs/${jobId}#apply`;
+  const resumeManagerHref = `${ROUTES.MYPAGE_RESUMES}?next=${encodeURIComponent(returnToApplication)}${selectedResumeId ? `&resumeId=${encodeURIComponent(selectedResumeId)}` : ''}`;
+  const applicationDraftKey = profileId && profileId !== authorId
+    ? `marie:application-draft:${profileId}:${jobId}`
+    : '';
 
   useEffect(() => {
     if (isLoading) return;
-    if (!profile) {
+    if (!profileId) {
       setLoading(false);
       return;
     }
+    let active = true;
 
     // 본인이 작성자가 아니면 폼을 즉시 노출하고, 기존 지원 내역 체크는 백그라운드로 수행.
     // (체크 결과가 오기 전에도 사용자는 폼을 보고 입력 시작 가능)
-    if (profile.id !== authorId) {
+    if (profileId !== authorId) {
       // 폼 즉시 노출 — 스켈레톤 없음
       setLoading(false);
       // 프로필 값으로 최초 1회만 프리필. 토큰 갱신으로 effect가 재실행돼도
       // 사용자가 입력하거나 지운 값(연락처·경력)을 덮어쓰지 않는다.
       if (!prefilledRef.current) {
         prefilledRef.current = true;
-        setContactPhone(profile.phone ?? '');
-        setCareerSummary(stripHtml(profile.bio ?? '').slice(0, 180));
+        setCareerSummary(stripHtml(profileBio ?? '').slice(0, 180));
       }
 
       // 백그라운드: 이미 지원했는지 체크. 결과 오면 상태 전환, 실패해도 폼 그대로 유지.
       withTimeout(
-        applicationService.getApplicationForJob(jobId, profile.id),
+        applicationService.getApplicationForJob(jobId, profileId),
         4000,
         '지원 내역 조회 지연',
       )
         .then((row) => {
-          if (row) setApplication(row);
+          if (active && row) {
+            setApplication(row);
+            if (applicationDraftKey) sessionStorage.removeItem(applicationDraftKey);
+          }
         })
         .catch(() => {});
-      return;
+      return () => { active = false; };
     }
 
     // 작성자(업체) 측 — 지원자 파이프라인 조회는 데이터가 핵심이므로 스켈레톤 표시.
     setLoading(true);
+    setReceivedError('');
     // 이 공고의 지원서만 서버에서 필터링 조회 (전체 지원서 무제한 fetch + 클라 필터 제거).
-    withTimeout(
-      applicationService.getApplicationsForJob(jobId),
-      5000,
-      '지원자 목록 조회 지연',
-    )
-      .then((rows) => setReceived(rows))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-    // profile 객체 identity(토큰 갱신마다 새 참조)가 아닌 profile.id 에만 반응해 effect 재실행을 막는다.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authorId, isLoading, jobId, profile?.id]);
+    setReceived([]);
+    void (async () => {
+      let cursor: string | null = null;
+      let firstPage = true;
+      do {
+        const page: HiringApplicationPage = await withTimeout(
+          applicationService.getApplicationsForJob(jobId, cursor),
+          8_000,
+          '지원자 목록 조회 지연',
+        );
+        if (!active) return;
+        if (firstPage) {
+          setReceived(page.applications);
+          setLoading(false);
+          firstPage = false;
+        } else {
+          setReceived((current) => {
+            const known = new Set(current.map((item) => item.id));
+            return [...current, ...page.applications.filter((item) => !known.has(item.id))];
+          });
+        }
+        const previousCursor: string | null = cursor;
+        cursor = page.nextCursor;
+        if (cursor && cursor === previousCursor) throw new Error('지원자 페이지 정보가 반복되었습니다.');
+      } while (cursor);
+    })()
+      .catch((error) => {
+        if (active) setReceivedError(error instanceof Error ? error.message : '지원자 목록을 불러오지 못했습니다.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => { active = false; };
+  }, [applicationDraftKey, authorId, isLoading, jobId, profileBio, profileId, receivedReloadKey]);
+
+  useEffect(() => {
+    if (!applicationDraftKey) {
+      setDraftHydratedKey('');
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(applicationDraftKey);
+      if (raw) {
+        const saved = JSON.parse(raw) as Record<string, unknown>;
+        if (typeof saved.message === 'string') setMessage(saved.message.slice(0, 4_000));
+        if (typeof saved.careerSummary === 'string') setCareerSummary(saved.careerSummary.slice(0, 500));
+        if (typeof saved.availableSchedule === 'string') setAvailableSchedule(saved.availableSchedule.slice(0, 300));
+        if (typeof saved.contactPhone === 'string') setContactPhone(saved.contactPhone.slice(0, 40));
+        if (typeof saved.selectedResumeId === 'string' && isUuid(saved.selectedResumeId)) {
+          setSelectedResumeId(saved.selectedResumeId);
+        }
+      }
+    } catch {
+      sessionStorage.removeItem(applicationDraftKey);
+    } finally {
+      setDraftHydratedKey(applicationDraftKey);
+    }
+  }, [applicationDraftKey]);
+
+  useEffect(() => {
+    if (!applicationDraftKey || draftHydratedKey !== applicationDraftKey || application) return;
+    sessionStorage.setItem(applicationDraftKey, JSON.stringify({
+      message,
+      careerSummary,
+      availableSchedule,
+      contactPhone,
+      selectedResumeId,
+    }));
+  }, [application, applicationDraftKey, availableSchedule, careerSummary, contactPhone, draftHydratedKey, message, selectedResumeId]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (!profileId || profileAccountType !== 'individual' || profileId === authorId) {
+      setResumes([]);
+      setSelectedResumeId('');
+      setResumesLoading(false);
+      setResumesError('');
+      return;
+    }
+
+    let active = true;
+    const controller = new AbortController();
+    setResumesLoading(true);
+    setResumesError('');
+
+    apiFetch('/api/resumes', {
+      credentials: 'include',
+      signal: controller.signal,
+    }, 8_000)
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({})) as { resumes?: ResumeRecord[]; error?: string };
+        if (!response.ok) throw new Error(body.error || '이력서를 불러오지 못했습니다.');
+        if (!active) return;
+        const nextResumes = Array.isArray(body.resumes) ? body.resumes : [];
+        setResumes(nextResumes);
+        setSelectedResumeId((current) => {
+          const requested = nextResumes.find((resume) => resume.id === safeRequestedResumeId);
+          if (requested) return requested.id;
+          if (nextResumes.some((resume) => resume.id === current)) return current;
+          return (
+            nextResumes.find((resume) => resume.isDefault)
+            ?? nextResumes[0]
+          )?.id ?? '';
+        });
+      })
+      .catch((error) => {
+        if (!active || controller.signal.aborted) return;
+        setResumes([]);
+        setSelectedResumeId('');
+        setResumesError(error instanceof Error ? error.message : '이력서를 불러오지 못했습니다.');
+      })
+      .finally(() => {
+        if (active) setResumesLoading(false);
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [authorId, isLoading, profileAccountType, profileId, resumeReloadKey, safeRequestedResumeId]);
 
   const pendingCount = useMemo(
     () => received.filter((item) => item.status === 'pending' || item.status === 'reviewing').length,
@@ -119,6 +265,12 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
     () => statusFilter === 'all' ? received : received.filter((item) => item.status === statusFilter),
     [received, statusFilter],
   );
+  const selectedResume = useMemo(
+    () => resumes.find((resume) => resume.id === selectedResumeId) ?? null,
+    [resumes, selectedResumeId],
+  );
+  const resumeReady = !!selectedResume
+    && isResumeContentSubmittable(selectedResume, selectedResume.completenessScore);
   const composedMessage = useMemo(() => {
     if (!profile) return '';
     const name = profile.company_name || profile.contact_name || '지원자';
@@ -136,21 +288,47 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       message.trim(),
     ].join('\n');
   }, [availableSchedule, careerSummary, message, profile]);
-  // 연락처는 필수 — 직접 입력했거나 프로필에 등록되어 있어야 함
-  const phoneAvailable = contactPhone.trim().length >= 9 || (profile?.phone ?? '').trim().length >= 9;
+  // 직접 입력 → 선택한 이력서 → 프로필 순으로 실제 제출 연락처를 결정한다.
+  const effectiveContactPhone = contactPhone.trim()
+    || selectedResume?.phone.trim()
+    || (profile?.phone ?? '').trim();
+  const phoneAvailable = isValidResumePhone(effectiveContactPhone);
+
+  const beginApplicationMutation = (id: string) => {
+    const sequence = (mutationSequenceRef.current.get(id) ?? 0) + 1;
+    mutationSequenceRef.current.set(id, sequence);
+    setMutatingApplicationIds((current) => new Set(current).add(id));
+    return sequence;
+  };
+
+  const finishApplicationMutation = (id: string, sequence: number) => {
+    if (mutationSequenceRef.current.get(id) !== sequence) return;
+    setMutatingApplicationIds((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  };
 
   const submit = async () => {
     if (!profile) { toast('로그인이 필요합니다.', 'error'); return; }
+    if (resumesLoading) { toast('이력서를 불러오고 있습니다.', 'error'); return; }
+    if (!selectedResume) { toast('제출할 이력서를 선택해주세요.', 'error'); return; }
+    if (!resumeReady) { toast('이력서 완성도를 60% 이상으로 채워주세요.', 'error'); return; }
     if (message.trim().length < 10) { toast('지원 쪽지를 10자 이상 입력해주세요.', 'error'); return; }
+    if (composedMessage.length > MAX_APPLICATION_MESSAGE_LENGTH) { toast('지원 내용을 조금 줄여주세요.', 'error'); return; }
     if (!phoneAvailable) { toast('연락받을 휴대폰 번호를 입력해주세요.', 'error'); return; }
     setSubmitting(true);
     try {
+      const applicationId = applicationIdRef.current ?? crypto.randomUUID();
+      applicationIdRef.current = applicationId;
       const created = await withTimeout(
         applicationService.createApplication({
+          applicationId,
           jobId,
-          applicantId: profile.id,
+          resumeId: selectedResume.id,
           message: composedMessage,
-          contactPhone,
+          contactPhone: effectiveContactPhone,
         }),
         10000,
       );
@@ -158,6 +336,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       setMessage('');
       setCareerSummary('');
       setAvailableSchedule('');
+      if (applicationDraftKey) sessionStorage.removeItem(applicationDraftKey);
       // 채용자에게 새 지원자 알림 이메일 — best-effort (실패해도 지원 접수엔 영향 없음)
       void apiFetch('/api/notify/application', {
         method: 'POST',
@@ -165,11 +344,24 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
         body: JSON.stringify({ applicationId: created.id }),
       }, 10_000).catch(() => {});
     } catch (err) {
-      const msg = err instanceof Error
-        ? err.message.includes('duplicate') ? '이미 접수된 내역이 있습니다.'
-          : err.message.includes('초과') ? '접수 요청이 너무 오래 걸려요. 다시 시도해주세요.'
-          : '접수에 실패했습니다.'
-        : '접수에 실패했습니다.';
+      const rawMessage = err instanceof Error ? err.message : '';
+      if (rawMessage.includes('이미 접수') || rawMessage.includes('duplicate')) {
+        try {
+          const existing = await applicationService.getApplicationForJob(jobId, profile.id);
+          if (existing) {
+            setApplication(existing);
+            toast('이미 접수된 지원 내역을 불러왔습니다.', 'success');
+            return;
+          }
+        } catch {
+          // 아래의 명확한 중복 안내를 유지한다.
+        }
+      }
+      const msg = rawMessage.includes('이미 접수') || rawMessage.includes('duplicate')
+        ? '이미 접수된 내역이 있습니다.'
+        : rawMessage.includes('초과')
+          ? '접수 요청이 너무 오래 걸려요. 접수 내역을 확인해주세요.'
+          : rawMessage || '접수에 실패했습니다.';
       toast(msg, 'error');
     } finally {
       setSubmitting(false);
@@ -177,25 +369,39 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   };
 
   const updateStatus = async (id: string, status: ApplicationStatus) => {
+    const sequence = beginApplicationMutation(id);
     try {
-      const updated = await withTimeout(applicationService.updateStatus(id, status), 10000, '상태 변경 지연');
-      setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      const updated = await withTimeout(applicationService.updateStatus(id, status, 'hiring'), 10000, '상태 변경 지연');
+      if (mutationSequenceRef.current.get(id) === sequence) {
+        // 상태 응답과 메모 저장 응답이 엇갈려도 비공개 메모의 최신값은 보존한다.
+        setReceived((prev) => prev.map((item) => (item.id === id ? { ...updated, author_note: item.author_note } : item)));
+      }
     } catch {
       toast('상태 변경에 실패했습니다.', 'error');
+    } finally {
+      finishApplicationMutation(id, sequence);
     }
   };
 
   const markCompleted = async (id: string, target: 'received' | 'applied') => {
+    const sequence = beginApplicationMutation(id);
     try {
-      const updated = await withTimeout(applicationService.markCompleted(id), 10000, '완료 처리 지연');
+      const updated = await withTimeout(
+        applicationService.markCompleted(id, target === 'received' ? 'hiring' : 'applicant'),
+        10000,
+        '완료 처리 지연',
+      );
+      if (mutationSequenceRef.current.get(id) !== sequence) return;
       if (target === 'received') {
-        setReceived((prev) => prev.map((item) => (item.id === id ? updated : item)));
+        setReceived((prev) => prev.map((item) => (item.id === id ? { ...updated, author_note: item.author_note } : item)));
       } else {
         setApplication(updated);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : '';
       toast(msg.includes('not_accepted') ? '승인된 지원만 완료 처리할 수 있습니다.' : '완료 처리에 실패했습니다.', 'error');
+    } finally {
+      finishApplicationMutation(id, sequence);
     }
   };
 
@@ -203,12 +409,15 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
     if (!application) return;
     const ok = await toastConfirm('지원을 취소하시겠습니까? 취소 후에는 이 공고에 다시 지원할 수 없습니다.');
     if (!ok) return;
+    const sequence = beginApplicationMutation(application.id);
     try {
       const updated = await withTimeout(applicationService.updateStatus(application.id, 'cancelled'), 10000, '지원 취소 지연');
-      setApplication(updated);
+      if (mutationSequenceRef.current.get(application.id) === sequence) setApplication(updated);
       toast('지원이 취소되었습니다.', 'success');
     } catch {
       toast('취소에 실패했습니다.', 'error');
+    } finally {
+      finishApplicationMutation(application.id, sequence);
     }
   };
 
@@ -259,8 +468,19 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
           ))}
         </div>
 
+        {receivedError && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-rose-200 bg-rose-50 px-4 py-5 text-sm text-rose-700">
+            <span>{receivedError}</span>
+            <button type="button" onClick={() => setReceivedReloadKey((value) => value + 1)} className="font-bold text-primary hover:underline">
+              다시 불러오기
+            </button>
+          </div>
+        )}
+
         {received.length === 0 ? (
+          receivedError ? null : (
           <div className="py-8 text-center text-sm text-gray-400">아직 접수된 {actionLabel} 내역이 없습니다.</div>
+          )
         ) : filteredReceived.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-400">선택한 상태의 지원자가 없습니다.</div>
         ) : (
@@ -296,12 +516,18 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                       {item.message}
                     </p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
+                      <Link
+                        href={`/applications/${item.id}`}
+                        className="rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark"
+                      >
+                        제출 이력서 보기
+                      </Link>
                       {NEXT_STATUSES.map((status) => (
                         <button
                           key={status}
                           type="button"
                           onClick={() => updateStatus(item.id, status)}
-                          disabled={item.status === status}
+                          disabled={item.status === status || mutatingApplicationIds.has(item.id)}
                           className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-600 hover:border-primary hover:text-primary disabled:bg-primary disabled:text-white disabled:border-primary"
                         >
                           {APPLICATION_STATUS_LABELS[status]}
@@ -312,12 +538,15 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                       <ApplicationCompletionRow
                         application={item}
                         side="hiring"
+                        disabled={mutatingApplicationIds.has(item.id)}
                         onMark={() => markCompleted(item.id, 'received')}
                       />
                     )}
                     <AuthorNoteEditor
                       application={item}
-                      onChange={(updated) => setReceived((prev) => prev.map((x) => (x.id === item.id ? updated : x)))}
+                      onChange={(updated) => setReceived((prev) => prev.map((x) => (
+                        x.id === item.id ? { ...x, author_note: updated.author_note } : x
+                      )))}
                     />
                   </div>
                 </div>
@@ -343,7 +572,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             <button
               type="button"
               onClick={cancelMyApplication}
-              className="text-xs text-gray-500 hover:text-state-urgent underline"
+              disabled={mutatingApplicationIds.has(application.id)}
+              className="text-xs text-gray-500 hover:text-state-urgent underline disabled:opacity-50"
             >
               {actionLabel} 취소
             </button>
@@ -354,10 +584,16 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
           <span className="text-gray-400">{formatRelativeTime(application.created_at)} 접수</span>
         </div>
         <p className="whitespace-pre-wrap rounded bg-secondary-50 px-4 py-3 text-sm leading-6 text-gray-700">{application.message}</p>
+        <div className="mt-3 flex justify-end">
+          <Link href={`/applications/${application.id}`} className="text-sm font-bold text-primary hover:underline">
+            제출 이력서 확인 →
+          </Link>
+        </div>
         {application.status === 'accepted' && (
           <ApplicationCompletionRow
             application={application}
             side="applicant"
+            disabled={mutatingApplicationIds.has(application.id)}
             onMark={() => markCompleted(application.id, 'applied')}
           />
         )}
@@ -404,14 +640,83 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   return (
     <section className="bg-white border-y border-gray-200 p-6 md:p-8">
       <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하기</h2>
-      <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 간단히 남겨주세요.</p>
+      <p className="text-sm text-gray-500 mb-4">선택한 이력서는 지원 시점의 내용으로 제출되며, 이후 수정해도 제출본은 바뀌지 않습니다.</p>
       <div className="space-y-3">
+        <div className="rounded border border-gray-200 bg-secondary-50 p-4">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold text-gray-800">제출 이력서 <span className="text-rose-500">*</span></p>
+            <Link href={resumeManagerHref} className="text-xs font-bold text-primary hover:underline">
+              이력서 관리
+            </Link>
+          </div>
+
+          {resumesLoading ? (
+            <div className="space-y-2 animate-pulse" aria-label="이력서를 불러오는 중">
+              <div className="h-10 rounded bg-gray-200" />
+              <div className="h-4 w-2/3 rounded bg-gray-200" />
+            </div>
+          ) : resumesError ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded border border-rose-200 bg-white px-3 py-2.5">
+              <p className="text-xs text-rose-600">{resumesError}</p>
+              <button
+                type="button"
+                onClick={() => setResumeReloadKey((value) => value + 1)}
+                className="text-xs font-bold text-primary hover:underline"
+              >
+                다시 불러오기
+              </button>
+            </div>
+          ) : resumes.length === 0 ? (
+            <div className="rounded border border-dashed border-gray-300 bg-white px-4 py-4 text-center">
+              <p className="text-sm font-bold text-gray-800">먼저 제출할 이력서를 만들어주세요.</p>
+              <p className="mt-1 text-xs text-gray-500">기본 정보·학력·경력·자격증을 등록한 후 지원할 수 있습니다.</p>
+              <Link href={resumeManagerHref} className="btn-primary mt-3 inline-flex text-xs">
+                이력서 만들기
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <select
+                value={selectedResumeId}
+                onChange={(event) => setSelectedResumeId(event.target.value)}
+                className="input-field bg-white"
+                aria-label="제출할 이력서"
+              >
+                {resumes.map((resume) => (
+                  <option key={resume.id} value={resume.id}>
+                    {resume.title}{resume.isDefault ? ' · 대표' : ''} · 완성도 {resume.completenessScore}%
+                  </option>
+                ))}
+              </select>
+              {selectedResume && (
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <p className={resumeReady ? 'text-gray-500' : 'font-semibold text-rose-600'}>
+                    {selectedResume.headline || selectedResume.fullName || '소개 미입력'}
+                    {' · '}
+                    {resumeReady
+                      ? `완성도 ${selectedResume.completenessScore}% · ${formatRelativeTime(selectedResume.updatedAt)} 수정`
+                      : !selectedResume.fullName.trim()
+                        ? `완성도 ${selectedResume.completenessScore}% — 이름을 입력해야 지원할 수 있어요.`
+                        : `완성도 ${selectedResume.completenessScore}% — 60% 이상이어야 지원할 수 있어요.`}
+                  </p>
+                  <Link
+                    href={resumeManagerHref}
+                    className="font-bold text-primary hover:underline"
+                  >
+                    선택한 이력서 수정
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-bold text-gray-700">경력/강점 <span className="font-normal text-gray-400">(선택)</span></span>
             <input
               value={careerSummary}
               onChange={(e) => setCareerSummary(e.target.value)}
+              maxLength={500}
               className="input-field"
               placeholder="예) 웨딩플래너 2년, 예식 당일 진행 경험"
             />
@@ -421,6 +726,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             <input
               value={availableSchedule}
               onChange={(e) => setAvailableSchedule(e.target.value)}
+              maxLength={300}
               className="input-field"
               placeholder="예) 주말 가능, 7월부터 출근 가능"
             />
@@ -429,16 +735,18 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
         <textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
+          maxLength={4_000}
           rows={5}
+          aria-label="지원 쪽지"
           className="input-field resize-none"
           placeholder="왜 이 공고에 지원하는지, 바로 맡을 수 있는 업무, 확인이 필요한 조건을 적어주세요."
         />
         <div>
           <label className="block mb-1 text-xs font-bold text-gray-700">
             연락처 <span className="text-rose-500">*</span>
-            {profile?.phone && (
+            {(selectedResume?.phone || profile?.phone) && (
               <span className="ml-1.5 text-[11px] font-semibold text-gray-500">
-                · 프로필 등록: {formatPhone(profile.phone)}
+                · 등록: {formatPhone(selectedResume?.phone || profile?.phone || '')}
               </span>
             )}
           </label>
@@ -446,9 +754,10 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             type="tel"
             value={contactPhone}
             onChange={(e) => setContactPhone(e.target.value)}
+            maxLength={40}
             className="input-field"
-            placeholder={profile?.phone ? '다른 연락처를 받으려면 입력 (선택)' : '예: 010-1234-5678'}
-            required={!profile?.phone}
+            placeholder={selectedResume?.phone || profile?.phone ? '다른 연락처를 제출하려면 입력' : '예: 010-1234-5678'}
+            required={!selectedResume?.phone && !profile?.phone}
             aria-required="true"
           />
           {!phoneAvailable && (
@@ -461,10 +770,10 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
           <button
             type="button"
             onClick={submit}
-            disabled={submitting}
+            disabled={submitting || resumesLoading || !selectedResume || !resumeReady}
             className="btn-primary"
           >
-            {submitting ? '접수 중...' : `${actionLabel} 접수`}
+            {submitting ? '이력서 제출 중...' : `${actionLabel} 접수`}
           </button>
         </div>
       </div>
@@ -545,6 +854,8 @@ function AuthorNoteEditor({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         rows={3}
+        maxLength={5_000}
+        aria-label="지원자 비공개 메모"
         placeholder="이 지원자에 대한 비공개 메모 (다른 사용자에게는 보이지 않습니다)"
         className="w-full border border-gray-200 px-2 py-1.5 text-xs focus:border-primary focus:outline-none resize-none"
       />
@@ -563,10 +874,12 @@ function AuthorNoteEditor({
 function ApplicationCompletionRow({
   application,
   side,
+  disabled = false,
   onMark,
 }: {
   application: Application;
   side: 'hiring' | 'applicant';
+  disabled?: boolean;
   onMark: () => void;
 }) {
   const mine = side === 'hiring' ? application.hiring_completed_at : application.applicant_completed_at;
@@ -604,7 +917,8 @@ function ApplicationCompletionRow({
           <button
             type="button"
             onClick={onMark}
-            className="shrink-0 rounded border border-primary px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors"
+            disabled={disabled}
+            className="shrink-0 rounded border border-primary px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary hover:text-white transition-colors disabled:cursor-wait disabled:opacity-50"
           >
             완료 표시
           </button>

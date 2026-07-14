@@ -1,4 +1,5 @@
 import type { AccountType, BusinessType, EmploymentType, Region, PostCategory, PostingType } from '@/shared/constants';
+import type { ResumeRecord, SubmittedResumeSnapshot } from '@/features/resumes/types';
 
 export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected';
 export type ReviewTagCategory = 'positive' | 'attention';
@@ -231,6 +232,7 @@ export interface Application {
   id: string;
   job_id: string;
   applicant_id: string;
+  resume_id: string | null;
   message: string;
   contact_phone: string | null;
   status: ApplicationStatus;
@@ -244,6 +246,18 @@ export interface Application {
   first_responded_at: string | null;
   job?: Job;
   applicant?: Profile;
+}
+
+export type Resume = ResumeRecord;
+
+export interface ApplicationResumeSnapshot {
+  application_id: string;
+  source_resume_id: string | null;
+  source_version: number;
+  schema_version: number;
+  photo_path: string | null;
+  snapshot: SubmittedResumeSnapshot;
+  created_at: string;
 }
 
 export interface ReviewTag {

@@ -14,6 +14,9 @@ import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import type { Application, Job, Profile } from '@/types/database';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import ResumePreview from '@/features/resumes/components/ResumePreview';
+import { parseSubmittedResumeSnapshot } from '@/features/resumes/lib/mapper';
+import { isUuid } from '@/shared/utils/uuid';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,16 +34,56 @@ interface Props {
  */
 export default async function ApplicationDetailPage({ params }: Props) {
   const { id } = await params;
+  if (!isUuid(id)) notFound();
   const viewer = await getCurrentVerifiedProfile();
   if (!viewer.ok) redirect(ROUTES.LOGIN);
 
   const supabase = createServerQueryClient();
-  const { data: appData } = await supabase
+  const signal = AbortSignal.timeout(10_000);
+  const { data: rawAccessRow, error: accessError } = await supabase
     .from('applications')
-    .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+    .select('id, applicant_id, job_id, job:jobs!inner(author_id)')
     .eq('id', id)
     .is('deleted_at', null)
+    .abortSignal(signal)
     .maybeSingle();
+  if (accessError) {
+    console.error('[application-detail] access lookup failed:', accessError.message);
+    if (signal.aborted) throw new Error('지원서 조회 시간이 초과되었습니다.');
+  }
+  const accessRow = rawAccessRow as unknown as {
+    id: string;
+    applicant_id: string;
+    job_id: string;
+    job?: { author_id: string } | Array<{ author_id: string }>;
+  } | null;
+  if (!accessRow) notFound();
+
+  const isApplicant = viewer.profileId === accessRow.applicant_id;
+  const accessJob = Array.isArray(accessRow.job) ? accessRow.job[0] : accessRow.job;
+  const isHiring = viewer.profileId === accessJob?.author_id;
+  if (!isHiring && !isApplicant) redirect(ROUTES.MYPAGE);
+
+  // 지원 당사자 확인이 끝난 뒤에만 메시지·연락처·비공개 채용 메모를 읽는다.
+  const [{ data: appData, error: applicationError }, { data: snapshotRow, error: snapshotError }] = await Promise.all([
+    supabase
+      .from('applications')
+      .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+      .eq('id', id)
+      .is('deleted_at', null)
+      .abortSignal(signal)
+      .maybeSingle(),
+    supabase
+      .from('application_resume_snapshots')
+      .select('snapshot, created_at')
+      .eq('application_id', id)
+      .abortSignal(signal)
+      .maybeSingle(),
+  ]);
+  if (applicationError) {
+    console.error('[application-detail] application lookup failed:', applicationError.message);
+    if (signal.aborted) throw new Error('지원서 조회 시간이 초과되었습니다.');
+  }
 
   if (!appData) notFound();
   const application = appData as Application & {
@@ -52,9 +95,12 @@ export default async function ApplicationDetailPage({ params }: Props) {
   const applicant = application.applicant;
   if (!job || !applicant) notFound();
 
-  const isHiring = viewer.profileId === job.author_id;
-  const isApplicant = viewer.profileId === application.applicant_id;
-  if (!isHiring && !isApplicant) redirect(ROUTES.MYPAGE);
+  // 이력서는 지원 당사자 확인이 끝난 뒤에만 서버에서 별도 조회한다.
+  // applications.* 일반 목록 쿼리에 학력·경력·연락처 payload가 실리지 않게 한다.
+  if (snapshotError) {
+    console.error('[application-detail] resume snapshot lookup failed:', snapshotError.message);
+  }
+  const submittedResume = parseSubmittedResumeSnapshot(snapshotRow?.snapshot);
 
   const applicantAvatar = resolveStorageUrl(applicant.profile_image, 'avatars');
   const applicantName = applicant.company_name || applicant.contact_name || '지원자';
@@ -139,6 +185,31 @@ export default async function ApplicationDetailPage({ params }: Props) {
           </Link>
         </section>
       )}
+
+      {/* 지원 시점에 고정된 이력서 제출본 */}
+      <section className="rounded-xl bg-white border border-gray-200 p-5 sm:p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">제출 이력서</p>
+            <p className="mt-1 text-xs text-gray-500">지원 시점의 내용으로 보관된 제출본입니다.</p>
+          </div>
+          {submittedResume && <span className="badge-attr">제출본 · 변경 불가</span>}
+        </div>
+        {submittedResume ? (
+          <ResumePreview
+            resume={submittedResume}
+            submittedAt={snapshotRow?.created_at ?? application.created_at}
+          />
+        ) : application.resume_id ? (
+          <div className="rounded border border-amber-200 bg-amber-50 px-4 py-5 text-sm text-amber-800">
+            제출된 이력서를 불러오지 못했습니다. 잠시 후 다시 확인해주세요.
+          </div>
+        ) : (
+          <div className="rounded border border-gray-200 bg-gray-50 px-4 py-5 text-sm leading-6 text-gray-600">
+            이 지원은 이력서 제출 기능 도입 전에 접수되어 별도 제출본이 없습니다. 아래 지원 메시지와 프로필 정보를 확인해주세요.
+          </div>
+        )}
+      </section>
 
       {/* Message body */}
       <section className="rounded-xl bg-white border border-gray-200 p-5">

@@ -25,7 +25,7 @@ export const dynamic = 'force-dynamic';
 async function getMyData(profileId: string) {
   const supabase = createServerQueryClient();
 
-  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes] = await Promise.all([
+  const [profileRes, jobsRes, postsRes, sentApplicationsRes, receivedApplicationsRes, resumesRes] = await Promise.all([
     supabase.from('profiles').select(SELF_PROFILE_COLUMNS).eq('id', profileId).single(),
     supabase
       .from('jobs')
@@ -56,6 +56,11 @@ async function getMyData(profileId: string) {
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
+    supabase
+      .from('resumes')
+      .select('id, completeness_score')
+      .eq('profile_id', profileId)
+      .is('deleted_at', null),
   ]);
 
   const profile = profileRes.data as Profile | null;
@@ -73,6 +78,8 @@ async function getMyData(profileId: string) {
     // 좁힌 select로 임베드(job/applicant)가 배열로 추론돼 Application과 직접 겹치지 않으므로 unknown 경유.
     sentApplications: (sentApplicationsRes.data ?? []) as unknown as Application[],
     receivedApplications: (receivedApplicationsRes.data ?? []) as unknown as Application[],
+    resumeCount: resumesRes.data?.length ?? 0,
+    bestResumeCompleteness: Math.max(0, ...(resumesRes.data ?? []).map((resume) => resume.completeness_score ?? 0)),
   };
 }
 
@@ -80,7 +87,7 @@ export default async function MyPage() {
   const viewer = await getCurrentVerifiedProfile();
   if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  const { profile, jobs, posts, sentApplications, receivedApplications } = await getMyData(viewer.profileId);
+  const { profile, jobs, posts, sentApplications, receivedApplications, resumeCount, bestResumeCompleteness } = await getMyData(viewer.profileId);
 
   if (!profile) redirect(ROUTES.LOGIN);
 
@@ -110,8 +117,8 @@ export default async function MyPage() {
             </>
           ) : (
             <>
-              <Link href={ROUTES.JOBS} className="btn-primary text-sm">공고 둘러보기</Link>
-              <Link href={ROUTES.MYPAGE_BOOKMARKS} className="btn-outline text-sm">스크랩한 공고</Link>
+              <Link href={ROUTES.MYPAGE_RESUMES} className="btn-primary text-sm">이력서 관리</Link>
+              <Link href={ROUTES.JOBS} className="btn-outline text-sm">공고 둘러보기</Link>
             </>
           )
         }
@@ -122,6 +129,7 @@ export default async function MyPage() {
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
             {imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={imageUrl} alt="프로필" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-primary/10 flex items-center justify-center">
@@ -209,10 +217,15 @@ export default async function MyPage() {
       </div>
 
       {/* Trust Status */}
-      <VerificationStatusPanel profile={profile} />
+      {isBusinessAcc && <VerificationStatusPanel profile={profile} />}
 
       {/* Onboarding */}
-      <OnboardingChecklist profile={profile} jobCount={jobs.length} />
+      <OnboardingChecklist
+        profile={profile}
+        jobCount={jobs.length}
+        resumeCount={resumeCount}
+        bestResumeCompleteness={bestResumeCompleteness}
+      />
 
       {/* ────────── 본인 활동 (위쪽 우선 노출) ────────── */}
       {/* 활동 통계 — Stats Summary는 아래(필수 데이터 위) */}
@@ -240,34 +253,49 @@ export default async function MyPage() {
         <div className="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4">
           <WorkspaceMetric label="작성한 게시글" value={posts.length} href="/mypage?tab=posts" />
           <WorkspaceMetric label="지원 내역" value={sentApplications.length} href="/mypage?tab=applications" />
-          <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} href="/mypage/dashboard" />
-          <WorkspaceMetric
-            label="평균 응답"
-            value={
-              profile.avg_response_minutes
-                ? profile.avg_response_minutes < 60
-                  ? profile.avg_response_minutes
-                  : profile.avg_response_minutes < 1440
-                    ? Math.round(profile.avg_response_minutes / 60)
-                    : Math.round(profile.avg_response_minutes / 1440)
-                : 0
-            }
-            unit={
-              profile.avg_response_minutes
-                ? profile.avg_response_minutes < 60
-                  ? '분'
-                  : profile.avg_response_minutes < 1440
-                    ? '시간'
-                    : '일'
-                : '-'
-            }
-            href="/mypage/dashboard"
-          />
+          {isBusinessAcc ? (
+            <>
+              <WorkspaceMetric label="진행 완료" value={profile.completed_deals_count} href="/mypage/dashboard" />
+              <WorkspaceMetric
+                label="평균 응답"
+                value={
+                  profile.avg_response_minutes
+                    ? profile.avg_response_minutes < 60
+                      ? profile.avg_response_minutes
+                      : profile.avg_response_minutes < 1440
+                        ? Math.round(profile.avg_response_minutes / 60)
+                        : Math.round(profile.avg_response_minutes / 1440)
+                    : 0
+                }
+                unit={
+                  profile.avg_response_minutes
+                    ? profile.avg_response_minutes < 60
+                      ? '분'
+                      : profile.avg_response_minutes < 1440
+                        ? '시간'
+                        : '일'
+                    : '-'
+                }
+                href="/mypage/dashboard"
+              />
+            </>
+          ) : (
+            <>
+              <WorkspaceMetric label="내 이력서" value={resumeCount} unit="개" href={ROUTES.MYPAGE_RESUMES} />
+              <WorkspaceMetric label="최고 완성도" value={bestResumeCompleteness} unit="%" href={ROUTES.MYPAGE_RESUMES} />
+            </>
+          )}
         </div>
       </section>
 
       {/* Tabs — 본인의 등록 공고 / 게시글 / 지원 내역 (본인 활동의 핵심) */}
-      <MyPageTabs jobs={jobs} posts={posts} sentApplications={sentApplications} receivedApplications={receivedApplications} />
+      <MyPageTabs
+        accountType={isBusinessAcc ? 'business' : 'individual'}
+        jobs={jobs}
+        posts={posts}
+        sentApplications={sentApplications}
+        receivedApplications={receivedApplications}
+      />
 
       {/* Pending Reviews — 작성 대기 중인 리뷰 (본인 처리 항목) */}
       <PendingReviewsSection profileId={profile.id} />

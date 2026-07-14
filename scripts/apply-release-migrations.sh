@@ -31,6 +31,9 @@ apply_pre_app() {
   apply_file "20260714000200_otp_atomic_verification.sql"
   apply_file "20260714000300_password_admin_service_operations.sql"
   apply_file "20260714000400_payment_catalog_hardening.sql"
+  # Additive resume tables/RPC must exist before the application build that
+  # starts using them.  It is independent of the final direct-write revokes.
+  apply_file "20260715000100_resume_system.sql"
 }
 
 apply_security_boundary() {

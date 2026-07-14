@@ -13,6 +13,11 @@ import { MAX_IMAGE_INPUT_BYTES } from '@/shared/utils/image';
 const IMAGE_QUEUE_PLACEHOLDER =
   'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22 viewBox=%220 0 800 500%22%3E%3Crect width=%22800%22 height=%22500%22 fill=%22%23f3f4f6%22/%3E%3Cpath d=%22M315 285l62-70 52 58 34-39 72 83H280z%22 fill=%22%23d1d5db%22/%3E%3Ccircle cx=%22463%22 cy=%22185%22 r=%2224%22 fill=%22%23d1d5db%22/%3E%3C/svg%3E';
 
+function publicStorageUrl(bucket: string, path: string): string {
+  const safePath = path.split('/').map(encodeURIComponent).join('/');
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${encodeURIComponent(bucket)}/${safePath}`;
+}
+
 interface UseImageUploadOptions {
   initialPath: string | null;
   initialUrl: string | null;
@@ -32,6 +37,7 @@ export function useImageUpload(options: UseImageUploadOptions) {
   const [path, setPathState] = useState<string | null>(options.initialPath);
   const pathRef = useRef<string | null>(options.initialPath);
   const [preview, setPreviewState] = useState<string | null>(options.initialUrl);
+  const remoteUrlRef = useRef<string | null>(options.initialUrl);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState<UploadProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +60,7 @@ export function useImageUpload(options: UseImageUploadOptions) {
 
   const showRemotePreview = useCallback((url: string | null) => {
     revokePreview();
+    remoteUrlRef.current = url;
     setPreviewState(url);
   }, [revokePreview]);
 
@@ -71,9 +78,7 @@ export function useImageUpload(options: UseImageUploadOptions) {
     const controller = new AbortController();
     controllerRef.current = controller;
     const previousPath = pathRef.current;
-    const previousUrl = previousPath
-      ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${optionsRef.current.bucket}/${previousPath}`
-      : null;
+    const previousUrl = remoteUrlRef.current;
 
     revokePreview();
     // 원본 blob을 <img>에 바로 넣으면 파일 용량이 작아도 초고해상도 디코드로
@@ -120,6 +125,11 @@ export function useImageUpload(options: UseImageUploadOptions) {
         if (requestId !== requestIdRef.current) return pathRef.current;
         // callback이 지원되지 않는 구현에서도 최종 압축본만 미리보기로 사용한다.
         if (!objectUrlRef.current) compressedPreviewHandler(result.file);
+        // 다음 사진 교체가 실패하면 방금 성공한 사진으로 정확히 돌아갈 수 있도록
+        // path와 함께 영속적으로 다시 읽을 수 있는 URL도 같은 시점에 갱신한다.
+        // endpoint 업로드는 비공개 프록시 URL을, 직접 업로드는 공개 Storage URL을 쓴다.
+        const endpointUrl = 'url' in result && typeof result.url === 'string' ? result.url : null;
+        remoteUrlRef.current = endpointUrl ?? publicStorageUrl(current.bucket, result.path);
         setPath(result.path);
         return result.path;
       } catch (uploadError) {
@@ -176,6 +186,15 @@ export function useImageUpload(options: UseImageUploadOptions) {
   }, []);
 
   const setExisting = useCallback((nextPath: string | null, nextUrl: string | null) => {
+    // 다른 레코드로 전환될 때 직전 업로드가 늦게 완료되어 새 레코드의 path를
+    // 덮어쓰지 않도록 진행 중 작업을 명시적으로 무효화한다.
+    requestIdRef.current += 1;
+    controllerRef.current?.abort();
+    controllerRef.current = null;
+    pendingRef.current = null;
+    setUploading(false);
+    setProgress(null);
+    setError(null);
     setPath(nextPath);
     showRemotePreview(nextUrl);
   }, [setPath, showRemotePreview]);

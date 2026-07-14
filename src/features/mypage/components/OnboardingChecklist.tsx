@@ -4,6 +4,8 @@ import type { Profile } from '@/types/database';
 interface Props {
   profile: Profile;
   jobCount: number;
+  resumeCount?: number;
+  bestResumeCompleteness?: number;
 }
 
 interface Item {
@@ -13,8 +15,8 @@ interface Item {
   href: string;
 }
 
-export default function OnboardingChecklist({ profile, jobCount }: Props) {
-  const items: Item[] = [
+export default function OnboardingChecklist({ profile, jobCount, resumeCount = 0, bestResumeCompleteness = 0 }: Props) {
+  const businessItems: Item[] = [
     {
       key: 'profile-image',
       label: '프로필 이미지 등록',
@@ -39,13 +41,12 @@ export default function OnboardingChecklist({ profile, jobCount }: Props) {
       done: profile.is_directory_listed,
       href: '/mypage/directory',
     },
-    // 업체 회원에게만 노출 — 개인 회원은 별도 본인 확인 절차 없음
-    ...(profile.account_type === 'business' ? [{
+    {
       key: 'verification',
       label: '업체 인증',
       done: profile.verification_status === 'verified',
       href: '/mypage/verification',
-    }] : []),
+    },
     {
       key: 'job',
       label: '공고 1개 이상 등록',
@@ -53,6 +54,35 @@ export default function OnboardingChecklist({ profile, jobCount }: Props) {
       href: '/jobs/new',
     },
   ];
+
+  const individualItems: Item[] = [
+    {
+      key: 'profile-image',
+      label: '프로필 이미지 등록',
+      done: !!profile.profile_image,
+      href: '/mypage/edit',
+    },
+    {
+      key: 'contact',
+      label: '연락처와 활동 지역 입력',
+      done: !!profile.phone && !!profile.region,
+      href: '/mypage/edit',
+    },
+    {
+      key: 'resume',
+      label: '이력서 만들기',
+      done: resumeCount > 0,
+      href: '/mypage/resumes',
+    },
+    {
+      key: 'resume-ready',
+      label: '제출 가능한 이력서 완성',
+      done: bestResumeCompleteness >= 60,
+      href: '/mypage/resumes',
+    },
+  ];
+
+  const items = profile.account_type === 'business' ? businessItems : individualItems;
 
   const doneCount = items.filter((i) => i.done).length;
   const percent = Math.round((doneCount / items.length) * 100);

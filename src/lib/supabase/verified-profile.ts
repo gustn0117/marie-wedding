@@ -15,6 +15,8 @@ export type VerifiedProfileResult =
       email: string | null;
       accountType: 'business' | 'individual';
       role: string;
+      onboardedAt: string | null;
+      bannedAt: string | null;
     }
   | { ok: false; reason: 'unauthorized' | 'profile_not_found' | 'timeout' | 'server_error' };
 
@@ -54,7 +56,7 @@ export async function getVerifiedProfile(signal: AbortSignal): Promise<VerifiedP
     const service = createServiceClient(signal);
     const { data: profile, error: profileError } = await service
       .from('profiles')
-      .select('id, account_type, role')
+      .select('id, account_type, role, onboarded_at, banned_at')
       .eq('user_id', user.id)
       .is('deleted_at', null)
       .abortSignal(signal)
@@ -73,6 +75,8 @@ export async function getVerifiedProfile(signal: AbortSignal): Promise<VerifiedP
       email: user.email ?? null,
       accountType: profile.account_type,
       role: profile.role,
+      onboardedAt: profile.onboarded_at,
+      bannedAt: profile.banned_at,
     };
   } catch (error) {
     if (signal.aborted) return { ok: false, reason: 'timeout' };

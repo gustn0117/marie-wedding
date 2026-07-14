@@ -24,51 +24,86 @@ export function translateApplicationStatusError(msg: string): string {
   return '상태 변경에 실패했습니다.';
 }
 
+const APPLICANT_APPLICATION_COLUMNS =
+  'id, job_id, applicant_id, resume_id, message, contact_phone, status, created_at, updated_at, deleted_at, hiring_completed_at, applicant_completed_at, first_responded_at' as const;
+
+type ApplicationAudience = 'applicant' | 'hiring';
+
+function redactAuthorNote(row: unknown): Application {
+  return { ...(row as Application), author_note: null };
+}
+
+export interface HiringApplicationPage {
+  applications: Application[];
+  nextCursor: string | null;
+}
+
+async function fetchHiringApplications(query = ''): Promise<HiringApplicationPage> {
+  const response = await apiFetch(`/api/applications/hiring${query}`, { credentials: 'include' }, 10_000);
+  const body = await response.json().catch(() => ({})) as {
+    applications?: Application[];
+    nextCursor?: string | null;
+    error?: string;
+  };
+  if (!response.ok) throw new Error(body.error || '지원서를 불러오지 못했습니다.');
+  return {
+    applications: Array.isArray(body.applications) ? body.applications : [],
+    nextCursor: typeof body.nextCursor === 'string' ? body.nextCursor : null,
+  };
+}
+
+async function fetchHiringApplication(id: string): Promise<Application> {
+  const response = await apiFetch(
+    `/api/applications/hiring?applicationId=${encodeURIComponent(id)}`,
+    { credentials: 'include' },
+    10_000,
+  );
+  const body = await response.json().catch(() => ({})) as { application?: Application; error?: string };
+  if (!response.ok || !body.application) throw new Error(body.error || '지원서를 불러오지 못했습니다.');
+  return body.application;
+}
+
 export const applicationService = {
   async getApplicationForJob(jobId: string, applicantId: string): Promise<Application | null> {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('applications')
-      .select(`*, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${APPLICANT_APPLICATION_COLUMNS}, job:jobs(*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('job_id', jobId)
       .eq('applicant_id', applicantId)
       .is('deleted_at', null)
       .maybeSingle();
 
     if (error) throw error;
-    return data as Application | null;
+    return data ? redactAuthorNote(data) : null;
   },
 
-  async getReceivedApplications(profileId: string): Promise<Application[]> {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('applications')
-      // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터
-      .select(`*, job:jobs!inner(*), applicant:profiles!inner(${PUBLIC_PROFILE_COLUMNS})`)
-      .is('deleted_at', null)
-      .is('applicant.deleted_at', null)
-      .eq('job.author_id', profileId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return (data ?? []) as Application[];
+  async getReceivedApplications(): Promise<Application[]> {
+    // author_note는 브라우저 DB 역할에 SELECT 권한이 없다. 서버가 인증된
+    // 공고 작성자를 다시 확인한 뒤 필요한 채용 측 payload만 반환한다.
+    const applications: Application[] = [];
+    const seen = new Set<string>();
+    let cursor: string | null = null;
+    do {
+      const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+      const page: HiringApplicationPage = await fetchHiringApplications(query);
+      for (const application of page.applications) {
+        if (!seen.has(application.id)) {
+          seen.add(application.id);
+          applications.push(application);
+        }
+      }
+      const previousCursor: string | null = cursor;
+      cursor = page.nextCursor;
+      if (cursor && cursor === previousCursor) throw new Error('지원자 페이지 정보가 반복되었습니다.');
+    } while (cursor);
+    return applications;
   },
 
-  async getApplicationsForJob(jobId: string): Promise<Application[]> {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('applications')
-      // 서버측에서 job_id 로 필터 + job 임베드 제거(공고 본문 HTML 비용 제거).
-      // 탈퇴한 지원자의 PII 노출 방지 — applicant.deleted_at IS NULL 필터.
-      .select(`*, applicant:profiles!inner(${PUBLIC_PROFILE_COLUMNS})`)
-      .eq('job_id', jobId)
-      .is('deleted_at', null)
-      .is('applicant.deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(100);
-
-    if (error) throw error;
-    return (data ?? []) as Application[];
+  async getApplicationsForJob(jobId: string, cursor?: string | null): Promise<HiringApplicationPage> {
+    const query = new URLSearchParams({ jobId });
+    if (cursor) query.set('cursor', cursor);
+    return fetchHiringApplications(`?${query.toString()}`);
   },
 
   async getSentApplications(profileId: string): Promise<Application[]> {
@@ -76,19 +111,20 @@ export const applicationService = {
     const { data, error } = await supabase
       .from('applications')
       // 삭제된 공고 / 탈퇴한 공고 작성자 표시 X
-      .select(`*, job:jobs!inner(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${APPLICANT_APPLICATION_COLUMNS}, job:jobs!inner(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .is('job.deleted_at', null)
       .eq('applicant_id', profileId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return (data ?? []) as Application[];
+    return (data ?? []).map(redactAuthorNote);
   },
 
   async createApplication(input: {
+    applicationId: string;
     jobId: string;
-    applicantId: string;
+    resumeId: string;
     message: string;
     contactPhone?: string;
   }): Promise<Application> {
@@ -98,17 +134,27 @@ export const applicationService = {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ jobId: input.jobId, message: input.message, contactPhone: input.contactPhone }),
+      body: JSON.stringify({
+        applicationId: input.applicationId,
+        jobId: input.jobId,
+        resumeId: input.resumeId,
+        message: input.message,
+        contactPhone: input.contactPhone,
+      }),
     });
     if (!res.ok) {
       const b = await res.json().catch(() => ({ error: '' }));
       throw new Error(b.error || '접수에 실패했습니다.');
     }
     const { data } = await res.json();
-    return data as Application;
+    return redactAuthorNote(data);
   },
 
-  async updateStatus(id: string, status: ApplicationStatus): Promise<Application> {
+  async updateStatus(
+    id: string,
+    status: ApplicationStatus,
+    audience: ApplicationAudience = 'applicant',
+  ): Promise<Application> {
     const supabase = createClient();
     const { error: rpcError } = await supabase.rpc('set_application_status', {
       p_application_id: id,
@@ -116,39 +162,37 @@ export const applicationService = {
     });
     if (rpcError) throw new Error(translateApplicationStatusError(rpcError.message));
 
+    if (audience === 'hiring') return fetchHiringApplication(id);
+
     const { data, error: fetchError } = await supabase
       .from('applications')
-      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${APPLICANT_APPLICATION_COLUMNS}, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .single();
 
     if (fetchError) throw fetchError;
-    return data as Application;
+    return redactAuthorNote(data);
   },
 
-  async markCompleted(id: string): Promise<Application> {
+  async markCompleted(id: string, audience: ApplicationAudience = 'applicant'): Promise<Application> {
     const supabase = createClient();
     const { error } = await supabase.rpc('mark_deal_completed', { p_application_id: id });
     if (error) throw error;
+    if (audience === 'hiring') return fetchHiringApplication(id);
+
     const { data, error: fetchErr } = await supabase
       .from('applications')
-      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${APPLICANT_APPLICATION_COLUMNS}, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .single();
     if (fetchErr) throw fetchErr;
-    return data as Application;
+    return redactAuthorNote(data);
   },
 
   async setAuthorNote(id: string, note: string): Promise<Application> {
     const supabase = createClient();
     const { error } = await supabase.rpc('set_author_note', { p_application_id: id, p_note: note });
     if (error) throw error;
-    const { data, error: fetchErr } = await supabase
-      .from('applications')
-      .select(`*, job:jobs(*), applicant:profiles(${PUBLIC_PROFILE_COLUMNS})`)
-      .eq('id', id)
-      .single();
-    if (fetchErr) throw fetchErr;
-    return data as Application;
+    return fetchHiringApplication(id);
   },
 };

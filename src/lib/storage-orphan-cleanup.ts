@@ -8,6 +8,7 @@ export const STORAGE_CLEANUP_BUCKETS = [
   'event-images',
   'banners',
   'portfolios',
+  'resume-files',
 ] as const;
 
 type CleanupBucket = (typeof STORAGE_CLEANUP_BUCKETS)[number];
@@ -113,6 +114,7 @@ async function readAllRows(
   table: string,
   columns: string,
   signal?: AbortSignal,
+  idColumn = 'id',
 ): Promise<Array<Record<string, unknown>>> {
   const client = createServiceClient(signal);
   const rows: Array<Record<string, unknown>> = [];
@@ -122,10 +124,10 @@ async function readAllRows(
     if (signal?.aborted) throw signal.reason ?? new DOMException('정리 작업이 취소되었습니다.', 'AbortError');
     let query = client
       .from(table)
-      .select(`id, ${columns}`)
-      .order('id', { ascending: true })
+      .select(`${idColumn}, ${columns}`)
+      .order(idColumn, { ascending: true })
       .limit(DB_PAGE_SIZE);
-    if (lastId) query = query.gt('id', lastId);
+    if (lastId) query = query.gt(idColumn, lastId);
     const { data, error } = await query.abortSignal(signal ?? new AbortController().signal);
     if (error) {
       throw new Error(`Storage 참조 조회 실패 (${table}): ${error.message}`);
@@ -135,7 +137,7 @@ async function readAllRows(
     const page = (data ?? []) as unknown as Array<Record<string, unknown>>;
     rows.push(...page);
     if (page.length < DB_PAGE_SIZE) return rows;
-    const nextLastId = page[page.length - 1]?.id;
+    const nextLastId = page[page.length - 1]?.[idColumn];
     if (typeof nextLastId !== 'string' || nextLastId === lastId) {
       throw new Error(`Storage 참조 페이지 진행에 실패했습니다 (${table}).`);
     }
@@ -151,13 +153,15 @@ async function readAllRows(
  */
 async function collectStorageReferences(signal?: AbortSignal): Promise<ReferenceMap> {
   const references = emptyReferenceMap();
-  const [profiles, jobs, posts, events, banners, portfolios] = await Promise.all([
+  const [profiles, jobs, posts, events, banners, portfolios, resumes, resumeSnapshots] = await Promise.all([
     readAllRows('profiles', 'profile_image, cover_image, gallery, bio', signal),
     readAllRows('jobs', 'image, description', signal),
     readAllRows('posts', 'content', signal),
     readAllRows('events', 'image, content', signal),
     readAllRows('banners', 'image_path_pc, image_path_mobile', signal),
     readAllRows('portfolios', 'images, cover_image, description', signal),
+    readAllRows('resumes', 'photo_path', signal),
+    readAllRows('application_resume_snapshots', 'photo_path', signal, 'application_id'),
   ]);
 
   for (const row of profiles) {
@@ -187,6 +191,12 @@ async function collectStorageReferences(signal?: AbortSignal): Promise<Reference
     }
     addKnownBucketPath(references, 'portfolios', row.cover_image);
     addHtmlReferences(references, row.description);
+  }
+  for (const row of resumes) {
+    addKnownBucketPath(references, 'resume-files', row.photo_path);
+  }
+  for (const row of resumeSnapshots) {
+    addKnownBucketPath(references, 'resume-files', row.photo_path);
   }
   return references;
 }
