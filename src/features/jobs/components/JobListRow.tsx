@@ -9,6 +9,7 @@ import {
 } from '@/shared/utils/format';
 import { getDDayLabel, isUrgent } from '@/shared/utils/tier';
 import VerificationBadge from '@/features/verification/components/VerificationBadge';
+import BusinessTypeIcon from '@/shared/components/BusinessTypeIcon';
 
 interface Props {
   job: Job;
@@ -40,6 +41,7 @@ export default function JobListRow({ job }: Props) {
     >
       {/* ───── 모바일 레이아웃 ───── */}
       <div className="sm:hidden flex items-start gap-3">
+        <BusinessTypeIcon businessType={job.business_type} className="w-9 h-9 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-[12.5px] font-bold text-gray-500 truncate flex items-center gap-1">
             {companyName}
@@ -68,17 +70,20 @@ export default function JobListRow({ job }: Props) {
       {/* ───── 데스크톱 레이아웃 ───── */}
       <div className="hidden sm:grid sm:grid-cols-[188px_minmax(0,1fr)_180px_112px] sm:gap-5 sm:items-center">
         {/* ① 회사 */}
-        <div className="min-w-0">
-          <p className="text-[14.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
-            {companyName}
-            {job.author && (
-              <VerificationBadge
-                verificationStatus={job.author.verification_status}
-                phoneVerified={job.author.phone_verified}
-              />
-            )}
-          </p>
-          <p className="text-[12.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
+        <div className="flex items-center gap-2.5 min-w-0">
+          <BusinessTypeIcon businessType={job.business_type} className="w-10 h-10 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[14.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
+              {companyName}
+              {job.author && (
+                <VerificationBadge
+                  verificationStatus={job.author.verification_status}
+                  phoneVerified={job.author.phone_verified}
+                />
+              )}
+            </p>
+            <p className="text-[12.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
+          </div>
         </div>
 
         {/* ② 제목 + 키워드 + 카테고리 칩 */}

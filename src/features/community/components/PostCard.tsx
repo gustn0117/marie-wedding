@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
-import { formatRelativeTime } from '@/shared/utils/format';
+import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Post } from '@/types/database';
 
@@ -17,40 +17,44 @@ function extractFirstImage(html: string): string | null {
 export default function PostCard({ post }: PostCardProps) {
   const thumbnail = extractFirstImage(post.content);
   const preview = post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const isNew = !post.is_notice && Date.now() - new Date(post.created_at).getTime() < 24 * 60 * 60 * 1000;
+  const category = getCategoryLabel(post.category);
 
   return (
     <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group block border-b border-gray-100 last:border-b-0">
-      <div className="flex gap-4 p-4">
-        <div className="flex-1 min-w-0">
-          {/* 공지 / New Badge */}
-          {(post.is_notice || Date.now() - new Date(post.created_at).getTime() < 24 * 60 * 60 * 1000) && (
-            <div className="flex items-center gap-1.5 mb-2">
-              {post.is_notice ? (
-                <span className="inline-flex items-center rounded bg-primary px-2 py-0.5 text-[11px] font-bold text-white">공지</span>
-              ) : (
-                <span className="inline-flex items-center rounded border border-red-100 bg-state-urgent-bg px-1.5 py-0.5 text-[10px] font-bold text-state-urgent">N</span>
-              )}
-            </div>
-          )}
+      <div className="flex gap-3 p-4">
+        {/* 왼쪽 썸네일 (이미지 있는 글만) — 네이버 카페 스타일 */}
+        {thumbnail && (
+          <div className="shrink-0 w-[68px] h-[68px] sm:w-[76px] sm:h-[76px] bg-gray-100 overflow-hidden rounded border border-gray-100">
+            <img src={thumbnail} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
 
-          {/* Title */}
-          <h3 className="text-[16px] sm:text-[17px] font-bold text-ink group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
+        <div className="flex-1 min-w-0">
+          {/* Title 행 — 말머리(공지/카테고리) + 제목 + 댓글수 */}
+          <h3 className="text-[15.5px] sm:text-[16px] font-semibold text-ink group-hover:text-primary transition-colors leading-snug line-clamp-2">
+            {post.is_notice ? (
+              <span className="mr-1.5 align-middle inline-flex items-center rounded bg-primary px-1.5 py-0.5 text-[11px] font-bold text-white">공지</span>
+            ) : category ? (
+              <span className="mr-1.5 align-middle text-[13px] font-bold text-primary">[{category}]</span>
+            ) : null}
             {post.title}
+            {isNew && <span className="ml-1 align-middle text-[10px] font-bold text-state-urgent">N</span>}
             {post.comment_count !== undefined && post.comment_count > 0 && (
-              <span className="text-primary font-bold ml-1.5 text-sm">[{post.comment_count}]</span>
+              <span className="text-primary font-bold ml-1.5 text-[13px]">[{post.comment_count}]</span>
             )}
           </h3>
 
           {/* Content Preview */}
           {preview && (
-            <p className="text-sm text-gray-500 line-clamp-2 mb-3 leading-relaxed">{preview}</p>
+            <p className="text-[13px] text-gray-500 line-clamp-1 mt-1 leading-relaxed">{preview}</p>
           )}
 
-          {/* Meta */}
-          <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+          {/* Meta — 작성자 · 시간 · 좋아요 */}
+          <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap mt-2">
             {post.author && (
               <span className="flex items-center gap-1.5">
-                <ProfileAvatar profileImage={post.author.profile_image} name={post.author.company_name || post.author.contact_name} size="sm" className="!w-5 !h-5 !text-[10px]" />
+                <ProfileAvatar profileImage={post.author.profile_image} name={post.author.company_name || post.author.contact_name} size="sm" className="!w-4 !h-4 !text-[9px]" />
                 <span className="font-medium text-gray-600">
                   {post.author.company_name || post.author.contact_name}
                 </span>
@@ -71,13 +75,6 @@ export default function PostCard({ post }: PostCardProps) {
             )}
           </div>
         </div>
-
-        {/* Thumbnail */}
-        {thumbnail && (
-          <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 overflow-hidden rounded border border-gray-100">
-            <img src={thumbnail} alt="" className="w-full h-full object-cover" />
-          </div>
-        )}
       </div>
     </Link>
   );
