@@ -78,7 +78,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     if (!content.trim() || !profile) return;
     setIsSubmitting(true);
     try {
-      const newComment = await withTimeout(communityService.createComment(postId, content.trim(), profile.id), 10000);
+      const newComment = await withTimeout(communityService.createComment(postId, content.trim()), 10000);
       setComments((prev) => [...prev, newComment]);
       setContent('');
     } catch (err) {

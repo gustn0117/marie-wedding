@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/client';
+import { apiFetch } from '@/shared/utils/apiFetch';
 import type { Application, ApplicationStatus } from '@/types/database';
 
 export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
@@ -90,19 +91,19 @@ export const applicationService = {
     message: string;
     contactPhone?: string;
   }): Promise<Application> {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('applications')
-      .insert({
-        job_id: input.jobId,
-        applicant_id: input.applicantId,
-        message: input.message.trim(),
-        contact_phone: input.contactPhone?.trim() || null,
-      })
-      .select('*, job:jobs(*), applicant:profiles(*)')
-      .single();
-
-    if (error) throw error;
+    // service_role 서버 라우트 경유 — 클라이언트 .insert().select().single() 의
+    // RLS/트리거 hang 회피, 즉시 응답.
+    const res = await apiFetch('/api/applications/create', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jobId: input.jobId, message: input.message, contactPhone: input.contactPhone }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '접수에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Application;
   },
 

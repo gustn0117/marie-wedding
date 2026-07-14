@@ -183,21 +183,19 @@ export const communityService = {
   async createComment(
     postId: string,
     content: string,
-    authorId: string,
   ): Promise<Comment> {
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({
-        post_id: postId,
-        content,
-        author_id: authorId,
-      })
-      .select('*, author:profiles!author_id(*)')
-      .single();
-
-    if (error) throw error;
+    // service_role 서버 라우트 경유 — 클라이언트 insert hang 회피.
+    const res = await apiFetch('/api/comments/create', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId, content }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '댓글 작성에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Comment;
   },
 
