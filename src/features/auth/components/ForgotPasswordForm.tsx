@@ -1,41 +1,69 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
-import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ForgotPasswordForm() {
+  const [step, setStep] = useState<'request' | 'reset' | 'done'>('request');
   const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [sending, setSending] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sentAt, setSentAt] = useState(0);
+  const [left, setLeft] = useState(0);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    setSubmitting(true);
+  // 인증번호 3분 카운트다운
+  useEffect(() => {
+    if (!sentAt || step !== 'reset') { setLeft(0); return; }
+    const tick = () => setLeft(Math.max(0, 180 - Math.floor((Date.now() - sentAt) / 1000)));
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [sentAt, step]);
+
+  const sendCode = async () => {
+    if (!email.trim()) { setError('이메일을 입력해주세요.'); return; }
     setError(null);
+    setSending(true);
     try {
-      const supabase = createClient();
-      const redirectTo = typeof window !== 'undefined'
-        ? `${window.location.origin}${ROUTES.RESET_PASSWORD}`
-        : undefined;
-      const { error: apiError } = await withTimeout(
-        supabase.auth.resetPasswordForEmail(email, { redirectTo }),
-        12000,
-        '메일 전송 요청 지연',
-      );
-      // 보안상 이메일 존재 여부를 노출하지 않음 — 항상 성공처럼 표시
-      if (apiError && !apiError.message.toLowerCase().includes('email')) {
-        setError(apiError.message);
-      } else {
-        setSent(true);
-      }
-    } catch {
-      // 네트워크 등 실제 실패만 노출
-      setError('재설정 메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+      const res = await fetch('/api/password-reset/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
+      setStep('reset');
+      setSentAt(Date.now());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const submitReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(code)) { setError('인증번호 6자리를 입력해주세요.'); return; }
+    if (password.length < 6) { setError('비밀번호는 최소 6자 이상이어야 합니다.'); return; }
+    if (password !== confirm) { setError('비밀번호가 일치하지 않습니다.'); return; }
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/password-reset/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), code, password }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '비밀번호 변경에 실패했습니다.');
+      setStep('done');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.');
     } finally {
       setSubmitting(false);
     }
@@ -51,38 +79,29 @@ export default function ForgotPasswordForm() {
           <p className="text-sm text-text-secondary">비밀번호 재설정</p>
         </div>
 
-        {sent ? (
+        {error && (
+          <div className="mb-6 p-3 rounded bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">{error}</div>
+        )}
+
+        {step === 'done' ? (
           <div className="space-y-5 text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 flex items-center justify-center">
               <svg className="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             </div>
-            <h2 className="text-lg font-bold text-ink">메일을 확인해 주세요</h2>
-            <p className="text-sm text-gray-500 leading-relaxed">
-              가입된 이메일이라면 <span className="font-semibold text-ink">{email}</span> 으로<br />
-              비밀번호 재설정 링크를 보냈습니다.<br />
-              메일이 도착하지 않으면 스팸함도 확인해 주세요.
-            </p>
-            <Link href={ROUTES.LOGIN} className="btn-primary w-full inline-flex">로그인으로 돌아가기</Link>
+            <h2 className="text-lg font-bold text-ink">비밀번호가 변경되었습니다</h2>
+            <p className="text-sm text-gray-500">새 비밀번호로 로그인해주세요.</p>
+            <Link href={ROUTES.LOGIN} className="btn-primary w-full inline-flex">로그인하기</Link>
           </div>
-        ) : (
+        ) : step === 'request' ? (
           <>
             <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-              가입에 사용한 이메일을 입력하시면<br />재설정 링크를 보내드립니다.
+              가입에 사용한 이메일을 입력하시면<br />인증번호를 보내드립니다.
             </p>
-
-            {error && (
-              <div className="mb-6 p-3 rounded bg-state-urgent-bg border border-red-200 text-state-urgent text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-5">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">
-                  이메일
-                </label>
+                <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">이메일</label>
                 <input
                   id="email"
                   name="email"
@@ -90,28 +109,63 @@ export default function ForgotPasswordForm() {
                   autoComplete="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); if (error) setError(null); }}
                   placeholder="example@company.com"
                   className="input-field"
                 />
               </div>
-
-              <button
-                type="submit"
-                disabled={submitting || !email}
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              >
-                {submitting ? '발송 중...' : '재설정 링크 받기'}
+              <button type="button" onClick={sendCode} disabled={sending || !email} className="btn-primary w-full">
+                {sending ? '발송 중…' : '인증번호 받기'}
               </button>
-            </form>
-
+            </div>
             <p className="mt-6 text-center text-sm text-text-secondary">
               비밀번호가 기억나셨나요?{' '}
-              <Link href={ROUTES.LOGIN} className="font-medium text-primary hover:text-primary-dark transition-colors">
-                로그인
-              </Link>
+              <Link href={ROUTES.LOGIN} className="font-medium text-primary hover:text-primary-dark transition-colors">로그인</Link>
             </p>
           </>
+        ) : (
+          <form onSubmit={submitReset} className="space-y-5">
+            <p className="text-sm text-gray-500 leading-relaxed">
+              <span className="font-semibold text-ink">{email}</span> 으로 보낸<br />인증번호와 새 비밀번호를 입력해주세요.
+            </p>
+            <div>
+              <label htmlFor="code" className="block text-sm font-medium text-text-primary mb-1.5">인증번호</label>
+              <div className="relative">
+                <input
+                  id="code"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+                  placeholder="인증번호 6자리"
+                  className="input-field w-full pr-16"
+                />
+                {left > 0 && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold tabular-nums text-state-urgent">
+                    {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
+                  </span>
+                )}
+              </div>
+              <div className="mt-1.5 flex items-center justify-between">
+                <span className="text-[11.5px] text-gray-400">{left > 0 ? '메일로 받은 6자리 인증번호' : '인증번호가 만료되었습니다.'}</span>
+                <button type="button" onClick={sendCode} disabled={sending} className="text-[11.5px] font-semibold text-primary hover:text-primary-dark disabled:opacity-50">
+                  {sending ? '발송 중…' : '재전송'}
+                </button>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-text-primary mb-1.5">새 비밀번호</label>
+              <input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="6자 이상 입력하세요" className="input-field" />
+            </div>
+            <div>
+              <label htmlFor="confirm" className="block text-sm font-medium text-text-primary mb-1.5">새 비밀번호 확인</label>
+              <input id="confirm" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="비밀번호를 다시 입력하세요" className="input-field" />
+            </div>
+            <button type="submit" disabled={submitting} className="btn-primary w-full">
+              {submitting ? '변경 중…' : '비밀번호 변경'}
+            </button>
+          </form>
         )}
       </div>
     </div>

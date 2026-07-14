@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
         .from('email_otps')
         .select('verified_at')
         .eq('email', emailKey)
+        .eq('purpose', 'signup')
         .not('verified_at', 'is', null)
         .order('verified_at', { ascending: false })
         .limit(1)
