@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { ROUTES } from '@/shared/constants';
-import Logo from '@/shared/components/Logo';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
 export default function ForgotPasswordForm() {
@@ -46,8 +45,8 @@ export default function ForgotPasswordForm() {
     <div className="w-full max-w-md mx-auto">
       <div className="bg-surface rounded border border-border p-8 shadow-sm">
         <div className="flex flex-col items-center text-center mb-8 gap-2">
-          <Link href={ROUTES.HOME} aria-label="Marié 홈">
-            <Logo variant="full" size="lg" />
+          <Link href={ROUTES.HOME} className="text-4xl font-bold tracking-tight text-ink" aria-label="Marié 홈">
+            Marié
           </Link>
           <p className="text-sm text-text-secondary">비밀번호 재설정</p>
         </div>
