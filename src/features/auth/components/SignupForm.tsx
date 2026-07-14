@@ -38,9 +38,8 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(STEPS.SELECT_TYPE);
 
-  // 인증 방법: 이메일(기본, 항상 가능) 또는 휴대폰(SMS 키 설정 시)
-  const [verifyMethod, setVerifyMethod] = useState<'email' | 'phone'>('email');
-  const [smsEnabled, setSmsEnabled] = useState(false);
+  // 인증 방법: 현재 이메일만 사용(전화번호 인증 미도입). 휴대폰 OTP 코드는 유지하되 폼에선 숨김.
+  const [verifyMethod] = useState<'email' | 'phone'>('email');
 
   // 휴대폰 인증
   const [otpSent, setOtpSent] = useState(false);
@@ -57,13 +56,6 @@ export default function SignupForm() {
   const [emailOtpVerifying, setEmailOtpVerifying] = useState(false);
   const [emailOtpSentAt, setEmailOtpSentAt] = useState(0); // 발송 시각(ms) — 카운트다운 기준
   const [emailOtpLeft, setEmailOtpLeft] = useState(0);      // 남은 유효시간(초)
-
-  useEffect(() => {
-    fetch('/api/otp/status')
-      .then((r) => r.json())
-      .then((d) => setSmsEnabled(!!d?.phone))
-      .catch(() => setSmsEnabled(false));
-  }, []);
 
   // 이메일 인증번호 3분 카운트다운 (발송 시각 기준으로 매초 갱신)
   useEffect(() => {
@@ -336,33 +328,9 @@ export default function SignupForm() {
           {/* Step 1: 계정 정보 */}
           {step === STEPS.ACCOUNT && (
             <>
-              {/* 인증 방법 선택 */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">본인 인증 방법</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setVerifyMethod('email')}
-                    className={`py-2.5 rounded text-sm font-bold border transition-colors ${verifyMethod === 'email' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-300 hover:border-primary'}`}
-                  >
-                    이메일 인증
-                  </button>
-                  <button
-                    type="button"
-                    disabled={!smsEnabled}
-                    onClick={() => smsEnabled && setVerifyMethod('phone')}
-                    className={`py-2.5 rounded text-sm font-bold border transition-colors ${verifyMethod === 'phone' ? 'bg-primary text-white border-primary' : 'bg-white text-gray-600 border-gray-300 hover:border-primary'} disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-300`}
-                  >
-                    휴대폰 인증{!smsEnabled && ' (준비중)'}
-                  </button>
-                </div>
-                <p className="mt-1.5 text-[11.5px] text-gray-400">
-                  {verifyMethod === 'email' ? '가입 이메일로 인증번호를 보내드립니다.' : '다음 단계에서 휴대폰 번호로 인증합니다.'}
-                </p>
-              </div>
-
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-text-primary mb-1.5">이메일</label>
+                <p className="mb-1.5 text-[11.5px] text-gray-400">가입 이메일로 인증번호를 보내드립니다.</p>
                 <div className="flex gap-2">
                   <input id="email" name="email" type="email" autoComplete="email" autoFocus required value={formData.email} onChange={handleChange} disabled={emailVerified} placeholder="example@company.com" className="input-field flex-1 disabled:bg-gray-50 disabled:text-gray-500" />
                   {verifyMethod === 'email' && !emailVerified && (
