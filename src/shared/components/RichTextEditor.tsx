@@ -86,9 +86,42 @@ function sanitize(html: string): string {
   return template.innerHTML;
 }
 
+/** 드롭 좌표에서 editor 직계 블록 + 그 블록의 앞/뒤 여부를 구한다. */
+function caretBlockFromPoint(x: number, y: number, editor: HTMLElement): { block: HTMLElement; before: boolean } | null {
+  let node: Node | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const doc = document as any;
+  if (typeof doc.caretRangeFromPoint === 'function') {
+    node = doc.caretRangeFromPoint(x, y)?.startContainer ?? null;
+  } else if (typeof doc.caretPositionFromPoint === 'function') {
+    node = doc.caretPositionFromPoint(x, y)?.offsetNode ?? null;
+  }
+  let el: HTMLElement | null = node
+    ? (node.nodeType === Node.TEXT_NODE ? node.parentElement : (node as HTMLElement))
+    : null;
+  if (el) {
+    while (el && el.parentElement && el.parentElement !== editor) el = el.parentElement;
+  }
+  if (!el || el.parentElement !== editor) {
+    // fallback: Y 기준 가장 가까운 직계 블록
+    let best: HTMLElement | null = null;
+    let bestDist = Infinity;
+    for (const b of Array.from(editor.children) as HTMLElement[]) {
+      const r = b.getBoundingClientRect();
+      const dist = Math.abs(y - (r.top + r.height / 2));
+      if (dist < bestDist) { bestDist = dist; best = b; }
+    }
+    el = best;
+  }
+  if (!el) return null;
+  const rect = el.getBoundingClientRect();
+  return { block: el, before: y < rect.top + rect.height / 2 };
+}
+
 export default function RichTextEditor({ value, onChange, placeholder, minHeight = 160, className = '', imageBucket = 'job-images' }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
+  const draggedImgRef = useRef<HTMLImageElement | null>(null);
   const [activeFormats, setActiveFormats] = useState<Record<string, boolean>>({});
   const [uploading, setUploading] = useState(false);
   // 이미지 툴바 상태 — 선택된 이미지 요소와 뷰포트 기준 위치
@@ -223,6 +256,48 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     if (!sibling) return;
     if (dir === -1) editor.insertBefore(block, sibling);
     else editor.insertBefore(sibling, block);
+    handleInput();
+    const rect = img.getBoundingClientRect();
+    setImgToolbar({ el: img, top: rect.top, left: rect.left + rect.width / 2 });
+  };
+
+  // 이미지 드래그&드롭으로 재배치 (데스크톱). 모바일은 툴바 ↑/↓ 버튼 사용.
+  const handleDragStart = (e: React.DragEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG' && target.classList.contains('rich-text-image')) {
+      draggedImgRef.current = target as HTMLImageElement;
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', 'rt-img'); } catch { /* noop */ }
+      setImgToolbar(null);
+    } else {
+      draggedImgRef.current = null;
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (draggedImgRef.current) {
+      e.preventDefault(); // 드롭 허용
+      e.dataTransfer.dropEffect = 'move';
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    const img = draggedImgRef.current;
+    const editor = editorRef.current;
+    draggedImgRef.current = null;
+    if (!img || !editor) return;
+    e.preventDefault(); // 기본 드롭(중복 삽입) 방지
+
+    // 드래그된 이미지를 담은 editor 직계 블록
+    let imgBlock: HTMLElement = img;
+    while (imgBlock.parentElement && imgBlock.parentElement !== editor) imgBlock = imgBlock.parentElement;
+    if (imgBlock.parentElement !== editor) return;
+
+    const point = caretBlockFromPoint(e.clientX, e.clientY, editor);
+    if (!point || point.block === imgBlock) { handleInput(); return; }
+
+    if (point.before) editor.insertBefore(imgBlock, point.block);
+    else editor.insertBefore(imgBlock, point.block.nextSibling);
     handleInput();
     const rect = img.getBoundingClientRect();
     setImgToolbar({ el: img, top: rect.top, left: rect.left + rect.width / 2 });
@@ -387,6 +462,9 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
           onMouseUp={updateActiveFormats}
           onFocus={updateActiveFormats}
           onClick={handleEditorClick}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
           className="px-4 py-3 text-[15px] text-gray-900 focus:outline-none rich-text-content break-words rich-text-editor-body"
           style={{ minHeight }}
         />
@@ -448,7 +526,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <span>사진 클릭 → <span className="font-semibold text-gray-600">크기·정렬·이동</span> 조절 · 붙여넣기 가능</span>
+        <span>사진 <span className="font-semibold text-gray-600">드래그로 이동</span> · 클릭 시 크기·정렬 조절</span>
         <span>·</span>
         <span>권장 가로 <span className="font-semibold text-gray-600">1200px 이하</span></span>
         <span>·</span>
