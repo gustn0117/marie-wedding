@@ -137,10 +137,11 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   }, [availableSchedule, careerSummary, message, profile]);
   // 연락처는 필수 — 직접 입력했거나 프로필에 등록되어 있어야 함
   const phoneAvailable = contactPhone.trim().length >= 9 || (profile?.phone ?? '').trim().length >= 9;
-  const canSubmit = !!profile && message.trim().length >= 10 && phoneAvailable;
 
   const submit = async () => {
-    if (!profile || !canSubmit) return;
+    if (!profile) { toast('로그인이 필요합니다.', 'error'); return; }
+    if (message.trim().length < 10) { toast('지원 쪽지를 10자 이상 입력해주세요.', 'error'); return; }
+    if (!phoneAvailable) { toast('연락받을 휴대폰 번호를 입력해주세요.', 'error'); return; }
     setSubmitting(true);
     try {
       const created = await withTimeout(
@@ -453,7 +454,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
           <button
             type="button"
             onClick={submit}
-            disabled={!canSubmit || submitting}
+            disabled={submitting}
             className="btn-primary"
           >
             {submitting ? '접수 중...' : `${actionLabel} 접수`}
