@@ -154,14 +154,19 @@ export const jobService = {
    * Update job status (open/closed/filled/hidden). RLS restricts to author/admin.
    */
   async updateStatus(id: string, status: 'open' | 'closed' | 'filled' | 'hidden'): Promise<Job> {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('jobs')
-      .update({ status })
-      .eq('id', id)
-      .select('*')
-      .single();
-    if (error) throw new Error(`상태 변경 실패: ${error.message}`);
+    // service_role 서버 라우트 경유 — 클라이언트 .update().select().single() 이
+    // RLS 리드백/트리거로 hang(요청 시간 초과)하던 문제 우회.
+    const res = await apiFetch('/api/jobs/status', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, status }),
+    });
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '상태 변경에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Job;
   },
 };
