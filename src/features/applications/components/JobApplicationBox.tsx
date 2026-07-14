@@ -118,16 +118,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
     () => statusFilter === 'all' ? received : received.filter((item) => item.status === statusFilter),
     [received, statusFilter],
   );
-  const readinessItems = useMemo(() => {
-    if (!profile) return [];
-    return [
-      { key: 'profile', label: '프로필 소개', done: stripHtml(profile.bio ?? '').length >= 30 },
-      { key: 'phone', label: '연락처', done: !!(contactPhone || profile.phone) },
-      { key: 'career', label: '경력/강점', done: careerSummary.trim().length >= 10 },
-      { key: 'schedule', label: '가능 일정', done: availableSchedule.trim().length >= 5 },
-    ];
-  }, [availableSchedule, careerSummary, contactPhone, profile]);
-  const readinessCount = readinessItems.filter((item) => item.done).length;
   const composedMessage = useMemo(() => {
     if (!profile) return '';
     const name = profile.company_name || profile.contact_name || '지원자';
@@ -147,7 +137,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   }, [availableSchedule, careerSummary, message, profile]);
   // 연락처는 필수 — 직접 입력했거나 프로필에 등록되어 있어야 함
   const phoneAvailable = contactPhone.trim().length >= 9 || (profile?.phone ?? '').trim().length >= 9;
-  const canSubmit = !!profile && message.trim().length >= 10 && careerSummary.trim().length >= 10 && availableSchedule.trim().length >= 5 && phoneAvailable;
+  const canSubmit = !!profile && message.trim().length >= 10 && phoneAvailable;
 
   const submit = async () => {
     if (!profile || !canSubmit) return;
@@ -406,33 +396,11 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   return (
     <section className="bg-white border-y border-gray-200 p-6 md:p-8">
       <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하기</h2>
-      <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 경력, 가능 일정, 연락처를 함께 남겨주세요.</p>
-      <div className="mb-4 rounded border border-primary/20 bg-primary-50 p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-bold text-gray-900">지원서 완성도 {readinessCount}/{readinessItems.length}</p>
-            <p className="mt-1 text-xs text-gray-600">프로필과 지원서가 구체적일수록 답변을 받을 확률이 높아집니다.</p>
-          </div>
-          <Link href={ROUTES.MYPAGE_EDIT} className="shrink-0 text-xs font-bold text-primary hover:underline">프로필 보강</Link>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          {readinessItems.map((item) => (
-            <span
-              key={item.key}
-              className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${
-                item.done ? 'border-primary bg-white text-primary' : 'border-gray-200 bg-white text-gray-400'
-              }`}
-            >
-              {item.done ? '완료 ' : '필요 '}
-              {item.label}
-            </span>
-          ))}
-        </div>
-      </div>
+      <p className="text-sm text-gray-500 mb-4">공고 작성자가 바로 검토할 수 있도록 간단히 남겨주세요.</p>
       <div className="space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">경력/강점 <span className="text-state-urgent">*</span></span>
+            <span className="mb-1 block text-xs font-bold text-gray-700">경력/강점 <span className="font-normal text-gray-400">(선택)</span></span>
             <input
               value={careerSummary}
               onChange={(e) => setCareerSummary(e.target.value)}
@@ -441,7 +409,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             />
           </label>
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">가능 일정 <span className="text-state-urgent">*</span></span>
+            <span className="mb-1 block text-xs font-bold text-gray-700">가능 일정 <span className="font-normal text-gray-400">(선택)</span></span>
             <input
               value={availableSchedule}
               onChange={(e) => setAvailableSchedule(e.target.value)}

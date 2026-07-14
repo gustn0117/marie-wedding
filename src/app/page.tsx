@@ -1,4 +1,3 @@
-import { unstable_cache } from 'next/cache';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import type { Event, Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
@@ -123,10 +122,12 @@ async function getHomeData() {
 // 홈 데이터는 전원에게 동일한 공개 데이터(개인화 없음) → 30초 캐싱으로
 // 1,000 동시접속 시 매 요청 7쿼리 대신 30초당 1회 채움으로 DB 부하를 줄인다.
 // 개인화(로그인 헤더)는 별도 컴포넌트(쿠키 기반)라 캐싱 영향 없음.
-const getHomeDataCached = unstable_cache(getHomeData, ['home-data-v2'], { revalidate: 30, tags: ['home-data'] });
+// 홈은 force-dynamic 으로 매 요청 최신 조회. 이전엔 unstable_cache(30초)를 썼으나
+// 멀티워커(클러스터)마다 in-memory 캐시가 달라 '새로고침마다 공고가 떴다 사라졌다'
+// 하던 문제가 있어 제거. 쿼리는 내부 kong 직결 + 인덱스라 매 요청 조회해도 빠르다.
 
 export default async function HomePage() {
-  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events, counts } = await getHomeDataCached();
+  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events, counts } = await getHomeData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

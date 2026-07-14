@@ -40,6 +40,11 @@ export default async function MessageDetailPage({ params }: Props) {
   await supabase.from('notifications').update({ read_at: new Date().toISOString() })
     .eq('profile_id', me.id).eq('link_url', `/mypage/messages/${params.id}`).is('read_at', null);
 
+  // 상대방이 보낸 안읽음 메시지를 서버에서 읽음 처리 → 쪽지 안읽음 배지가 확실히 사라짐.
+  // (클라 mark_messages_read RPC 는 세션 토큰 지연으로 실패하던 문제 회피)
+  await supabase.from('messages').update({ read_at: new Date().toISOString() })
+    .eq('conversation_id', params.id).neq('sender_id', me.id).is('read_at', null);
+
   // 파트너 · 메시지 · 사이드바 대화목록을 병렬 조회(서버·내부 kong 직결이라 빠름).
   const [partnerRes, msgsRes, conversations] = await Promise.all([
     supabase.from('profiles').select('id, company_name, contact_name, deleted_at').eq('id', partnerId).maybeSingle(),
