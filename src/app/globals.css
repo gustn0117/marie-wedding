@@ -24,6 +24,10 @@
     color: #13161d;
     font-size: 15px;
     line-height: 1.6;
+    /* 모바일 가로 오버플로우 가드 — 어떤 요소가 뷰포트보다 넓어도 화면이 가로로
+       넘쳐 '축소하면 비율 깨짐'이 나지 않게. clip 이라 sticky 헤더는 유지됨.
+       (가로 스크롤이 필요한 곳은 자체 overflow-x-auto 컨테이너로 처리) */
+    overflow-x: clip;
   }
 
   /* Sticky header 아래로 앵커 target 이 숨지 않도록 스크롤 오프셋 확보.
