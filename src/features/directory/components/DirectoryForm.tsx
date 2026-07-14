@@ -343,7 +343,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         </div>
       )}
 
-      {/* Status Card — 기본 공개. 숨김은 옵션. */}
+      {/* Status Card — 기본 비공개(opt-in). 공개해야 디렉토리·검색에 노출. */}
       <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-state-new-bg/30' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded flex items-center justify-center ${listed ? 'bg-primary' : 'bg-gray-400'}`}>
@@ -356,9 +356,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-900">{listed ? '디렉토리에 공개 중' : '디렉토리에서 숨김 상태'}</p>
+            <p className="text-sm font-bold text-gray-900">{listed ? '디렉토리에 공개 중' : '아직 공개되지 않음 (비공개)'}</p>
             <p className="text-xs text-gray-500 mt-0.5">
-              {listed ? '다른 사용자가 검색·디렉토리에서 내 업체를 볼 수 있어요' : '내 정보가 검색·디렉토리에 노출되지 않아요. 다시 공개로 전환할 수 있어요'}
+              {listed ? '다른 사용자가 검색·인재/업체 프로필 목록에서 내 프로필을 볼 수 있어요' : '공개해야만 검색·인재/업체 프로필 목록에 노출됩니다. 준비되면 공개하세요'}
             </p>
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               listed ? 'border border-gray-300 bg-white text-gray-600 hover:bg-gray-50' : 'bg-primary text-white hover:bg-primary-dark'
             }`}
           >
-            {submitting ? '처리 중...' : listed ? '공개 해제' : '다시 공개'}
+            {submitting ? '처리 중...' : listed ? '공개 해제' : '디렉토리에 공개'}
           </button>
         </div>
       </div>
