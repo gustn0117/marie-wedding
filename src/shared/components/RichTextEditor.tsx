@@ -207,6 +207,27 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
     setImgToolbar(null);
   };
 
+  // 이미지(를 담은 블록)를 위/아래로 이동 — 드래그 대신 확실한 재배치(모바일 포함)
+  const moveImg = (dir: -1 | 1) => {
+    if (!imgToolbar) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const img = imgToolbar.el;
+    // 이미지를 담은 editor 직계 블록 찾기
+    let block: HTMLElement = img;
+    while (block.parentElement && block.parentElement !== editor) {
+      block = block.parentElement;
+    }
+    if (block.parentElement !== editor) return;
+    const sibling = dir === -1 ? block.previousElementSibling : block.nextElementSibling;
+    if (!sibling) return;
+    if (dir === -1) editor.insertBefore(block, sibling);
+    else editor.insertBefore(sibling, block);
+    handleInput();
+    const rect = img.getBoundingClientRect();
+    setImgToolbar({ el: img, top: rect.top, left: rect.left + rect.width / 2 });
+  };
+
   const handlePaste = (e: React.ClipboardEvent) => {
     // 붙여넣기 이미지(클립보드 이미지)를 업로드
     const items = e.clipboardData.items;
@@ -242,7 +263,8 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
       const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${imageBucket}/${path}`;
 
       editorRef.current?.focus();
-      document.execCommand('insertHTML', false, `<img src="${url}" alt="" class="rich-text-image" /><p><br></p>`);
+      // 기본을 '자기 줄(블록) + 가운데'로 삽입 → 줄바꿈·정렬·이동이 자연스럽게 동작.
+      document.execCommand('insertHTML', false, `<img src="${url}" alt="" class="rich-text-image" style="display:block;margin:10px auto;max-width:100%" /><p><br></p>`);
       handleInput();
     } catch (err) {
       toast(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.', 'error');
@@ -404,6 +426,16 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
               </button>
             </div>
             <div className="w-px h-5 bg-gray-200 mx-1" />
+            <div className="flex items-center gap-0.5 px-1">
+              <span className="text-[10px] text-gray-500 mr-1">이동</span>
+              <button type="button" onClick={() => moveImg(-1)} className="rounded p-1.5 text-gray-700 hover:bg-gray-100" title="위로 이동">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+              </button>
+              <button type="button" onClick={() => moveImg(1)} className="rounded p-1.5 text-gray-700 hover:bg-gray-100" title="아래로 이동">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+              </button>
+            </div>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
             <button type="button" onClick={deleteImg} className="rounded p-1.5 text-state-urgent hover:bg-state-urgent-bg" title="삭제">
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9M5 6h14l-1.09 13.09A2 2 0 0116 21H8a2 2 0 01-1.91-1.91L5 6zm5 0V4a1 1 0 011-1h2a1 1 0 011 1v2" /></svg>
             </button>
@@ -416,7 +448,7 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
         </svg>
-        <span>드래그 또는 붙여넣기도 가능</span>
+        <span>사진 클릭 → <span className="font-semibold text-gray-600">크기·정렬·이동</span> 조절 · 붙여넣기 가능</span>
         <span>·</span>
         <span>권장 가로 <span className="font-semibold text-gray-600">1200px 이하</span></span>
         <span>·</span>
