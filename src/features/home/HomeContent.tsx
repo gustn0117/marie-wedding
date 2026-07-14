@@ -146,7 +146,12 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
               <BoardList header={['글', '작성']}>
                 {featuredPosts.slice(0, 6).map((post) => (
                   <Link key={post.id} href={ROUTES.COMMUNITY_DETAIL(post.id)} className="board-row group">
-                    <span className="board-row-title group-hover:text-primary transition-colors">{post.title}</span>
+                    <span className="board-row-title group-hover:text-primary transition-colors">
+                      {post.is_notice && (
+                        <span className="inline-flex items-center rounded bg-primary px-1.5 py-0.5 mr-1.5 text-[10px] font-bold text-white align-middle">공지</span>
+                      )}
+                      {post.title}
+                    </span>
                     <span className="board-row-meta">
                       <span className="tabular-nums">{formatRelativeTime(post.created_at)}</span>
                     </span>

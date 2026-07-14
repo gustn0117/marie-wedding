@@ -5,7 +5,6 @@ import { useState, useCallback } from 'react';
 const SORT_OPTIONS = [
   { value: 'latest', label: '최신순' },
   { value: 'popular', label: '인기순' },
-  { value: 'views', label: '조회순' },
 ] as const;
 
 export default function PostFilters() {

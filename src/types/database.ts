@@ -176,13 +176,14 @@ export interface Message {
 
 export interface Post {
   id: string;
-  author_id: string;
+  author_id: string | null;
   title: string;
   content: string;
   category: PostCategory;
   region: string | null;
   view_count: number;
   like_count: number;
+  is_notice?: boolean;
   adopted_comment_id: string | null;
   created_at: string;
   updated_at: string;

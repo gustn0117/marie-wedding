@@ -4,7 +4,6 @@ import { ROUTES } from '@/shared/constants';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import PostFilters from '@/features/community/components/PostFilters';
 import PostList from '@/features/community/components/PostList';
-import HotPostsSection from '@/features/community/components/HotPostsSection';
 import type { Post } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
@@ -47,11 +46,12 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
     }
   }
 
+  // 공지글은 항상 최상단 고정
+  query = query.order('is_notice', { ascending: false });
+
   // 정렬 옵션
   if (sort === 'popular') {
     query = query.order('like_count', { ascending: false }).order('created_at', { ascending: false });
-  } else if (sort === 'views') {
-    query = query.order('view_count', { ascending: false }).order('created_at', { ascending: false });
   } else {
     query = query.order('created_at', { ascending: false });
   }
@@ -84,7 +84,6 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         }
       />
 
-      <HotPostsSection />
       <Suspense fallback={null}>
         <PostFilters />
       </Suspense>

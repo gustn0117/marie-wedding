@@ -14,7 +14,7 @@ import { createClient } from '@/lib/supabase/client';
 
 interface CommentSectionProps {
   postId: string;
-  postAuthorId: string;
+  postAuthorId: string | null;
   adoptedCommentId?: string | null;
   /** SSR 에서 marie_profile cookie 로 판정한 로그인 여부 — hydration flash 방지 */
   initialAuthenticated?: boolean;

@@ -12,7 +12,7 @@ import { friendlyError } from '@/shared/utils/errorMessages';
 
 interface PostDetailActionsProps {
   postId: string;
-  authorId: string;
+  authorId: string | null;
   /** SSR 에서 marie_profile cookie 로 미리 결정한 canManage — hydration flash 방지 */
   initialCanManage?: boolean;
 }

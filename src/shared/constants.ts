@@ -95,6 +95,7 @@ export const ROUTES = {
   ADMIN_USERS: '/admin/users',
   ADMIN_JOBS: '/admin/jobs',
   ADMIN_POSTS: '/admin/posts',
+  ADMIN_NOTICE: '/admin/notice',
   ADMIN_COMMENTS: '/admin/comments',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_INQUIRIES: '/admin/inquiries',

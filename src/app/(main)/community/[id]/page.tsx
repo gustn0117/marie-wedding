@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
-import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
+import { formatRelativeTime } from '@/shared/utils/format';
 import type { Post } from '@/types/database';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import RichTextView from '@/shared/components/RichTextView';
@@ -21,7 +21,6 @@ interface PageProps {
 
 async function getPostData(id: string, viewerProfileId: string | null) {
   const supabase = createServerQueryClient();
-  await supabase.rpc('increment_view_count', { post_id: id });
 
   const { data: post } = await supabase
     .from('posts')
@@ -73,23 +72,27 @@ export default async function PostDetailPage({ params }: PageProps) {
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.COMMUNITY} className="text-gray-500 hover:text-primary transition-colors">커뮤니티</Link>
-        <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
-        <Link href={`${ROUTES.COMMUNITY}?category=${post.category}`} className="text-gray-500 hover:text-primary transition-colors">
-          {getCategoryLabel(post.category)}
-        </Link>
+        {post.is_notice && (
+          <>
+            <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+            <span className="text-primary font-semibold">공지</span>
+          </>
+        )}
       </nav>
 
       {/* Post Card */}
       <article className="bg-white border-y border-gray-200 overflow-hidden">
         {/* Header */}
         <header className="p-6 md:p-8 border-b border-gray-100">
-          {/* 카테고리 chip ── 우측: 작성자 전용 수정/삭제 */}
+          {/* 공지 배지 ── 우측: 작성자 전용 수정/삭제 */}
           <div className="flex items-start justify-between gap-3 mb-3">
-            <span className="inline-flex items-center px-2.5 py-1 bg-primary-50 text-primary text-xs font-semibold">
-              {getCategoryLabel(post.category)}
-            </span>
+            {post.is_notice ? (
+              <span className="inline-flex items-center rounded bg-primary px-2.5 py-1 text-xs font-bold text-white">공지</span>
+            ) : (
+              <span />
+            )}
             <PostDetailActions
               postId={post.id}
               authorId={post.author_id}
@@ -104,23 +107,15 @@ export default async function PostDetailPage({ params }: PageProps) {
           <div className="flex items-center gap-3">
             <ProfileAvatar
               profileImage={post.author?.profile_image}
-              name={post.author?.company_name || post.author?.contact_name || '?'}
+              name={post.is_notice ? '마리에 운영팀' : (post.author?.company_name || post.author?.contact_name || '?')}
               size="sm"
             />
             <div>
               <p className="text-sm font-semibold text-gray-900">
-                {post.author?.company_name ?? post.author?.contact_name ?? '알 수 없음'}
+                {post.is_notice ? '마리에 운영팀' : (post.author?.company_name ?? post.author?.contact_name ?? '알 수 없음')}
               </p>
               <div className="flex items-center gap-2 text-xs text-gray-400">
                 <time>{formatRelativeTime(post.created_at)}</time>
-                <span className="w-px h-3 bg-gray-200" />
-                <span className="flex items-center gap-1">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  {post.view_count.toLocaleString()}
-                </span>
                 <span className="w-px h-3 bg-gray-200" />
                 <span className="flex items-center gap-1">
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">

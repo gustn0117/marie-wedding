@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
-import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
+import { formatRelativeTime } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Post } from '@/types/database';
 
@@ -22,15 +22,16 @@ export default function PostCard({ post }: PostCardProps) {
     <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group block border-b border-gray-100 last:border-b-0">
       <div className="flex gap-4 p-4">
         <div className="flex-1 min-w-0">
-          {/* Category + New Badge */}
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="inline-flex items-center rounded border border-primary-200 bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary">
-              {getCategoryLabel(post.category)}
-            </span>
-            {Date.now() - new Date(post.created_at).getTime() < 24 * 60 * 60 * 1000 && (
-              <span className="inline-flex items-center rounded border border-red-100 bg-state-urgent-bg px-1.5 py-0.5 text-[10px] font-bold text-state-urgent">N</span>
-            )}
-          </div>
+          {/* 공지 / New Badge */}
+          {(post.is_notice || Date.now() - new Date(post.created_at).getTime() < 24 * 60 * 60 * 1000) && (
+            <div className="flex items-center gap-1.5 mb-2">
+              {post.is_notice ? (
+                <span className="inline-flex items-center rounded bg-primary px-2 py-0.5 text-[11px] font-bold text-white">공지</span>
+              ) : (
+                <span className="inline-flex items-center rounded border border-red-100 bg-state-urgent-bg px-1.5 py-0.5 text-[10px] font-bold text-state-urgent">N</span>
+              )}
+            </div>
+          )}
 
           {/* Title */}
           <h3 className="text-[16px] sm:text-[17px] font-bold text-ink group-hover:text-primary transition-colors leading-snug mb-1.5 line-clamp-2">
@@ -57,14 +58,6 @@ export default function PostCard({ post }: PostCardProps) {
             )}
             <span>·</span>
             <time>{formatRelativeTime(post.created_at)}</time>
-            <span>·</span>
-            <span className="flex items-center gap-1">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {post.view_count.toLocaleString()}
-            </span>
             {post.like_count > 0 && (
               <>
                 <span>·</span>

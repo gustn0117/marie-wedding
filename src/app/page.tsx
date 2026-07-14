@@ -31,6 +31,7 @@ async function getHomeData() {
       .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
       .is('deleted_at', null)
       .filter('comments.deleted_at', 'is', null)
+      .order('is_notice', { ascending: false })
       .order('created_at', { ascending: false })
       .range(0, 4),
     supabase
