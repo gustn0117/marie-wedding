@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { authService } from '@/features/auth/services/auth-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -29,6 +29,7 @@ export default function SignupForm() {
     password: '',
     confirmPassword: '',
     contactName: '',
+    phone: '',
     regions: [],
     businessTypes: [],
     companyName: '',
@@ -36,6 +37,63 @@ export default function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(STEPS.SELECT_TYPE);
+
+  // 휴대폰 인증 (SMS 활성화 시에만 강제)
+  const [smsEnabled, setSmsEnabled] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/otp/status')
+      .then((r) => r.json())
+      .then((d) => setSmsEnabled(!!d?.enabled))
+      .catch(() => setSmsEnabled(false));
+  }, []);
+
+  const sendOtp = async () => {
+    const digits = formData.phone.replace(/[^0-9]/g, '');
+    if (!/^01[0-9]{8,9}$/.test(digits)) { setError('올바른 휴대폰 번호를 입력해주세요.'); return; }
+    setError(null);
+    setOtpSending(true);
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digits }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '인증번호 발송에 실패했습니다.');
+      setOtpSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증번호 발송에 실패했습니다.');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    const digits = formData.phone.replace(/[^0-9]/g, '');
+    if (!/^\d{6}$/.test(otpCode)) { setError('인증번호 6자리를 입력해주세요.'); return; }
+    setError(null);
+    setOtpVerifying(true);
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: digits, code: otpCode }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || '인증에 실패했습니다.');
+      setPhoneVerified(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '인증에 실패했습니다.');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -56,6 +114,7 @@ export default function SignupForm() {
 
   const validateProfile = (): boolean => {
     if (!formData.contactName.trim()) { setError('이름을 입력해주세요.'); return false; }
+    if (smsEnabled && !phoneVerified) { setError('휴대폰 인증을 완료해주세요.'); return false; }
     if (formData.regions.length === 0) { setError('지역을 선택해주세요.'); return false; }
     if (formData.accountType === 'business') {
       if (formData.businessTypes.length === 0) { setError('업종을 1개 이상 선택해주세요.'); return false; }
@@ -78,6 +137,7 @@ export default function SignupForm() {
         regions: formData.regions,
         businessTypes: formData.businessTypes.length > 0 ? formData.businessTypes : undefined,
         companyName: formData.companyName?.trim() || undefined,
+        phone: formData.phone.replace(/[^0-9]/g, '') || undefined,
       }), 15000);
       // router.push는 client navigation이라 미들웨어를 통과하지 않아 marie_profile cookie가 set되지 않음.
       // 가입 직후엔 full reload로 헤더(profile/이름/로그아웃 메뉴)가 즉시 반영되도록 한다.
@@ -233,6 +293,59 @@ export default function SignupForm() {
                   {formData.accountType === 'business' ? '담당자명' : '이름'}
                 </label>
                 <input id="contactName" name="contactName" type="text" required value={formData.contactName} onChange={handleChange} placeholder={formData.accountType === 'business' ? '담당자명을 입력하세요' : '이름을 입력하세요'} className="input-field" />
+              </div>
+
+              {/* 휴대폰 (+ SMS 활성화 시 인증) */}
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-text-primary mb-1.5">
+                  휴대폰 번호 {smsEnabled ? <span className="text-state-urgent">*</span> : <span className="text-text-muted">(선택)</span>}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    value={formData.phone}
+                    onChange={(e) => {
+                      setFormData((prev) => ({ ...prev, phone: e.target.value }));
+                      setPhoneVerified(false);
+                      setOtpSent(false);
+                      if (error) setError(null);
+                    }}
+                    disabled={phoneVerified}
+                    placeholder="01012345678"
+                    className="input-field flex-1 disabled:bg-gray-50 disabled:text-gray-500"
+                  />
+                  {smsEnabled && !phoneVerified && (
+                    <button type="button" onClick={sendOtp} disabled={otpSending} className="btn-outline whitespace-nowrap px-4">
+                      {otpSending ? '전송 중…' : otpSent ? '재전송' : '인증번호'}
+                    </button>
+                  )}
+                  {phoneVerified && (
+                    <span className="inline-flex items-center gap-1 px-3 text-sm font-bold text-emerald-600 whitespace-nowrap">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                      인증됨
+                    </span>
+                  )}
+                </div>
+                {smsEnabled && otpSent && !phoneVerified && (
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="인증번호 6자리"
+                      className="input-field flex-1"
+                    />
+                    <button type="button" onClick={verifyOtp} disabled={otpVerifying} className="btn-primary whitespace-nowrap px-4">
+                      {otpVerifying ? '확인 중…' : '확인'}
+                    </button>
+                  </div>
+                )}
               </div>
 
               {formData.accountType === 'business' && (

@@ -1,6 +1,12 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { validateEmail } from '@/shared/utils/validation';
+import { isSmsEnabled, normalizePhone, isValidPhone } from '@/lib/otp';
+import { sendEmail } from '@/features/notifications/lib/email';
+import { welcomeEmail } from '@/features/notifications/lib/templates';
+
+// 휴대폰 인증 후 회원가입까지 허용하는 시간 (인증 완료 → 가입 폼 제출)
+const PHONE_VERIFY_WINDOW_MS = 30 * 60 * 1000; // 30분
 
 // ---------------------------------------------------------------------------
 // In-memory 슬라이딩 윈도우 rate limiter
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, accountType, contactName, regions, businessTypes, companyName } = body;
+    const { email, password, accountType, contactName, regions, businessTypes, companyName, phone } = body;
 
     if (!email || !password || !contactName || !regions?.length) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
@@ -118,6 +124,27 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServiceClient();
 
+    // 0. 휴대폰 인증 확인 — SMS 가 활성화된 경우에만 강제.
+    //    (NHN 키 미설정 시 isSmsEnabled()=false → 인증번호가 실제로 안 가므로 요구하지 않는다.)
+    const phoneDigits = normalizePhone(phone);
+    const smsOn = isSmsEnabled();
+    if (smsOn) {
+      if (!isValidPhone(phoneDigits)) {
+        return NextResponse.json({ error: '휴대폰 인증을 완료해주세요.' }, { status: 400 });
+      }
+      const { data: otp } = await supabase
+        .from('phone_otps')
+        .select('verified_at')
+        .eq('phone', phoneDigits)
+        .not('verified_at', 'is', null)
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!otp?.verified_at || Date.now() - new Date(otp.verified_at).getTime() > PHONE_VERIFY_WINDOW_MS) {
+        return NextResponse.json({ error: '휴대폰 인증을 다시 완료해주세요.' }, { status: 400 });
+      }
+    }
+
     // 1. Create auth user (auto-confirmed with admin API)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
@@ -148,6 +175,15 @@ export async function POST(request: NextRequest) {
       onboarded_at: new Date().toISOString(),
     };
 
+    // 휴대폰: 인증 완료(SMS on)면 verified 로 저장, 아니면 입력값만(선택) 저장.
+    if (phoneDigits && isValidPhone(phoneDigits)) {
+      profileData.phone = phoneDigits;
+      if (smsOn) {
+        profileData.phone_verified = true;
+        profileData.phone_verified_at = new Date().toISOString();
+      }
+    }
+
     if (accountType === 'business') {
       profileData.business_type = Array.isArray(businessTypes) ? businessTypes.join(',') : businessTypes;
       profileData.company_name = companyName;
@@ -159,6 +195,19 @@ export async function POST(request: NextRequest) {
       // Cleanup: delete the auth user if profile creation fails
       await supabase.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json({ error: `프로필 생성 실패: ${profileError.message}` }, { status: 500 });
+    }
+
+    // 사용한 인증번호 정리(재사용 방지) — 실패해도 가입엔 영향 없음.
+    if (smsOn && phoneDigits) {
+      await supabase.from('phone_otps').delete().eq('phone', phoneDigits).then(undefined, () => {});
+    }
+
+    // 회원가입 환영 메일 — best-effort. 실패해도 가입은 성공 처리.
+    try {
+      const { subject, html, text } = welcomeEmail(contactName);
+      await sendEmail({ to: email, subject, html, text });
+    } catch (mailErr) {
+      console.error('[signup] welcome email failed:', mailErr);
     }
 
     return NextResponse.json({ success: true, userId: authData.user.id });

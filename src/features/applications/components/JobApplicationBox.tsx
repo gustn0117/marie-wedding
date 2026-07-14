@@ -157,6 +157,12 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       setMessage('');
       setCareerSummary('');
       setAvailableSchedule('');
+      // 채용자에게 새 지원자 알림 이메일 — best-effort (실패해도 지원 접수엔 영향 없음)
+      fetch('/api/notify/application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ applicationId: created.id }),
+      }).catch(() => {});
     } catch (err) {
       const msg = err instanceof Error
         ? err.message.includes('duplicate') ? '이미 접수된 내역이 있습니다.'
