@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { apiFetch } from '@/shared/utils/apiFetch';
 import type { Review, ReviewTag } from '@/types/database';
 
 export const reviewService = {
@@ -17,12 +18,18 @@ export const reviewService = {
   },
 
   async submit(applicationId: string, tagIds: string[]): Promise<Review> {
-    const supabase = createClient();
-    const { data, error } = await supabase.rpc('submit_review', {
-      p_application_id: applicationId,
-      p_tag_ids: tagIds,
+    // SSR 세션 서버 라우트 경유 — 클라이언트 rpc 의 세션토큰 hang 회피.
+    const res = await apiFetch('/api/reviews/submit', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ applicationId, tagIds }),
     });
-    if (error) throw error;
+    if (!res.ok) {
+      const b = await res.json().catch(() => ({ error: '' }));
+      throw new Error(b.error || '리뷰 제출에 실패했습니다.');
+    }
+    const { data } = await res.json();
     return data as Review;
   },
 

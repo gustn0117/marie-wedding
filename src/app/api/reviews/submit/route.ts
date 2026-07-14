@@ -1,0 +1,43 @@
+import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
+import { NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
+import { cookies } from 'next/headers';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+/**
+ * 리뷰 제출 — submit_review RPC 는 auth.uid() 로 리뷰어를 판별하므로
+ * SSR 세션 클라이언트로 서버(내부 kong)에서 호출. 클라이언트가 Cloudflare 경유로
+ * rpc 직접 호출 시 세션토큰 지연으로 hang 하던 문제 우회.
+ * Body: { applicationId, tagIds: string[] }
+ */
+export async function POST(request: Request) {
+  let body: { applicationId?: string; tagIds?: string[] };
+  try { body = await request.json(); } catch {
+    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
+  }
+  const { applicationId, tagIds } = body;
+  if (!applicationId || !Array.isArray(tagIds)) {
+    return NextResponse.json({ error: '리뷰 정보를 확인해주세요.' }, { status: 400 });
+  }
+
+  const cookieStore = await cookies();
+  const ssr = createServerClient(SUPABASE_SERVER_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
+    cookies: {
+      getAll() { return cookieStore.getAll(); },
+      setAll(list) { list.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); },
+    },
+  });
+  const { data: { user } } = await ssr.auth.getUser();
+  if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+
+  const { data, error } = await ssr.rpc('submit_review', {
+    p_application_id: applicationId,
+    p_tag_ids: tagIds,
+  });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ data });
+}
