@@ -9,7 +9,6 @@ import RichTextEditor from '@/shared/components/RichTextEditor';
 import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
-import { toast } from '@/shared/components/Toast';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -79,7 +78,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData?.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}` : null
   );
@@ -93,32 +92,37 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     setSections((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 파일 고르는 즉시 백그라운드 업로드 → 저장 시엔 이미 올라가 있어 즉시 완료.
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    // 크기 제한 없음 — 저장 시 자동 압축.
     if (!file.type.startsWith('image/')) { setError('이미지 파일만 업로드할 수 있습니다.'); return; }
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    setImagePreview(URL.createObjectURL(file)); // 즉시 미리보기
     setError(null);
+    setImageUploading(true);
+    try {
+      const supabase = createClient();
+      const compressed = await compressImage(file, { maxDimension: 1280, quality: 0.8 });
+      const ext = compressed.name.split('.').pop() || 'jpg';
+      const path = `${Date.now()}.${ext}`;
+      const { error: uploadError } = await withTimeout(
+        supabase.storage.from('job-images').upload(path, compressed, { upsert: true }),
+        60000, '이미지 업로드가 너무 오래 걸려요.',
+      );
+      if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
+      setFormData(prev => ({ ...prev, image: path })); // 업로드 완료 → 경로 저장
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.');
+      setImagePreview(formData.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${formData.image}` : null);
+    } finally {
+      setImageUploading(false);
+    }
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
     setImagePreview(null);
     setFormData(prev => ({ ...prev, image: null }));
     if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const uploadImage = async (): Promise<string | null> => {
-    if (!imageFile) return formData.image || null;
-    const supabase = createClient();
-    const compressed = await compressImage(imageFile, { maxDimension: 1280, quality: 0.8 });
-    const ext = compressed.name.split('.').pop() || 'jpg';
-    const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 60000, '이미지 업로드가 너무 오래 걸려요.');
-    if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
-    return path;
   };
 
   const validate = (): string | null => {
@@ -165,29 +169,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
     setLoading(true);
     try {
-      let imagePath = formData.image;
-      let imageFailed = false;
-      if (imageFile) {
-        // 이미지 업로드는 비치명적 — 실패해도 공고는 등록한다(기존 이미지 유지).
-        try {
-          imagePath = await uploadImage();
-        } catch (e) {
-          console.warn('[JobForm] 이미지 업로드 실패, 공고는 계속 등록:', e);
-          imageFailed = true;
-          imagePath = formData.image ?? null;
-        }
-      } else if (!imagePreview) {
-        imagePath = null;
-      }
+      // 이미지는 파일 선택 시 이미 업로드됨(formData.image=path) → 저장은 텍스트만이라 즉시 완료.
       await onSubmit({
         ...formData,
         postingType: 'hiring',
-        image: imagePath,
+        image: imagePreview ? formData.image ?? null : null,
         description: composedDescription, // 5개 섹션을 합친 HTML
       });
-      if (imageFailed) {
-        toast('공고는 등록됐지만 이미지 업로드에 실패했어요. 수정에서 다시 시도해주세요.', 'error');
-      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {
@@ -482,10 +470,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || imageUploading}
             className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '처리 중...' : submitLabel}
+            {loading ? '처리 중...' : imageUploading ? '이미지 올리는 중…' : submitLabel}
           </button>
         </div>
       </div>
