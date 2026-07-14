@@ -116,7 +116,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     const compressed = await compressImage(imageFile, { maxDimension: 1280, quality: 0.8 });
     const ext = compressed.name.split('.').pop() || 'jpg';
     const path = `${Date.now()}.${ext}`;
-    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 30000, '이미지 업로드가 너무 오래 걸려요.');
+    const { error: uploadError } = await withTimeout(supabase.storage.from('job-images').upload(path, compressed, { upsert: true }), 60000, '이미지 업로드가 너무 오래 걸려요.');
     if (uploadError) throw new Error('이미지 업로드에 실패했습니다.');
     return path;
   };

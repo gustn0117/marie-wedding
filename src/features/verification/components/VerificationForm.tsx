@@ -38,7 +38,7 @@ export default function VerificationForm() {
       const doc = file.type.startsWith('image/')
         ? await compressImage(file, { maxDimension: 2200, quality: 0.8 })
         : file;
-      const result = await withTimeout(submitVerification({ businessNumber, documentFile: doc }), 20000);
+      const result = await withTimeout(submitVerification({ businessNumber, documentFile: doc }), 65000);
       if (!result.ok) { setError(result.error); return; }
       setDone(true);
     } catch (err) {

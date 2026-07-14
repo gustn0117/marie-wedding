@@ -108,7 +108,7 @@ export const jobService = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'create', payload: formData }),
-    });
+    }, 60000);
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' }));
       throw new Error(body.error || `등록에 실패했습니다 (HTTP ${res.status}).`);
@@ -126,7 +126,7 @@ export const jobService = {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode: 'update', id, payload: formData }),
-    });
+    }, 60000);
     if (!res.ok) {
       const body = await res.json().catch(() => ({ error: '' }));
       throw new Error(body.error || `수정에 실패했습니다 (HTTP ${res.status}).`);

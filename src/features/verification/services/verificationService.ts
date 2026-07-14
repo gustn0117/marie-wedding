@@ -14,11 +14,12 @@ export async function submitVerification(req: VerificationSubmitRequest): Promis
   form.set('businessNumber', req.businessNumber);
   form.set('document', req.documentFile);
 
+  // 파일 업로드라 기본 15초로는 느린 연결/큰 파일에서 끊긴다 → 60초.
   const res = await apiFetch('/api/verifications/submit', {
     method: 'POST',
     body: form,
     headers: { Authorization: `Bearer ${session.access_token}` },
-  });
+  }, 60000);
 
   if (!res.ok) {
     const text = await res.text();
