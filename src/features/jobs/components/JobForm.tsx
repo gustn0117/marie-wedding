@@ -5,6 +5,7 @@ import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 import { compressImage } from '@/shared/utils/image';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
@@ -22,6 +23,7 @@ import {
   EMPTY_JOB_SECTIONS,
   serializeSections,
   parseSections,
+  sectionHasContent,
   type JobSectionKey,
   type JobSectionMap,
 } from '@/features/jobs/lib/parse-job-description';
@@ -122,7 +124,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const validate = (): string | null => {
     if (!formData.title.trim()) return '제목을 입력해주세요.';
     for (const sec of JOB_SECTIONS) {
-      if (FORM_SECTION_META[sec.key].required && !sections[sec.key].trim()) {
+      if (FORM_SECTION_META[sec.key].required && !sectionHasContent(sections[sec.key])) {
         return `${sec.title}를 입력해주세요.`;
       }
     }
@@ -341,21 +343,19 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             return (
             <div key={sec.key}>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor={`section-${sec.key}`} className="text-sm font-semibold text-gray-800">
+                <label className="text-sm font-semibold text-gray-800">
                   {sec.title}
                   {meta.required && <span className="text-state-urgent ml-1">*</span>}
                   {!meta.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
                 </label>
-                <span className="text-[11px] text-gray-400 tabular-nums">{sections[sec.key].length}자</span>
+                <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
               </div>
-              <textarea
-                id={`section-${sec.key}`}
+              <RichTextEditor
                 value={sections[sec.key]}
-                onChange={(e) => setSection(sec.key, e.target.value)}
+                onChange={(html) => setSection(sec.key, html)}
                 placeholder={meta.placeholder}
-                rows={sec.key === 'extra' ? 3 : 4}
-                className="w-full rounded border border-gray-300 px-4 py-3 text-[14px] text-gray-900 placeholder:text-gray-400 placeholder:whitespace-pre-line focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100 resize-y"
-                required={meta.required}
+                minHeight={sec.key === 'extra' ? 90 : 120}
+                imageBucket="job-images"
               />
             </div>
             );

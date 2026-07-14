@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { toast } from '@/shared/components/Toast';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 
 interface NoticeRow {
   id: string;
@@ -11,12 +12,9 @@ interface NoticeRow {
   created_at: string;
 }
 
-// 줄바꿈 있는 평문 → 간단한 HTML 문단 (RichTextView 호환)
-function textToHtml(text: string): string {
-  return text
-    .split(/\n{2,}/)
-    .map((para) => `<p>${para.replace(/\n/g, '<br/>').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`)
-    .join('');
+// 리치 에디터 HTML 에 실질 내용(텍스트/이미지)이 있는지
+function hasContent(html: string): boolean {
+  return html.replace(/<[^>]*>/g, '').trim().length > 0 || /<img/i.test(html);
 }
 
 export default function AdminNoticePage() {
@@ -42,7 +40,7 @@ export default function AdminNoticePage() {
   }, [load]);
 
   const submit = async () => {
-    if (!title.trim() || !content.trim()) {
+    if (!title.trim() || !hasContent(content)) {
       toast('제목과 내용을 입력해주세요.', 'error');
       return;
     }
@@ -52,7 +50,7 @@ export default function AdminNoticePage() {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title.trim(), content: textToHtml(content.trim()) }),
+        body: JSON.stringify({ title: title.trim(), content }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || '등록에 실패했습니다.');
@@ -105,15 +103,12 @@ export default function AdminNoticePage() {
           />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="n-content" className="block text-sm font-semibold text-gray-800">내용</label>
-          <textarea
-            id="n-content"
+          <label className="block text-sm font-semibold text-gray-800">내용</label>
+          <RichTextEditor
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={10}
-            className="w-full rounded border border-gray-300 px-4 py-3 text-sm resize-y focus:outline-none focus:border-primary"
-            placeholder="공지 내용을 입력하세요. 줄바꿈은 그대로 유지됩니다."
-            maxLength={10000}
+            onChange={setContent}
+            placeholder="공지 내용을 입력하세요. 이미지·굵기·제목 등 서식을 사용할 수 있어요."
+            minHeight={240}
           />
         </div>
         <div className="flex justify-end">

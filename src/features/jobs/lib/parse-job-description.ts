@@ -74,13 +74,19 @@ export function htmlToPlain(html: string): string {
     .trim();
 }
 
+/** 섹션에 실질 내용(텍스트 또는 이미지)이 있는지 */
+export function sectionHasContent(html: string): boolean {
+  if (!html) return false;
+  return htmlToPlain(html).trim().length > 0 || /<img/i.test(html);
+}
+
+// 섹션은 이제 RichTextEditor 가 만든 HTML(문단·이미지·서식 포함)을 그대로 담는다.
 export function serializeSections(s: JobSectionMap): string {
   const blocks: string[] = [];
   for (const sec of JOB_SECTIONS) {
-    const v = s[sec.key].trim();
-    if (!v) continue;
-    const html = v.split(/\n+/).map((line) => `<p>${escapeHtml(line)}</p>`).join('');
-    blocks.push(`<h3>${escapeHtml(sec.title)}</h3>${html}`);
+    const v = (s[sec.key] || '').trim();
+    if (!sectionHasContent(v)) continue;
+    blocks.push(`<h3>${escapeHtml(sec.title)}</h3>${v}`);
   }
   return blocks.join('');
 }
@@ -102,17 +108,16 @@ export function parseSections(html: string): { sections: JobSectionMap; fallback
     const body = m[2].trim();
     const k = SECTION_LABEL_TO_KEY[heading];
     if (k) {
-      const plain = htmlToPlain(body);
-      if (plain) map[k] = (map[k] ? map[k] + '\n' : '') + plain;
+      // 본문 HTML(문단·이미지·서식)을 그대로 유지 — 리치 에디터로 다시 편집 가능하도록
+      if (body) map[k] = (map[k] || '') + body;
       matched++;
     } else if (body) {
-      const plain = htmlToPlain(body);
-      if (plain) map.extra = (map.extra ? map.extra + '\n' : '') + plain;
+      map.extra = (map.extra || '') + body;
     }
   }
 
   if (matched === 0) {
-    map.extra = htmlToPlain(html);
+    map.extra = html;
     return { sections: map, fallbackUsed: true };
   }
   return { sections: map, fallbackUsed: false };
