@@ -25,7 +25,9 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const businessNumber = (form.get('businessNumber') || '').toString().trim();
   const doc = form.get('document');
-  if (!businessNumber || !(doc instanceof File)) {
+  // ⚠️ Node 18 런타임엔 File 전역이 없어 `doc instanceof File` 이 ReferenceError → 500(빈 본문).
+  // FormDataEntryValue 는 string | File 이므로 문자열이 아니면 파일로 판별한다.
+  if (!businessNumber || !doc || typeof doc === 'string' || typeof doc.arrayBuffer !== 'function') {
     return new NextResponse('잘못된 요청입니다.', { status: 400 });
   }
   if (!/^[0-9-]{10,14}$/.test(businessNumber)) {
