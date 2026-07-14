@@ -18,7 +18,7 @@ function mailFrom(): string {
   return (
     process.env.MAIL_FROM ||
     process.env.RESEND_FROM_ADDRESS ||
-    'Marié <noreply@marie-wedding.hsweb.pics>'
+    'Marié <noreply@marie.co.kr>'
   );
 }
 

@@ -17,7 +17,7 @@ services:
       # Postfix mynetworks 에 172.16/12(도커망) 포함이라 인증 없이 릴레이 허용됨.
       - SMTP_HOST=host.docker.internal
       - SMTP_PORT=25
-      - MAIL_FROM=Marié <noreply@marie-wedding.hsweb.pics>
+      - MAIL_FROM=Marié <noreply@marie.co.kr>
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

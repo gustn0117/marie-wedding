@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const email = authUser?.user?.email;
     if (!email) return NextResponse.json({ ok: true, sent: false });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://marie-wedding.hsweb.pics';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://marie.co.kr';
     const applicantName = applicant?.company_name || applicant?.contact_name || '지원자';
     const { subject, html, text } = newApplicationEmail({
       jobTitle: job.title ?? '채용 공고',

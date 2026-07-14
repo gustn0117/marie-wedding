@@ -20,7 +20,7 @@ function shell(bodyInner: string): string {
 /** 회원가입 환영 메일 */
 export function welcomeEmail(name: string): { subject: string; html: string; text: string } {
   const safeName = escapeHtml(name || '회원');
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://marie-wedding.hsweb.pics';
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://marie.co.kr';
   const subject = '[마리에] 가입을 환영합니다';
   const html = shell(`
     <h2 style="color:${BRAND};margin:0 0 16px;font-size:20px">${safeName}님, 마리에에 오신 것을 환영합니다 🎉</h2>
