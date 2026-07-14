@@ -13,6 +13,13 @@ services:
       # 서버사이드 Supabase 호출은 Cloudflare 를 우회해 같은 호스트의 Kong 으로 직결.
       # (공인 URL 경유 시 요청당 +300ms hairpin + cloudflared 불안정 시 hang → 무한 로딩)
       - SUPABASE_INTERNAL_URL=http://kong:8000
+      # 자체 SMTP: 호스트 Postfix(+opendkim DKIM 서명)로 릴레이. host-gateway 로 호스트 접근.
+      # Postfix mynetworks 에 172.16/12(도커망) 포함이라 인증 없이 릴레이 허용됨.
+      - SMTP_HOST=host.docker.internal
+      - SMTP_PORT=25
+      - MAIL_FROM=Marié <noreply@marie-wedding.hsweb.pics>
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - default
       - supabase
