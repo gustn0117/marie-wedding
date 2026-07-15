@@ -35,11 +35,15 @@ function sanitizeServer(html: string): string {
         width: [/^\d+(\.\d+)?(px|%)$/],
         height: [/^\d+(\.\d+)?(px|%)$/],
         'max-width': [/^\d+(\.\d+)?(px|%)$/],
-        // 이미지 정렬(가운데) 및 float 지원
+        // 이미지 정렬(가운데) 및 float 지원.
+        // 에디터가 넣는 `margin:10px auto`(상하 여백 + 좌우 auto=가운데)를 허용해야
+        // 저장/표시 시에도 가운데 정렬이 유지된다. (기존엔 `0 auto`/`auto`만 허용해 통째로 제거됐음)
         display: [/^(block|inline|inline-block)$/],
-        margin: [/^0 auto$/, /^auto$/],
-        'margin-left': [/^auto$/],
-        'margin-right': [/^auto$/],
+        margin: [/^\d+(\.\d+)?(px)?\s+auto$/, /^0\s+auto$/, /^auto$/],
+        'margin-left': [/^auto$/, /^0(px)?$/],
+        'margin-right': [/^auto$/, /^0(px)?$/],
+        'margin-top': [/^\d+(\.\d+)?px$/],
+        'margin-bottom': [/^\d+(\.\d+)?px$/],
         float: [/^(left|right|none)$/],
       },
     },
