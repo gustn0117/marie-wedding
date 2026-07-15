@@ -706,9 +706,9 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                       </span>
                       <span className="mt-1.5 flex items-center gap-2">
                         <span className="h-1.5 w-full max-w-[110px] overflow-hidden rounded-full bg-gray-100">
-                          <span className={`block h-full rounded-full ${ready ? 'bg-primary' : 'bg-amber-400'}`} style={{ width: `${resume.completenessScore}%` }} />
+                          <span className={`block h-full rounded-full ${ready ? 'bg-primary' : 'bg-gray-300'}`} style={{ width: `${resume.completenessScore}%` }} />
                         </span>
-                        <span className={`shrink-0 text-[11px] font-semibold ${ready ? 'text-gray-400' : 'text-amber-600'}`}>
+                        <span className="shrink-0 text-[11px] font-semibold text-gray-500">
                           완성도 {resume.completenessScore}%{ready ? '' : ' · 60% 필요'}
                         </span>
                       </span>
@@ -717,8 +717,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                 );
               })}
               {selectedResume && !resumeReady && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs">
-                  <p className="font-semibold text-amber-700">
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs">
+                  <p className="font-semibold text-gray-600">
                     {!selectedResume.fullName.trim() ? '이름을 입력해야 지원할 수 있어요.' : '완성도 60% 이상이어야 지원할 수 있어요.'}
                   </p>
                   <Link href={resumeManagerHref} className="shrink-0 font-bold text-primary hover:underline">이력서 채우기 →</Link>

@@ -381,7 +381,7 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
             <div className="sticky top-[calc(var(--header-h)+8px)] z-20 mb-4 flex flex-wrap items-center justify-between gap-3 rounded border border-gray-200 bg-white/95 p-3 shadow-sm backdrop-blur">
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-gray-900">{draft.title}</p>
-                <p className={`text-xs font-semibold ${submissionReady ? 'text-primary' : 'text-amber-600'}`}>
+                <p className={`text-xs font-semibold ${submissionReady ? 'text-primary' : 'text-gray-500'}`}>
                   완성도 {liveCompleteness}% {submissionReady ? '· 제출 가능' : !draft.fullName.trim() ? '· 이름 입력 필요' : '· 60%부터 제출 가능'}
                 </p>
               </div>
@@ -628,7 +628,7 @@ function CompletenessChecklist({ resume, score, submittable }: { resume: ResumeC
             <span className="text-2xl font-extrabold tabular-nums text-gray-900">{score}<span className="text-base font-bold text-gray-400">%</span></span>
             {submittable
               ? <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary"><svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>제출 가능</span>
-              : <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-600">제출까지 {Math.max(0, 60 - score)}%</span>}
+              : <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-500">제출까지 {Math.max(0, 60 - score)}%</span>}
           </div>
           <p className="mt-1 text-xs text-gray-500">{submittable ? '지원할 때 이 이력서를 바로 제출할 수 있어요.' : `아래 ${remaining}개 항목 중 필요한 만큼 채우면 제출할 수 있어요.`}</p>
         </div>
