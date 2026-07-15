@@ -8,7 +8,7 @@ import type {
 } from '@/features/resumes/types';
 
 export const RESUME_SELECT_COLUMNS =
-  'id, profile_id, title, is_default, photo_path, full_name, email, phone, birth_date, address, headline, summary, desired_roles, desired_regions, desired_employment_types, skills, educations, experiences, certificates, languages, links, completeness_score, version, last_used_at, created_at, updated_at, deleted_at' as const;
+  'id, profile_id, title, is_default, photo_path, full_name, email, phone, birth_date, address, headline, summary, desired_roles, desired_regions, desired_employment_types, skills, educations, experiences, certificates, languages, links, attachments, completeness_score, version, last_used_at, created_at, updated_at, deleted_at' as const;
 
 type ResumeRow = Record<string, unknown>;
 
@@ -43,6 +43,7 @@ export function mapResumeRow(row: ResumeRow): ResumeRecord {
     certificates: array<ResumeRecord['certificates'][number]>(row.certificates),
     languages: array<ResumeRecord['languages'][number]>(row.languages),
     links: array<ResumeRecord['links'][number]>(row.links),
+    attachments: array<ResumeRecord['attachments'][number]>(row.attachments),
     completenessScore: typeof row.completeness_score === 'number' ? row.completeness_score : 0,
     version: typeof row.version === 'number' ? row.version : 1,
     lastUsedAt: typeof row.last_used_at === 'string' ? row.last_used_at : null,
@@ -75,6 +76,7 @@ export function resumeContentToRow(
     certificates: content.certificates,
     languages: content.languages,
     links: content.links,
+    attachments: content.attachments,
     completeness_score: options.completenessScore,
   };
 }
@@ -148,6 +150,12 @@ export function parseSubmittedResumeSnapshot(value: unknown): SubmittedResumeSna
       label: string(item.label),
       url: httpUrl(item.url),
     })).filter((item) => item.url),
+    attachments: recordArray(snapshot.attachments).map((item, index) => ({
+      id: string(item.id) || `attachment-${index}`,
+      name: string(item.name),
+      path: string(item.path),
+      size: typeof item.size === 'number' && Number.isFinite(item.size) ? Math.max(0, Math.floor(item.size)) : 0,
+    })).filter((item) => item.path),
   };
   return result;
 }

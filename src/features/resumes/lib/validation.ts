@@ -7,9 +7,10 @@ import type {
   ResumeLanguage,
   ResumeLanguageLevel,
   ResumeLink,
+  ResumeAttachment,
 } from '@/features/resumes/types';
 import { calculateResumeCompleteness, isValidResumePhone } from '@/features/resumes/types';
-import { isCanonicalResumePhotoPath } from '@/features/resumes/lib/photo';
+import { isCanonicalResumePhotoPath, isCanonicalResumeAttachmentPath } from '@/features/resumes/lib/photo';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -163,6 +164,27 @@ function parseLinks(value: unknown): ResumeLink[] {
   });
 }
 
+function parseAttachments(value: unknown, userId: string): ResumeAttachment[] {
+  return objectList(value, '첨부파일', 5)
+    .map((item) => {
+      const path = text(item.path, 300, '첨부파일 경로');
+      if (path && !isCanonicalResumeAttachmentPath(path, userId)) {
+        throw new Error('본인이 올린 포트폴리오 파일만 첨부할 수 있습니다.');
+      }
+      const rawSize = Number(item.size);
+      const size = Number.isFinite(rawSize) && rawSize > 0
+        ? Math.min(Math.floor(rawSize), 20 * 1024 * 1024)
+        : 0;
+      return {
+        id: rowId(item.id),
+        name: text(item.name, 200, '파일명'),
+        path,
+        size,
+      };
+    })
+    .filter((attachment) => attachment.path);
+}
+
 export function parseResumeInput(value: unknown, userId: string): ParsedResumeInput {
   if (!isPlainObject(value)) throw new Error('이력서 형식이 올바르지 않습니다.');
   const photoPath = value.photoPath === null || value.photoPath === ''
@@ -197,6 +219,7 @@ export function parseResumeInput(value: unknown, userId: string): ParsedResumeIn
     certificates: parseCertificates(value.certificates),
     languages: parseLanguages(value.languages),
     links: parseLinks(value.links),
+    attachments: parseAttachments(value.attachments, userId),
   };
 
   return {

@@ -1,4 +1,4 @@
-import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
+import { resolveResumePhotoUrl, resolveResumeAttachmentUrl } from '@/features/resumes/lib/photo';
 import {
   RESUME_DEGREE_LABELS,
   RESUME_LANGUAGE_LEVEL_LABELS,
@@ -51,6 +51,7 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
   }
 
   const data = resume as ResumeContent;
+  const attachments = data.attachments ?? [];
   const photoUrl = resolveResumePhotoUrl(data.photoPath);
   const experiences = [...data.experiences].sort((a, b) => b.startDate.localeCompare(a.startDate));
   const educations = [...data.educations].sort((a, b) => b.startDate.localeCompare(a.startDate));
@@ -189,18 +190,37 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
           </Section>
         )}
 
-        {data.links.some((l) => l.url) && (
+        {(attachments.length > 0 || data.links.some((l) => l.url)) && (
           <Section title="포트폴리오와 링크">
-            <ul className="space-y-1.5">
-              {data.links.map((item) => item.url && (
-                <li key={item.id}>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-primary hover:underline">
-                    <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
-                    {item.label || item.url}
-                  </a>
-                </li>
-              ))}
-            </ul>
+            {attachments.length > 0 && (
+              <ul className="mb-2.5 space-y-1.5">
+                {attachments.map((item) => {
+                  const href = resolveResumeAttachmentUrl(item.path);
+                  if (!href) return null;
+                  return (
+                    <li key={item.id}>
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-primary hover:underline">
+                        <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                        {item.name || '포트폴리오.pdf'}
+                        <span className="text-[11px] font-medium text-gray-400">PDF</span>
+                      </a>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            {data.links.some((l) => l.url) && (
+              <ul className="space-y-1.5">
+                {data.links.map((item) => item.url && (
+                  <li key={item.id}>
+                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 break-all text-[13px] font-semibold text-primary hover:underline">
+                      <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg>
+                      {item.label || item.url}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Section>
         )}
       </div>

@@ -51,6 +51,13 @@ export interface ResumeLink {
   url: string;
 }
 
+export interface ResumeAttachment {
+  id: string;
+  name: string; // 표시용 파일명
+  path: string; // resume-files 스토리지 경로
+  size: number; // bytes
+}
+
 export interface ResumeContent {
   title: string;
   photoPath: string | null;
@@ -70,6 +77,7 @@ export interface ResumeContent {
   certificates: ResumeCertificate[];
   languages: ResumeLanguage[];
   links: ResumeLink[];
+  attachments: ResumeAttachment[];
 }
 
 export interface ResumeRecord extends ResumeContent {
@@ -149,6 +157,7 @@ export function createEmptyResumeContent(title = '새 이력서'): ResumeContent
     certificates: [],
     languages: [],
     links: [],
+    attachments: [],
   };
 }
 

@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
-import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
+import { resolveResumePhotoUrl, resolveResumeAttachmentUrl } from '@/features/resumes/lib/photo';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import ResumePreview from '@/features/resumes/components/ResumePreview';
 import SmartDate from '@/shared/components/SmartDate';
@@ -16,6 +16,7 @@ import {
   isResumeContentSubmittable,
   isValidResumeEmail,
   isValidResumePhone,
+  type ResumeAttachment,
   type ResumeCertificate,
   type ResumeContent,
   type ResumeEducation,
@@ -88,6 +89,8 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
   const [deleting, setDeleting] = useState(false);
   const operationRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
   const rawNext = searchParams.get('next');
   const uuidPart = '[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
   const nextHref = rawNext && new RegExp(`^/jobs/${uuidPart}(?:\\?resumeId=${uuidPart})?#apply$`, 'i').test(rawNext)
@@ -194,6 +197,56 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
   function patch<K extends keyof ResumeContent>(key: K, value: ResumeContent[K]) {
     setDraft((current) => current ? { ...current, [key]: value } : current);
     setDirty(true);
+  }
+
+  // 포트폴리오 PDF는 선택 즉시 업로드하고 경로만 이력서에 담아둔다(사진과 동일한
+  // 방식). 저장 버튼을 눌러야 이력서 레코드에 최종 반영된다.
+  async function handleAttachmentSelect(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !draft || attachmentUploading) return;
+    if (draft.attachments.length >= 5) {
+      toast('포트폴리오는 최대 5개까지 첨부할 수 있습니다.', 'error');
+      return;
+    }
+    if ((file.type && file.type !== 'application/pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast('PDF 파일만 첨부할 수 있습니다.', 'error');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast('PDF 파일은 10MB 이하여야 합니다.', 'error');
+      return;
+    }
+    setAttachmentUploading(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('name', file.name);
+      const response = await apiFetch(
+        `/api/resumes/attachment?resumeId=${encodeURIComponent(draft.id)}`,
+        { method: 'POST', credentials: 'include', body: form },
+        60_000,
+      );
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error || '파일을 올리지 못했습니다.');
+      const attachment: ResumeAttachment = {
+        id: crypto.randomUUID(),
+        name: typeof body.name === 'string' ? body.name : file.name,
+        path: body.path,
+        size: typeof body.size === 'number' ? body.size : file.size,
+      };
+      patch('attachments', [...draft.attachments, attachment]);
+      toast('포트폴리오를 첨부했습니다.', 'success');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : '파일을 올리지 못했습니다.', 'error');
+    } finally {
+      setAttachmentUploading(false);
+    }
+  }
+
+  function removeAttachment(id: string) {
+    if (!draft) return;
+    patch('attachments', draft.attachments.filter((item) => item.id !== id));
   }
 
   async function selectResume(resume: ResumeRecord) {
@@ -549,13 +602,56 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                 </FormSection>
 
                 <FormSection title="포트폴리오와 링크" actionLabel="링크 추가" onAdd={draft.links.length < 10 ? () => patch('links', [...draft.links, newLink()]) : undefined}>
-                  <div className="space-y-4">
-                    {draft.links.length === 0 && <EmptyRows label="등록된 링크가 없습니다." />}
-                    {draft.links.map((item, index) => (
-                      <RepeatCard key={item.id} title={`링크 ${index + 1}`} onRemove={() => patch('links', draft.links.filter((row) => row.id !== item.id))}>
-                        <div className="grid gap-3 sm:grid-cols-2"><TextField label="링크 이름" value={item.label} maxLength={60} onChange={(value) => patch('links', draft.links.map((row) => row.id === item.id ? { ...row, label: value } : row))} placeholder="포트폴리오" /><TextField label="URL" type="url" value={item.url} maxLength={500} onChange={(value) => patch('links', draft.links.map((row) => row.id === item.id ? { ...row, url: value } : row))} placeholder="https://" /></div>
-                      </RepeatCard>
-                    ))}
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm font-semibold text-gray-800">PDF 포트폴리오</p>
+                        <p className="mt-0.5 text-xs text-gray-500">작업물·포트폴리오를 PDF로 첨부하세요. 최대 5개 · 파일당 10MB.</p>
+                      </div>
+                      <input ref={attachmentInputRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={handleAttachmentSelect} />
+                      {draft.attachments.length > 0 && (
+                        <ul className="space-y-2">
+                          {draft.attachments.map((item) => {
+                            const href = resolveResumeAttachmentUrl(item.path);
+                            return (
+                              <li key={item.id} className="flex items-center gap-3 rounded border border-gray-200 bg-white px-3 py-2.5">
+                                <PdfIcon />
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-medium text-gray-800">{item.name}</p>
+                                  <p className="text-xs text-gray-400">{formatFileSize(item.size)}</p>
+                                </div>
+                                {href && <a href={href} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/5">보기</a>}
+                                <button type="button" onClick={() => removeAttachment(item.id)} className="shrink-0 rounded px-2 py-1 text-xs font-semibold text-gray-400 hover:text-state-urgent">삭제</button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                      {draft.attachments.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => attachmentInputRef.current?.click()}
+                          disabled={attachmentUploading}
+                          className="flex w-full items-center justify-center gap-2 rounded border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-600 transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {attachmentUploading ? (
+                            <><Spinner /> 올리는 중…</>
+                          ) : (
+                            <><UploadIcon /> PDF 파일 첨부</>
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="space-y-4 border-t border-gray-100 pt-5">
+                      <p className="text-sm font-semibold text-gray-800">링크</p>
+                      {draft.links.length === 0 && <EmptyRows label="등록된 링크가 없습니다." />}
+                      {draft.links.map((item, index) => (
+                        <RepeatCard key={item.id} title={`링크 ${index + 1}`} onRemove={() => patch('links', draft.links.filter((row) => row.id !== item.id))}>
+                          <div className="grid gap-3 sm:grid-cols-2"><TextField label="링크 이름" value={item.label} maxLength={60} onChange={(value) => patch('links', draft.links.map((row) => row.id === item.id ? { ...row, label: value } : row))} placeholder="포트폴리오" /><TextField label="URL" type="url" value={item.url} maxLength={500} onChange={(value) => patch('links', draft.links.map((row) => row.id === item.id ? { ...row, url: value } : row))} placeholder="https://" /></div>
+                        </RepeatCard>
+                      ))}
+                    </div>
                   </div>
                 </FormSection>
 
@@ -648,6 +744,39 @@ function RepeatCard({ title, onRemove, children }: { title: string; onRemove: ()
 
 function EmptyRows({ label }: { label: string }) {
   return <div className="rounded border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400">{label}</div>;
+}
+
+function formatFileSize(bytes: number): string {
+  if (!bytes || bytes <= 0) return '';
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+function PdfIcon() {
+  return (
+    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-primary/10 text-primary">
+      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+      </svg>
+    </span>
+  );
+}
+
+function UploadIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+    </svg>
+  );
+}
+
+function Spinner() {
+  return (
+    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
 }
 
 // 완성도 가이드 — 무엇을 채우면 제출 가능한지 항목별로 안내
