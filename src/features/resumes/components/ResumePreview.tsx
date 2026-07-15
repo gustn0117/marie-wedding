@@ -71,8 +71,8 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
     <article className={`resume-sheet overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm ${className}`}>
       {/* ── 헤더: 이름이 히어로, 네이비 액센트 룰 ── */}
       <header className="px-7 pt-8 sm:px-10 sm:pt-10">
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-end">
-          <div className="h-36 w-28 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 shadow-sm">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-7">
+          <div className="aspect-[3/4] w-24 shrink-0 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 shadow-sm sm:w-[104px]">
             {photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={photoUrl} alt={`${data.fullName || '지원자'} 증명사진`} className="h-full w-full object-cover" />
@@ -84,7 +84,7 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-primary">Résumé</p>
-            <h2 className="mt-2 text-[32px] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-[38px]">{data.fullName || '이름 미입력'}</h2>
+            <h2 className="mt-1.5 text-[30px] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-[34px]">{data.fullName || '이름 미입력'}</h2>
             {data.headline && <p className="mt-2 text-[15px] font-medium leading-relaxed text-gray-600">{data.headline}</p>}
           </div>
         </div>
@@ -102,18 +102,14 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
       <div className="space-y-9 px-7 py-9 sm:px-10 sm:py-10">
         {desired.length > 0 && (
           <Section title="희망 조건">
-            <div className="space-y-3">
+            <dl className="space-y-2.5">
               {desired.map((group) => (
-                <div key={group.label} className="flex flex-wrap items-center gap-2">
-                  <span className="w-16 shrink-0 text-[12px] font-bold text-gray-400">{group.label}</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.items.map((item) => (
-                      <span key={item} className="rounded-md border border-primary/20 bg-primary-50 px-2.5 py-1 text-[12px] font-bold text-primary">{item}</span>
-                    ))}
-                  </div>
+                <div key={group.label} className="flex gap-4">
+                  <dt className="w-16 shrink-0 text-[13px] font-semibold text-gray-400">{group.label}</dt>
+                  <dd className="text-[14px] font-medium leading-6 text-gray-800">{group.items.join('   ·   ')}</dd>
                 </div>
               ))}
-            </div>
+            </dl>
           </Section>
         )}
 
@@ -159,9 +155,7 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
 
         {data.skills.length > 0 && (
           <Section title="기술과 강점">
-            <div className="flex flex-wrap gap-2">
-              {data.skills.map((skill) => <span key={skill} className="rounded-md bg-gray-100 px-3 py-1.5 text-[13px] font-semibold text-gray-700">{skill}</span>)}
-            </div>
+            <p className="text-[14px] font-medium leading-7 text-gray-800">{data.skills.join('   ·   ')}</p>
           </Section>
         )}
 
