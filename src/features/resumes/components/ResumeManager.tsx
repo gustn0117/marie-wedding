@@ -604,8 +604,42 @@ function DateField({ label, value, onChange, granularity = 'month', disabled, pl
 
 function TagInput({ label, values, onChange, placeholder, maxItems, maxLength }: { label: string; values: string[]; onChange: (values: string[]) => void; placeholder: string; maxItems: number; maxLength: number }) {
   const [input, setInput] = useState('');
-  function add() { const value = input.trim().replace(/,$/, ''); if (value && value.length <= maxLength && values.length < maxItems && !values.includes(value)) onChange([...values, value]); setInput(''); }
-  return <div><label className="block text-sm font-semibold text-gray-700">{label}<input value={input} maxLength={maxLength} disabled={values.length >= maxItems} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ',') { event.preventDefault(); add(); } }} onBlur={add} className="input-field mt-1 disabled:bg-gray-100" placeholder={values.length >= maxItems ? `최대 ${maxItems}개` : placeholder} /></label><div className="mt-2 flex flex-wrap gap-1.5">{values.map((value) => <button key={value} type="button" onClick={() => onChange(values.filter((item) => item !== value))} className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:border-state-urgent hover:text-state-urgent">{value} ×</button>)}</div></div>;
+  const full = values.length >= maxItems;
+  function add() {
+    const value = input.trim();
+    if (value && value.length <= maxLength && !full && !values.includes(value)) onChange([...values, value]);
+    setInput('');
+  }
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700" htmlFor={`tag-${label}`}>{label}</label>
+      <div className="mt-1 flex gap-2">
+        <input
+          id={`tag-${label}`}
+          value={input}
+          maxLength={maxLength}
+          disabled={full}
+          onChange={(e) => setInput(e.target.value)}
+          // 한글 IME 조합 중(마지막 글자 확정용 스페이스/엔터)엔 추가하지 않는다.
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); add(); } }}
+          className="input-field disabled:bg-gray-100"
+          placeholder={full ? `최대 ${maxItems}개` : placeholder}
+        />
+        <button type="button" onClick={add} disabled={full || !input.trim()} className="btn-outline shrink-0 px-4 text-sm disabled:opacity-40">추가</button>
+      </div>
+      <p className="mt-1 text-[11px] text-gray-400">입력 후 Enter 또는 &lsquo;추가&rsquo; · 최대 {maxItems}개</p>
+      {values.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {values.map((value) => (
+            <button key={value} type="button" onClick={() => onChange(values.filter((item) => item !== value))} className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:border-state-urgent hover:text-state-urgent">
+              {value}
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function RepeatCard({ title, onRemove, children }: { title: string; onRemove: () => void; children: React.ReactNode }) {
