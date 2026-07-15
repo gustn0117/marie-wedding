@@ -408,20 +408,39 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                 <FormSection title="기본 정보" description="채용 담당자가 가장 먼저 확인하는 정보입니다.">
                   <div className="grid gap-5 lg:grid-cols-[160px_minmax(0,1fr)]">
                     <div>
-                      <div className="h-44 w-36 overflow-hidden rounded border border-gray-200 bg-gray-50">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        aria-label={imageUpload.preview ? '증명사진 변경' : '증명사진 추가'}
+                        className="group relative block h-44 w-36 overflow-hidden rounded-lg border border-gray-200 bg-gray-50 transition-colors hover:border-primary/50"
+                      >
                         {imageUpload.preview ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={imageUpload.preview} alt="이력서 증명사진" className="h-full w-full object-cover" />
-                        ) : <div className="flex h-full items-center justify-center text-3xl font-bold text-gray-300">{(draft.fullName || '?').charAt(0)}</div>}
-                      </div>
+                          <>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={imageUpload.preview} alt="이력서 증명사진" className="h-full w-full object-cover" />
+                            <span className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/45 group-hover:opacity-100">
+                              <span className="inline-flex items-center gap-1 text-xs font-bold text-white">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
+                                변경
+                              </span>
+                            </span>
+                          </>
+                        ) : (
+                          <span className="flex h-full flex-col items-center justify-center gap-1.5 text-gray-400 transition-colors group-hover:text-primary">
+                            <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" /></svg>
+                            <span className="text-xs font-bold">사진 추가</span>
+                            <span className="text-[10px] text-gray-400">클릭해서 업로드</span>
+                          </span>
+                        )}
+                      </button>
                       <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={(event) => {
                         const file = event.target.files?.[0];
                         if (file) { imageUpload.selectFile(file); setDirty(true); }
                         event.target.value = '';
                       }} />
                       <div className="mt-2 flex gap-2 text-xs font-semibold">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-primary">사진 변경</button>
-                        {imageUpload.preview && <button type="button" onClick={() => { imageUpload.remove(); patch('photoPath', null); }} className="text-gray-500">삭제</button>}
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-primary hover:underline">사진 변경</button>
+                        {imageUpload.preview && <button type="button" onClick={() => { imageUpload.remove(); patch('photoPath', null); }} className="text-gray-500 hover:text-state-urgent">삭제</button>}
                       </div>
                       <ImageUploadHint ratio="증명사진 비율" recommendedSize="400 × 520px" maxSize="자동 압축" />
                       {imageUpload.uploading && <p className="mt-2 text-xs font-semibold text-primary">{imageUpload.statusText}</p>}

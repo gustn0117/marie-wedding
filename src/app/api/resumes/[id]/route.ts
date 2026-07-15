@@ -10,7 +10,9 @@ export const dynamic = 'force-dynamic';
 
 const REQUEST_TIMEOUT_MS = 12_000;
 const MAX_REQUEST_BYTES = 256 * 1024;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+// RFC 4122 UUID (8-4-4-4-12). 이전 패턴은 4번째 그룹이 누락돼 모든 정상 UUID를
+// 거부 → 이력서 저장/삭제가 '잘못된 이력서 ID'로 전부 실패했음.
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 interface Context { params: Promise<{ id: string }> }
 
