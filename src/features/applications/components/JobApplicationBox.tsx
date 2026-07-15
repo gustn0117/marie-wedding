@@ -338,12 +338,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       setCareerSummary('');
       setAvailableSchedule('');
       if (applicationDraftKey) sessionStorage.removeItem(applicationDraftKey);
-      // 채용자에게 새 지원자 알림 이메일 — best-effort (실패해도 지원 접수엔 영향 없음)
-      void apiFetch('/api/notify/application', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ applicationId: created.id }),
-      }, 10_000).catch(() => {});
+      // 채용자 알림 이메일은 서버(/api/applications/create)에서 확실히 발송한다.
     } catch (err) {
       const rawMessage = err instanceof Error ? err.message : '';
       if (rawMessage.includes('이미 접수') || rawMessage.includes('duplicate')) {

@@ -7,6 +7,7 @@ import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { isUuid } from '@/shared/utils/uuid';
 import { isValidResumePhone } from '@/features/resumes/types';
 import { readBoundedJson } from '@/lib/bounded-json';
+import { notifyEmployerOfApplication } from '@/features/notifications/lib/applicationNotify';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -169,5 +170,14 @@ export async function POST(request: Request) {
   // 지원자 응답에는 업체의 비공개 메모(author_note)를 절대 포함하지 않는다.
   const safeApplication = { ...(row as Record<string, unknown>) };
   delete safeApplication.author_note;
+
+  // 채용자에게 새 지원자 알림 이메일 — 서버에서 확실히 발송(자체 SMTP, best-effort).
+  // 클라이언트 fire-and-forget 대신 서버 처리라 누락되지 않는다.
+  const notifyJobId = typeof safeApplication.job_id === 'string' ? safeApplication.job_id : jobId;
+  const notifyApplicantId = typeof safeApplication.applicant_id === 'string' ? safeApplication.applicant_id : '';
+  if (notifyApplicantId) {
+    await notifyEmployerOfApplication(notifyJobId, notifyApplicantId);
+  }
+
   return NextResponse.json({ data: safeApplication });
 }
