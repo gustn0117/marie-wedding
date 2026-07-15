@@ -23,6 +23,7 @@ import {
   type ResumeRecord,
 } from '@/features/resumes/types';
 import { isUuid } from '@/shared/utils/uuid';
+import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -675,36 +676,52 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
               </Link>
             </div>
           ) : (
-            <div className="space-y-2">
-              <select
-                value={selectedResumeId}
-                onChange={(event) => setSelectedResumeId(event.target.value)}
-                className="input-field bg-white"
-                aria-label="제출할 이력서"
-              >
-                {resumes.map((resume) => (
-                  <option key={resume.id} value={resume.id}>
-                    {resume.title}{resume.isDefault ? ' · 대표' : ''} · 완성도 {resume.completenessScore}%
-                  </option>
-                ))}
-              </select>
-              {selectedResume && (
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <p className={resumeReady ? 'text-gray-500' : 'font-semibold text-rose-600'}>
-                    {selectedResume.headline || selectedResume.fullName || '소개 미입력'}
-                    {' · '}
-                    {resumeReady
-                      ? `완성도 ${selectedResume.completenessScore}% · ${formatRelativeTime(selectedResume.updatedAt)} 수정`
-                      : !selectedResume.fullName.trim()
-                        ? `완성도 ${selectedResume.completenessScore}% — 이름을 입력해야 지원할 수 있어요.`
-                        : `완성도 ${selectedResume.completenessScore}% — 60% 이상이어야 지원할 수 있어요.`}
-                  </p>
-                  <Link
-                    href={resumeManagerHref}
-                    className="font-bold text-primary hover:underline"
+            <div className="space-y-2" role="radiogroup" aria-label="제출할 이력서 선택">
+              {resumes.map((resume) => {
+                const active = resume.id === selectedResumeId;
+                const ready = isResumeContentSubmittable(resume, resume.completenessScore);
+                const photoUrl = resolveResumePhotoUrl(resume.photoPath);
+                return (
+                  <button
+                    key={resume.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => setSelectedResumeId(resume.id)}
+                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all ${active ? 'border-primary bg-primary-50 ring-1 ring-primary' : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'}`}
                   >
-                    선택한 이력서 수정
-                  </Link>
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${active ? 'border-primary bg-primary' : 'border-gray-300'}`}>
+                      {active && <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                    </span>
+                    <span className="h-12 w-9 shrink-0 overflow-hidden rounded border border-gray-200 bg-gray-50">
+                      {photoUrl
+                        // eslint-disable-next-line @next/next/no-img-element
+                        ? <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+                        : <span className="flex h-full items-center justify-center text-sm font-bold text-gray-300">{(resume.title || '이').charAt(0)}</span>}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className={`truncate text-sm font-bold ${active ? 'text-primary' : 'text-gray-900'}`}>{resume.title}</span>
+                        {resume.isDefault && <span className="shrink-0 rounded bg-primary px-1.5 py-0.5 text-[9px] font-bold text-white">대표</span>}
+                      </span>
+                      <span className="mt-1.5 flex items-center gap-2">
+                        <span className="h-1.5 w-full max-w-[110px] overflow-hidden rounded-full bg-gray-100">
+                          <span className={`block h-full rounded-full ${ready ? 'bg-primary' : 'bg-amber-400'}`} style={{ width: `${resume.completenessScore}%` }} />
+                        </span>
+                        <span className={`shrink-0 text-[11px] font-semibold ${ready ? 'text-gray-400' : 'text-amber-600'}`}>
+                          완성도 {resume.completenessScore}%{ready ? '' : ' · 60% 필요'}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+              {selectedResume && !resumeReady && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs">
+                  <p className="font-semibold text-amber-700">
+                    {!selectedResume.fullName.trim() ? '이름을 입력해야 지원할 수 있어요.' : '완성도 60% 이상이어야 지원할 수 있어요.'}
+                  </p>
+                  <Link href={resumeManagerHref} className="shrink-0 font-bold text-primary hover:underline">이력서 채우기 →</Link>
                 </div>
               )}
             </div>
