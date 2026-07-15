@@ -308,8 +308,24 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
   return (
     <div className="grid gap-5 xl:grid-cols-[280px_minmax(0,1fr)]">
       <aside className="space-y-3">
-        <button type="button" onClick={createResume} disabled={busy || resumes.length >= 5} className="btn-primary w-full justify-center disabled:opacity-50">
-          {creating ? '만드는 중…' : '+ 새 이력서'}
+        <button
+          type="button"
+          onClick={createResume}
+          disabled={busy || resumes.length >= 5}
+          className="group flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-sm"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white shadow-sm transition-transform group-hover:scale-105 group-disabled:group-hover:scale-100">
+            {creating ? (
+              <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+            ) : (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            )}
+          </span>
+          <span className="min-w-0">
+            <span className="block text-sm font-bold text-gray-900 group-hover:text-primary">{creating ? '만드는 중…' : '새 이력서 만들기'}</span>
+            <span className="block text-[11.5px] text-gray-400">{resumes.length >= 5 ? '최대 5개까지 만들 수 있어요' : `이력서 ${resumes.length}/5 · 빈 양식으로 시작`}</span>
+          </span>
+          <svg className="ml-auto h-4 w-4 shrink-0 text-gray-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
         </button>
         <div className="overflow-hidden rounded border border-gray-200 bg-white">
           {resumes.length === 0 ? (
