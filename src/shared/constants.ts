@@ -1,4 +1,4 @@
-import type { VerificationStatus, JobStatus } from '@/types/database';
+import type { JobStatus } from '@/types/database';
 
 export const ACCOUNT_TYPES = [
   { value: 'individual', label: '개인 회원' },
@@ -104,11 +104,9 @@ export const ROUTES = {
   ADMIN_EVENTS: '/admin/events',
   ADMIN_EVENTS_NEW: '/admin/events/new',
   ADMIN_EVENTS_EDIT: (id: string) => `/admin/events/${id}/edit`,
-  ADMIN_VERIFICATIONS: '/admin/verifications',
   ADMIN_AUDIT_LOG: '/admin/audit-log',
   ADMIN_BANNERS: '/admin/banners',
   ADMIN_MODERATION_KEYWORDS: '/admin/moderation-keywords',
-  MYPAGE_VERIFICATION: '/mypage/verification',
   MYPAGE_AVAILABILITY: '/mypage/availability',
   MYPAGE_MESSAGES: '/mypage/messages',
   MYPAGE_MESSAGE_DETAIL: (id: string) => `/mypage/messages/${id}`,
@@ -117,15 +115,6 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
 } as const;
-
-export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
-  unverified: '미인증',
-  pending: '검토 중',
-  verified: '인증 완료',
-  rejected: '거절됨',
-};
-
-export const VERIFICATION_BADGE_LABEL = '인증';
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
   open: '모집중',

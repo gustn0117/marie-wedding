@@ -2,7 +2,6 @@
 
 interface StatsData {
   totalProfiles: number;
-  verifiedProfiles: number;
   listedProfiles: number;
   totalJobs: number;
   recentJobs: number;
@@ -19,7 +18,6 @@ export default function StatsExportButton({ stats, regionLabel, bizLabel }: { st
     lines.push('');
     lines.push('Metric,Value');
     lines.push(`누적 회원,${stats.totalProfiles}`);
-    lines.push(`인증 업체,${stats.verifiedProfiles}`);
     lines.push(`공개 디렉토리,${stats.listedProfiles}`);
     lines.push(`누적 공고,${stats.totalJobs}`);
     lines.push(`최근 30일 공고,${stats.recentJobs}`);

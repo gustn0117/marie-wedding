@@ -12,7 +12,6 @@ interface CompanyCardProps {
 export default function CompanyCard({ profile }: CompanyCardProps) {
   const name = profile.company_name || profile.contact_name;
   const initial = name.charAt(0).toUpperCase();
-  const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
   // 카드 썸네일은 커버 이미지 우선 (가로), 없으면 프로필 이미지(로고), 없으면 이니셜
   const imageUrl =
@@ -30,16 +29,9 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="svc-card">
       {/* 썸네일 */}
       <div className="svc-card-thumb bg-gray-50">
-        {premium ? (
+        {premium && (
           <span className="svc-card-badge svc-card-badge-prime">PREMIUM</span>
-        ) : verified ? (
-          <span className="svc-card-badge svc-card-badge-promoted inline-flex items-center gap-0.5">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
-            인증
-          </span>
-        ) : null}
+        )}
         <SafeImage
           src={imageUrl}
           alt={name}
@@ -98,7 +90,6 @@ export default function CompanyCard({ profile }: CompanyCardProps) {
         {/* 푸터 */}
         <div className="svc-card-seller justify-between">
           <span className="truncate">{name}</span>
-          {verified && <span className="svc-card-m-badge shrink-0" title="인증 업체">인</span>}
         </div>
       </div>
     </Link>

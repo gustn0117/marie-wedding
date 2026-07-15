@@ -25,7 +25,7 @@ async function getHomeData() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  const [postsRes, jobsRes, profilesRes, eventsRes, verifiedCountRes, recentJobsCountRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
+  const [postsRes, jobsRes, profilesRes, eventsRes, recentJobsCountRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
     supabase
       .from('posts')
       .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
@@ -61,11 +61,6 @@ async function getHomeData() {
       .order('start_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range(0, 3),
-    supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .is('deleted_at', null)
-      .eq('verification_status', 'verified'),
     supabase
       .from('jobs')
       .select('id', { count: 'exact', head: true })
@@ -114,7 +109,6 @@ async function getHomeData() {
       jobs: jobsRes.count ?? 0,
       profiles: profilesRes.count ?? 0,
       posts: postsRes.count ?? 0,
-      verified: verifiedCountRes.count ?? 0,
       recentJobs: recentJobsCountRes.count ?? 0,
     },
   };

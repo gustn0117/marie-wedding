@@ -10,7 +10,7 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import type { Event, Job, Post, Profile } from '@/types/database';
-import BusinessTypeIcon, { CheckIcon } from '@/shared/components/icons/BusinessTypeIcon';
+import BusinessTypeIcon from '@/shared/components/icons/BusinessTypeIcon';
 import FeaturedJobsCarousel from '@/features/home/FeaturedJobsCarousel';
 import FeaturedProfilesCarousel from '@/features/home/FeaturedProfilesCarousel';
 
@@ -25,7 +25,6 @@ interface HomeContentProps {
     jobs: number;
     profiles: number;
     posts: number;
-    verified: number;
     recentJobs: number;
   };
 }
@@ -231,19 +230,13 @@ function JobBoardRow({ job, compact = false }: { job: Job; compact?: boolean }) 
 /* === 업체 프로필 게시판 행 — 한 줄 === */
 function CompanyBoardRow({ profile }: { profile: Profile }) {
   const name = profile.company_name || profile.contact_name;
-  const verified = profile.verification_status === 'verified';
   const bizLabel = profile.business_type ? getBusinessTypeLabel(profile.business_type.split(',')[0].trim()) : '파트너';
   const region = getRegionLabel(profile.region);
   return (
     <Link href={ROUTES.DIRECTORY_DETAIL(profile.id)} className="board-row group">
       <span className="board-cat">{bizLabel}</span>
-      <span className="board-row-title group-hover:text-primary transition-colors inline-flex items-center gap-1.5">
+      <span className="board-row-title group-hover:text-primary transition-colors">
         {name}
-        {verified && (
-          <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-primary-50 text-primary shrink-0">
-            <CheckIcon className="w-2.5 h-2.5" strokeWidth={3} />
-          </span>
-        )}
       </span>
       <span className="board-row-meta">
         <span>{region}</span>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
-import { TRUST_TIER_LABELS, computeTrustTier, type Profile } from '@/types/database';
+import { type Profile } from '@/types/database';
 
 interface Props {
   profileId: string;
@@ -68,7 +68,6 @@ async function loadMetrics(profileId: string): Promise<Metrics> {
 export default async function HomeMyPanel({ profileId }: Props) {
   const [profile, m] = await Promise.all([loadProfile(profileId), loadMetrics(profileId)]);
   if (!profile) return null;
-  const trustTier = computeTrustTier(profile);
   const displayName = profile.company_name || profile.contact_name;
   const imageUrl = profile.profile_image
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.profile_image}`
@@ -93,7 +92,7 @@ export default async function HomeMyPanel({ profileId }: Props) {
                 {displayName}
               </Link>
               <p className="text-[12px] text-gray-500 mt-0.5">
-                {profile.account_type === 'business' ? '업체 회원' : '개인 회원'} · {TRUST_TIER_LABELS[trustTier]}
+                {profile.account_type === 'business' ? '업체 회원' : '개인 회원'}
               </p>
             </div>
           </div>
@@ -110,11 +109,8 @@ export default async function HomeMyPanel({ profileId }: Props) {
             <MetricCell href={ROUTES.MYPAGE} label="검토 대기" value={m.pendingReceived} />
             <MetricCell href={ROUTES.MYPAGE} label="리뷰 대기" value={m.pendingReviews} highlight={m.pendingReviews > 0} />
           </div>
-          <div className="grid grid-cols-2 gap-2 p-4 border-t border-gray-100">
+          <div className="grid grid-cols-1 gap-2 p-4 border-t border-gray-100">
             <Link href={ROUTES.JOBS_NEW} className="btn-primary text-[14px]">+ 공고 등록</Link>
-            <Link href={ROUTES.MYPAGE_VERIFICATION} className="btn-outline text-[14px]">
-              {profile.verification_status === 'verified' ? '인증 정보' : '업체 인증'}
-            </Link>
           </div>
         </div>
       </div>

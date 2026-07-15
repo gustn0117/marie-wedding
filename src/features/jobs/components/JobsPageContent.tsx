@@ -56,7 +56,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const [employmentTypeDropdownOpen, setEmploymentTypeDropdownOpen] = useState(false);
   const [browsingRegion, setBrowsingRegion] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const verifiedOnly = searchParams.get('verified') === '1';
   const completedOnly = searchParams.get('completed') === '1';
 
   const jobs = initialJobs ?? [];
@@ -487,15 +486,6 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       <div className="platform-panel-soft flex items-center gap-2 px-4 py-3 flex-wrap">
         <button
           type="button"
-          onClick={() => updateParams({ verified: verifiedOnly ? '' : '1' })}
-          className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
-            verifiedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
-          }`}
-        >
-          <span className="inline-flex items-center gap-1"><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>인증 업체만</span>
-        </button>
-        <button
-          type="button"
           onClick={() => updateParams({ completed: completedOnly ? '' : '1' })}
           className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold border transition-colors ${
             completedOnly ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-primary hover:text-primary'
@@ -510,7 +500,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         {activeFilters.map((f) => (
           <FilterChip key={f.key} label={f.label} onRemove={() => handleRemoveFilter(f.key)} />
         ))}
-        {(activeFilters.length > 0 || verifiedOnly || completedOnly || search.trim() || searchParams.get('salaryMin') || searchParams.get('expMax')) && (
+        {(activeFilters.length > 0 || completedOnly || search.trim() || searchParams.get('salaryMin') || searchParams.get('expMax')) && (
           <button
             onClick={handleResetAll}
             className="ml-auto text-micro text-gray-400 hover:text-gray-600 underline-offset-2 hover:underline"

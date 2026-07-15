@@ -10,7 +10,6 @@ import {
 import { ROUTES } from '@/shared/constants';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
 
 interface Props {
   job: Job;
@@ -21,10 +20,9 @@ export default function JobDetailHero({ job }: Props) {
   const daysLeft = job.deadline
     ? Math.ceil((new Date(job.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     : null;
-  const isVerified = job.author?.verification_status === 'verified';
 
   return (
-    <section className={`bg-white border-y border-gray-200 overflow-hidden ${isVerified ? 'border-l-4 border-l-primary' : ''}`}>
+    <section className="bg-white border-y border-gray-200 overflow-hidden">
       {(() => {
         const src = resolveStorageUrl(job.image, 'job-images');
         return src ? (
@@ -79,10 +77,6 @@ export default function JobDetailHero({ job }: Props) {
                 <p className="text-sm font-bold text-gray-900 group-hover:text-primary transition-colors">
                   {job.author.company_name || job.author.contact_name || '알 수 없음'}
                 </p>
-                <VerificationBadge
-                  verificationStatus={job.author.verification_status}
-                  phoneVerified={job.author.phone_verified}
-                />
               </div>
               <p className="text-xs text-gray-500 mt-0.5">
                 <time>{formatRelativeTime(job.created_at)}</time> 등록

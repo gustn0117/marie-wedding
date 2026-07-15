@@ -12,7 +12,6 @@ interface JobCardProps {
 export default function JobCard({ job }: JobCardProps) {
   const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
   const initial = company.charAt(0).toUpperCase();
-  const verified = job.author?.verification_status === 'verified';
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const imageUrl = resolveStorageUrl(job.image, 'job-images');
 
@@ -43,7 +42,6 @@ export default function JobCard({ job }: JobCardProps) {
         <p className="svc-card-price">{job.salary_info || '면접 후 결정'}</p>
         <div className="svc-card-seller">
           <span className="truncate flex-1">{company}</span>
-          {verified && <span className="svc-card-m-badge" title="인증 업체">인</span>}
         </div>
       </div>
     </Link>

@@ -11,7 +11,6 @@ import {
 } from '@/shared/utils/format';
 import type { Profile, Job, Post, Application } from '@/types/database';
 import MyPageTabs from '@/features/mypage/MyPageTabs';
-import VerificationStatusPanel from '@/features/verification/components/VerificationStatusPanel';
 import OnboardingChecklist from '@/features/mypage/components/OnboardingChecklist';
 import RecommendedJobs from '@/features/recommendations/components/RecommendedJobs';
 import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSection';
@@ -215,9 +214,6 @@ export default async function MyPage() {
 
         {/* Quick actions는 좌측 rail로 대체됨 → 본문 노이즈 제거. */}
       </div>
-
-      {/* Trust Status */}
-      {isBusinessAcc && <VerificationStatusPanel profile={profile} />}
 
       {/* Onboarding */}
       <OnboardingChecklist

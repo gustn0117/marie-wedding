@@ -180,9 +180,6 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
                     <p className="text-sm font-bold text-ink group-hover:text-primary truncate">{name}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{getRegionLabel(p.region)}</p>
                   </div>
-                  {p.verification_status === 'verified' && (
-                    <span className="text-[10px] font-bold text-primary bg-primary-50 px-1.5 py-0.5 rounded shrink-0 inline-flex items-center gap-0.5"><svg className="w-2.5 h-2.5 inline" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 인증</span>
-                  )}
                 </Link>
               </li>
             );

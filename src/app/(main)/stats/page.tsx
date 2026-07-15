@@ -23,14 +23,12 @@ async function loadStats() {
 
   const [
     totalProfilesRes,
-    verifiedProfilesRes,
     listedProfilesRes,
     totalJobsRes,
     recentJobsRes,
     totalPostsRes,
   ] = await Promise.all([
     supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified').is('deleted_at', null),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_directory_listed', true).is('deleted_at', null),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('hidden_by_admin', false),
     supabase.from('jobs').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('hidden_by_admin', false).gte('created_at', monthAgo),
@@ -71,7 +69,6 @@ async function loadStats() {
 
   return {
     totalProfiles: totalProfilesRes.count ?? 0,
-    verifiedProfiles: verifiedProfilesRes.count ?? 0,
     listedProfiles: listedProfilesRes.count ?? 0,
     totalJobs: totalJobsRes.count ?? 0,
     recentJobs: recentJobsRes.count ?? 0,
@@ -103,7 +100,6 @@ export default async function StatsPage() {
 
       <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatTile label="누적 회원" value={s.totalProfiles} />
-        <StatTile label="인증 업체" value={s.verifiedProfiles} />
         <StatTile label="공개 디렉토리" value={s.listedProfiles} />
         <StatTile label="누적 공고" value={s.totalJobs} />
         <StatTile label="최근 30일 공고" value={s.recentJobs} highlight />

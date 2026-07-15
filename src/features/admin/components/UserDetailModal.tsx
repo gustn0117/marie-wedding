@@ -3,8 +3,6 @@
 import { useEffect, useState } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
-import type { Profile } from '@/types/database';
-import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 import { toast } from '@/shared/components/Toast';
 
 type Detail = Awaited<ReturnType<typeof adminService.getUserDetail>>;
@@ -101,7 +99,6 @@ export default function UserDetailModal({ userId, onClose }: Props) {
 
 function DetailBody({ d }: { d: Detail }) {
   const p = d.profile;
-  const tier = computeTrustTier(p);
   const [featured, setFeatured] = useState<boolean>(!!p.featured_at);
   const [busy, setBusy] = useState(false);
   const toggleFeatured = async () => {
@@ -179,18 +176,9 @@ function DetailBody({ d }: { d: Detail }) {
         <Field label="갤러리 수">{(p.gallery?.length ?? 0)}장</Field>
       </Section>
 
-      <Section title="신뢰·인증">
-        <Field label="신뢰 등급"><Badge tone="primary">{TRUST_TIER_LABELS[tier]}</Badge></Field>
-        <Field label="사업자 인증">
-          <Badge tone={p.verification_status === 'verified' ? 'green' : p.verification_status === 'pending' ? 'amber' : 'gray'}>
-            {verificationLabel(p.verification_status)}
-          </Badge>
-        </Field>
-        <Field label="사업자 번호">{p.business_number || '-'}</Field>
+      <Section title="계정 인증">
         <Field label="휴대폰 인증">{p.phone_verified ? `완료 (${p.phone_verified_at ? formatDate(p.phone_verified_at) : ''})` : '미인증'}</Field>
         <Field label="이메일 인증">{d.auth?.email_confirmed_at ? `완료 (${formatDate(d.auth.email_confirmed_at)})` : '미인증'}</Field>
-        <Field label="인증 서류">{p.verification_document || '-'}</Field>
-        <Field label="인증 거부 사유" wide>{p.verification_reject_reason || '-'}</Field>
       </Section>
 
       <Section title="활동 통계">
@@ -285,10 +273,6 @@ function Badge({ tone, children }: { tone: 'gray' | 'primary' | 'red' | 'green' 
 function providerLabel(p: string | null | undefined): string {
   if (!p) return '미상';
   return p === 'email' ? '이메일' : p === 'kakao' ? '카카오' : p === 'naver' ? '네이버' : p === 'apple' ? 'Apple' : p;
-}
-
-function verificationLabel(s: Profile['verification_status']): string {
-  return s === 'verified' ? '인증 완료' : s === 'pending' ? '심사 중' : s === 'rejected' ? '거절' : '미인증';
 }
 
 function stripHtml(html: string): string {

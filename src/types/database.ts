@@ -68,20 +68,6 @@ export interface ModerationKeyword {
   created_at: string;
 }
 
-export type TrustTier = 'unverified' | 'business_verified' | 'deal_proven';
-
-export function computeTrustTier(profile: Pick<Profile, 'verification_status' | 'completed_deals_count'>): TrustTier {
-  if (profile.completed_deals_count >= 5) return 'deal_proven';
-  if (profile.verification_status === 'verified') return 'business_verified';
-  return 'unverified';
-}
-
-export const TRUST_TIER_LABELS: Record<TrustTier, string> = {
-  unverified: '미인증',
-  business_verified: '인증 업체',
-  deal_proven: '채용 검증',
-};
-
 export interface Job {
   id: string;
   author_id: string;

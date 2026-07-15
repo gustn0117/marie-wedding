@@ -12,7 +12,6 @@ import {
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import type { Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
@@ -157,10 +156,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <VerificationBadge
-                verificationStatus={profile.verification_status}
-                phoneVerified={profile.phone_verified}
-              />
               {profile.business_type && profile.business_type.split(',').filter(Boolean).map((bt) => (
                 <span key={bt} className="inline-flex items-center px-2 py-0.5 bg-primary-50 text-primary text-xs font-semibold">
                   {getBusinessTypeLabel(bt.trim())}

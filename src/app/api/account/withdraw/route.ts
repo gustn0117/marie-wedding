@@ -4,7 +4,6 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
-import { removeVerificationDocument } from '@/lib/verification-document';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -59,7 +58,7 @@ export async function POST(request: Request) {
   // (네이버 가입 중 profile insert 실패해 orphan 인 케이스 / 이미 삭제 후 재시도 케이스 모두 대응)
   const { data: profile, error: profileError } = await service
     .from('profiles')
-    .select('id, deleted_at, verification_document')
+    .select('id, deleted_at')
     .eq('user_id', user.id)
     .abortSignal(requestSignal)
     .maybeSingle();
@@ -110,9 +109,6 @@ export async function POST(request: Request) {
       { status: requestSignal.aborted ? 504 : 500 },
     );
   }
-
-  // DB purge가 확정된 다음에만 비공개 사업자 서류를 제거한다.
-  await removeVerificationDocument(profile.verification_document);
 
   // 응답에 모든 인증 쿠키 만료 — 클라는 redirect 직후 비로그인 상태
   const res = NextResponse.json({ success: true });

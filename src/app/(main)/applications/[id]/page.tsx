@@ -11,7 +11,6 @@ import {
   getEmploymentTypeLabel,
 } from '@/shared/utils/format';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import type { Application, Job, Profile } from '@/types/database';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import ResumePreview from '@/features/resumes/components/ResumePreview';
@@ -168,12 +167,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-base font-bold text-ink truncate flex items-center gap-1.5 group-hover:text-primary transition-colors">
+              <p className="text-base font-bold text-ink truncate group-hover:text-primary transition-colors">
                 {applicantName}
-                <VerificationBadge
-                  verificationStatus={applicant.verification_status}
-                  phoneVerified={applicant.phone_verified}
-                />
               </p>
               <p className="text-xs text-gray-500 mt-1 truncate">
                 {bizLabel} · {getRegionLabel(applicant.region)}

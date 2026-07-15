@@ -42,12 +42,6 @@ export default function OnboardingChecklist({ profile, jobCount, resumeCount = 0
       href: '/mypage/directory',
     },
     {
-      key: 'verification',
-      label: '업체 인증',
-      done: profile.verification_status === 'verified',
-      href: '/mypage/verification',
-    },
-    {
       key: 'job',
       label: '공고 1개 이상 등록',
       done: jobCount >= 1,

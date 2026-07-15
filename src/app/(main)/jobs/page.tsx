@@ -26,7 +26,7 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   // Foreign-table 필터(verified/completed)는 PostgREST inner join이 있어야
   // outer-join으로 fallback되지 않고 실제 행을 걸러냄. inner join 마커는 `!inner`.
   // 그 외 일반 표시용 임베드는 LEFT join이라도 무방.
-  const needsInnerAuthor = searchParams.verified === '1' || searchParams.completed === '1';
+  const needsInnerAuthor = searchParams.completed === '1';
   const authorEmbed = needsInnerAuthor
     ? `author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`
     : `author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`;
@@ -74,9 +74,6 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
   if (searchParams.search) {
     query = query.ilike('title', `%${searchParams.search}%`);
-  }
-  if (searchParams.verified === '1') {
-    query = query.eq('author.verification_status', 'verified');
   }
   if (searchParams.completed === '1') {
     query = query.gt('author.completed_deals_count', 0);

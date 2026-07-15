@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { revalidateTag } from 'next/cache';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { createServiceClient } from '@/lib/supabase/service';
-import { removeVerificationDocument } from '@/lib/verification-document';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import { isUuid } from '@/shared/utils/uuid';
 import { sameNullableTimestamp } from '@/shared/utils/idempotency';
@@ -222,14 +221,8 @@ export async function POST(request: NextRequest) {
 
       case 'softDeleteUser': {
         // withdraw 라우트와 동일 정책 — purge_profile_cascade 로 관련 콘텐츠 전체 soft delete
-        const { data: target } = await supabase
-          .from('profiles')
-          .select('verification_document')
-          .eq('id', params.id)
-          .maybeSingle();
         const { error } = await supabase.rpc('purge_profile_cascade', { p_profile_id: params.id });
         if (error) throw error;
-        await removeVerificationDocument(target?.verification_document);
         return NextResponse.json({ success: true });
       }
 

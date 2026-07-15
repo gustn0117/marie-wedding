@@ -8,7 +8,6 @@ import {
   getRegionLabel,
 } from '@/shared/utils/format';
 import { getDDayLabel, isUrgent } from '@/shared/utils/tier';
-import VerificationBadge from '@/features/verification/components/VerificationBadge';
 import BusinessTypeIcon from '@/shared/components/BusinessTypeIcon';
 
 interface Props {
@@ -43,14 +42,8 @@ export default function JobListRow({ job }: Props) {
       <div className="sm:hidden flex items-start gap-3">
         <BusinessTypeIcon businessType={job.business_type} className="w-9 h-9 shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
-          <p className="text-[12.5px] font-bold text-gray-500 truncate flex items-center gap-1">
+          <p className="text-[12.5px] font-bold text-gray-500 truncate">
             {companyName}
-            {job.author && (
-              <VerificationBadge
-                verificationStatus={job.author.verification_status}
-                phoneVerified={job.author.phone_verified}
-              />
-            )}
           </p>
           <h3 className="text-[15px] font-bold text-ink leading-snug line-clamp-2 mt-1">{job.title}</h3>
           <p className="text-[12.5px] text-gray-500 mt-1.5 truncate">
@@ -73,14 +66,8 @@ export default function JobListRow({ job }: Props) {
         <div className="flex items-center gap-2.5 min-w-0">
           <BusinessTypeIcon businessType={job.business_type} className="w-10 h-10 shrink-0" />
           <div className="min-w-0">
-            <p className="text-[14.5px] font-bold text-ink leading-tight truncate flex items-center gap-1.5">
+            <p className="text-[14.5px] font-bold text-ink leading-tight truncate">
               {companyName}
-              {job.author && (
-                <VerificationBadge
-                  verificationStatus={job.author.verification_status}
-                  phoneVerified={job.author.phone_verified}
-                />
-              )}
             </p>
             <p className="text-[12.5px] text-gray-500 mt-1 truncate">{businessLabel}</p>
           </div>

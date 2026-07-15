@@ -33,7 +33,7 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
   let query = supabase
     .from('profiles')
     .select(
-      'id, company_name, contact_name, business_type, region, profile_image, cover_image, verification_status, phone_verified, premium_tier, completed_deals_count, response_rate, verified_at',
+      'id, company_name, contact_name, business_type, region, profile_image, cover_image, premium_tier, completed_deals_count, response_rate',
       { count: 'exact' },
     )
     .is('deleted_at', null)
@@ -72,11 +72,10 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     }
   }
 
-  // 정렬: 프리미엄 → 진행 이력 → 인증 업체 → 가나다순
+  // 정렬: 프리미엄 → 진행 이력 → 가나다순
   query = query
     .order('premium_tier', { ascending: false, nullsFirst: false })
     .order('completed_deals_count', { ascending: false })
-    .order('verified_at', { ascending: false, nullsFirst: false })
     .order('company_name', { ascending: true })
     .range(from, to);
 

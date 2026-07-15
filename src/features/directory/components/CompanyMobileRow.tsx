@@ -12,12 +12,11 @@ interface Props {
 /**
  * 디렉토리 모바일 1열 compact row.
  * - 좌측 64×64 썸네일 (이미지 없으면 이니셜)
- * - 우측 회사명·인증·업종·지역·진행/응답률
+ * - 우측 회사명·업종·지역·진행/응답률
  */
 export default function CompanyMobileRow({ profile }: Props) {
   const name = profile.company_name || profile.contact_name;
   const initial = name.charAt(0).toUpperCase();
-  const verified = profile.verification_status === 'verified';
   const premium = profile.premium_tier !== 'free';
   const imageUrl =
     resolveStorageUrl(profile.cover_image, 'avatars') ??
@@ -53,14 +52,6 @@ export default function CompanyMobileRow({ profile }: Props) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-[14.5px] font-bold text-ink truncate">{name}</p>
-          {verified && (
-            <span className="shrink-0 inline-flex items-center gap-0.5 px-1 py-0 rounded text-[10px] font-bold text-primary border border-primary-200 bg-primary-50">
-              <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
-              인증
-            </span>
-          )}
         </div>
         <p className="text-[12px] text-gray-500 mt-0.5 truncate">
           {bizLabel} · {region}

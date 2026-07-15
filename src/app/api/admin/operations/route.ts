@@ -2,7 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { createServiceClient } from '@/lib/supabase/service';
-import { removeVerificationDocument } from '@/lib/verification-document';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -76,18 +75,11 @@ export async function POST(request: NextRequest) {
         const profileId = requiredUuid(body.profileId);
         if (!profileId) return jsonError('회원 ID가 올바르지 않습니다.', 400);
 
-        const { data: target } = await supabase
-          .from('profiles')
-          .select('verification_document')
-          .eq('id', profileId)
-          .abortSignal(signal)
-          .maybeSingle();
         const { error } = await supabase
           .rpc('purge_profile_cascade', { p_profile_id: profileId })
           .abortSignal(signal);
         if (signal.aborted) return jsonError('회원 삭제 시간이 초과되었습니다. 현재 상태를 다시 확인해 주세요.', 504);
         if (error) return databaseError(error, '회원을 삭제하지 못했습니다.');
-        await removeVerificationDocument(target?.verification_document);
         return NextResponse.json({ ok: true });
       }
 

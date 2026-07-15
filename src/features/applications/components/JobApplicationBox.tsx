@@ -15,7 +15,6 @@ import { formatRelativeTime, getPrimaryBusinessTypeLabel, getRegionLabel, format
 import { withTimeout } from '@/shared/utils/withTimeout';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { toast, toastConfirm } from '@/shared/components/Toast';
-import { computeTrustTier, TRUST_TIER_LABELS } from '@/types/database';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import {
   isResumeContentSubmittable,
@@ -459,15 +458,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                       <h3 className="text-sm font-bold text-gray-900">
                         {item.applicant?.company_name || item.applicant?.contact_name || '알 수 없음'}
                       </h3>
-                      {item.applicant && (() => {
-                        const tier = computeTrustTier(item.applicant);
-                        const emphasis = tier === 'deal_proven' || tier === 'business_verified';
-                        return (
-                          <span className={`inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold border ${emphasis ? 'border-primary bg-white text-primary' : 'border-gray-300 bg-white text-gray-600'}`}>
-                            {TRUST_TIER_LABELS[tier]}
-                          </span>
-                        );
-                      })()}
                       <span className="badge-attr">{APPLICATION_STATUS_LABELS[item.status]}</span>
                       <span className="text-xs text-gray-400">{formatRelativeTime(item.created_at)}</span>
                     </div>
