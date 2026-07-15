@@ -125,7 +125,7 @@ export function isValidResumePhone(value: string): boolean {
   return digitCount >= 9 && digitCount <= 15;
 }
 
-function isValidResumeEmail(value: string): boolean {
+export function isValidResumeEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 

@@ -13,6 +13,8 @@ import {
   RESUME_LANGUAGE_LEVEL_LABELS,
   calculateResumeCompleteness,
   isResumeContentSubmittable,
+  isValidResumeEmail,
+  isValidResumePhone,
   type ResumeCertificate,
   type ResumeContent,
   type ResumeEducation,
@@ -21,6 +23,23 @@ import {
   type ResumeLink,
   type ResumeRecord,
 } from '@/features/resumes/types';
+
+// 완성도 배점(calculateResumeCompleteness)과 1:1로 대응하는 체크리스트 —
+// "무엇을 채우면 제출 가능한지"를 사용자에게 그대로 보여준다.
+function completenessItems(r: ResumeContent): { label: string; done: boolean; points: number; required?: boolean }[] {
+  const contactOk = isValidResumeEmail(r.email) || isValidResumePhone(r.phone);
+  return [
+    { label: '이름', done: !!r.fullName.trim(), points: 10, required: true },
+    { label: '증명사진', done: !!r.photoPath, points: 10 },
+    { label: '연락처 또는 이메일', done: contactOk, points: 10 },
+    { label: '한 줄 소개', done: !!r.headline.trim(), points: 10 },
+    { label: '자기소개 30자 이상', done: r.summary.trim().length >= 30, points: 20 },
+    { label: '학력 1개 이상', done: r.educations.some((e) => e.school.trim()), points: 15 },
+    { label: '경력 1개 이상', done: r.experiences.some((e) => e.company.trim() && e.position.trim()), points: 15 },
+    { label: '자격증 또는 기술', done: r.certificates.some((c) => c.name.trim()) || r.skills.length > 0, points: 5 },
+    { label: '희망 직무', done: r.desiredRoles.length > 0, points: 5 },
+  ];
+}
 
 interface ResumeManagerProps {
   initialResumes: ResumeRecord[];
@@ -297,24 +316,38 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
               <p className="font-bold text-gray-800">아직 이력서가 없습니다</p>
               <p className="mt-2 text-xs leading-5">새 이력서를 만들어 채용 지원을 준비해보세요.</p>
             </div>
-          ) : resumes.map((resume) => (
+          ) : resumes.map((resume) => {
+            const photoUrl = resolveResumePhotoUrl(resume.photoPath);
+            const active = draft?.id === resume.id;
+            return (
             <button
               key={resume.id}
               type="button"
               onClick={() => void selectResume(resume)}
               disabled={busy}
-              className={`block w-full border-b border-gray-100 p-4 text-left last:border-b-0 ${draft?.id === resume.id ? 'bg-primary-50' : 'hover:bg-gray-50'}`}
+              className={`flex w-full gap-3 border-b border-gray-100 p-3.5 text-left last:border-b-0 transition-colors ${active ? 'bg-primary-50' : 'hover:bg-gray-50'}`}
             >
-              <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-sm font-bold text-gray-900">{resume.title}</p>
-                {resume.isDefault && <span className="shrink-0 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">대표</span>}
+              <div className={`h-14 w-11 shrink-0 overflow-hidden rounded border bg-gray-50 ${active ? 'border-primary/30' : 'border-gray-200'}`}>
+                {photoUrl
+                  // eslint-disable-next-line @next/next/no-img-element
+                  ? <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+                  : <div className="flex h-full items-center justify-center text-lg font-bold text-gray-300">{(resume.title || '이').charAt(0)}</div>}
               </div>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full bg-primary" style={{ width: `${resume.completenessScore}%` }} />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <p className={`truncate text-sm font-bold ${active ? 'text-primary' : 'text-gray-900'}`}>{resume.title}</p>
+                  {resume.isDefault && <span className="shrink-0 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">대표</span>}
+                </div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-100">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${resume.completenessScore}%` }} />
+                </div>
+                <p className="mt-1 text-[11px] text-gray-400">
+                  완성도 {resume.completenessScore}% · {new Date(resume.updatedAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })} 수정
+                </p>
               </div>
-              <p className="mt-1 text-[11px] text-gray-400">완성도 {resume.completenessScore}% · v{resume.version}</p>
             </button>
-          ))}
+            );
+          })}
         </div>
         <p className="px-1 text-xs leading-5 text-gray-400">최대 5개 · 지원할 때 공고에 맞는 이력서를 선택할 수 있습니다.</p>
       </aside>
@@ -353,6 +386,8 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
               </fieldset>
             ) : (
               <fieldset disabled={busy} className="min-w-0 space-y-4 border-0 p-0 disabled:opacity-80">
+                {previewData && <CompletenessChecklist resume={previewData} score={liveCompleteness} submittable={submissionReady} />}
+
                 <FormSection title="기본 정보" description="채용 담당자가 가장 먼저 확인하는 정보입니다.">
                   <div className="grid gap-5 lg:grid-cols-[160px_minmax(0,1fr)]">
                     <div>
@@ -521,4 +556,40 @@ function RepeatCard({ title, onRemove, children }: { title: string; onRemove: ()
 
 function EmptyRows({ label }: { label: string }) {
   return <div className="rounded border border-dashed border-gray-300 px-4 py-8 text-center text-sm text-gray-400">{label}</div>;
+}
+
+// 완성도 가이드 — 무엇을 채우면 제출 가능한지 항목별로 안내
+function CompletenessChecklist({ resume, score, submittable }: { resume: ResumeContent; score: number; submittable: boolean }) {
+  const items = completenessItems(resume);
+  const remaining = items.filter((i) => !i.done).length;
+  return (
+    <section className="rounded-lg border border-gray-200 bg-white p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-extrabold tabular-nums text-gray-900">{score}<span className="text-base font-bold text-gray-400">%</span></span>
+            {submittable
+              ? <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2 py-0.5 text-[11px] font-bold text-primary"><svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>제출 가능</span>
+              : <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-600">제출까지 {Math.max(0, 60 - score)}%</span>}
+          </div>
+          <p className="mt-1 text-xs text-gray-500">{submittable ? '지원할 때 이 이력서를 바로 제출할 수 있어요.' : `아래 ${remaining}개 항목 중 필요한 만큼 채우면 제출할 수 있어요.`}</p>
+        </div>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-100">
+        <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${score}%` }} />
+      </div>
+      <ul className="mt-4 grid gap-x-5 gap-y-2 sm:grid-cols-2">
+        {items.map((item) => (
+          <li key={item.label} className="flex items-center gap-2 text-sm">
+            <span className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${item.done ? 'bg-primary text-white' : 'border border-gray-300'}`}>
+              {item.done && <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={3.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+            </span>
+            <span className={item.done ? 'text-gray-400 line-through' : 'font-medium text-gray-700'}>{item.label}</span>
+            {item.required && !item.done && <span className="rounded bg-state-urgent-bg px-1 text-[10px] font-bold text-state-urgent">필수</span>}
+            <span className="ml-auto text-[11px] tabular-nums text-gray-300">+{item.points}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
 }
