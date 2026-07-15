@@ -9,6 +9,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import ResumePreview from '@/features/resumes/components/ResumePreview';
+import SmartDate from '@/shared/components/SmartDate';
 import {
   RESUME_LANGUAGE_LEVEL_LABELS,
   calculateResumeCompleteness,
@@ -419,7 +420,7 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                       <TextField label="한 줄 소개" value={draft.headline} onChange={(value) => patch('headline', value)} maxLength={120} placeholder="예: 현장 대응에 강한 웨딩 플래너" />
                       <TextField label="연락처" type="tel" value={draft.phone} onChange={(value) => patch('phone', value)} maxLength={30} />
                       <TextField label="이메일" type="email" value={draft.email} onChange={(value) => patch('email', value)} maxLength={254} />
-                      <TextField label="생년월일 (선택)" type="date" value={draft.birthDate} onChange={(value) => patch('birthDate', value)} />
+                      <DateField label="생년월일 (선택)" granularity="day" value={draft.birthDate} onChange={(value) => patch('birthDate', value)} />
                       <TextField label="거주지" value={draft.address} onChange={(value) => patch('address', value)} maxLength={200} placeholder="예: 서울시 강남구" />
                     </div>
                   </div>
@@ -446,8 +447,8 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                         <div className="grid gap-3 sm:grid-cols-2">
                           <TextField label="회사명" value={item.company} maxLength={100} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, company: value } : row))} />
                           <TextField label="직책 / 담당업무" value={item.position} maxLength={100} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, position: value } : row))} />
-                          <TextField label="입사 월" type="month" value={item.startDate} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, startDate: value } : row))} />
-                          <TextField label="퇴사 월" type="month" value={item.endDate} disabled={item.isCurrent} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, endDate: value } : row))} />
+                          <DateField label="입사 월" value={item.startDate} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, startDate: value } : row))} />
+                          <DateField label="퇴사 월" value={item.endDate} disabled={item.isCurrent} onChange={(value) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, endDate: value } : row))} />
                         </div>
                         <label className="mt-3 flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={item.isCurrent} onChange={(event) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, isCurrent: event.target.checked, endDate: event.target.checked ? '' : row.endDate } : row))} />현재 재직 중</label>
                         <textarea aria-label={`경력 ${index + 1} 설명`} value={item.description} onChange={(event) => patch('experiences', draft.experiences.map((row) => row.id === item.id ? { ...row, description: event.target.value } : row))} rows={4} maxLength={2000} className="input-field mt-3 resize-y" placeholder="담당 업무와 성과를 구체적으로 적어주세요." />
@@ -464,10 +465,10 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                         <div className="grid gap-3 sm:grid-cols-2">
                           <TextField label="학교명" value={item.school} maxLength={100} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, school: value } : row))} />
                           <TextField label="전공" value={item.major} maxLength={100} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, major: value } : row))} />
-                          <label className="block text-sm font-semibold text-gray-700">학위<select value={item.degree} onChange={(event) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, degree: event.target.value as ResumeEducation['degree'] } : row))} className="input-field mt-1"><option value="high_school">고등학교</option><option value="associate">전문학사</option><option value="bachelor">학사</option><option value="master">석사</option><option value="doctorate">박사</option><option value="other">기타</option></select></label>
+                          <SelectField label="학위" value={item.degree} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, degree: value as ResumeEducation['degree'] } : row))}><option value="high_school">고등학교</option><option value="associate">전문학사</option><option value="bachelor">학사</option><option value="master">석사</option><option value="doctorate">박사</option><option value="other">기타</option></SelectField>
                           <span />
-                          <TextField label="입학 월" type="month" value={item.startDate} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, startDate: value } : row))} />
-                          <TextField label="졸업 월" type="month" value={item.endDate} disabled={item.isCurrent} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, endDate: value } : row))} />
+                          <DateField label="입학 월" value={item.startDate} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, startDate: value } : row))} />
+                          <DateField label="졸업 월" value={item.endDate} disabled={item.isCurrent} onChange={(value) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, endDate: value } : row))} />
                         </div>
                         <label className="mt-3 flex items-center gap-2 text-sm text-gray-600"><input type="checkbox" checked={item.isCurrent} onChange={(event) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, isCurrent: event.target.checked, endDate: event.target.checked ? '' : row.endDate } : row))} />재학 중</label>
                         <textarea aria-label={`학력 ${index + 1} 설명`} value={item.description} onChange={(event) => patch('educations', draft.educations.map((row) => row.id === item.id ? { ...row, description: event.target.value } : row))} rows={3} maxLength={1000} className="input-field mt-3 resize-y" placeholder="교육 과정, 활동, 성과 등을 적어주세요." />
@@ -484,7 +485,7 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                         <div className="grid gap-3 sm:grid-cols-2">
                           <TextField label="자격증명" value={item.name} maxLength={100} onChange={(value) => patch('certificates', draft.certificates.map((row) => row.id === item.id ? { ...row, name: value } : row))} />
                           <TextField label="발급기관" value={item.issuer} maxLength={100} onChange={(value) => patch('certificates', draft.certificates.map((row) => row.id === item.id ? { ...row, issuer: value } : row))} />
-                          <TextField label="취득일" type="date" value={item.acquiredDate} onChange={(value) => patch('certificates', draft.certificates.map((row) => row.id === item.id ? { ...row, acquiredDate: value } : row))} />
+                          <DateField label="취득일" granularity="day" value={item.acquiredDate} onChange={(value) => patch('certificates', draft.certificates.map((row) => row.id === item.id ? { ...row, acquiredDate: value } : row))} />
                           <TextField label="자격번호 (선택)" value={item.credentialId} maxLength={100} onChange={(value) => patch('certificates', draft.certificates.map((row) => row.id === item.id ? { ...row, credentialId: value } : row))} />
                         </div>
                       </RepeatCard>
@@ -503,7 +504,7 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                       <RepeatCard key={item.id} title={`외국어 ${index + 1}`} onRemove={() => patch('languages', draft.languages.filter((row) => row.id !== item.id))}>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <TextField label="언어" value={item.language} maxLength={50} onChange={(value) => patch('languages', draft.languages.map((row) => row.id === item.id ? { ...row, language: value } : row))} />
-                          <label className="block text-sm font-semibold text-gray-700">수준<select value={item.level} onChange={(event) => patch('languages', draft.languages.map((row) => row.id === item.id ? { ...row, level: event.target.value as ResumeLanguage['level'] } : row))} className="input-field mt-1">{Object.entries(RESUME_LANGUAGE_LEVEL_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                          <SelectField label="수준" value={item.level} onChange={(value) => patch('languages', draft.languages.map((row) => row.id === item.id ? { ...row, level: value as ResumeLanguage['level'] } : row))}>{Object.entries(RESUME_LANGUAGE_LEVEL_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SelectField>
                           <TextField label="시험명 (선택)" value={item.testName} maxLength={100} onChange={(value) => patch('languages', draft.languages.map((row) => row.id === item.id ? { ...row, testName: value } : row))} />
                           <TextField label="점수 / 등급" value={item.score} maxLength={50} onChange={(value) => patch('languages', draft.languages.map((row) => row.id === item.id ? { ...row, score: value } : row))} />
                         </div>
@@ -542,6 +543,28 @@ function FormSection({ title, description, actionLabel, onAdd, children }: { tit
 
 function TextField({ label, value, onChange, type = 'text', placeholder, maxLength, required, disabled }: { label: string; value: string; onChange: (value: string) => void; type?: string; placeholder?: string; maxLength?: number; required?: boolean; disabled?: boolean }) {
   return <label className="block text-sm font-semibold text-gray-700">{label}{required && <span className="text-state-urgent"> *</span>}<input type={type} value={value} maxLength={maxLength} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} required={required} disabled={disabled} className="input-field mt-1 disabled:bg-gray-100" /></label>;
+}
+
+// 셀렉트 — 네이티브 화살표 대신 커스텀 chevron 으로 통일
+function SelectField({ label, value, onChange, children }: { label: string; value: string; onChange: (value: string) => void; children: React.ReactNode }) {
+  return (
+    <label className="block text-sm font-semibold text-gray-700">{label}
+      <div className="relative mt-1">
+        <select value={value} onChange={(e) => onChange(e.target.value)} className="input-field w-full appearance-none pr-9">{children}</select>
+        <svg className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+      </div>
+    </label>
+  );
+}
+
+// 날짜/월 필드 — 네이티브 대신 커스텀 SmartDate 사용
+function DateField({ label, value, onChange, granularity = 'month', disabled, placeholder }: { label: string; value: string; onChange: (value: string) => void; granularity?: 'month' | 'day'; disabled?: boolean; placeholder?: string }) {
+  return (
+    <div>
+      <span className="mb-1 block text-sm font-semibold text-gray-700">{label}</span>
+      <SmartDate value={value} onChange={onChange} granularity={granularity} disabled={disabled} noFuture placeholder={placeholder ?? (granularity === 'month' ? '년/월 선택' : '날짜 선택')} />
+    </div>
+  );
 }
 
 function TagInput({ label, values, onChange, placeholder, maxItems, maxLength }: { label: string; values: string[]; onChange: (values: string[]) => void; placeholder: string; maxItems: number; maxLength: number }) {
