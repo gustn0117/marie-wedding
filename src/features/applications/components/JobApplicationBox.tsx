@@ -45,10 +45,6 @@ const FILTER_LABELS: Record<ApplicationStatus | 'all', string> = {
   cancelled: '취소',
 };
 
-function stripHtml(html: string) {
-  return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-}
-
 export default function JobApplicationBox({ jobId, authorId, isClosed = false }: JobApplicationBoxProps) {
   const { profile, isLoading } = useAuth();
   const [application, setApplication] = useState<Application | null>(null);
@@ -56,8 +52,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   const [receivedError, setReceivedError] = useState('');
   const [receivedReloadKey, setReceivedReloadKey] = useState(0);
   const [message, setMessage] = useState('');
-  const [careerSummary, setCareerSummary] = useState('');
-  const [availableSchedule, setAvailableSchedule] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [loading, setLoading] = useState(true);
@@ -70,7 +64,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   const [resumeReloadKey, setResumeReloadKey] = useState(0);
   const [draftHydratedKey, setDraftHydratedKey] = useState('');
   // 프로필 값 프리필을 최초 1회로 제한 (토큰 갱신 시 profile 재생성으로 인한 입력값 덮어쓰기 방지)
-  const prefilledRef = useRef(false);
   const applicationIdRef = useRef<string | null>(null);
   const mutationSequenceRef = useRef(new Map<string, number>());
   const searchParams = useSearchParams();
@@ -103,13 +96,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
     if (profileId !== authorId) {
       // 폼 즉시 노출 — 스켈레톤 없음
       setLoading(false);
-      // 프로필 값으로 최초 1회만 프리필. 토큰 갱신으로 effect가 재실행돼도
-      // 사용자가 입력하거나 지운 값(연락처·경력)을 덮어쓰지 않는다.
-      if (!prefilledRef.current) {
-        prefilledRef.current = true;
-        setCareerSummary(stripHtml(profileBio ?? '').slice(0, 180));
-      }
-
       // 백그라운드: 이미 지원했는지 체크. 결과 오면 상태 전환, 실패해도 폼 그대로 유지.
       withTimeout(
         applicationService.getApplicationForJob(jobId, profileId),
@@ -175,8 +161,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       if (raw) {
         const saved = JSON.parse(raw) as Record<string, unknown>;
         if (typeof saved.message === 'string') setMessage(saved.message.slice(0, 4_000));
-        if (typeof saved.careerSummary === 'string') setCareerSummary(saved.careerSummary.slice(0, 500));
-        if (typeof saved.availableSchedule === 'string') setAvailableSchedule(saved.availableSchedule.slice(0, 300));
         if (typeof saved.contactPhone === 'string') setContactPhone(saved.contactPhone.slice(0, 40));
         if (typeof saved.selectedResumeId === 'string' && isUuid(saved.selectedResumeId)) {
           setSelectedResumeId(saved.selectedResumeId);
@@ -193,12 +177,10 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
     if (!applicationDraftKey || draftHydratedKey !== applicationDraftKey || application) return;
     sessionStorage.setItem(applicationDraftKey, JSON.stringify({
       message,
-      careerSummary,
-      availableSchedule,
       contactPhone,
       selectedResumeId,
     }));
-  }, [application, applicationDraftKey, availableSchedule, careerSummary, contactPhone, draftHydratedKey, message, selectedResumeId]);
+  }, [application, applicationDraftKey, contactPhone, draftHydratedKey, message, selectedResumeId]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -272,23 +254,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
   );
   const resumeReady = !!selectedResume
     && isResumeContentSubmittable(selectedResume, selectedResume.completenessScore);
-  const composedMessage = useMemo(() => {
-    if (!profile) return '';
-    const name = profile.company_name || profile.contact_name || '지원자';
-    const field = getPrimaryBusinessTypeLabel(profile.business_type, 2) || '미입력';
-    const region = getRegionLabel(profile.region) || '미입력';
-    return [
-      '[지원 요약]',
-      `- 이름/프로필: ${name}`,
-      `- 활동 분야: ${field}`,
-      `- 활동 지역: ${region}`,
-      `- 경력/강점: ${careerSummary.trim() || '미입력'}`,
-      `- 가능 일정: ${availableSchedule.trim() || '미입력'}`,
-      '',
-      '[지원 쪽지]',
-      message.trim(),
-    ].join('\n');
-  }, [availableSchedule, careerSummary, message, profile]);
+  // 경력·강점·일정 등 상세는 이력서가 담으므로, 지원 메시지는 '한마디'만 제출한다.
+  const composedMessage = useMemo(() => message.trim(), [message]);
   // 직접 입력 → 선택한 이력서 → 프로필 순으로 실제 제출 연락처를 결정한다.
   const effectiveContactPhone = contactPhone.trim()
     || selectedResume?.phone.trim()
@@ -335,8 +302,6 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       );
       setApplication(created);
       setMessage('');
-      setCareerSummary('');
-      setAvailableSchedule('');
       if (applicationDraftKey) sessionStorage.removeItem(applicationDraftKey);
       // 채용자 알림 이메일은 서버(/api/applications/create)에서 확실히 발송한다.
     } catch (err) {
@@ -722,37 +687,21 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
             </div>
           )}
         </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">경력/강점 <span className="font-normal text-gray-400">(선택)</span></span>
-            <input
-              value={careerSummary}
-              onChange={(e) => setCareerSummary(e.target.value)}
-              maxLength={500}
-              className="input-field"
-              placeholder="예) 웨딩플래너 2년, 예식 당일 진행 경험"
-            />
+        <div>
+          <label htmlFor="apply-message" className="mb-1 block text-xs font-bold text-gray-700">
+            지원 한마디 <span className="text-rose-500">*</span>
+            <span className="ml-1 font-normal text-gray-400">경력·학력 등 상세는 이력서에 담겨요</span>
           </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-bold text-gray-700">가능 일정 <span className="font-normal text-gray-400">(선택)</span></span>
-            <input
-              value={availableSchedule}
-              onChange={(e) => setAvailableSchedule(e.target.value)}
-              maxLength={300}
-              className="input-field"
-              placeholder="예) 주말 가능, 7월부터 출근 가능"
-            />
-          </label>
+          <textarea
+            id="apply-message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            maxLength={4_000}
+            rows={4}
+            className="input-field resize-none"
+            placeholder="왜 이 공고에 지원하는지, 바로 맡을 수 있는 업무, 확인이 필요한 조건을 간단히 적어주세요."
+          />
         </div>
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          maxLength={4_000}
-          rows={5}
-          aria-label="지원 쪽지"
-          className="input-field resize-none"
-          placeholder="왜 이 공고에 지원하는지, 바로 맡을 수 있는 업무, 확인이 필요한 조건을 적어주세요."
-        />
         <div>
           <label className="block mb-1 text-xs font-bold text-gray-700">
             연락처 <span className="text-rose-500">*</span>
