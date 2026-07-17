@@ -94,10 +94,50 @@ function scheduleStorageOrphanCleanup() {
 if (isPrimary && workers > 1) {
   console.log(`[cluster] primary ${process.pid}: forking ${workers} workers of ${cpuCount} CPUs`);
   for (let i = 0; i < workers; i++) cluster.fork();
+
+  // 종료 중에는 워커를 되살리지 않는다. 되살리면 docker stop 이 유예시간을
+  // 다 쓰고 SIGKILL 로 끝나 처리중 요청이 잘린다.
+  let shuttingDown = false;
+
   cluster.on('exit', (worker, code, signal) => {
+    if (shuttingDown) return;
     console.error(`[cluster] worker ${worker.process.pid} exited (${signal || code}); restarting`);
     cluster.fork();
   });
+
+  // 무중단 배포에서 옛 색을 stop 하면 SIGTERM 이 온다. 워커에 전파해 처리중
+  // 요청을 끝낼 시간을 주고, 다 빠지면 즉시 종료한다. 유예 안에 안 끝나면 강제 종료.
+  const SHUTDOWN_GRACE_MS = Number.parseInt(process.env.SHUTDOWN_GRACE_MS || '', 10) || 10_000;
+
+  function shutdown(signal) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    const alive = Object.values(cluster.workers || {});
+    console.log(`[cluster] ${signal} received; draining ${alive.length} workers`);
+    for (const worker of alive) {
+      try {
+        worker.process.kill('SIGTERM');
+      } catch {
+        // 이미 종료된 워커 — 무시
+      }
+    }
+    const force = setTimeout(() => {
+      console.error('[cluster] grace period elapsed; forcing exit');
+      process.exit(0);
+    }, SHUTDOWN_GRACE_MS);
+    force.unref();
+    const poll = setInterval(() => {
+      if (Object.keys(cluster.workers || {}).length === 0) {
+        clearInterval(poll);
+        process.exit(0);
+      }
+    }, 200);
+    poll.unref();
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+
   scheduleStorageOrphanCleanup();
 } else {
   // 워커 프로세스(또는 workers===1) — 실제 Next 서버 구동

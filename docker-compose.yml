@@ -1,32 +1,83 @@
 name: marie-wedding
 
+# 무중단 배포 구조 (docs/superpowers/specs/2026-07-17-zero-downtime-deploy-design.md)
+#
+#   cloudflared → 127.0.0.1:3046 → [nginx] → web-blue:3000  (활성)
+#                                          ↘ web-green:3000 (대기)
+#
+# nginx 만 호스트 포트를 점유하고 배포 중에도 재생성되지 않는다. 앱은 색깔별로
+# 번갈아 뜨며 profiles 로 분리돼 평소엔 활성 색 하나만 실행된다.
+#
+# `docker compose up -d` 를 직접 쓰지 말 것 — 색이 하나도 안 뜬다.
+# 배포는 항상 `bash webhook-deploy.sh`.
+
+x-web-common: &web-common
+  build:
+    context: .
+    dockerfile: Dockerfile
+    secrets:
+      - env_production
+  # 호스트 포트를 열지 않는다. 외부 노출은 nginx 만 담당.
+  expose:
+    - "3000"
+  env_file:
+    - .env.production
+  environment:
+    # 서버사이드 Supabase 호출은 Cloudflare 를 우회해 같은 호스트의 Kong 으로 직결.
+    # (공인 URL 경유 시 요청당 +300ms hairpin + cloudflared 불안정 시 hang → 무한 로딩)
+    - SUPABASE_INTERNAL_URL=http://kong:8000
+    # 자체 SMTP: 호스트 Postfix(+opendkim DKIM 서명)로 릴레이. host-gateway 로 호스트 접근.
+    # Postfix mynetworks 에 172.16/12(도커망) 포함이라 인증 없이 릴레이 허용됨.
+    - SMTP_HOST=host.docker.internal
+    - SMTP_PORT=25
+    - MAIL_FROM=Marié <admin@marie.co.kr>
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  networks:
+    - default
+    - supabase
+  restart: unless-stopped
+  # 배포 스크립트가 이 상태를 폴링해 "스왑해도 되는지" 판단한다.
+  # node:22-alpine 이라 curl/wget 없이 node 로 확인한다.
+  healthcheck:
+    test:
+      - CMD
+      - node
+      - -e
+      - "require('http').get('http://127.0.0.1:3000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+    interval: 3s
+    timeout: 3s
+    retries: 3
+    start_period: 5s
+  # 옛 색 정지 시 처리중 요청이 끝날 시간을 준다(cluster-server.js 가 SIGTERM 을
+  # 워커에 전파해 드레인). 이 시간을 넘기면 도커가 SIGKILL.
+  stop_grace_period: 20s
+
 services:
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      secrets:
-        - env_production
+  nginx:
+    image: nginx:1.27-alpine
     ports:
-      # 외부 트래픽은 nginx/cloudflared만 받고 Next.js 포트는 호스트 로컬에만 공개.
-      - "127.0.0.1:${PORT:-3000}:3000"
-    env_file:
-      - .env.production
-    environment:
-      # 서버사이드 Supabase 호출은 Cloudflare 를 우회해 같은 호스트의 Kong 으로 직결.
-      # (공인 URL 경유 시 요청당 +300ms hairpin + cloudflared 불안정 시 hang → 무한 로딩)
-      - SUPABASE_INTERNAL_URL=http://kong:8000
-      # 자체 SMTP: 호스트 Postfix(+opendkim DKIM 서명)로 릴레이. host-gateway 로 호스트 접근.
-      # Postfix mynetworks 에 172.16/12(도커망) 포함이라 인증 없이 릴레이 허용됨.
-      - SMTP_HOST=host.docker.internal
-      - SMTP_PORT=25
-      - MAIL_FROM=Marié <admin@marie.co.kr>
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # 외부 트래픽은 cloudflared만 받고 앱 포트는 호스트 로컬에만 공개.
+      - "127.0.0.1:${PORT:-3000}:80"
+    volumes:
+      # 파일이 아니라 "디렉토리"로 마운트한다. 단일 파일 bind-mount 는 inode 를
+      # 물기 때문에, 배포 스크립트가 upstream 파일을 교체하면 컨테이너가 옛 내용을
+      # 계속 보게 된다. 디렉토리 마운트는 그 문제가 없다.
+      # (upstream.inc 는 확장자가 .conf 가 아니라 자동 include 에 안 걸린다)
+      - ./nginx:/etc/nginx/conf.d:ro
     networks:
       - default
-      - supabase
     restart: unless-stopped
+
+  web-blue:
+    <<: *web-common
+    profiles:
+      - blue
+
+  web-green:
+    <<: *web-common
+    profiles:
+      - green
 
 networks:
   supabase:
