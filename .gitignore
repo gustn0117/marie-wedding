@@ -41,3 +41,7 @@ next-env.d.ts
 
 # Supabase CLI local metadata
 /supabase/.temp/
+
+# 배포 스크립트가 생성하는 활성 색 상태. 추적되면 git pull 이 되돌려
+# 스크립트가 활성 색을 오판하고 살아있는 컨테이너를 죽인다.
+nginx/upstream.inc
