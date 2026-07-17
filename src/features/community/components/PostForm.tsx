@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { REGIONS, ROUTES } from '@/shared/constants';
+import { ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { communityService } from '../services/community-service';
@@ -26,7 +26,6 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     content: initialData?.content ?? '',
     // 게시판(카테고리) 폐지 — 폼에서 선택 없이 기본값으로 저장(DB category 컬럼 호환)
     category: initialData?.category ?? 'jobtip',
-    region: initialData?.region ?? '',
   });
   const contentRef = useRef(formData.content);
   // 같은 작성 폼의 재시도는 동일 ID를 사용해 응답 유실 시 중복 글을 만들지 않는다.
@@ -115,40 +114,6 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           {error}
         </div>
       )}
-
-      {/* Region (선택) */}
-      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
-        <label className="block text-sm font-semibold text-gray-800">
-          지역 <span className="text-xs font-normal text-gray-400">(선택, 지역소식·후기에 유용)</span>
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          <button
-            type="button"
-            onClick={() => setFormData(prev => ({ ...prev, region: '' }))}
-            className={`rounded px-3 py-1.5 text-xs font-bold border ${
-              !formData.region
-                ? 'bg-primary text-white border-primary'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
-            }`}
-          >
-            없음
-          </button>
-          {REGIONS.map((r) => (
-            <button
-              key={r.value}
-              type="button"
-              onClick={() => setFormData(prev => ({ ...prev, region: r.value }))}
-              className={`rounded px-3 py-1.5 text-xs font-bold border ${
-                formData.region === r.value
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-white text-gray-600 border-gray-300 hover:border-primary hover:text-primary'
-              }`}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Title */}
       <div className="space-y-2 rounded border border-gray-200 bg-white p-4">

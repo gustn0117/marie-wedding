@@ -22,7 +22,7 @@ const WRITE_TIMEOUT_MS = 10_000;
  */
 export async function POST(request: Request) {
   const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(WRITE_TIMEOUT_MS)]);
-  let body: { id?: string; title?: string; content?: string; category?: string; region?: string | null };
+  let body: { id?: string; title?: string; content?: string; category?: string };
   try {
     body = await request.json();
   } catch {
@@ -32,7 +32,6 @@ export async function POST(request: Request) {
   const title = (body.title ?? '').trim();
   const content = (body.content ?? '').trim();
   const category = (body.category ?? '').trim();
-  const region = body.region?.trim() || null;
   const postId = body.id?.trim();
 
   if (!title || !content || !category) {
@@ -110,7 +109,6 @@ export async function POST(request: Request) {
     title,
     content,
     category,
-    region,
     author_id: profile.id,
     is_notice: false,
   };
@@ -124,7 +122,7 @@ export async function POST(request: Request) {
     if (error.code === '23505') {
       const { data: existing, error: replayError } = await service
         .from('posts')
-        .select('id, author_id, title, content, category, region, is_notice, deleted_at')
+        .select('id, author_id, title, content, category, is_notice, deleted_at')
         .eq('id', postId)
         .abortSignal(requestSignal)
         .maybeSingle();
@@ -142,8 +140,7 @@ export async function POST(request: Request) {
       const exactReplay = sameContext
         && existing.title === createInput.title
         && existing.content === createInput.content
-        && existing.category === createInput.category
-        && existing.region === createInput.region;
+        && existing.category === createInput.category;
       if (exactReplay) {
         return NextResponse.json({ post: { id: postId }, replayed: true });
       }

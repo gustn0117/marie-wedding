@@ -110,7 +110,6 @@ export const communityService = {
         title: data.title,
         content: data.content,
         category: data.category,
-        region: data.region || null,
       }),
     });
     if (!res.ok) {
@@ -136,7 +135,6 @@ export const communityService = {
         title: data.title,
         content: data.content,
         category: data.category,
-        region: data.region || null,
       }),
     });
     if (!res.ok) {

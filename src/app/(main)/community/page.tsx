@@ -37,9 +37,6 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
   if (searchParams.category) {
     query = query.eq('category', searchParams.category);
   }
-  if (searchParams.region) {
-    query = query.eq('region', searchParams.region);
-  }
   if (searchParams.search) {
     const term = normalizeSearchTerm(searchParams.search);
     if (term) {
@@ -73,7 +70,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 export default async function CommunityPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
   const { posts, count } = await getPosts(resolvedSearchParams);
-  const activeFilterCount = ['category', 'search', 'sort', 'region'].filter((key) => resolvedSearchParams[key]).length;
+  const activeFilterCount = ['category', 'search', 'sort'].filter((key) => resolvedSearchParams[key]).length;
 
   return (
     <div className="space-y-4">

@@ -17,7 +17,7 @@ const WRITE_TIMEOUT_MS = 10_000;
  */
 export async function POST(request: Request) {
   const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(WRITE_TIMEOUT_MS)]);
-  let body: { id?: string; title?: string; content?: string; category?: string; region?: string | null };
+  let body: { id?: string; title?: string; content?: string; category?: string };
   try {
     body = await request.json();
   } catch {
@@ -30,7 +30,6 @@ export async function POST(request: Request) {
   const title = (body.title ?? '').trim();
   const content = (body.content ?? '').trim();
   const category = (body.category ?? '').trim();
-  const region = body.region?.trim() || null;
 
   if (!title || !content || !category) {
     return NextResponse.json({ error: '제목·내용·카테고리는 필수입니다.' }, { status: 400 });
@@ -88,7 +87,7 @@ export async function POST(request: Request) {
 
   const { error: updateErr } = await service
     .from('posts')
-    .update({ title, content, category, region, updated_at: new Date().toISOString() })
+    .update({ title, content, category, updated_at: new Date().toISOString() })
     .eq('id', id)
     .abortSignal(requestSignal);
   if (updateErr) {
