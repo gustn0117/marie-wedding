@@ -19,8 +19,33 @@ npm run dev      # Dev server at localhost:3000
 npm run build    # Production build
 npm run lint     # ESLint (next/core-web-vitals + next/typescript)
 npm start        # Start production server
-docker-compose up -d --build  # Docker deployment
 ```
+
+## Deployment — zero-downtime blue/green
+
+**Never run `docker compose up -d --build` for this app.** Colors are behind compose
+profiles so it starts no app at all, and it races the auto-deploy hook (that's what
+caused the recurring container-name conflicts).
+
+- **Automatic**: push to `main`. The server's auto-deployer hook runs `webhook-deploy.sh`.
+- **Manual**: `ssh deploy "cd /home/server/apps/marie-wedding && bash webhook-deploy.sh"`
+
+`webhook-deploy.sh` builds the idle color, waits for `/api/health`, validates the nginx
+config, swaps `nginx/upstream.inc`, reloads nginx, drains, then removes the old color.
+Any failure aborts **without swapping**, so the live color keeps serving.
+
+Design and the traps found while building it:
+[docs/superpowers/specs/2026-07-17-zero-downtime-deploy-design.md](docs/superpowers/specs/2026-07-17-zero-downtime-deploy-design.md)
+
+Two things not to undo:
+- `nginx/upstream.inc` is gitignored on purpose — it's the live-color state file. If git
+  tracks it, a pull rewrites it and the deploy script kills the container that's serving.
+- The old top-level `nginx.conf` was deleted on purpose. It set `X-Real-IP` to the docker
+  gateway IP (which would make admin/signup IP rate limits global — one user's failures
+  would block everyone) and capped bodies at 10M (10MB resume PDFs would 413).
+
+Schema changes must be backward compatible: during a swap both versions run for a few
+seconds. Adding a column is safe; renaming or dropping one breaks the old version.
 
 ## Architecture
 
