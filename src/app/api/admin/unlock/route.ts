@@ -185,18 +185,8 @@ export async function POST(request: Request) {
       );
     }
 
-    if (process.env.NODE_ENV === 'production' && configured.length < 16) {
-      if (!unlockRateState.weakPasswordWarningWritten) {
-        unlockRateState.weakPasswordWarningWritten = true;
-        console.error('[admin/unlock] weak ADMIN_PASSWORD rejected in production');
-      }
-      await waitForMinimumResponse(startedAt);
-      return NextResponse.json(
-        { error: '관리자 비밀번호 보안 설정이 완료되지 않았습니다.' },
-        { status: 503 },
-      );
-    }
-
+    // 운영자 요청으로 짧은 비밀번호를 허용한다. /admin 은 미들웨어상 공개 경로라
+    // 이 비밀번호가 유일한 관문이므로, 아래 경고 로그로 약한 설정을 계속 기록만 한다.
     if (configured.length < 16 && !unlockRateState.weakPasswordWarningWritten) {
       unlockRateState.weakPasswordWarningWritten = true;
       console.error('[admin/unlock] ADMIN_PASSWORD는 최소 16자 이상의 무작위 값으로 즉시 교체해야 합니다.');
