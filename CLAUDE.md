@@ -44,6 +44,13 @@ Two things not to undo:
   gateway IP (which would make admin/signup IP rate limits global — one user's failures
   would block everyone) and capped bodies at 10M (10MB resume PDFs would 413).
 
+**Never `scp`/edit a git-tracked file directly on the server for a hotfix.** The
+auto-deployer runs `git pull`; a locally-modified tracked file makes every future pull
+abort with "local changes would be overwritten", so pushes silently keep rebuilding the
+OLD code while the tree stays pinned to an old commit. (This bit us once via a scp'd
+`nginx/default.conf`.) For a hotfix: commit + push and let the deploy carry it, or if you
+must touch the server, `git reset --hard origin/main` afterward to unstick pulls.
+
 Schema changes must be backward compatible: during a swap both versions run for a few
 seconds. Adding a column is safe; renaming or dropping one breaks the old version.
 
