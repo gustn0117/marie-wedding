@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
   const { data: job, error: jobError } = await service
     .from('jobs')
-    .select('id, author_id')
+    .select('id, author_id, deadline')
     .eq('id', id)
     .is('deleted_at', null)
     .abortSignal(requestSignal)
@@ -91,9 +91,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '본인 공고만 변경할 수 있습니다.' }, { status: 403 });
   }
 
+  // '다시 모집'(open) 인데 기한이 이미 지났으면 status 만 바꿔선 목록·상세가 계속 마감으로
+  // 보이고 30분 자동마감 cron 이 곧바로 closed 로 되돌린다. 기한을 비워(상시 모집) 실제로
+  // 재개되게 한다. 사장은 이후 공고 수정에서 새 마감일을 설정할 수 있다.
+  const reopeningExpired = status === 'open' && !!job.deadline && new Date(job.deadline).getTime() <= Date.now();
+  const updatePayload = reopeningExpired ? { status, deadline: null } : { status };
+
   const { data, error } = await service
     .from('jobs')
-    .update({ status })
+    .update(updatePayload)
     .eq('id', id)
     .select('*')
     .abortSignal(requestSignal)

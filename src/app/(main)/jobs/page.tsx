@@ -78,6 +78,11 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   if (searchParams.completed === '1') {
     query = query.gt('author.completed_deals_count', 0);
   }
+  // 급여 필터 UI 는 '월 XXX만원~'(월급, 만원 단위)다. salary_min/max 를 단위 무시하고 숫자로만
+  // 비교하면 시급(원 단위, 예 15,000)·일급 공고가 월급 필터를 오염시킨다. 월급 공고로 한정한다.
+  if (searchParams.salaryMin || searchParams.salaryMax) {
+    query = query.eq('salary_unit', 'monthly');
+  }
   if (searchParams.salaryMin) {
     const v = Number(searchParams.salaryMin);
     if (Number.isFinite(v) && v > 0) query = query.gte('salary_min', v);

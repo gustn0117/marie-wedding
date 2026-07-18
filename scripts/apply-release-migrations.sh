@@ -34,6 +34,14 @@ apply_pre_app() {
   # Additive resume tables/RPC must exist before the application build that
   # starts using them.  It is independent of the final direct-write revokes.
   apply_file "20260715000100_resume_system.sql"
+  # 7/18 hardening — MUST run after the 07-14 files, which re-CREATE the OLD
+  # reactivate/purge/is_admin. Omitting these here means a release run reverts the
+  # withdrawal PII scrub, storage lockdown, and admin-role guards on the LIVE DB.
+  apply_file "20260718000100_withdraw_purge_resumes_and_name_reset.sql"
+  apply_file "20260718000200_withdraw_purge_storage_and_inquiries.sql"
+  apply_file "20260718000300_scale_indexes.sql"
+  apply_file "20260718000400_security_storage_and_admin_role.sql"
+  apply_file "20260718000500_profiles_featured_columns.sql"
 }
 
 apply_security_boundary() {

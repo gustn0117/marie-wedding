@@ -96,6 +96,7 @@ MIGRATIONS=(
   "20260718000200_withdraw_purge_storage_and_inquiries.sql"
   "20260718000300_scale_indexes.sql"
   "20260718000400_security_storage_and_admin_role.sql"
+  "20260718000500_profiles_featured_columns.sql"
 )
 
 psql_value() {

@@ -42,6 +42,9 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
 
   useEffect(() => {
     const { from, to } = monthBounds(year, month);
+    // 월을 빠르게 넘기면 이전 달 응답이 더 늦게 도착해 새 달 slots 를 덮어쓰고 busy 도
+    // 잘못 풀리던 레이스가 있었다. cleanup 으로 이 효과가 최신일 때만 상태를 반영한다.
+    let active = true;
     setBusy(true);
     withTimeout(
       availabilityService.listForProfile(profileId, from, to, { publicOnly: !editable }),
@@ -49,12 +52,14 @@ export default function AvailabilityCalendar({ profileId, editable }: Props) {
       '일정 조회 지연',
     )
       .then((rows) => {
+        if (!active) return;
         const map: Record<string, AvailabilitySlot> = {};
         rows.forEach((r) => { map[r.date] = r; });
         setSlots(map);
       })
-      .catch(() => setSlots({}))
-      .finally(() => setBusy(false));
+      .catch(() => { if (active) setSlots({}); })
+      .finally(() => { if (active) setBusy(false); });
+    return () => { active = false; };
   }, [profileId, year, month, editable]);
 
   function nextStatus(curr: AvailabilityStatus | null): AvailabilityStatus | null {

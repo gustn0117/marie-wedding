@@ -1,4 +1,5 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { todayKstIso } from '@/shared/utils/kstDate';
 import type { Event, Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
@@ -22,7 +23,7 @@ const PUBLIC_PROFILE_COLS =
 
 async function getHomeData() {
   const supabase = createServerQueryClient();
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayKstIso();
 
   // 홈은 목록 6~4행만 보여주고 총개수(count)는 화면에 렌더하지 않는다. 과거 count:'exact'
   // 5회가 매 요청 활성행 전체를 카운트 스캔해 성장 시 공유 Postgres CPU를 잡아먹었다.

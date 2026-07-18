@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { formatDate, formatRelativeTime } from '@/shared/utils/format';
+import { todayKstIso } from '@/shared/utils/kstDate';
 import { EVENT_TYPES } from '@/features/events/types';
 import Logo from '@/shared/components/Logo';
 import type { Event } from '@/types/database';
@@ -30,7 +31,7 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
     if (v === 'upcoming' || v === 'ongoing' || v === 'ended' || v === 'always') return v;
     return 'all';
   })();
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const todayIso = todayKstIso();
 
   let query = supabase
     .from('events')
