@@ -171,7 +171,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
                 {applicantName}
               </p>
               <p className="text-xs text-gray-500 mt-1 truncate">
-                {bizLabel} · {getRegionLabel(applicant.region)}
+                {bizLabel}
+                {getRegionLabel(applicant.region) ? ` · ${getRegionLabel(applicant.region)}` : ''}
                 {applicant.completed_deals_count > 0 && ` · 진행 ${applicant.completed_deals_count}건`}
                 {applicant.response_rate > 0 && ` · 응답률 ${Math.round(applicant.response_rate)}%`}
               </p>

@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
 const REQUEST_TIMEOUT_MS = 10_000;
 const PAGE_SIZE = 30;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const MODERATION_SCOPES = new Set(['job', 'post', 'comment', 'all']);
-const MODERATION_ACTIONS = new Set(['hide', 'flag']);
+// DB 트리거가 실제 처리하는 값만 허용(comment 범위·flag 동작은 트리거 없음 → 무동작).
+const MODERATION_SCOPES = new Set(['job', 'post', 'all']);
+const MODERATION_ACTIONS = new Set(['hide']);
 const AUDIT_TABLES = new Set([
   'profiles',
   'jobs',

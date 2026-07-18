@@ -4,6 +4,7 @@ import JobsPageContent from '@/features/jobs/components/JobsPageContent';
 import type { Job } from '@/types/database';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,7 +74,9 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     query = query.or(orPart);
   }
   if (searchParams.search) {
-    query = query.ilike('title', `%${searchParams.search}%`);
+    // '%','_' 를 그대로 ilike 에 넣으면 와일드카드로 동작해 오검색된다(디렉토리/커뮤니티와 동일 정규화).
+    const term = normalizeSearchTerm(searchParams.search);
+    if (term) query = query.ilike('title', `%${term}%`);
   }
   if (searchParams.completed === '1') {
     query = query.gt('author.completed_deals_count', 0);
@@ -93,7 +96,9 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
   }
   if (searchParams.expMax) {
     const v = Number(searchParams.expMax);
-    if (Number.isFinite(v) && v >= 0) query = query.lte('experience_min', v);
+    // experience_min IS NULL 은 '경력무관' 공고다. .lte 만 쓰면 NULL 이 제외돼 경력무관·
+    // 신입 대상 공고가 경력 필터에서 사라진다. 경력무관은 어느 경력 필터에도 포함시킨다.
+    if (Number.isFinite(v) && v >= 0) query = query.or(`experience_min.lte.${v},experience_min.is.null`);
   }
 
   // 정렬: 사용자 지정 sort 우선, 기본은 promoted → 최신순.

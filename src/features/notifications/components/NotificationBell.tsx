@@ -36,6 +36,27 @@ const TYPE_LABELS: Record<string, string> = {
   system: '시스템',
 };
 
+// DB 트리거가 만드는 실제 타입은 message_received·deal_half_completed 처럼 접두사형이
+// 많다. 정확 매칭이 없으면 첫 글자('m','d')가 배지에 뜨던 것을 패밀리 매핑 + '알림' 폴백으로 바꾼다.
+function labelForType(type: string): string {
+  if (TYPE_LABELS[type]) return TYPE_LABELS[type];
+  if (type.startsWith('message')) return '쪽지';
+  if (type.startsWith('deal') || type.startsWith('contract') || type.startsWith('booking') || type.startsWith('settlement')) return '거래';
+  if (type.startsWith('application') || type.startsWith('apply')) return '지원';
+  if (type.startsWith('review')) return '리뷰';
+  if (type.startsWith('payment') || type.startsWith('premium') || type.startsWith('quotation')) return '결제';
+  if (type.startsWith('job')) return '공고';
+  return '알림';
+}
+function toneForType(type: string): string {
+  if (TYPE_TONES[type]) return TYPE_TONES[type];
+  if (type.startsWith('message')) return TYPE_TONES.message;
+  if (type.startsWith('payment') || type.startsWith('premium') || type.startsWith('quotation')) return TYPE_TONES.payment;
+  if (type.startsWith('review')) return TYPE_TONES.review;
+  if (type.startsWith('application') || type.startsWith('apply') || type.startsWith('job') || type.startsWith('deal')) return TYPE_TONES.application;
+  return TYPE_TONES.system;
+}
+
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
@@ -175,8 +196,8 @@ export default function NotificationBell() {
                   const isUnread = !n.read_at;
                   const Inner = (
                     <div className={`flex gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${isUnread ? 'bg-blue-50/40' : ''}`}>
-                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-bold shrink-0 ${TYPE_TONES[n.type] ?? TYPE_TONES.system}`}>
-                        {TYPE_LABELS[n.type] ?? n.type[0]}
+                      <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-[10px] font-bold shrink-0 ${toneForType(n.type)}`}>
+                        {labelForType(n.type)}
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm truncate ${isUnread ? 'font-bold text-ink' : 'text-gray-700'}`}>{n.title}</p>

@@ -210,7 +210,10 @@ export default function EditProfilePage() {
       fail('이름을 입력해주세요.', 'contact_name');
       return;
     }
-    if (shouldWrite('region') && (!formData.region || formData.region.split(',').filter(Boolean).length === 0)) {
+    // 개인회원 프로필에서 지역은 선택 항목이다(업체는 이 화면에 오지 않음). 사용자가 직접
+    // 지역을 편집(dirty)한 경우에만 비었는지 검사한다. 이게 없으면 지역 미설정 개인회원이
+    // 이름/소개만 바꿔도 '지역을 선택하세요'로 저장이 막혔다.
+    if (dirtyFieldsRef.current.has('region') && (!formData.region || formData.region.split(',').filter(Boolean).length === 0)) {
       fail('지역을 1개 이상 선택해주세요.');
       return;
     }

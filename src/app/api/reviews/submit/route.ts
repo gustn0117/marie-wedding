@@ -2,6 +2,7 @@ import { SUPABASE_SERVER_URL } from '@/lib/supabase/serverUrl';
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
+import { SUPABASE_SCHEMA } from '@/lib/supabase/schema';
 import { cookies } from 'next/headers';
 
 export const runtime = 'nodejs';
@@ -25,6 +26,9 @@ export async function POST(request: Request) {
 
   const cookieStore = await cookies();
   const ssr = createServerClient(SUPABASE_SERVER_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+    // schema 누락 시 submit_review 를 public 스키마로 호출해 PGRST202(함수 없음) → 리뷰가
+    // 100% 저장 안 됐다. marie_wedding 스키마를 명시한다.
+    db: { schema: SUPABASE_SCHEMA },
     cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
     cookies: {
       getAll() { return cookieStore.getAll(); },

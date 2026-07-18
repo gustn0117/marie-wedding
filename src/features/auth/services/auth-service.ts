@@ -67,12 +67,14 @@ export const authService = {
     if (error) throw error;
   },
 
-  async signInWithKakao() {
+  async signInWithKakao(next?: string) {
     const supabase = createClient();
+    // 로그인 후 돌아갈 경로(next)를 콜백에 전달한다. /auth/callback 이 next 를 검증·사용.
+    const suffix = next ? `?next=${encodeURIComponent(next)}` : '';
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback${suffix}`,
       },
     });
     if (error) throw error;

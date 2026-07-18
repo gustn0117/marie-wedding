@@ -5,16 +5,16 @@ import { adminService } from '@/features/admin/services/admin-service';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import type { ModerationKeyword, ModerationScope, ModerationAction } from '@/types/database';
 
+// 실제 DB 트리거(auto_moderate_job/post)가 처리하는 조합만 노출한다. 'comment' 범위와
+// 'flag' 동작은 트리거가 없어 저장돼도 아무 일도 안 하면서 성공 표시(허위 성공)라 제거.
 const SCOPE_LABELS: Record<ModerationScope, string> = {
   job: '공고',
   post: '커뮤니티',
-  comment: '댓글',
   all: '전체',
 };
 
 const ACTION_LABELS: Record<ModerationAction, string> = {
   hide: '자동 숨김',
-  flag: '신고 큐로',
 };
 
 export default function ModerationKeywordsManager() {

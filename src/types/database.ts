@@ -56,8 +56,8 @@ export interface Profile {
   admin_note: string | null;
 }
 
-export type ModerationScope = 'job' | 'post' | 'comment' | 'all';
-export type ModerationAction = 'hide' | 'flag';
+export type ModerationScope = 'job' | 'post' | 'all';
+export type ModerationAction = 'hide';
 
 export interface ModerationKeyword {
   id: string;

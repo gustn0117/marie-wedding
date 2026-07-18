@@ -259,7 +259,11 @@ export async function GET(request: Request) {
   if (!isCanonicalResumePhotoPath(path)) return new NextResponse(null, { status: 404 });
 
   try {
-    if (!(await canReadPhoto(path, caller.profileId, signal))) {
+    // 본인 폴더({userId}/resume/) 경로는 아직 이력서에 부착 전(미저장 상태의 미리보기)이라도
+    // 열람을 허용한다 — 그 폴더엔 본인만 업로드할 수 있으므로 안전. 이게 없으면 저장 전
+    // '미리보기'에서 방금 올린 증명사진이 404(깨진 이미지)로 뜬다.
+    const isOwnPath = isCanonicalResumePhotoPath(path, caller.userId);
+    if (!isOwnPath && !(await canReadPhoto(path, caller.profileId, signal))) {
       return new NextResponse(null, { status: 404 });
     }
     const { data, error } = await createServiceClient(signal).storage.from(BUCKET).download(path);

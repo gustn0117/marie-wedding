@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
-import { formatRelativeTime, getCategoryLabel } from '@/shared/utils/format';
+import { formatRelativeTime } from '@/shared/utils/format';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import type { Post } from '@/types/database';
 
@@ -18,7 +18,6 @@ export default function PostCard({ post }: PostCardProps) {
   const thumbnail = extractFirstImage(post.content);
   const preview = post.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const isNew = !post.is_notice && Date.now() - new Date(post.created_at).getTime() < 24 * 60 * 60 * 1000;
-  const category = getCategoryLabel(post.category);
 
   return (
     <Link href={ROUTES.COMMUNITY_DETAIL(post.id)} className="platform-data-row group block border-b border-gray-100 last:border-b-0">
@@ -33,11 +32,9 @@ export default function PostCard({ post }: PostCardProps) {
         <div className="flex-1 min-w-0">
           {/* Title 행 — 말머리(공지/카테고리) + 제목 + 댓글수 */}
           <h3 className="text-[15.5px] sm:text-[16px] font-semibold text-ink group-hover:text-primary transition-colors leading-snug line-clamp-2">
-            {post.is_notice ? (
+            {post.is_notice && (
               <span className="mr-1.5 align-middle inline-flex items-center rounded bg-primary px-1.5 py-0.5 text-[11px] font-bold text-white">공지</span>
-            ) : category ? (
-              <span className="mr-1.5 align-middle text-[13px] font-bold text-primary">[{category}]</span>
-            ) : null}
+            )}
             {post.title}
             {isNew && <span className="ml-1 align-middle text-[10px] font-bold text-state-urgent">N</span>}
             {post.comment_count !== undefined && post.comment_count > 0 && (

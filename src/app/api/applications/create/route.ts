@@ -171,12 +171,15 @@ export async function POST(request: Request) {
   const safeApplication = { ...(row as Record<string, unknown>) };
   delete safeApplication.author_note;
 
-  // 채용자에게 새 지원자 알림 이메일 — 서버에서 확실히 발송(자체 SMTP, best-effort).
-  // 클라이언트 fire-and-forget 대신 서버 처리라 누락되지 않는다.
+  // 채용자에게 새 지원자 알림 이메일 — 서버(지속 실행 Node)에서 백그라운드로 발송한다.
+  // await 하면 자체 SMTP 가 느릴 때 '지원하기' 응답이 그만큼 지연되므로 기다리지 않고
+  // 즉시 응답한다. 프로세스가 살아있어 발송은 백그라운드로 완주한다(best-effort).
   const notifyJobId = typeof safeApplication.job_id === 'string' ? safeApplication.job_id : jobId;
   const notifyApplicantId = typeof safeApplication.applicant_id === 'string' ? safeApplication.applicant_id : '';
   if (notifyApplicantId) {
-    await notifyEmployerOfApplication(notifyJobId, notifyApplicantId);
+    void notifyEmployerOfApplication(notifyJobId, notifyApplicantId).catch((e) => {
+      console.error('[applications/create] employer notify failed (non-fatal):', e);
+    });
   }
 
   return NextResponse.json({ data: safeApplication });

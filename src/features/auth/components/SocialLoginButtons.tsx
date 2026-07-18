@@ -1,12 +1,19 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { authService } from '@/features/auth/services/auth-service';
 
 interface Props {
   /** 가입 화면이면 'signup', 로그인 화면이면 'login'. 카피만 다름. */
   mode?: 'login' | 'signup';
   onError?: (msg: string) => void;
+}
+
+/** 로그인 페이지의 redirect 파라미터를 안전한 내부 경로로만 허용(오픈리다이렉트 방지). */
+function safeNext(value: string | null): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/jobs';
+  return value;
 }
 
 /**
@@ -19,6 +26,9 @@ interface Props {
  */
 export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  // 로그인 화면이 ?redirect=... 로 원래 목적지를 전달한다. 소셜 로그인도 이를 존중한다.
+  const next = safeNext(searchParams.get('redirect'));
 
   const verb = mode === 'signup' ? '시작하기' : '로그인';
 
@@ -30,7 +40,7 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
       onError?.('카카오 로그인이 응답하지 않아요. 다시 시도해주세요.');
     }, 8000);
     try {
-      await authService.signInWithKakao();
+      await authService.signInWithKakao(next);
       // signInWithOAuth는 redirect를 발생시키므로 promise resolve 후엔 페이지가 이미 떠난 상태일 수 있음
     } catch {
       onError?.('카카오 로그인에 실패했어요. 잠시 후 다시 시도해주세요.');
@@ -43,7 +53,7 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
   return (
     <div className="space-y-2">
       <a
-        href={`/auth/naver/start?next=${encodeURIComponent('/jobs')}`}
+        href={`/auth/naver/start?next=${encodeURIComponent(next)}`}
         className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#03C75A] text-white text-sm font-bold hover:opacity-90 transition-opacity"
       >
         <NaverIcon />
