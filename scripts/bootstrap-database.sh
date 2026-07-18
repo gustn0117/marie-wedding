@@ -92,6 +92,10 @@ MIGRATIONS=(
   "20260714000400_payment_catalog_hardening.sql"
   "20260714000500_security_boundaries.sql"
   "20260715000100_resume_system.sql"
+  "20260718000100_withdraw_purge_resumes_and_name_reset.sql"
+  "20260718000200_withdraw_purge_storage_and_inquiries.sql"
+  "20260718000300_scale_indexes.sql"
+  "20260718000400_security_storage_and_admin_role.sql"
 )
 
 psql_value() {
