@@ -168,7 +168,8 @@ export default function NotificationBell() {
         <div
           role="dialog"
           aria-label="알림"
-          className="absolute right-0 top-full mt-2 w-[360px] max-w-[calc(100vw-32px)] rounded-xl border border-gray-200 bg-white shadow-xl z-50"
+          // 모바일: 뷰포트에 고정(fixed)해 화면 밖으로 잘리지 않게. sm↑: 벨 기준 우측 정렬 드롭다운.
+          className="fixed left-2 right-2 top-[calc(var(--header-h)+8px)] w-auto max-w-none sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[360px] sm:max-w-[calc(100vw-32px)] rounded-xl border border-gray-200 bg-white shadow-xl z-50"
         >
           <header className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h2 className="text-sm font-bold text-ink">알림</h2>

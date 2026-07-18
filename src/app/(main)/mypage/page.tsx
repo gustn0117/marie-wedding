@@ -261,7 +261,7 @@ export default async function MyPage() {
                       : profile.avg_response_minutes < 1440
                         ? Math.round(profile.avg_response_minutes / 60)
                         : Math.round(profile.avg_response_minutes / 1440)
-                    : 0
+                    : '-'
                 }
                 unit={
                   profile.avg_response_minutes
@@ -270,7 +270,7 @@ export default async function MyPage() {
                       : profile.avg_response_minutes < 1440
                         ? '시간'
                         : '일'
-                    : '-'
+                    : ''
                 }
                 href="/mypage/dashboard"
               />
@@ -334,7 +334,7 @@ function WorkspaceMetric({
   href,
 }: {
   label: string;
-  value: number;
+  value: number | string;
   unit?: string;
   href?: string;
 }) {

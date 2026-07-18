@@ -181,7 +181,11 @@ export default function AdminJobsPage() {
                     <td className="px-5 py-3">
                       {job.deleted_at ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-urgent-bg text-state-urgent">삭제됨</span>
-                      ) : job.deadline && new Date(job.deadline) < new Date() ? (
+                      ) : job.hidden_by_admin || job.status === 'hidden' ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-200 text-gray-600">숨김</span>
+                      ) : job.status === 'filled' ? (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">충원완료</span>
+                      ) : job.status === 'closed' || (job.deadline && new Date(job.deadline) < new Date()) ? (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">마감</span>
                       ) : (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-state-new-bg text-state-new">활성</span>

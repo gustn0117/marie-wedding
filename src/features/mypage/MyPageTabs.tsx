@@ -48,8 +48,14 @@ export default function MyPageTabs({ accountType, jobs: initialJobs, posts, sent
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   useEffect(() => {
-    if (tabParam !== 'jobs' && tabParam !== 'posts' && tabParam !== 'applications') return;
-    if (tabParam === 'jobs' && !isBusiness) return;
+    const valid = tabParam === 'jobs' || tabParam === 'posts' || tabParam === 'applications';
+    // 유효 tab 파라미터가 없거나(뒤로가기로 /mypage 복귀) 개인계정에 jobs 요청이면 기본 탭으로 복귀.
+    // 예전엔 early-return 이라 ?tab=posts → 뒤로가기 시 URL 은 /mypage 인데 탭이 posts 로 남아
+    // 새로고침해야 맞춰졌다. URL 변화에 항상 반응하도록 리셋 분기를 둔다(리셋 시엔 스크롤 안 함).
+    if (!valid || (tabParam === 'jobs' && !isBusiness)) {
+      setActiveTab(isBusiness ? 'jobs' : 'applications');
+      return;
+    }
     setActiveTab(tabParam);
     const el = document.getElementById('mypage-tabs');
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });

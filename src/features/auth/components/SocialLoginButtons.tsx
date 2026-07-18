@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { authService } from '@/features/auth/services/auth-service';
 
@@ -24,7 +24,12 @@ function safeNext(value: string | null): string {
  *
  * 한 컴포넌트로 로그인·회원가입 페이지 양쪽에 재사용.
  */
-export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
+/**
+ * useSearchParams 를 쓰는 실제 본체. /login·/signup 은 정적 프리렌더 대상이라
+ * Suspense 경계 없이 useSearchParams 를 쓰면 빌드가 깨진다(missing-suspense-with-csr-bailout).
+ * 반드시 아래 기본 export 의 Suspense 래퍼를 통해서만 렌더한다.
+ */
+function SocialLoginButtonsInner({ mode = 'login', onError }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const searchParams = useSearchParams();
   // 로그인 화면이 ?redirect=... 로 원래 목적지를 전달한다. 소셜 로그인도 이를 존중한다.
@@ -70,6 +75,32 @@ export default function SocialLoginButtons({ mode = 'login', onError }: Props) {
         <span>{loading === 'kakao' ? '카카오 연결 중…' : `카카오로 ${verb}`}</span>
       </button>
     </div>
+  );
+}
+
+// Suspense fallback — 하이드레이션 전 잠깐 보이는 정적 골격. 실제 버튼과 동일 높이·색으로
+// 레이아웃 시프트를 없앤다(비상호작용). next 파라미터는 하이드레이션 후 본체가 채운다.
+function SocialLoginButtonsFallback({ mode = 'login' }: Pick<Props, 'mode'>) {
+  const verb = mode === 'signup' ? '시작하기' : '로그인';
+  return (
+    <div className="space-y-2" aria-hidden>
+      <div className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#03C75A] text-white text-sm font-bold opacity-70">
+        <NaverIcon />
+        <span>네이버로 {verb}</span>
+      </div>
+      <div className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#FEE500] text-[#191919] text-sm font-bold opacity-70">
+        <KakaoIcon />
+        <span>카카오로 {verb}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function SocialLoginButtons(props: Props) {
+  return (
+    <Suspense fallback={<SocialLoginButtonsFallback mode={props.mode} />}>
+      <SocialLoginButtonsInner {...props} />
+    </Suspense>
   );
 }
 

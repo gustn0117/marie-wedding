@@ -97,8 +97,11 @@ export default function AdminReportsPage() {
     setActionLoading(report.id);
     try {
       const updated = await adminService.updateReportStatus(report.id, next);
+      // 낙관적 즉시 반영 후, 상태 필터가 걸린 목록·헤더 count 를 서버 기준으로 재동기화.
+      // (필터가 'resolved'인데 'reviewing'으로 바꾸면 그 행은 목록에서 빠져야 count 와 맞는다.)
       setReports((prev) => prev.map((item) => (item.id === report.id ? { ...item, ...updated } : item)));
       toast('상태를 변경했습니다.', 'success');
+      void load();
       void loadStats();
     } catch {
       toast('상태 변경에 실패했습니다.', 'error');

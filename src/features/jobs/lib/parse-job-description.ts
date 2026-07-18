@@ -103,16 +103,22 @@ export function parseSections(html: string): { sections: JobSectionMap; fallback
   const pattern = /<h[1-6][^>]*>([^<]+)<\/h[1-6]>([\s\S]*?)(?=<h[1-6][^>]*>|$)/gi;
   let m: RegExpExecArray | null;
   let matched = 0;
+  let currentKey: JobSectionKey | null = null;
   while ((m = pattern.exec(html)) !== null) {
     const heading = m[1].trim();
     const body = m[2].trim();
     const k = SECTION_LABEL_TO_KEY[heading];
     if (k) {
       // 본문 HTML(문단·이미지·서식)을 그대로 유지 — 리치 에디터로 다시 편집 가능하도록
+      currentKey = k;
       if (body) map[k] = (map[k] || '') + body;
       matched++;
-    } else if (body) {
-      map.extra = (map.extra || '') + body;
+    } else {
+      // 알려진 섹션 라벨이 아닌 헤더 = 사용자가 본문에 직접 넣은 소제목(대/중 버튼 h2·h3).
+      // 구분자로 오인하면 소제목 텍스트가 사라지고 그 뒤 본문이 엉뚱한 카드로 이동한다.
+      // 소제목 마크업(m[0])째 현재 섹션(없으면 extra)에 되붙여 원문을 보존한다.
+      const target = currentKey ?? 'extra';
+      map[target] = (map[target] || '') + m[0];
     }
   }
 

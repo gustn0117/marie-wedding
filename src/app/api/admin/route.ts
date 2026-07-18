@@ -322,6 +322,19 @@ export async function POST(request: NextRequest) {
       case 'toggleFeaturedProfile': {
         const { id, featured } = params as { id: string; featured: boolean };
         if (featured) {
+          // 디렉토리 노출 조건(deleted_at IS NULL AND is_directory_listed=true)을 못 채운 프로필을
+          // 추천하면 메인에 뜨지 않아 "추천했는데 안 보인다"가 된다. 미리 막고 명확히 안내한다.
+          const { data: target } = await supabase
+            .from('profiles')
+            .select('is_directory_listed, deleted_at')
+            .eq('id', id)
+            .maybeSingle();
+          if (!target || target.deleted_at || !target.is_directory_listed) {
+            return NextResponse.json(
+              { error: '비공개(디렉토리 미노출)이거나 탈퇴한 프로필은 추천할 수 없습니다.' },
+              { status: 400 },
+            );
+          }
           const { data: max } = await supabase
             .from('profiles')
             .select('featured_order')

@@ -27,6 +27,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createIdRef = useRef<string | null>(null);
@@ -60,11 +61,14 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
   }, [postId]);
 
   const fetchComments = useCallback(async () => {
+    setLoadError(false);
     try {
       const data = await withTimeout(communityService.getComments(postId), 10000, '댓글 조회 지연');
       setComments(data);
     } catch (err) {
+      // 조회 실패를 삼키면 "댓글 없음"으로 오인돼 있던 댓글이 사라진 것처럼 보인다. 에러 상태로 구분.
       console.error('Failed to fetch comments:', err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -190,6 +194,17 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
                 </div>
               </div>
             ))}
+          </div>
+        ) : loadError ? (
+          <div className="text-center py-8">
+            <p className="text-sm text-gray-400">댓글을 불러오지 못했습니다.</p>
+            <button
+              type="button"
+              onClick={() => { setLoading(true); fetchComments(); }}
+              className="mt-2 text-sm font-bold text-primary hover:underline"
+            >
+              다시 시도
+            </button>
           </div>
         ) : comments.length === 0 ? (
           <div className="text-center py-8">
