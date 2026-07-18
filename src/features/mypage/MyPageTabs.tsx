@@ -13,6 +13,7 @@ import {
 import type { Application, ApplicationStatus, Job, Post } from '@/types/database';
 import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
 import JobStatusMenu from '@/features/jobs/components/JobStatusMenu';
+import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
 import { JOB_STATUS_LABELS } from '@/shared/constants';
 
 type AppFilter = 'all' | 'active' | 'completed' | ApplicationStatus;
@@ -255,7 +256,8 @@ function FilterableApplicationList({
             // 1클릭에 다중 네비게이션이 발생함. outer 카드는 div + 단일 내부 Link로 구성.
             // QA-013: 받은 지원 카드 클릭 시 application 상세로 이동 (job 상세로 이동하던 기존 동작 교체)
             const cardHref = `/applications/${item.id}`;
-            const showReviewLink = item.hiring_completed_at && item.applicant_completed_at;
+            // 30일 창이 지나면 리뷰 제출이 거부되므로 링크도 숨긴다.
+            const showReviewLink = reviewWindowOpen(item.hiring_completed_at, item.applicant_completed_at);
             return (
               <div key={item.id} className="platform-data-row relative px-4 py-3">
                 <div className="flex items-start justify-between gap-3">

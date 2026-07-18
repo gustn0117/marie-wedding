@@ -7,6 +7,7 @@ import PostList from '@/features/community/components/PostList';
 import type { Post } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
+import LoadErrorState from '@/shared/components/LoadErrorState';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +57,7 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
   query = query.range(from, to);
 
-  const { data, count } = await query;
+  const { data, count, error } = await query;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts = (data ?? []).map((row: any) => {
@@ -64,12 +65,12 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
     return { ...rest, comment_count: commentAgg?.[0]?.count ?? 0 } as Post;
   });
 
-  return { posts, count: count ?? 0 };
+  return { posts, count: count ?? 0, error: !!error };
 }
 
 export default async function CommunityPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
-  const { posts, count } = await getPosts(resolvedSearchParams);
+  const { posts, count, error } = await getPosts(resolvedSearchParams);
   const activeFilterCount = ['category', 'search', 'sort'].filter((key) => resolvedSearchParams[key]).length;
 
   return (
@@ -86,7 +87,11 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       <Suspense fallback={null}>
         <PostFilters />
       </Suspense>
-      <PostList initialPosts={posts} initialCount={count} />
+      {error ? (
+        <LoadErrorState message="게시글을 불러오지 못했습니다." />
+      ) : (
+        <PostList initialPosts={posts} initialCount={count} />
+      )}
     </div>
   );
 }

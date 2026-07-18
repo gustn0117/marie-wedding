@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
+import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
 import { type Profile } from '@/types/database';
 
 interface Props {
@@ -53,8 +54,9 @@ async function loadMetrics(profileId: string): Promise<Metrics> {
     .filter('conversation_id', 'in', `(SELECT id FROM marie_wedding.conversations WHERE participant_a = '${profileId}' OR participant_b = '${profileId}')`);
 
   const reviewedSet = new Set(((myReviewsRes.data ?? []) as Array<{ application_id: string }>).map((r) => r.application_id));
-  const deals = (dealsRes.data ?? []) as Array<{ id: string }>;
-  const pendingReviews = deals.filter((d) => !reviewedSet.has(d.id)).length;
+  const deals = (dealsRes.data ?? []) as Array<{ id: string; hiring_completed_at: string | null; applicant_completed_at: string | null }>;
+  // 30일 창이 지난 건은 리뷰 제출이 거부되므로 대기 카운트에서 제외(마이페이지 게이트와 동일).
+  const pendingReviews = deals.filter((d) => !reviewedSet.has(d.id) && reviewWindowOpen(d.hiring_completed_at, d.applicant_completed_at)).length;
 
   return {
     unreadNotifications: unreadNotif.count ?? 0,

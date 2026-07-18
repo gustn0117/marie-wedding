@@ -7,6 +7,7 @@ import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
+import LoadErrorState from '@/shared/components/LoadErrorState';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,13 +80,13 @@ async function getProfiles(searchParams: Record<string, string | undefined>) {
     .order('company_name', { ascending: true })
     .range(from, to);
 
-  const { data, count } = await query;
-  return { profiles: (data ?? []) as Profile[], count: count ?? 0 };
+  const { data, count, error } = await query;
+  return { profiles: (data ?? []) as Profile[], count: count ?? 0, error: !!error };
 }
 
 export default async function DirectoryPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
-  const { profiles, count } = await getProfiles(resolvedSearchParams);
+  const { profiles, count, error } = await getProfiles(resolvedSearchParams);
   const activeFilterCount = ['businessType', 'region', 'search'].filter((key) => resolvedSearchParams[key]).length;
 
   return (
@@ -99,17 +100,21 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         }
       />
 
-      <Suspense
-        fallback={
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <div key={i} className="surface animate-pulse h-48" />
-            ))}
-          </div>
-        }
-      >
-        <CompanyList initialProfiles={profiles} initialCount={count} />
-      </Suspense>
+      {error ? (
+        <LoadErrorState message="프로필을 불러오지 못했습니다." />
+      ) : (
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="surface animate-pulse h-48" />
+              ))}
+            </div>
+          }
+        >
+          <CompanyList initialProfiles={profiles} initialCount={count} />
+        </Suspense>
+      )}
     </div>
   );
 }

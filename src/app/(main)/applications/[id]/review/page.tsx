@@ -4,6 +4,7 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
 import ReviewForm from '@/features/reviews/components/ReviewForm';
+import { reviewWindowOpen, REVIEW_WINDOW_DAYS } from '@/features/applications/lib/reviewWindow';
 import type { Application, Job, Profile } from '@/types/database';
 import PageHeader from '@/shared/components/PageHeader';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
@@ -44,6 +45,20 @@ export default async function ReviewPage({ params }: Props) {
         <header className="platform-panel p-6">
           <h1 className="text-2xl font-bold text-gray-900">리뷰 작성</h1>
           <p className="mt-2 text-sm text-gray-600">양쪽 모두 진행 완료 표시를 해야 리뷰를 작성할 수 있습니다.</p>
+        </header>
+      </main>
+    );
+  }
+
+  // 진행 완료 후 30일이 지나면 서버가 리뷰 제출을 거부한다. 폼 대신 만료 안내를 보여
+  // '작성 유도 → 제출 실패' 를 막는다.
+  if (!reviewWindowOpen(application.hiring_completed_at, application.applicant_completed_at)) {
+    return (
+      <main className="mx-auto max-w-2xl space-y-4">
+        <header className="platform-panel p-6">
+          <h1 className="text-2xl font-bold text-gray-900">리뷰 작성 기한 만료</h1>
+          <p className="mt-2 text-sm text-gray-600">진행 완료 후 {REVIEW_WINDOW_DAYS}일이 지나 리뷰를 작성할 수 없습니다.</p>
+          <Link href={ROUTES.MYPAGE} className="btn-outline mt-4 inline-flex text-sm">마이페이지로</Link>
         </header>
       </main>
     );

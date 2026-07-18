@@ -97,6 +97,7 @@ MIGRATIONS=(
   "20260718000300_scale_indexes.sql"
   "20260718000400_security_storage_and_admin_role.sql"
   "20260718000500_profiles_featured_columns.sql"
+  "20260719000100_job_reopen_on_future_deadline.sql"
 )
 
 psql_value() {

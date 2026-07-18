@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
 import type { Application, Job, Profile } from '@/types/database';
 
 interface Props {
@@ -50,7 +51,8 @@ async function load(profileId: string) {
   // dedupe by id (same application may appear in both if self-applied — shouldn't happen but safety)
   const seen = new Set<string>();
   const unique = all.filter((a) => (seen.has(a.id) ? false : (seen.add(a.id), true)));
-  const pending = unique.filter((a) => !reviewedSet.has(a.id));
+  // 리뷰 30일 창이 지난 건은 제출이 어차피 거부되므로 '작성 대기'에서 제외(영구 재촉 방지).
+  const pending = unique.filter((a) => !reviewedSet.has(a.id) && reviewWindowOpen(a.hiring_completed_at, a.applicant_completed_at));
   pending.sort((a, b) => {
     const ad = Math.max(new Date(a.hiring_completed_at!).getTime(), new Date(a.applicant_completed_at!).getTime());
     const bd = Math.max(new Date(b.hiring_completed_at!).getTime(), new Date(b.applicant_completed_at!).getTime());

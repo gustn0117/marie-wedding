@@ -143,6 +143,14 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
   }>());
   // 이미지 툴바 상태 — 선택된 이미지 요소와 뷰포트 기준 위치
   const [imgToolbar, setImgToolbar] = useState<{ el: HTMLImageElement; top: number; left: number } | null>(null);
+  // 좁은 화면(모바일)에선 툴바가 뷰포트보다 넓어 좌우로 잘린다 → 하단 고정 바로 전환.
+  const [isNarrow, setIsNarrow] = useState(false);
+  useEffect(() => {
+    const check = () => setIsNarrow(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   useEffect(() => {
     if (activeUploadsRef.current.size > 0) return;
@@ -668,8 +676,13 @@ export default function RichTextEditor({ value, onChange, placeholder, minHeight
         {/* 이미지 플로팅 툴바 — 이미지 클릭 시 위에 뜨는 크기/정렬/삭제 컨트롤 */}
         {imgToolbar && !disabled && (
           <div
-            className="fixed z-50 -translate-x-1/2 -translate-y-full mt-[-8px] flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1 shadow-lg pointer-events-auto"
-            style={{ top: imgToolbar.top, left: imgToolbar.left }}
+            className={
+              isNarrow
+                // 모바일: 화면 하단에 좌우 여백만 두고 고정, 넘치면 줄바꿈 — 모든 버튼이 항상 눌린다.
+                ? 'fixed z-50 left-2 right-2 bottom-2 flex flex-wrap items-center justify-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1 shadow-lg pointer-events-auto'
+                : 'fixed z-50 -translate-x-1/2 -translate-y-full mt-[-8px] flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1 py-1 shadow-lg pointer-events-auto'
+            }
+            style={isNarrow ? undefined : { top: imgToolbar.top, left: imgToolbar.left }}
             onMouseDown={(e) => e.preventDefault()} /* 편집 포커스 유지 */
           >
             <div className="flex items-center gap-0.5 px-1">

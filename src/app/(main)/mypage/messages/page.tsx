@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import { formatRelativeTime } from '@/shared/utils/format';
 import PageHeader from '@/shared/components/PageHeader';
+import LoadErrorState from '@/shared/components/LoadErrorState';
 import { loadConversationSummaries } from '@/features/messages/services/conversationSummaries';
 import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 
@@ -12,7 +13,14 @@ export default async function MessagesPage() {
   const viewer = await getCurrentVerifiedProfile();
   if (!viewer.ok) redirect(ROUTES.LOGIN);
 
-  const conversations = await loadConversationSummaries(viewer.profileId);
+  // 조회 실패를 "대화 없음"으로 오인시키지 않는다.
+  let conversations: Awaited<ReturnType<typeof loadConversationSummaries>> = [];
+  let loadFailed = false;
+  try {
+    conversations = await loadConversationSummaries(viewer.profileId);
+  } catch {
+    loadFailed = true;
+  }
 
   return (
     <main className="space-y-4">
@@ -23,7 +31,9 @@ export default async function MessagesPage() {
       />
 
       <section className="surface">
-        {conversations.length === 0 ? (
+        {loadFailed ? (
+          <LoadErrorState message="대화 목록을 불러오지 못했습니다." />
+        ) : conversations.length === 0 ? (
           <p className="p-10 text-center text-sm text-gray-500">아직 대화가 없습니다. 디렉토리 상세에서 &quot;쪽지 보내기&quot;로 시작해 보세요.</p>
         ) : (
           <ul className="divide-y divide-gray-100">

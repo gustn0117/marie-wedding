@@ -42,6 +42,9 @@ apply_pre_app() {
   apply_file "20260718000300_scale_indexes.sql"
   apply_file "20260718000400_security_storage_and_admin_role.sql"
   apply_file "20260718000500_profiles_featured_columns.sql"
+  # refresh_job_status: 미래 마감일로 수정 시 closed/urgent → open 재오픈 (sweep v3 #5).
+  # 빠지면 릴리스 run 이 재오픈 버그가 있는 옛 트리거로 되돌린다.
+  apply_file "20260719000100_job_reopen_on_future_deadline.sql"
 }
 
 apply_security_boundary() {

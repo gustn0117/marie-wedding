@@ -6,7 +6,7 @@ import { formatRelativeTime } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { ROUTES } from '@/shared/constants';
-import { notificationService } from '@/features/notifications/services/notification-service';
+import { notificationService, NOTIFICATIONS_UPDATED_EVENT } from '@/features/notifications/services/notification-service';
 
 interface Notification {
   id: string;
@@ -62,6 +62,7 @@ export default function NotificationBell() {
   const [items, setItems] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // 서버 라우트(service_role)로 목록+안읽음수 동시 조회 — 마이페이지 알림과 동일 소스.
@@ -74,9 +75,14 @@ export default function NotificationBell() {
         const body = await res.json();
         setItems((body.items ?? []) as Notification[]);
         setUnreadCount(body.unreadCount ?? 0);
+        setLoadError(false);
+      } else {
+        // 비200(401 세션만료·5xx)을 삼키면 "알림 없음"으로 오인된다. 에러 상태로 구분.
+        setLoadError(true);
       }
     } catch (err) {
       console.error('[NotificationBell] loadData failed:', err);
+      setLoadError(true);
     } finally {
       if (withSpinner) setLoading(false);
     }
@@ -102,6 +108,13 @@ export default function NotificationBell() {
   useEffect(() => {
     if (open) loadData(true);
   }, [open, loadData]);
+
+  // 알림 페이지·쪽지 상세 등에서 읽음 처리되면 즉시 재조회해 배지 지연(최대 60초)을 없앤다.
+  useEffect(() => {
+    const onUpdated = () => loadData();
+    window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
+    return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
+  }, [loadData]);
 
   // outside click + esc
   useEffect(() => {
@@ -186,6 +199,17 @@ export default function NotificationBell() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
                 ))}
+              </div>
+            ) : loadError ? (
+              <div className="p-8 text-center">
+                <p className="text-sm text-gray-400">알림을 불러오지 못했습니다.</p>
+                <button
+                  type="button"
+                  onClick={() => loadData(true)}
+                  className="mt-2 text-sm font-bold text-primary hover:underline"
+                >
+                  다시 시도
+                </button>
               </div>
             ) : items.length === 0 ? (
               <div className="p-8 text-center">

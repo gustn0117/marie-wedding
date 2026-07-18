@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Message } from '@/types/database';
 import { messageService } from '@/features/messages/services/messageService';
+import { broadcastNotificationsUpdated } from '@/features/notifications/services/notification-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
 
@@ -21,6 +22,9 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
 
   useEffect(() => {
     messageService.markRead(conversationId).catch(() => {});
+    // 서버 컴포넌트가 이 대화의 쪽지 알림을 read 처리했으니 헤더 벨도 즉시 재조회시켜
+    // 안읽음 배지가 실제보다 크게 남는 지연을 없앤다.
+    broadcastNotificationsUpdated();
   }, [conversationId]);
 
   useEffect(() => {

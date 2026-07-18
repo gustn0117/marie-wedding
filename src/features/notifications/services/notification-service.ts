@@ -2,6 +2,15 @@ import { createClient } from '@/lib/supabase/client';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import type { Notification } from '@/types/database';
 
+// 읽음 처리가 어디서 일어나든(알림 페이지·쪽지 상세 등) 헤더 알림벨이 즉시 재조회하도록
+// 브로드캐스트. 벨은 이 이벤트를 구독해 안읽음 배지를 최대 60초 지연 없이 동기화한다.
+export const NOTIFICATIONS_UPDATED_EVENT = 'marie:notifications-updated';
+export function broadcastNotificationsUpdated() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(NOTIFICATIONS_UPDATED_EVENT));
+  }
+}
+
 export const notificationService = {
   async getNotifications(): Promise<Notification[]> {
     const supabase = createClient();
@@ -29,6 +38,7 @@ export const notificationService = {
       const body = await res.json().catch(() => ({} as { error?: string }));
       throw new Error(body.error || '읽음 처리에 실패했습니다.');
     }
+    broadcastNotificationsUpdated();
   },
 
   async markAllRead(): Promise<void> {
@@ -42,5 +52,6 @@ export const notificationService = {
       const body = await res.json().catch(() => ({} as { error?: string }));
       throw new Error(body.error || '읽음 처리에 실패했습니다.');
     }
+    broadcastNotificationsUpdated();
   },
 };

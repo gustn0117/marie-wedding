@@ -46,7 +46,8 @@ export default async function MessageDetailPage({ params }: Props) {
   const [partnerRes, msgsRes, conversations] = await Promise.all([
     supabase.from('profiles').select('id, company_name, contact_name, deleted_at').eq('id', partnerId).maybeSingle(),
     supabase.from('messages').select('*').eq('conversation_id', id).order('created_at', { ascending: true }),
-    loadConversationSummaries(profileId),
+    // 사이드바 대화목록은 부차적 — 실패해도 상세 대화는 열리도록 빈 배열로 폴백.
+    loadConversationSummaries(profileId).catch(() => []),
   ]);
   const partner = partnerRes.data;
   const msgs = msgsRes.data;

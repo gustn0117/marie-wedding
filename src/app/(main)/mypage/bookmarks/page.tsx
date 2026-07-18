@@ -10,6 +10,7 @@ import {
   getCategoryLabel,
 } from '@/shared/utils/format';
 import EmptyState from '@/shared/components/EmptyState';
+import LoadErrorState from '@/shared/components/LoadErrorState';
 import PageHeader from '@/shared/components/PageHeader';
 import type { Job, Profile, Post } from '@/types/database';
 
@@ -37,7 +38,7 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
   const activeMeta = TABS.find((t) => t.key === activeTab)!;
 
   const supabase = createServerQueryClient();
-  const { data: bookmarks } = await supabase
+  const { data: bookmarks, error: bookmarksError } = await supabase
     .from('bookmarks')
     .select('target_id, created_at')
     .eq('profile_id', viewer.profileId)
@@ -53,29 +54,33 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
   let jobs: Pick<Job, 'id' | 'title' | 'region' | 'employment_type' | 'status' | 'created_at' | 'deadline'>[] = [];
   let profiles: Pick<Profile, 'id' | 'company_name' | 'contact_name' | 'business_type' | 'region' | 'profile_image' | 'verification_status'>[] = [];
   let posts: Pick<Post, 'id' | 'title' | 'category' | 'view_count' | 'like_count' | 'comment_count' | 'created_at'>[] = [];
+  let detailError = false;
 
   if (ids.length > 0) {
     if (activeMeta.targetType === 'job') {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('jobs')
         .select('id, title, region, employment_type, status, created_at, deadline')
         .in('id', ids)
         .is('deleted_at', null);
+      detailError = !!error;
       jobs = (data ?? []).sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
     } else if (activeMeta.targetType === 'profile') {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, company_name, contact_name, business_type, region, profile_image, verification_status')
         .in('id', ids)
         .is('deleted_at', null);
+      detailError = !!error;
       profiles = (data ?? []).sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
     } else {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .select('id, title, category, view_count, like_count, created_at, comments:comments!comments_post_id_fkey(count)')
         .in('id', ids)
         .is('deleted_at', null)
         .filter('comments.deleted_at', 'is', null);
+      detailError = !!error;
       posts = (data ?? [])
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((row: any) => {
@@ -85,6 +90,9 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
         .sort((a, b) => (order[a.id] ?? 99) - (order[b.id] ?? 99));
     }
   }
+
+  // 조회 실패를 "저장한 항목 없음"으로 오인시키지 않는다.
+  const loadFailed = !!bookmarksError || detailError;
 
   const isEmpty = activeMeta.targetType === 'job' ? jobs.length === 0
     : activeMeta.targetType === 'profile' ? profiles.length === 0
@@ -114,7 +122,9 @@ export default async function BookmarksPage({ searchParams }: PageProps) {
         })}
       </div>
 
-      {isEmpty ? (
+      {loadFailed ? (
+        <LoadErrorState message="저장한 항목을 불러오지 못했습니다." />
+      ) : isEmpty ? (
         <EmptyState
           title={`저장한 ${activeMeta.label}이 없습니다`}
           description="관심 있는 항목 옆 하트 버튼을 눌러 저장하면 여기서 모아볼 수 있어요."

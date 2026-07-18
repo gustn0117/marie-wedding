@@ -23,6 +23,7 @@ import {
 } from '@/features/resumes/types';
 import { isUuid } from '@/shared/utils/uuid';
 import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
+import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -336,8 +337,9 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
         // 상태 응답과 메모 저장 응답이 엇갈려도 비공개 메모의 최신값은 보존한다.
         setReceived((prev) => prev.map((item) => (item.id === id ? { ...updated, author_note: item.author_note } : item)));
       }
-    } catch {
-      toast('상태 변경에 실패했습니다.', 'error');
+    } catch (err) {
+      // 서비스가 번역한 사유(취소된 지원/완료된 거래 등)를 그대로 노출한다.
+      toast(err instanceof Error ? err.message : '상태 변경에 실패했습니다.', 'error');
     } finally {
       finishApplicationMutation(id, sequence);
     }
@@ -473,17 +475,30 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                       >
                         제출 이력서 보기
                       </Link>
-                      {NEXT_STATUSES.map((status) => (
-                        <button
-                          key={status}
-                          type="button"
-                          onClick={() => updateStatus(item.id, status)}
-                          disabled={item.status === status || mutatingApplicationIds.has(item.id)}
-                          className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-600 hover:border-primary hover:text-primary disabled:bg-primary disabled:text-white disabled:border-primary"
-                        >
-                          {APPLICATION_STATUS_LABELS[status]}
-                        </button>
-                      ))}
+                      {NEXT_STATUSES.map((status) => {
+                        // 취소·완료(동결) 지원은 RPC가 상태변경을 거부한다 → 버튼도 비활성화해
+                        // 눌러도 실패만 나는 상황을 없앤다.
+                        const isCurrent = item.status === status;
+                        const frozen = item.status === 'cancelled' || !!item.hiring_completed_at || !!item.applicant_completed_at;
+                        const disabled = isCurrent || frozen || mutatingApplicationIds.has(item.id);
+                        // 현재 상태 = 선택된 표시(primary), 동결/처리중 = 비활성 회색, 그 외 = 클릭 가능.
+                        const tone = isCurrent
+                          ? 'bg-primary text-white border-primary'
+                          : disabled
+                            ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                            : 'text-gray-600 border-gray-300 hover:border-primary hover:text-primary';
+                        return (
+                          <button
+                            key={status}
+                            type="button"
+                            onClick={() => updateStatus(item.id, status)}
+                            disabled={disabled}
+                            className={`rounded border px-3 py-1.5 text-xs font-bold ${tone}`}
+                          >
+                            {APPLICATION_STATUS_LABELS[status]}
+                          </button>
+                        );
+                      })}
                     </div>
                     {item.status === 'accepted' && (
                       <ApplicationCompletionRow
@@ -838,6 +853,8 @@ function ApplicationCompletionRow({
   // bothDone 시 리뷰 작성 링크
   const reviewHref = `/applications/${application.id}/review`;
   const bothDone = !!mine && !!other;
+  // 30일 창이 지나면 제출이 거부되므로 링크 대신 만료 안내를 보여준다.
+  const canReview = reviewWindowOpen(application.hiring_completed_at, application.applicant_completed_at);
 
   return (
     <div className="mt-3 rounded border border-gray-200 p-3 text-xs">
@@ -845,14 +862,16 @@ function ApplicationCompletionRow({
         <div className="flex items-center justify-between gap-2">
           <div>
             <p className="font-bold text-gray-900 inline-flex items-center gap-1"><svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg> 진행 완료</p>
-            <p className="text-gray-500 mt-0.5">함께 진행한 상대에 대한 리뷰를 30일 이내 작성해 주세요.</p>
+            <p className="text-gray-500 mt-0.5">{canReview ? '함께 진행한 상대에 대한 리뷰를 30일 이내 작성해 주세요.' : '리뷰 작성 기한(30일)이 지났습니다.'}</p>
           </div>
-          <a
-            href={reviewHref}
-            className="shrink-0 rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark"
-          >
-            리뷰 작성 →
-          </a>
+          {canReview && (
+            <a
+              href={reviewHref}
+              className="shrink-0 rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark"
+            >
+              리뷰 작성 →
+            </a>
+          )}
         </div>
       ) : mine ? (
         <div className="flex items-center justify-between gap-2">

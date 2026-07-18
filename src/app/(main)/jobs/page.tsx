@@ -39,10 +39,15 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
     .eq('hidden_by_admin', false)
     .eq('posting_type', 'hiring');
 
-  // 기본 가드: 'hidden'만 제외 (admin이 명시적으로 숨긴 것).
-  // closed/filled는 최근 등록된 공고가 자동 closed로 잡혀도 사용자 인지를 위해 노출.
-  // 카드/리스트에서 "마감" 배지로 시각 구분됨 (getJobTier + isExpired).
-  query = query.neq('status', 'hidden');
+  // 기본 목록은 모집중(open/urgent)만 노출한다. 수동으로 '채용완료(filled)'·'마감(closed)'
+  // 처리했거나 admin이 숨긴(hidden) 공고는 상세에서 지원이 막히므로, 목록에 '입사지원' 가능한
+  // 것처럼 남겨두면 목록·상세가 어긋난다(마감일이 미래/상시라 마감 배지도 안 붙는다).
+  // includeClosed 일 때만 마감/채용완료도 함께 노출한다.
+  if (searchParams.includeClosed) {
+    query = query.neq('status', 'hidden');
+  } else {
+    query = query.not('status', 'in', '(hidden,filled,closed)');
+  }
 
   // 마감일이 지난 공고 제외 (deadline IS NULL 이거나 deadline >= now).
   // 서버(DB)에서 필터해야 count와 실제 반환 행이 동일한 조건을 보므로

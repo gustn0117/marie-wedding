@@ -72,9 +72,19 @@ function stripHtml(html: string) {
 
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
   const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
-  const [sections, setSections] = useState<JobSectionMap>(() =>
-    initialData?.description ? parseSections(initialData.description).sections : { ...EMPTY_JOB_SECTIONS }
-  );
+  const [sections, setSections] = useState<JobSectionMap>(() => {
+    if (!initialData?.description) return { ...EMPTY_JOB_SECTIONS };
+    const parsed = parseSections(initialData.description);
+    // 구(舊) 공고: 5섹션 헤더 없이 저장돼 파싱이 전체를 extra 로만 담으면(fallbackUsed) 필수 섹션
+    // (담당 업무 등)이 비어 수정 저장이 영구 차단된다. 본문을 첫 필수 섹션(duty)에 실어 편집 가능하게 한다.
+    if (parsed.fallbackUsed) {
+      return { ...EMPTY_JOB_SECTIONS, duty: parsed.sections.extra };
+    }
+    return parsed.sections;
+  });
+  // 레거시 공고 수정: 본문이 duty 한 곳에 seed 됐고 나머지 필수 섹션(지원 자격/근무 조건)은
+  // 비어 있다. 이 세션에선 개별 필수 섹션 강제를 풀고 '본문 존재'만 요구해 저장 차단을 없앤다.
+  const [isLegacySeed] = useState(() => !!initialData?.description && parseSections(initialData.description).fallbackUsed);
   const sectionsRef = useRef(sections);
   const [loading, setLoading] = useState(false);
   const savingRef = useRef(false);
@@ -162,6 +172,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   };
 
   const validateSections = (currentSections: JobSectionMap, deferPendingSection = false): string | null => {
+    // 레거시 seed 수정: 개별 필수 섹션 대신 '본문이 하나라도 있으면' 통과(내용 소실 없이 저장 가능).
+    if (isLegacySeed) {
+      return JOB_SECTIONS.some((sec) => sectionHasContent(currentSections[sec.key])) ? null : '내용을 입력해주세요.';
+    }
     for (const sec of JOB_SECTIONS) {
       if (FORM_SECTION_META[sec.key].required && !sectionHasContent(currentSections[sec.key])) {
         if (deferPendingSection && (pendingSectionsRef.current.get(sec.key) ?? 0) > 0) continue;

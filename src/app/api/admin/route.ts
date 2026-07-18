@@ -185,8 +185,8 @@ export async function POST(request: NextRequest) {
           supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
           supabase.from('posts').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
           supabase.from('comments').select('*', { count: 'exact', head: true }).eq('author_id', id).is('deleted_at', null),
-          supabase.from('applications').select('*', { count: 'exact', head: true }).eq('applicant_id', id),
-          supabase.from('applications').select('jobs!inner(author_id)', { count: 'exact', head: true }).eq('jobs.author_id', id),
+          supabase.from('applications').select('*', { count: 'exact', head: true }).eq('applicant_id', id).is('deleted_at', null),
+          supabase.from('applications').select('jobs!inner(author_id)', { count: 'exact', head: true }).eq('jobs.author_id', id).is('deleted_at', null),
         ]);
 
         return NextResponse.json({
@@ -392,6 +392,9 @@ export async function POST(request: NextRequest) {
           .select('*, author:profiles!author_id(*), comments:comments!comments_post_id_fkey(count)', { count: 'exact' })
           .order('created_at', { ascending: false })
           .range(from, from + pageSize - 1);
+
+        // 댓글 수는 소프트삭제 제외 — 공개 목록/카운트 기준과 일치시킨다.
+        query = query.filter('comments.deleted_at', 'is', null);
 
         if (!showDeleted) query = query.is('deleted_at', null);
         if (search) {
