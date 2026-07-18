@@ -110,6 +110,16 @@ function addHtmlReferences(references: ReferenceMap, value: unknown): void {
   if (typeof value === 'string' && value) addEmbeddedReferences(references, value);
 }
 
+/** resumes.attachments(jsonb)[].path 를 resume-files 참조로 등록한다. */
+function addAttachmentReferences(references: ReferenceMap, value: unknown): void {
+  if (!Array.isArray(value)) return;
+  for (const item of value) {
+    if (item && typeof item === 'object' && typeof (item as Record<string, unknown>).path === 'string') {
+      addKnownBucketPath(references, 'resume-files', (item as Record<string, unknown>).path);
+    }
+  }
+}
+
 async function readAllRows(
   table: string,
   columns: string,
@@ -160,8 +170,8 @@ async function collectStorageReferences(signal?: AbortSignal): Promise<Reference
     readAllRows('events', 'image, content', signal),
     readAllRows('banners', 'image_path_pc, image_path_mobile', signal),
     readAllRows('portfolios', 'images, cover_image, description', signal),
-    readAllRows('resumes', 'photo_path', signal),
-    readAllRows('application_resume_snapshots', 'photo_path', signal, 'application_id'),
+    readAllRows('resumes', 'photo_path, attachments', signal),
+    readAllRows('application_resume_snapshots', 'photo_path, snapshot', signal, 'application_id'),
   ]);
 
   for (const row of profiles) {
@@ -194,9 +204,18 @@ async function collectStorageReferences(signal?: AbortSignal): Promise<Reference
   }
   for (const row of resumes) {
     addKnownBucketPath(references, 'resume-files', row.photo_path);
+    // 포트폴리오 PDF 첨부. 경로가 attachments(jsonb)[].path 안에만 있어, 여기서
+    // 참조로 등록하지 않으면 살아있는 이력서의 첨부가 고아로 오인돼 영구삭제된다.
+    addAttachmentReferences(references, row.attachments);
   }
   for (const row of resumeSnapshots) {
     addKnownBucketPath(references, 'resume-files', row.photo_path);
+    // 제출 스냅샷에도 첨부 경로가 복제되므로 함께 보호한다.
+    if (row.snapshot && typeof row.snapshot === 'object' && !Array.isArray(row.snapshot)) {
+      const snap = row.snapshot as Record<string, unknown>;
+      addKnownBucketPath(references, 'resume-files', typeof snap.photoPath === 'string' ? snap.photoPath : null);
+      addAttachmentReferences(references, snap.attachments);
+    }
   }
   return references;
 }

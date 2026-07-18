@@ -21,12 +21,6 @@ interface HomeContentProps {
   featuredProfiles?: Profile[];
   profiles: Profile[];
   events: Event[];
-  counts: {
-    jobs: number;
-    profiles: number;
-    posts: number;
-    recentJobs: number;
-  };
 }
 
 // 카테고리 그리드 — SVG 아이콘 (이모지 사용 금지, 미니멀 무채색 팔레트 준수).

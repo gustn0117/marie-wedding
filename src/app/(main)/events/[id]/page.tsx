@@ -47,6 +47,7 @@ async function getRelatedJobs(event: Event): Promise<Job[]> {
     .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
+    .neq('status', 'hidden')
     .eq('posting_type', 'hiring')
     .ilike('title', `%${keyword}%`)
     .order('is_promoted', { ascending: false })

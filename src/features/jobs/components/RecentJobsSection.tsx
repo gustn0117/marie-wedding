@@ -14,9 +14,13 @@ export default function RecentJobsSection() {
   useEffect(() => {
     let ids: string[] = [];
     try {
-      ids = JSON.parse(localStorage.getItem(RECENT_JOBS_KEY) || '[]') as string[];
+      const parsed: unknown = JSON.parse(localStorage.getItem(RECENT_JOBS_KEY) || '[]');
+      // 손상된/조작된 localStorage 값(비배열)이면 filter 가 밖에서 throw 되어
+      // 클라이언트 컴포넌트가 통째로 크래시했다. 배열 검증을 try 안에서 처리.
+      if (Array.isArray(parsed)) {
+        ids = parsed.filter((x): x is string => typeof x === 'string' && !!x).slice(0, 5);
+      }
     } catch { /* noop */ }
-    ids = ids.filter(Boolean).slice(0, 5);
     if (ids.length === 0) { setJobs([]); return; }
 
     const sb = createClient();

@@ -11,6 +11,7 @@ import {
   NAVER_STATE_COOKIE,
   NAVER_STATE_COOKIE_PATH,
   placeholderEmailFor,
+  isPlaceholderEmail,
   verifyState,
 } from '@/lib/naver-oauth';
 
@@ -259,13 +260,16 @@ export async function GET(request: Request) {
   }
 
   // ⑥ redirect
+  // email-required 는 "지금 네이버가 이메일을 줬는가"가 아니라 "계정에 아직 실제
+  // 이메일이 없는가(placeholder인가)"로 판단해야 한다. 네이버는 재로그인마다 이메일을
+  // 거의 주지 않으므로, userInfo.email 로 판단하면 이미 이메일을 등록·온보딩까지 마친
+  // 사용자도 매 로그인 email-required 로 튕긴다.
   const onboarded = existingByNaver?.onboarded_at;
-  if (isNewUser || !userInfo.email) {
-    return NextResponse.redirect(
-      `${origin}/onboarding${userInfo.email ? '' : '/email-required'}?next=${encodeURIComponent(next)}`,
-    );
+  const stillNeedsEmail = isPlaceholderEmail(targetUserEmail);
+  if (stillNeedsEmail) {
+    return NextResponse.redirect(`${origin}/onboarding/email-required?next=${encodeURIComponent(next)}`);
   }
-  if (!onboarded) {
+  if (isNewUser || !onboarded) {
     return NextResponse.redirect(`${origin}/onboarding?next=${encodeURIComponent(next)}`);
   }
   return NextResponse.redirect(`${origin}${next}`);

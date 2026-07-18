@@ -163,3 +163,8 @@ export async function fetchUserInfo(
 export function placeholderEmailFor(naverSub: string): string {
   return `naver_${naverSub}@social.marie.local`;
 }
+
+/** 아직 실제 이메일로 교체되지 않은 네이버 임시 이메일인지. */
+export function isPlaceholderEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().endsWith('@social.marie.local');
+}

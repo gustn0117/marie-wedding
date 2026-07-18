@@ -13,8 +13,14 @@ import { SUPABASE_SCHEMA } from './schema';
 // 게다가 클러스터(멀티워커) 배포라 워커마다 캐시 스냅샷이 달라 '삭제한 공고/비공개 프로필이
 // 새로고침마다 떴다 사라졌다' 하는 깜빡임이 발생했다.
 // → 읽기 클라이언트의 모든 요청에 cache:'no-store' 를 주입해 매 요청 실시간 조회를 보장한다.
+// SSR 읽기에 타임아웃을 건다. 없으면 공유 Postgres/Kong 이 지연될 때 fetch 가
+// settle 되지 않아 워커가 무한 점유되고(health 는 계속 green), 트래픽이 몰리면
+// 워커 풀이 고갈된다. 15초면 정상 쿼리엔 충분하고 hang 은 확실히 끊는다.
+const SSR_QUERY_TIMEOUT_MS = 15_000;
 function noStoreFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-  return fetch(input, { ...init, cache: 'no-store' });
+  const timeout = AbortSignal.timeout(SSR_QUERY_TIMEOUT_MS);
+  const signal = init?.signal ? AbortSignal.any([init.signal, timeout]) : timeout;
+  return fetch(input, { ...init, cache: 'no-store', signal });
 }
 
 export function createServerQueryClient() {

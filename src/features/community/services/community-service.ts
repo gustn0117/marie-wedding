@@ -201,17 +201,19 @@ export const communityService = {
   },
 
   /**
-   * Soft-delete a comment.
+   * Soft-delete a comment via service_role 서버 라우트.
+   * 클라이언트 직접 update 는 세션 만료+쿠키 잔존 상태에서 RLS 로 0행 갱신되고도
+   * 성공으로 오표시되던 문제가 있어 서버 재인증 경로로 옮겼다.
    */
   async deleteComment(id: string): Promise<void> {
-    const supabase = createClient();
-
-    const { error } = await supabase
-      .from('comments')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
-
-    if (error) throw error;
+    const res = await apiFetch(`/api/comments/${id}/delete`, {
+      method: 'POST',
+      credentials: 'include',
+    }, 12_000);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: '' }));
+      throw new Error(body.error || `댓글 삭제에 실패했습니다 (HTTP ${res.status}).`);
+    }
   },
 
   /**

@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   // (네이버 가입 중 profile insert 실패해 orphan 인 케이스 / 이미 삭제 후 재시도 케이스 모두 대응)
   const { data: profile, error: profileError } = await service
     .from('profiles')
-    .select('id, deleted_at')
+    .select('id, deleted_at, profile_image, cover_image, gallery')
     .eq('user_id', user.id)
     .abortSignal(requestSignal)
     .maybeSingle();
@@ -108,6 +108,21 @@ export async function POST(request: Request) {
       { error: requestSignal.aborted ? '탈퇴 처리 시간이 초과되었습니다. 현재 계정 상태를 다시 확인해주세요.' : `탈퇴 처리에 실패했습니다: ${rpcErr.message}` },
       { status: requestSignal.aborted ? 504 : 500 },
     );
+  }
+
+  // 공개 avatars 파일(프로필사진·커버·갤러리)은 URL 만 알면 탈퇴 후에도 조회되므로
+  // 즉시 제거한다(개인정보 삭제 요청). purge 가 이미 컬럼을 NULL 로 비웠고, 여기서
+  // 실제 객체를 지운다. 비공개 resume-files 는 스냅샷 참조 여부를 고려해야 하므로
+  // 고아정리에 맡긴다. best-effort — 실패해도 탈퇴 자체는 성공 처리.
+  const avatarPaths = [
+    typeof profile.profile_image === 'string' ? profile.profile_image : null,
+    typeof profile.cover_image === 'string' ? profile.cover_image : null,
+    ...(Array.isArray(profile.gallery) ? profile.gallery.filter((p): p is string => typeof p === 'string') : []),
+  ].filter((p): p is string => !!p && !/^(?:https?:|data:|blob:)/i.test(p));
+  if (avatarPaths.length > 0) {
+    await service.storage.from('avatars').remove(avatarPaths).catch((e) => {
+      console.error('[withdraw] avatar cleanup failed (non-fatal):', e);
+    });
   }
 
   // 응답에 모든 인증 쿠키 만료 — 클라는 redirect 직후 비로그인 상태

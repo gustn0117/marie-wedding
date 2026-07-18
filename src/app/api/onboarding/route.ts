@@ -71,9 +71,27 @@ export async function POST(request: Request) {
   }
 
   const service = createServiceClient(requestSignal);
+
+  // 이미 온보딩을 마친 프로필의 재호출을 막는다. 없으면 크래프트된 POST 로
+  // 온보딩 필드를 다시 덮어써 우회로가 된다(/api/* 는 미들웨어 인증 예외).
+  const { data: existing } = await service
+    .from('profiles')
+    .select('onboarded_at')
+    .eq('user_id', user.id)
+    .abortSignal(requestSignal)
+    .maybeSingle();
+  if (existing?.onboarded_at) {
+    return NextResponse.json({ error: 'already_onboarded' }, { status: 409 });
+  }
+
   const updates: Record<string, unknown> = {
     account_type: accountType,
     phone,
+    // 온보딩의 전화번호는 OTP 인증을 거치지 않는다. service_role UPDATE 라 DB 트리거가
+    // 인증상태를 대신 해제해주지 않으므로, 여기서 명시적으로 미인증으로 세팅해
+    // 미인증 번호에 '인증 완료' 표시가 남는 것을 막는다(directory/update 와 동일 방침).
+    phone_verified: false,
+    phone_verified_at: null,
     onboarded_at: new Date().toISOString(),
   };
   if (accountType === 'business') {

@@ -16,6 +16,13 @@ import { cookies } from 'next/headers';
  */
 const MAX_PATHS = 20;
 
+// 임의 경로 재검증을 막는 화이트리스트. 앱이 실제로 무효화할 수 있는 경로만 허용.
+const ALLOWED_PREFIXES = ['/jobs', '/directory', '/community', '/events', '/search', '/stats', '/mypage', '/admin'];
+function isAllowedPath(p: string): boolean {
+  if (p === '/') return true;
+  return ALLOWED_PREFIXES.some((prefix) => p === prefix || p.startsWith(`${prefix}/`));
+}
+
 export async function POST(req: Request) {
   // (1) 시크릿 헤더 통과
   const secret = req.headers.get('x-revalidate-secret');
@@ -57,7 +64,7 @@ export async function POST(req: Request) {
     }
     let count = 0;
     for (const path of paths) {
-      if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//')) {
+      if (typeof path === 'string' && path.startsWith('/') && !path.startsWith('//') && isAllowedPath(path)) {
         revalidatePath(path);
         count++;
       }

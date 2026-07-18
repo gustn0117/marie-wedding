@@ -55,7 +55,7 @@ export async function POST(req: Request) {
   // 결제 상태에 따라 처리
   if (portonePayment.status === 'PAID') {
     // 서버 카탈로그로 저장한 DB 금액/통화와 게이트웨이 실결제를 모두 대조한다.
-    if (dbPayment.amount !== portonePayment.amount.total || dbPayment.currency !== portonePayment.amount.currency) {
+    if (dbPayment.amount !== portonePayment.amount.total || dbPayment.currency !== portonePayment.currency) {
       console.error('[webhook] amount mismatch', { dbAmount: dbPayment.amount, gatewayAmount: portonePayment.amount.total });
       return NextResponse.json({ error: 'amount_mismatch' }, { status: 400 });
     }

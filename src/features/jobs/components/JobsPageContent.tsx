@@ -338,8 +338,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         {/* Region Dropdown Panel */}
         {regionDropdownOpen && (
           <div className="border-b border-gray-200 bg-white">
-            <div className="flex">
-              <div className="w-[200px] border-r border-gray-200 max-h-[360px] overflow-y-auto">
+            <div className="flex flex-col sm:flex-row">
+              <div className="w-full sm:w-[200px] border-b sm:border-b-0 sm:border-r border-gray-200 max-h-[220px] sm:max-h-[360px] overflow-y-auto">
                 <button
                   onClick={() => handleRegionConfirm('')}
                   className={`w-full text-left px-4 py-2 text-small hover:bg-gray-50 transition-colors ${
@@ -389,19 +389,19 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                       닫기
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 lg:grid-cols-4 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
                     {browsingRegionDetails.map((detail) => (
                       <label
                         key={detail.value}
-                        className="flex items-center gap-2 px-2 py-1.5 text-small text-gray-600 hover:text-gray-900 cursor-pointer rounded hover:bg-primary-50/50"
+                        className="flex items-center gap-2 px-2 py-1.5 text-small text-gray-600 hover:text-gray-900 cursor-pointer rounded hover:bg-primary-50/50 min-w-0"
                       >
                         <input
                           type="checkbox"
                           checked={selectedSubRegions.includes(detail.value)}
                           onChange={() => handleSubRegionToggle(detail.value)}
-                          className="w-3.5 h-3.5 rounded-sm border-gray-300 text-primary focus:ring-primary/30"
+                          className="w-3.5 h-3.5 shrink-0 rounded-sm border-gray-300 text-primary focus:ring-primary/30"
                         />
-                        <span>{detail.label}</span>
+                        <span className="truncate">{detail.label}</span>
                       </label>
                     ))}
                   </div>

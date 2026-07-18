@@ -61,11 +61,20 @@ export default function NotificationBell() {
     }
   }, []);
 
-  // 마운트 시 + 60초마다 안읽음수 갱신
+  // 마운트 시 + 60초마다 안읽음수 갱신. 단, 탭이 백그라운드일 땐 폴링을 멈춘다.
+  // 폴링 1회 = 공유 GoTrue getUser() 검증 + DB 조회라, 열어만 둔 수많은 배경 탭이
+  // 접속자 수에 비례해 상시 인증 부하를 만들던 것을 없앤다. 탭 복귀 시 즉시 1회 갱신.
   useEffect(() => {
-    loadData();
-    const t = setInterval(() => loadData(), 60_000);
-    return () => clearInterval(t);
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const start = () => { if (timer === null) timer = setInterval(() => loadData(), 60_000); };
+    const stop = () => { if (timer !== null) { clearInterval(timer); timer = null; } };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') { loadData(); start(); }
+      else stop();
+    };
+    if (document.visibilityState === 'visible') { loadData(); start(); }
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
   }, [loadData]);
 
   // 열 때 fresh load (스피너 표시)

@@ -22,13 +22,15 @@ const PUBLIC_PROFILE_COLS =
 
 async function getHomeData() {
   const supabase = createServerQueryClient();
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const todayIso = new Date().toISOString().slice(0, 10);
 
-  const [postsRes, jobsRes, profilesRes, eventsRes, recentJobsCountRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
+  // 홈은 목록 6~4행만 보여주고 총개수(count)는 화면에 렌더하지 않는다. 과거 count:'exact'
+  // 5회가 매 요청 활성행 전체를 카운트 스캔해 성장 시 공유 Postgres CPU를 잡아먹었다.
+  // 사문화된 counts 라 카운트 자체를 제거 → 목록 쿼리는 인덱스에서 6행만 읽고 멈춘다.
+  const [postsRes, jobsRes, profilesRes, eventsRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
     supabase
       .from('posts')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`, { count: 'exact' })
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`)
       .is('deleted_at', null)
       .filter('comments.deleted_at', 'is', null)
       .order('is_notice', { ascending: false })
@@ -36,7 +38,7 @@ async function getHomeData() {
       .range(0, 4),
     supabase
       .from('jobs')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`, { count: 'exact' })
+      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
@@ -45,7 +47,7 @@ async function getHomeData() {
       .range(0, 5),
     supabase
       .from('profiles')
-      .select(PUBLIC_PROFILE_COLS, { count: 'exact' })
+      .select(PUBLIC_PROFILE_COLS)
       .is('deleted_at', null)
       .eq('is_directory_listed', true)
       .order('created_at', { ascending: false })
@@ -54,21 +56,13 @@ async function getHomeData() {
     // 둘 다 없는 상시 행사만 노출. 종료된 행사는 제외.
     supabase
       .from('events')
-      .select('*', { count: 'exact' })
+      .select('*')
       .is('deleted_at', null)
       .or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`)
       .order('is_pinned', { ascending: false })
       .order('start_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
       .range(0, 3),
-    supabase
-      .from('jobs')
-      .select('id', { count: 'exact', head: true })
-      .is('deleted_at', null)
-      .eq('hidden_by_admin', false)
-      .neq('status', 'hidden')
-      .eq('posting_type', 'hiring')
-      .gte('created_at', thirtyDaysAgo),
     // 인기 공고 — 관리자가 선정한 featured_at IS NOT NULL인 공고만
     supabase
       .from('jobs')
@@ -105,12 +99,6 @@ async function getHomeData() {
     featuredProfiles: (featuredProfilesRes.data ?? []) as Profile[],
     profiles: (profilesRes.data ?? []) as Profile[],
     events: (eventsRes.data ?? []) as Event[],
-    counts: {
-      jobs: jobsRes.count ?? 0,
-      profiles: profilesRes.count ?? 0,
-      posts: postsRes.count ?? 0,
-      recentJobs: recentJobsCountRes.count ?? 0,
-    },
   };
 }
 
@@ -122,7 +110,7 @@ async function getHomeData() {
 // 하던 문제가 있어 제거. 쿼리는 내부 kong 직결 + 인덱스라 매 요청 조회해도 빠르다.
 
 export default async function HomePage() {
-  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events, counts } = await getHomeData();
+  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events } = await getHomeData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -135,7 +123,6 @@ export default async function HomePage() {
         featuredProfiles={featuredProfiles}
         profiles={profiles}
         events={events}
-        counts={counts}
       />
       <Footer />
     </div>

@@ -19,7 +19,11 @@ const PORTONE_API_BASE = 'https://api.portone.io';
 export interface PortOnePayment {
   id: string;
   status: 'READY' | 'PENDING' | 'PAID' | 'FAILED' | 'CANCELLED' | 'PARTIAL_CANCELLED' | 'VIRTUAL_ACCOUNT_ISSUED';
-  amount: { total: number; currency: string };
+  // PortOne V2 REST: currency 는 결제건 최상위 필드다. amount(PaymentAmount)에는
+  // total 만 있고 currency 가 없다. 과거 amount.currency 로 잘못 읽어 항상 undefined →
+  // 정상 PAID 웹훅이 통화 불일치로 100% 400 거부되던 버그가 있었다.
+  amount: { total: number };
+  currency: string;
   orderName: string;
   customer?: { id?: string; name?: string; email?: string };
   failure?: { reason: string };

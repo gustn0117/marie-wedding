@@ -35,7 +35,15 @@ export default function DatePicker({ value, onChange, placeholder = '날짜 선�
   for (let i = 0; i < firstDay; i++) days.push(null);
   for (let i = 1; i <= daysInMonth; i++) days.push(i);
 
-  const selectedDate = value ? new Date(value) : null;
+  // 'YYYY-MM-DD' 를 로컬 자정으로 파싱한다. new Date('2026-07-18') 는 UTC 자정이라
+  // 로컬 자정으로 만든 날짜 셀(new Date(year,month,day))과 getTime()이 KST 기준 9시간
+  // 어긋나 선택 하이라이트가 항상 표시되지 않던 버그가 있었다.
+  const selectedDate = value
+    ? (() => {
+        const [y, m, d] = value.split('-').map(Number);
+        return y && m && d ? new Date(y, m - 1, d) : null;
+      })()
+    : null;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
