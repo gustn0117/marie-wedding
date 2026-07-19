@@ -75,7 +75,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
   const [dirty, setDirty] = useState(false);
-  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  // 필드별 검증 경고 — { field: 어느 필드, message }. 제출 시 누락 필드로 스크롤 + 그 자리에 경고.
+  const [fieldError, setFieldError] = useState<{ field: string; message: string } | null>(null);
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
   useUnsavedChangesWarning(dirty);
   const [sections, setSections] = useState<JobSectionMap>(() => {
     if (!initialData?.description) return { ...EMPTY_JOB_SECTIONS };
@@ -124,6 +126,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
 
   const setSection = (key: JobSectionKey, value: string) => {
     setDirty(true);
+    setFieldError(null);
     const next = { ...sectionsRef.current, [key]: value };
     sectionsRef.current = next;
     setSections(next);
@@ -150,58 +153,69 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const validateFields = (): string | null => {
-    if (!formData.title.trim()) return '제목을 입력해주세요.';
-    if (!formData.businessType) return '업종을 선택해주세요.';
-    if (!formData.employmentType) return '고용형태를 선택해주세요.';
-    if (!formData.region) return '지역을 선택해주세요.';
+  type FieldIssue = { field: string; message: string };
+
+  const validateFields = (): FieldIssue | null => {
+    if (!formData.title.trim()) return { field: 'title', message: '제목을 입력해주세요.' };
+    if (!formData.businessType) return { field: 'businessType', message: '업종을 선택해주세요.' };
+    if (!formData.employmentType) return { field: 'employmentType', message: '고용형태를 선택해주세요.' };
+    if (!formData.region) return { field: 'region', message: '지역을 선택해주세요.' };
 
     // 급여 범위 검증 — INTEGER 컬럼 초과·역전 방지 (null = 미기재 허용)
     const MAX_SALARY = 100_000_000;
     for (const [label, v] of [['최소', formData.salaryMin], ['최대', formData.salaryMax]] as const) {
       if (v != null && (!Number.isInteger(v) || v < 0 || v > MAX_SALARY)) {
-        return `급여 ${label}값은 0 이상 ${MAX_SALARY.toLocaleString()} 이하의 정수여야 합니다.`;
+        return { field: 'salaryRange', message: `급여 ${label}값은 0 이상 ${MAX_SALARY.toLocaleString()} 이하의 정수여야 합니다.` };
       }
     }
     if (formData.salaryMin != null && formData.salaryMax != null && formData.salaryMin > formData.salaryMax) {
-      return '급여 최소값이 최대값보다 클 수 없습니다.';
+      return { field: 'salaryRange', message: '급여 최소값이 최대값보다 클 수 없습니다.' };
     }
     // 최소 경력 검증 — INTEGER 컬럼 초과·음수 방지
     if (
       formData.experienceMin != null &&
       (!Number.isInteger(formData.experienceMin) || formData.experienceMin < 0 || formData.experienceMin > 50)
     ) {
-      return '최소 경력은 0 이상 50 이하의 정수여야 합니다.';
+      return { field: 'experience', message: '최소 경력은 0 이상 50 이하의 정수여야 합니다.' };
     }
 
     return null;
   };
 
-  const validateSections = (currentSections: JobSectionMap, deferPendingSection = false): string | null => {
+  const validateSections = (currentSections: JobSectionMap, deferPendingSection = false): FieldIssue | null => {
     // 레거시 seed 수정: 개별 필수 섹션 대신 '본문이 하나라도 있으면' 통과(내용 소실 없이 저장 가능).
     if (isLegacySeed) {
-      return JOB_SECTIONS.some((sec) => sectionHasContent(currentSections[sec.key])) ? null : '내용을 입력해주세요.';
+      return JOB_SECTIONS.some((sec) => sectionHasContent(currentSections[sec.key])) ? null : { field: 'section:duty', message: '내용을 입력해주세요.' };
     }
     for (const sec of JOB_SECTIONS) {
       if (FORM_SECTION_META[sec.key].required && !sectionHasContent(currentSections[sec.key])) {
         if (deferPendingSection && (pendingSectionsRef.current.get(sec.key) ?? 0) > 0) continue;
-        return `${sec.title}를 입력해주세요.`;
+        return { field: `section:${sec.key}`, message: `${sec.title}를 입력해주세요.` };
       }
     }
     return null;
+  };
+
+  // 누락 필드로 스크롤 이동 + 그 자리에 경고 표시
+  const showFieldIssue = (issue: FieldIssue) => {
+    setFieldError(issue);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`jobfield-${issue.field}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.querySelector<HTMLElement>('input, textarea, [contenteditable="true"], button')?.focus?.();
+      }
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (savingRef.current) return;
     setError(null);
-    const fieldError = validateFields();
-    const currentSectionError = validateSections(sectionsRef.current, true);
+    const issue = validateFields() || validateSections(sectionsRef.current, true);
     // 업로드 중인 바로 그 섹션만 검증을 유예한다. 다른 필수 섹션 오류는 즉시 보여준다.
-    const immediateError = fieldError || currentSectionError;
-    if (immediateError) {
-      setError(immediateError);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (issue) {
+      showFieldIssue(issue);
       return;
     }
     savingRef.current = true;
@@ -216,8 +230,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       const latestSections = sectionsRef.current;
       const validationError = validateSections(latestSections);
       if (validationError) {
-        setError(validationError);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showFieldIssue(validationError);
         return;
       }
       await onSubmit({
@@ -330,7 +343,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       {/* STEP 2: 제목 & 이미지 */}
       <Section step={2} title="제목과 대표 이미지를 입력하세요" description="직무, 지역, 고용형태가 한눈에 보이면 검색과 클릭 전환이 좋아집니다.">
         <div className="space-y-4">
-          <div>
+          <div id="jobfield-title" className={`scroll-mt-24 ${fieldError?.field === 'title' ? 'rounded-lg p-2.5 -m-2.5 ring-2 ring-state-urgent/50 bg-state-urgent-bg/40' : ''}`}>
             <div className="flex items-center justify-between mb-2">
               <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
               <span className="text-xs text-gray-400">{formData.title.length}/100</span>
@@ -343,6 +356,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
               className="w-full rounded border border-gray-300 px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               maxLength={100}
             />
+            {fieldError?.field === 'title' && <FieldWarning message={fieldError.message} />}
           </div>
 
           <div>
@@ -393,8 +407,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         <div className="space-y-5">
           {JOB_SECTIONS.map((sec) => {
             const meta = FORM_SECTION_META[sec.key];
+            const secErr = fieldError?.field === `section:${sec.key}` ? fieldError.message : undefined;
             return (
-            <div key={sec.key}>
+            <div key={sec.key} id={`jobfield-section:${sec.key}`} className={`scroll-mt-24 ${secErr ? 'rounded-lg p-2.5 -m-2.5 ring-2 ring-state-urgent/50 bg-state-urgent-bg/40' : ''}`}>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-sm font-semibold text-gray-800">
                   {sec.title}
@@ -412,6 +427,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 onUploadPromise={(promise) => trackSectionUpload(sec.key, promise)}
                 disabled={loading}
               />
+              {secErr && <FieldWarning message={secErr} />}
             </div>
             );
           })}
@@ -425,7 +441,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       {/* STEP 4: 세부 조건 */}
       <Section step={4} title="세부 조건을 선택하세요" description="정확한 조건을 선택하면 적합한 지원자를 찾을 수 있어요.">
         <div className="space-y-5">
-          <FieldRow label="업종" required hint="업체가 속한 분야를 선택해주세요">
+          <FieldRow label="업종" required hint="업체가 속한 분야를 선택해주세요"
+            id="jobfield-businessType" error={fieldError?.field === 'businessType' ? fieldError.message : undefined}>
             <PillGroup
               options={BUSINESS_TYPES}
               value={formData.businessType}
@@ -433,7 +450,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label="고용형태" required hint="정규직, 계약직, 단기알바 중 선택">
+          <FieldRow label="고용형태" required hint="정규직, 계약직, 단기알바 중 선택"
+            id="jobfield-employmentType" error={fieldError?.field === 'employmentType' ? fieldError.message : undefined}>
             <PillGroup
               options={EMPLOYMENT_TYPES}
               value={formData.employmentType}
@@ -441,7 +459,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label="지역" required hint="근무 지역을 선택해주세요. 세부 지역(구/군)까지 선택 가능">
+          <FieldRow label="지역" required hint="근무 지역을 선택해주세요. 세부 지역(구/군)까지 선택 가능"
+            id="jobfield-region" error={fieldError?.field === 'region' ? fieldError.message : undefined}>
             <RegionPicker
               value={formData.region}
               onChange={(v) => setFormData(prev => ({ ...prev, region: v }))}
@@ -463,7 +482,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             />
           </FieldRow>
 
-          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 월급/연봉은 만원 단위, 일급/시급은 원 단위로 입력하세요.">
+          <FieldRow label="급여 범위" hint="검색 필터에 사용됩니다. 월급/연봉은 만원 단위, 일급/시급은 원 단위로 입력하세요."
+            id="jobfield-salaryRange" error={fieldError?.field === 'salaryRange' ? fieldError.message : undefined}>
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_140px] gap-2">
               <input
                 type="number"
@@ -494,7 +514,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             </div>
           </FieldRow>
 
-          <FieldRow label="최소 경력" hint="신입 가능이면 0을 입력하세요. 미입력 시 무관.">
+          <FieldRow label="최소 경력" hint="신입 가능이면 0을 입력하세요. 미입력 시 무관."
+            id="jobfield-experience" error={fieldError?.field === 'experience' ? fieldError.message : undefined}>
             <div className="flex items-center gap-2 max-w-[200px]">
               <input
                 type="number"
@@ -568,9 +589,9 @@ function Section({ step, title, description, children }: { step: number; title: 
   );
 }
 
-function FieldRow({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function FieldRow({ label, required, hint, children, id, error }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; id?: string; error?: string }) {
   return (
-    <div>
+    <div id={id} className={`scroll-mt-24 ${error ? 'rounded-lg p-2.5 -m-2.5 ring-2 ring-state-urgent/50 bg-state-urgent-bg/40' : ''}`}>
       <div className="mb-1.5">
         <label className="text-sm font-semibold text-gray-800">
           {label}
@@ -579,7 +600,20 @@ function FieldRow({ label, required, hint, children }: { label: string; required
         {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
       </div>
       {children}
+      {error && <FieldWarning message={error} />}
     </div>
+  );
+}
+
+// 필드 아래 인라인 경고 메시지 (누락 시)
+function FieldWarning({ message }: { message: string }) {
+  return (
+    <p role="alert" className="mt-1.5 flex items-center gap-1 text-sm font-semibold text-state-urgent">
+      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+      </svg>
+      {message}
+    </p>
   );
 }
 
