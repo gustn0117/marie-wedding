@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
 import { sendEmail } from '@/features/notifications/lib/email';
+import { sanitizeRichHtml } from '@/shared/utils/sanitizeRichHtml';
 
 const APP_URL = 'https://marie.co.kr'; // 추적 픽셀은 외부 수신자가 로드하므로 공개 URL 고정
 
@@ -16,9 +17,36 @@ function escapeHtml(v: string) {
   return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// 이메일 본문 컨테이너 — 폭/기본 서체를 인라인으로 고정(메일 클라이언트는 <style> 를 자주 제거).
+// 본문 서식(굵기·정렬·이미지 크기)은 에디터가 이미 인라인 스타일로 넣으므로 그대로 살아남는다.
+const MAIL_SHELL_OPEN = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo','Malgun Gothic',sans-serif;max-width:600px;margin:0 auto;line-height:1.7;color:#333;font-size:15px;word-break:break-word">`;
+const MAIL_SHELL_CLOSE = `</div>`;
+
+// 관리자 작성 리치 HTML → 허용목록 정리 후 메일 컨테이너로 감싼다.
+function richBodyHtml(html: string) {
+  const inner = sanitizeRichHtml(html);
+  // 스타일이 없는 이미지(예: 붙여넣기)만 넘침 방지 스타일을 부여한다.
+  // 에디터가 넣은 이미지는 이미 width/정렬 인라인 스타일이 있으므로 건드리지 않는다.
+  // (style 을 중복으로 붙이면 메일 클라이언트가 앞의 것만 적용해 크기/정렬이 깨진다.)
+  const guarded = inner.replace(/<img(?![^>]*\bstyle=)/gi, '<img style="max-width:100%;height:auto"');
+  return `${MAIL_SHELL_OPEN}${guarded}${MAIL_SHELL_CLOSE}`;
+}
+
 // 관리자 답장/작성 본문(plain text)을 안전한 HTML 로 감싼다.
 function bodyHtml(text: string) {
-  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;line-height:1.7;color:#333;font-size:15px;white-space:pre-wrap">${escapeHtml(text)}</div>`;
+  return `${MAIL_SHELL_OPEN}<div style="white-space:pre-wrap">${escapeHtml(text)}</div>${MAIL_SHELL_CLOSE}`;
+}
+
+// HTML → 대체 텍스트(멀티파트 text/plain + 목록 미리보기/답장 인용용).
+function htmlToText(html: string): string {
+  return html
+    .replace(/<\s*(br|\/p|\/div|\/h2|\/h3|\/li)\s*>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/[ \t]+\n/g, '\n')
+    .trim();
 }
 
 // ── 목록 ──────────────────────────────────────────────────────────────
@@ -86,20 +114,36 @@ export async function POST(request: Request) {
   if (action === 'send') {
     const to = typeof body.to === 'string' ? body.to.trim() : '';
     const subject = typeof body.subject === 'string' ? body.subject.trim() : '';
-    const text = typeof body.text === 'string' ? body.text : '';
+    // 리치 HTML(에디터) 우선, 없으면 레거시 plain text.
+    const rawHtml = typeof body.html === 'string' ? body.html : '';
+    const rawText = typeof body.text === 'string' ? body.text : '';
     const inReplyTo = typeof body.inReplyTo === 'string' ? body.inReplyTo : null;
     if (!EMAIL_RE.test(to)) return NextResponse.json({ error: '받는사람 이메일 형식이 올바르지 않습니다.' }, { status: 400 });
     if (!subject) return NextResponse.json({ error: '제목을 입력해주세요.' }, { status: 400 });
-    if (!text.trim()) return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
+
+    // 본문 HTML/텍스트/텍스트대체 확정
+    let cleanHtml: string;
+    let textPart: string;
+    if (rawHtml.trim()) {
+      cleanHtml = richBodyHtml(rawHtml);
+      textPart = htmlToText(cleanHtml);
+      // 시각적으로 비어도(예: <p><br></p>) 이미지가 있으면 발송 허용
+      if (!textPart && !/<img\b/i.test(cleanHtml)) {
+        return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
+      }
+    } else {
+      if (!rawText.trim()) return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
+      cleanHtml = bodyHtml(rawText);
+      textPart = rawText;
+    }
 
     // 수신확인(오픈 트래킹) — 보내는 메일에만 보이지 않는 추적 픽셀을 심는다. 상대가 열어
     // 이미지를 로드하면 /api/mail/track/{id} 가 opened_at 을 기록. 저장본(body_html)에는
     // 픽셀을 넣지 않아 관리자 본인이 보낸편지함을 열 때 오탐(읽음)이 나지 않게 한다.
     const trackingId = randomUUID();
-    const cleanHtml = bodyHtml(text);
     const pixel = `<img src="${APP_URL}/api/mail/track/${trackingId}" width="1" height="1" alt="" style="display:none;max-height:0;overflow:hidden"/>`;
 
-    const result = await sendEmail({ to, subject, html: cleanHtml + pixel, text });
+    const result = await sendEmail({ to, subject, html: cleanHtml + pixel, text: textPart });
     if (!result.ok) {
       console.error('[api/admin/mail] send failed:', result.error);
       return NextResponse.json({ error: `발송 실패: ${result.error ?? '알 수 없는 오류'}` }, { status: 502 });
@@ -112,7 +156,7 @@ export async function POST(request: Request) {
       from_addr: process.env.MAIL_FROM || 'admin@marie.co.kr',
       to_addr: to.slice(0, 512),
       subject: subject.slice(0, 998),
-      body_text: text.slice(0, 500_000),
+      body_text: textPart.slice(0, 500_000),
       body_html: cleanHtml.slice(0, 500_000),
       message_id: result.id ?? null,
       in_reply_to: inReplyTo?.slice(0, 998) ?? null,

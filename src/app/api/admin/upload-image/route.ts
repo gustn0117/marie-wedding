@@ -14,6 +14,8 @@ const TARGETS = {
   notice: { bucket: 'job-images', prefix: 'admin/notices' },
   'event-cover': { bucket: 'event-images', prefix: 'admin/covers' },
   'event-content': { bucket: 'event-images', prefix: 'admin/content' },
+  // 관리자 메일 본문 이미지 — 공개 버킷이어야 외부 수신자의 메일 클라이언트가 로드한다.
+  mail: { bucket: 'event-images', prefix: 'admin/mail' },
 } as const;
 
 type Target = keyof typeof TARGETS;

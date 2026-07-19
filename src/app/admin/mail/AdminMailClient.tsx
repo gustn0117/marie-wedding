@@ -1,8 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { toast } from '@/shared/components/Toast';
+import RichTextEditor from '@/shared/components/RichTextEditor';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 
 interface Mail {
   id: string;
@@ -34,14 +36,29 @@ function addrOnly(v: string): string {
   return (m ? m[1] : v).trim();
 }
 
+function escapeHtml(v: string): string {
+  return v.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+// 에디터 HTML 이 실질적으로 비어있는지(텍스트/이미지 없음) 검사
+function htmlIsEmpty(html: string): boolean {
+  if (/<img\b/i.test(html)) return false;
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0;
+}
+
+interface Compose { to: string; subject: string; html: string; inReplyTo: string | null; }
+
 export default function AdminMailClient() {
   const [folder, setFolder] = useState<Folder>('inbound');
   const [items, setItems] = useState<Mail[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Mail | null>(null);
-  const [compose, setCompose] = useState<{ to: string; subject: string; text: string; inReplyTo: string | null } | null>(null);
+  const [compose, setCompose] = useState<Compose | null>(null);
   const [sending, setSending] = useState(false);
+  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
+  // 최신 본문 HTML — 이미지 업로드 완료가 onChange 로 반영되기 전 발송 눌러도 최신값을 쓴다.
+  const htmlRef = useRef('');
 
   const load = useCallback(async (f: Folder) => {
     setLoading(true);
@@ -81,16 +98,20 @@ export default function AdminMailClient() {
 
   const send = async () => {
     if (!compose) return;
-    if (!compose.to.trim() || !compose.subject.trim() || !compose.text.trim()) {
+    const html = htmlRef.current || compose.html;
+    if (!compose.to.trim() || !compose.subject.trim() || htmlIsEmpty(html)) {
       toast('받는사람·제목·내용을 모두 입력해주세요.', 'error');
       return;
     }
     setSending(true);
     try {
+      // 본문에 넣은 사진 업로드가 끝날 때까지 대기(끝나면 최신 HTML 로 발송)
+      await waitForUploads();
+      const finalHtml = htmlRef.current || html;
       const res = await apiFetch('/api/admin/mail', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ action: 'send', to: addrOnly(compose.to), subject: compose.subject, text: compose.text, inReplyTo: compose.inReplyTo }),
-      }, 20000);
+        body: JSON.stringify({ action: 'send', to: addrOnly(compose.to), subject: compose.subject, html: finalHtml, inReplyTo: compose.inReplyTo }),
+      }, 30000);
       const b = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(b.error || '발송 실패');
       toast('메일을 발송했습니다.', 'success');
@@ -103,11 +124,15 @@ export default function AdminMailClient() {
     }
   };
 
+  const openCompose = (c: Compose) => { htmlRef.current = c.html; setCompose(c); };
+
   const reply = (m: Mail) => {
     const to = addrOnly(m.from_addr);
     const subject = m.subject?.startsWith('Re:') ? m.subject : `Re: ${m.subject ?? ''}`;
-    const quoted = `\n\n--------\n${fmt(m.created_at)} ${addrOnly(m.from_addr)} 님이 작성:\n${(m.body_text ?? '').split('\n').map((l) => `> ${l}`).join('\n')}`;
-    setCompose({ to, subject, text: quoted, inReplyTo: m.message_id });
+    // 원문을 HTML 인용 블록으로 프리필(에디터에서 위에 답장 작성).
+    const quotedLines = escapeHtml(m.body_text ?? '').split('\n').map((l) => l || '<br>').join('<br>');
+    const quoted = `<p><br></p><p>――――――――</p><p>${escapeHtml(fmt(m.created_at))} ${escapeHtml(addrOnly(m.from_addr))} 님이 작성:</p><div style="color:#888">${quotedLines}</div>`;
+    openCompose({ to, subject, html: quoted, inReplyTo: m.message_id });
   };
 
   return (
@@ -117,7 +142,7 @@ export default function AdminMailClient() {
           <h1 className="text-xl font-bold text-ink">메일</h1>
           <p className="mt-0.5 text-xs text-gray-500">admin@marie.co.kr 송·수신 관리</p>
         </div>
-        <button type="button" onClick={() => setCompose({ to: '', subject: '', text: '', inReplyTo: null })} className="btn-primary text-sm">＋ 메일 작성</button>
+        <button type="button" onClick={() => openCompose({ to: '', subject: '', html: '', inReplyTo: null })} className="btn-primary text-sm">＋ 메일 작성</button>
       </div>
 
       {/* 탭 */}
@@ -212,8 +237,8 @@ export default function AdminMailClient() {
 
       {/* 작성/답장 모달 */}
       {compose && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onMouseDown={(e) => { if (e.target === e.currentTarget) setCompose(null); }}>
-          <div className="w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 p-4 overflow-y-auto" onMouseDown={(e) => { if (e.target === e.currentTarget && !sending) setCompose(null); }}>
+          <div className="my-6 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
             <h3 className="text-base font-bold text-ink">{compose.inReplyTo ? '답장' : '새 메일'}</h3>
             <div className="mt-4 space-y-3">
               <div>
@@ -226,12 +251,21 @@ export default function AdminMailClient() {
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-500">내용</label>
-                <textarea value={compose.text} onChange={(e) => setCompose({ ...compose, text: e.target.value })} rows={9} className="mt-1 w-full resize-y rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+                <p className="mb-1 text-[11px] text-gray-400">굵기·기울임·제목 크기·정렬·목록과 사진 첨부를 사용할 수 있어요.</p>
+                <RichTextEditor
+                  value={compose.html}
+                  onChange={(html) => { htmlRef.current = html; setCompose((c) => (c ? { ...c, html } : c)); }}
+                  placeholder="내용을 입력하세요. 상단 도구모음으로 서식과 사진을 넣을 수 있어요."
+                  minHeight={260}
+                  imageUploadEndpoint="/api/admin/upload-image?target=mail"
+                  onUploadPromise={trackUpload}
+                  disabled={sending}
+                />
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={() => setCompose(null)} disabled={sending} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50">취소</button>
-              <button type="button" onClick={send} disabled={sending} className="btn-primary text-sm disabled:opacity-50">{sending ? '발송 중…' : '발송'}</button>
+              <button type="button" onClick={send} disabled={sending} className="btn-primary text-sm disabled:opacity-50">{sending ? (pendingCount > 0 ? `사진 ${pendingCount}장 마무리 중…` : '발송 중…') : '발송'}</button>
             </div>
           </div>
         </div>
