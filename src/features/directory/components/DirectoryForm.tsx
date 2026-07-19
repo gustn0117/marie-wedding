@@ -18,6 +18,8 @@ import { validatePhone } from '@/shared/utils/validation';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { friendlyError } from '@/shared/utils/errorMessages';
 import { toast } from '@/shared/components/Toast';
+import { useFieldError } from '@/shared/hooks/useFieldError';
+import { FieldWarning, fieldWrapClass } from '@/shared/components/FieldWarning';
 import type { Profile } from '@/types/database';
 
 const COMPANY_SIZES = [
@@ -58,12 +60,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
   const saveLockRef = useRef(false);
   const [savingStep, setSavingStep] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { fieldError, setFieldError, showFieldIssue } = useFieldError('dirfield');
   const [success, setSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormDataRaw] = useState({
     contact_name: profile.contact_name || '',
     company_name: profile.company_name || '',
     business_type: profile.business_type || '',
@@ -75,6 +78,8 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     established_year: profile.established_year || '',
     address: profile.address || '',
   });
+  // 어떤 필드든 편집하면 그 자리의 검증 경고를 지운다(누락 필드 재입력 즉시 반영).
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setFieldError(null); setFormDataRaw(v); };
   const bioRef = useRef(formData.bio);
   const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
 
@@ -361,22 +366,19 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
   const handleSave = async () => {
     if (saveLockRef.current) return;
-    // 클라이언트 유효성 검사 — 서버 왕복 없이 즉시 피드백
-    if (!formData.region) {
-      setError('지역을 1개 이상 선택해주세요. 지역 카드를 눌러 활성화하세요.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    // 클라이언트 유효성 검사 — 누락 필드로 스크롤 + 그 자리에 경고
+    if (!formData.business_type) {
+      showFieldIssue({ field: 'business_type', message: '업종을 1개 이상 선택해주세요.' });
       return;
     }
-    if (!formData.business_type) {
-      setError('업종을 1개 이상 선택해주세요.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (!formData.region) {
+      showFieldIssue({ field: 'region', message: '지역을 1개 이상 선택해주세요. 지역 카드를 눌러 활성화하세요.' });
       return;
     }
     if (formData.phone.trim().length > 0) {
       const phoneCheck = validatePhone(formData.phone);
       if (!phoneCheck.valid) {
-        setError(phoneCheck.reason ?? '연락처를 정확히 입력해주세요.');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        showFieldIssue({ field: 'phone', message: phoneCheck.reason ?? '연락처를 정확히 입력해주세요.' });
         return;
       }
     }
@@ -665,14 +667,14 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       {/* STEP 2: 업종 & 지역 */}
       <Section step={2} title="업종과 지역을 선택하세요" description="복수 선택이 가능합니다.">
         <div className="space-y-5">
-          <FieldRow label="업종" hint="업체가 제공하는 모든 서비스를 선택하세요 (복수 선택 가능)">
+          <FieldRow label="업종" required hint="업체가 제공하는 모든 서비스를 선택하세요 (복수 선택 가능)" id="dirfield-business_type" error={fieldError?.field === 'business_type' ? fieldError.message : undefined}>
             <PillGroup
               options={BUSINESS_TYPES}
               selected={formData.business_type.split(',').filter(Boolean)}
               onToggle={(v) => togglePill('business_type', v)}
             />
           </FieldRow>
-          <FieldRow label="활동 지역" required hint="업체가 활동하는 지역을 모두 선택하세요">
+          <FieldRow label="활동 지역" required hint="업체가 활동하는 지역을 모두 선택하세요" id="dirfield-region" error={fieldError?.field === 'region' ? fieldError.message : undefined}>
             <PillGroup
               options={REGIONS}
               selected={formData.region.split(',').filter(Boolean)}
@@ -716,7 +718,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               />
             </FieldRow>
-            <FieldRow label="연락처">
+            <FieldRow label="연락처" id="dirfield-phone" error={fieldError?.field === 'phone' ? fieldError.message : undefined}>
               <input
                 type="tel"
                 value={formData.phone}
@@ -863,9 +865,9 @@ function Section({ step, title, description, children }: { step: number; title: 
   );
 }
 
-function FieldRow({ label, required, hint, children }: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
+function FieldRow({ label, required, hint, children, id, error }: { label: string; required?: boolean; hint?: string; children: React.ReactNode; id?: string; error?: string }) {
   return (
-    <div>
+    <div id={id} className={fieldWrapClass(!!error)}>
       <div className="mb-1.5">
         <label className="text-sm font-semibold text-gray-800">
           {label}
@@ -874,6 +876,7 @@ function FieldRow({ label, required, hint, children }: { label: string; required
         {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
       </div>
       {children}
+      {error && <FieldWarning message={error} />}
     </div>
   );
 }

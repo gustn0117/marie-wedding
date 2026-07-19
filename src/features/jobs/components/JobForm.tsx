@@ -9,6 +9,8 @@ import RichTextEditor from '@/shared/components/RichTextEditor';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { useFieldError } from '@/shared/hooks/useFieldError';
+import { FieldWarning } from '@/shared/components/FieldWarning';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -75,8 +77,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
   const [dirty, setDirty] = useState(false);
-  // 필드별 검증 경고 — { field: 어느 필드, message }. 제출 시 누락 필드로 스크롤 + 그 자리에 경고.
-  const [fieldError, setFieldError] = useState<{ field: string; message: string } | null>(null);
+  // 필드별 검증 경고 + 누락 필드로 스크롤(공용 훅). id 접두사 'jobfield'.
+  const { fieldError, setFieldError, showFieldIssue } = useFieldError('jobfield');
   const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
   useUnsavedChangesWarning(dirty);
   const [sections, setSections] = useState<JobSectionMap>(() => {
@@ -194,18 +196,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       }
     }
     return null;
-  };
-
-  // 누락 필드로 스크롤 이동 + 그 자리에 경고 표시
-  const showFieldIssue = (issue: FieldIssue) => {
-    setFieldError(issue);
-    requestAnimationFrame(() => {
-      const el = document.getElementById(`jobfield-${issue.field}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.querySelector<HTMLElement>('input, textarea, [contenteditable="true"], button')?.focus?.();
-      }
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -602,18 +592,6 @@ function FieldRow({ label, required, hint, children, id, error }: { label: strin
       {children}
       {error && <FieldWarning message={error} />}
     </div>
-  );
-}
-
-// 필드 아래 인라인 경고 메시지 (누락 시)
-function FieldWarning({ message }: { message: string }) {
-  return (
-    <p role="alert" className="mt-1.5 flex items-center gap-1 text-sm font-semibold text-state-urgent">
-      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-      </svg>
-      {message}
-    </p>
   );
 }
 

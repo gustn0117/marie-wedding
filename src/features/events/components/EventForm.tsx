@@ -11,6 +11,8 @@ import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { adminService } from '@/features/admin/services/admin-service';
+import { useFieldError } from '@/shared/hooks/useFieldError';
+import { FieldWarning, fieldWrapClass } from '@/shared/components/FieldWarning';
 import { EVENT_TYPES, EVENT_TYPE_DESCRIPTIONS } from '../types';
 import type { EventFormData } from '../types';
 
@@ -37,7 +39,8 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
   const [formData, setFormDataRaw] = useState<EventFormData>({ ...EMPTY, ...initialData });
   const [dirty, setDirty] = useState(false);
-  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  const { fieldError, setFieldError, showFieldIssue } = useFieldError('eventfield');
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
   useUnsavedChangesWarning(dirty);
   const contentRef = useRef(formData.content);
   // 응답만 유실된 생성 요청을 동일 PK로 안전하게 재시도한다.
@@ -89,9 +92,9 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingRef.current) return;
-    if (!formData.title.trim()) { setError('제목을 입력해주세요.'); return; }
+    if (!formData.title.trim()) { showFieldIssue({ field: 'title', message: '제목을 입력해주세요.' }); return; }
     if (!contentRef.current.trim() && !hasPendingUploads()) {
-      setError('내용을 입력해주세요.');
+      showFieldIssue({ field: 'content', message: '내용을 입력해주세요.' });
       return;
     }
 
@@ -120,7 +123,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       ]);
       const latestContent = contentRef.current;
       if (!latestContent.trim()) {
-        setError('내용을 입력해주세요.');
+        showFieldIssue({ field: 'content', message: '내용을 입력해주세요.' });
         return;
       }
       const payload = {
@@ -180,7 +183,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       </div>
 
       {/* Title */}
-      <div className="space-y-2">
+      <div id="eventfield-title" className={`space-y-2 ${fieldWrapClass(fieldError?.field === 'title')}`}>
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
           <span className="text-xs text-gray-400">{formData.title.length}/200</span>
@@ -193,6 +196,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
           className="w-full px-4 py-3 border border-gray-300 text-base focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
           maxLength={200}
         />
+        {fieldError?.field === 'title' && <FieldWarning message={fieldError.message} />}
         <div className="flex flex-wrap gap-1.5">
           {['코엑스 웨딩박람회 일정', 'SETEC 웨딩페어 채용행사', '드레스 브랜드 쇼케이스'].map((example) => (
             <button
@@ -244,7 +248,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
       </div>
 
       {/* Content */}
-      <div className="space-y-2">
+      <div id="eventfield-content" className={`space-y-2 ${fieldWrapClass(fieldError?.field === 'content')}`}>
         <label className="block text-sm font-semibold text-gray-800">상세 내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
@@ -256,6 +260,7 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
           onUploadPromise={trackUpload}
           disabled={submitting}
         />
+        {fieldError?.field === 'content' && <FieldWarning message={fieldError.message} />}
       </div>
 
       {/* Event details */}

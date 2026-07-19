@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { useFieldError } from '@/shared/hooks/useFieldError';
+import { FieldWarning, fieldWrapClass } from '@/shared/components/FieldWarning';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
@@ -30,7 +32,8 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   });
   // 미저장 변경 추적 — 이탈 시 경고(긴 본문 소실 방지).
   const [dirty, setDirty] = useState(false);
-  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  const { fieldError, setFieldError, showFieldIssue } = useFieldError('postfield');
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
   useUnsavedChangesWarning(dirty);
   const contentRef = useRef(formData.content);
   // 같은 작성 폼의 재시도는 동일 ID를 사용해 응답 유실 시 중복 글을 만들지 않는다.
@@ -57,10 +60,8 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
     e.preventDefault();
     if (submittingRef.current) return;
     if (!isValid) {
-      if (meaningfulChars(titleClean) < 2) setError('제목에 영문/숫자/한글을 2자 이상 입력해주세요.');
-      else if (meaningfulChars(contentClean) < 5) setError('내용을 5자 이상 입력해주세요.');
-      else setError('모든 필수 항목을 입력해주세요.');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (meaningfulChars(titleClean) < 2) showFieldIssue({ field: 'title', message: '제목에 영문/숫자/한글을 2자 이상 입력해주세요.' });
+      else showFieldIssue({ field: 'content', message: '내용을 5자 이상 입력해주세요.' });
       return;
     }
     if (!isEdit && !profileId) {
@@ -121,7 +122,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       )}
 
       {/* Title */}
-      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
+      <div id="postfield-title" className={`space-y-2 rounded border border-gray-200 bg-white p-4 ${fieldWrapClass(fieldError?.field === 'title')}`}>
         <div className="flex items-center justify-between">
           <label className="text-sm font-semibold text-gray-800">제목 <span className="text-state-urgent">*</span></label>
           <span className="text-xs text-gray-400">{formData.title.length}/100</span>
@@ -135,10 +136,11 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           maxLength={100}
           required
         />
+        {fieldError?.field === 'title' && <FieldWarning message={fieldError.message} />}
       </div>
 
       {/* Content */}
-      <div className="space-y-2 rounded border border-gray-200 bg-white p-4">
+      <div id="postfield-content" className={`space-y-2 rounded border border-gray-200 bg-white p-4 ${fieldWrapClass(fieldError?.field === 'content')}`}>
         <label className="block text-sm font-semibold text-gray-800">내용 <span className="text-state-urgent">*</span></label>
         <RichTextEditor
           value={formData.content}
@@ -151,6 +153,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           onUploadPromise={trackUpload}
           disabled={isSubmitting}
         />
+        {fieldError?.field === 'content' && <FieldWarning message={fieldError.message} />}
       </div>
 
       {/* Actions */}
