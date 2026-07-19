@@ -100,6 +100,7 @@ MIGRATIONS=(
   "20260719000100_job_reopen_on_future_deadline.sql"
   "20260719000200_storage_security_hardening.sql"
   "20260719000300_purge_resync_like_count.sql"
+  "20260719000400_admin_mail.sql"
 )
 
 psql_value() {

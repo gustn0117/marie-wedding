@@ -100,6 +100,7 @@ export const ROUTES = {
   ADMIN_COMMENTS: '/admin/comments',
   ADMIN_REPORTS: '/admin/reports',
   ADMIN_INQUIRIES: '/admin/inquiries',
+  ADMIN_MAIL: '/admin/mail',
   ADMIN_BROADCAST: '/admin/broadcast',
   ADMIN_EVENTS: '/admin/events',
   ADMIN_EVENTS_NEW: '/admin/events/new',
