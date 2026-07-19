@@ -98,6 +98,8 @@ MIGRATIONS=(
   "20260718000400_security_storage_and_admin_role.sql"
   "20260718000500_profiles_featured_columns.sql"
   "20260719000100_job_reopen_on_future_deadline.sql"
+  "20260719000200_storage_security_hardening.sql"
+  "20260719000300_purge_resync_like_count.sql"
 )
 
 psql_value() {

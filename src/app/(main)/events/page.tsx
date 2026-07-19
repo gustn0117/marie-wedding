@@ -61,17 +61,24 @@ async function getEvents(searchParams: Record<string, string | undefined>) {
       query = query.is('start_date', null).is('end_date', null);
       break;
     default:
-      query = query.or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`);
+      // 기본(all) = '종료되지 않음' = end_date >= 오늘 OR end_date 없음.
+      // (upcoming ∪ ongoing ∪ always 의 정확한 합집합 — 상시진행(종료일 없음, 시작 과거)이
+      //  예전 술어에서 누락돼 목록·카운트에서 사라지던 것 수정.)
+      query = query.or(`end_date.gte.${todayIso},end_date.is.null`);
   }
+
+  const pageSize = 24;
+  const page = Math.max(1, parseInt(searchParams.page || '1', 10) || 1);
+  const from = (page - 1) * pageSize;
 
   query = query
     .order('is_pinned', { ascending: false })
     .order('start_date', { ascending: true, nullsFirst: false })
     .order('created_at', { ascending: false })
-    .range(0, 49);
+    .range(from, from + pageSize - 1);
 
   const { data, count } = await query;
-  return { events: (data ?? []) as Event[], count: count ?? 0, statusFilter };
+  return { events: (data ?? []) as Event[], count: count ?? 0, statusFilter, page, pageSize };
 }
 
 function getTypeLabel(type: string): string {
@@ -119,11 +126,22 @@ function buildStatusHref(status: StatusFilter, type: string, q: string): string 
   return qs ? `/events?${qs}` : '/events';
 }
 
+function buildPageHref(page: number, status: StatusFilter, type: string, q: string): string {
+  const params = new URLSearchParams();
+  if (status !== 'all') params.set('status', status);
+  if (type) params.set('type', type);
+  if (q) params.set('q', q);
+  if (page > 1) params.set('page', String(page));
+  const qs = params.toString();
+  return qs ? `/events?${qs}` : '/events';
+}
+
 export default async function EventsPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
-  const { events, count, statusFilter } = await getEvents(resolvedSearchParams);
+  const { events, count, statusFilter, page, pageSize } = await getEvents(resolvedSearchParams);
   const activeType = resolvedSearchParams.type ?? '';
   const q = resolvedSearchParams.q ?? '';
+  const totalPages = Math.max(1, Math.ceil(count / pageSize));
 
   // 상단 고정 이벤트와 일반 이벤트 분리
   const pinned = events.filter(e => e.is_pinned);
@@ -234,6 +252,24 @@ export default async function EventsPage({ searchParams }: PageProps) {
                 <EventCard key={event.id} event={event} />
               ))}
             </div>
+          )}
+
+          {/* 페이지네이션 — 24건 초과 시 노출(51+ 접근 불가 방지) */}
+          {totalPages > 1 && (
+            <nav className="flex flex-wrap items-center justify-center gap-1.5 pt-2" aria-label="페이지">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Link
+                  key={p}
+                  href={buildPageHref(p, statusFilter, activeType, q)}
+                  aria-current={p === page ? 'page' : undefined}
+                  className={`min-w-9 rounded-md px-3 py-1.5 text-sm font-bold transition-colors ${
+                    p === page ? 'bg-ink text-white' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {p}
+                </Link>
+              ))}
+            </nav>
           )}
         </div>
       )}

@@ -139,6 +139,44 @@ export async function POST(request: Request) {
     }
   }
 
+  // website: 정규화(거부 아님) — javascript:/data: 등 저장형 XSS 방지(어드민/마이페이지가 href 로 렌더).
+  // 스킴 없는 흔한 입력(www.naver.com)은 https:// 를 보정해 저장하고, 위험/무효 스킴은 조용히
+  // 드롭(null)해 저장 전체는 통과시킨다. (전체 400 으로 죽이면 무관한 필드 저장까지 막혀버림)
+  if (Object.prototype.hasOwnProperty.call(updates, 'website')) {
+    const raw = typeof updates.website === 'string' ? updates.website.trim() : '';
+    if (!raw) {
+      payload.website = null;
+    } else {
+      const candidate = /^[a-z][a-z0-9+.-]*:/i.test(raw) ? raw : `https://${raw}`;
+      let ok = false;
+      try { const u = new URL(candidate); ok = u.protocol === 'http:' || u.protocol === 'https:'; } catch { ok = false; }
+      payload.website = ok ? candidate : null;
+    }
+  }
+
+  // 이미지/gallery: 신뢰 스토리지 '키'(스킴 없음) 또는 우리 Supabase 스토리지 호스트 URL 만 허용
+  // — 임의 외부 URL(추적 비콘·피싱)·javascript:/data: 저장 차단. 기존 URL형 값과의 호환은 유지.
+  const supaOrigin = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
+  const isStorageKey = (s: unknown): s is string => {
+    if (typeof s !== 'string' || s.length === 0 || s.length > 1024) return false;
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(s) && !s.startsWith('//') && !s.startsWith('/')) return true; // 스킴 없는 스토리지 키
+    return !!supaOrigin && s.startsWith(supaOrigin + '/'); // 신뢰 Supabase 호스트 절대 URL
+  };
+  for (const key of ['profile_image', 'cover_image'] as const) {
+    if (Object.prototype.hasOwnProperty.call(updates, key)) {
+      const v = updates[key];
+      if (v === null || v === '') payload[key] = null;
+      else if (isStorageKey(v)) payload[key] = v;
+      else return NextResponse.json({ error: '이미지 경로가 올바르지 않습니다.' }, { status: 400 });
+    }
+  }
+  if (Object.prototype.hasOwnProperty.call(updates, 'gallery')) {
+    const g = updates.gallery;
+    if (g === null) payload.gallery = null;
+    else if (Array.isArray(g) && g.length <= 30 && g.every(isStorageKey)) payload.gallery = g;
+    else return NextResponse.json({ error: '갤러리 형식이 올바르지 않습니다.' }, { status: 400 });
+  }
+
   // UPDATE — .select() 없이. RETURNING 직렬화로 인해 trigger/RLS 이슈 발생 가능
   const { error: updateErr } = await service
     .from('profiles')

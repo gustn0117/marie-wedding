@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getRegionLabel, getBusinessTypeLabels } from '@/shared/utils/format';
+import { safeExternalHref } from '@/shared/utils/safeUrl';
 import { toast } from '@/shared/components/Toast';
 
 type Detail = Awaited<ReturnType<typeof adminService.getUserDetail>>;
@@ -157,11 +158,11 @@ function DetailBody({ d }: { d: Detail }) {
           {p.bio ? <p className="whitespace-pre-wrap text-sm text-gray-700">{stripHtml(p.bio)}</p> : <span className="text-gray-400">-</span>}
         </Field>
         <Field label="웹사이트">
-          {p.website ? (
-            <a href={p.website} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+          {safeExternalHref(p.website) ? (
+            <a href={safeExternalHref(p.website)} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
               {p.website}
             </a>
-          ) : '-'}
+          ) : (p.website || '-')}
         </Field>
         <Field label="프로필 이미지">{p.profile_image || '-'}</Field>
         <Field label="공개 디렉토리 등록">{p.is_directory_listed ? '공개' : '비공개'}</Field>

@@ -11,7 +11,7 @@ export async function createClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       db: { schema: SUPABASE_SCHEMA },
-      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME, secure: process.env.NODE_ENV === 'production' },
       cookies: {
         getAll() {
           return cookieStore.getAll();

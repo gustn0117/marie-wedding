@@ -12,7 +12,7 @@ export function createClient(signal?: AbortSignal) {
       // timeout 이후 모든 Supabase 요청이 영구 abort된다.
       isSingleton: !signal,
       db: { schema: SUPABASE_SCHEMA },
-      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME, secure: process.env.NODE_ENV === 'production' },
       ...(signal ? {
         global: {
           fetch: (input: RequestInfo | URL, init?: RequestInit) => (

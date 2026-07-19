@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,13 @@ export async function POST(req: Request) {
     }
 
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+    // 제재(banned) 유저는 대화 시작 차단.
+    const service = createServiceClient();
+    const { data: me } = await service.from('profiles').select('banned_at').eq('user_id', user.id).maybeSingle();
+    if (me?.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
+
     const { data, error } = await supabase.rpc('start_conversation', { p_other_profile_id: targetProfileId });
     if (error) {
       console.error('[api/messages/start] rpc error:', error.message);

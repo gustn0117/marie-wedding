@@ -45,6 +45,11 @@ apply_pre_app() {
   # refresh_job_status: 미래 마감일로 수정 시 closed/urgent → open 재오픈 (sweep v3 #5).
   # 빠지면 릴리스 run 이 재오픈 버그가 있는 옛 트리거로 되돌린다.
   apply_file "20260719000100_job_reopen_on_future_deadline.sql"
+  # 스토리지 보안(sweep v4 #1/#3): 반드시 20260718000400 '뒤'에 와야 한다 — 그 파일이
+  # job_images_update/delete 를 재생성하므로, 이 파일이 다시 DROP 해 교차테넌트 훼손 구멍을 막는다.
+  apply_file "20260719000200_storage_security_hardening.sql"
+  # purge like_count 재동기화(sweep v4 #9): 20260718000100 원본 purge 를 덮어써야 하므로 뒤에 온다.
+  apply_file "20260719000300_purge_resync_like_count.sql"
 }
 
 apply_security_boundary() {

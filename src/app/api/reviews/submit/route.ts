@@ -38,6 +38,10 @@ export async function POST(request: Request) {
   const { data: { user } } = await ssr.auth.getUser();
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
 
+  // 제재(banned) 유저는 리뷰 제출 차단 (상대 평판 조작 방지).
+  const { data: me } = await ssr.from('profiles').select('banned_at').eq('user_id', user.id).maybeSingle();
+  if (me?.banned_at) return NextResponse.json({ error: '제재된 계정은 이용할 수 없습니다.' }, { status: 403 });
+
   const { data, error } = await ssr.rpc('submit_review', {
     p_application_id: applicationId,
     p_tag_ids: tagIds,

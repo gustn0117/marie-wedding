@@ -13,7 +13,7 @@ export async function updateSession(request: NextRequest) {
     SUPABASE_SERVER_URL,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
+      cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME, secure: process.env.NODE_ENV === 'production' },
       cookies: {
         getAll() {
           return request.cookies.getAll();
