@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
 import { sendEmail } from '@/features/notifications/lib/email';
-import { sanitizeRichHtml } from '@/shared/utils/sanitizeRichHtml';
+import { sanitizeRichHtml, sanitizeEmailHtml } from '@/shared/utils/sanitizeRichHtml';
 
 const APP_URL = 'https://marie.co.kr'; // 추적 픽셀은 외부 수신자가 로드하므로 공개 URL 고정
 
@@ -40,7 +40,9 @@ function bodyHtml(text: string) {
 // HTML → 대체 텍스트(멀티파트 text/plain + 목록 미리보기/답장 인용용).
 function htmlToText(html: string): string {
   return html
-    .replace(/<\s*(br|\/p|\/div|\/h2|\/h3|\/li)\s*>/gi, '\n')
+    // style/script 블록은 내용까지 통째로 제거(태그만 지우면 CSS 가 본문 텍스트로 샌다)
+    .replace(/<(style|script)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<\s*(br|\/p|\/div|\/h2|\/h3|\/h1|\/h4|\/h5|\/h6|\/li|\/tr|\/table)\s*>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/gi, ' ')
     .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
@@ -114,7 +116,8 @@ export async function POST(request: Request) {
   if (action === 'send') {
     const to = typeof body.to === 'string' ? body.to.trim() : '';
     const subject = typeof body.subject === 'string' ? body.subject.trim() : '';
-    // 리치 HTML(에디터) 우선, 없으면 레거시 plain text.
+    // mode: 'html' = 완성된 HTML 소스 직접 발송, 그 외 = 리치 에디터 산출물.
+    const mode = body.mode === 'html' ? 'html' : 'rich';
     const rawHtml = typeof body.html === 'string' ? body.html : '';
     const rawText = typeof body.text === 'string' ? body.text : '';
     const inReplyTo = typeof body.inReplyTo === 'string' ? body.inReplyTo : null;
@@ -124,7 +127,15 @@ export async function POST(request: Request) {
     // 본문 HTML/텍스트/텍스트대체 확정
     let cleanHtml: string;
     let textPart: string;
-    if (rawHtml.trim()) {
+    if (mode === 'html') {
+      // 소스 모드 — 넓은 이메일 허용목록으로 정리, 템플릿 레이아웃을 살리기 위해 감싸지 않는다.
+      if (!rawHtml.trim()) return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
+      cleanHtml = sanitizeEmailHtml(rawHtml);
+      textPart = htmlToText(cleanHtml);
+      if (!textPart && !/<img\b/i.test(cleanHtml)) {
+        return NextResponse.json({ error: '내용이 비어 있습니다. HTML 본문을 확인해주세요.' }, { status: 400 });
+      }
+    } else if (rawHtml.trim()) {
       cleanHtml = richBodyHtml(rawHtml);
       textPart = htmlToText(cleanHtml);
       // 시각적으로 비어도(예: <p><br></p>) 이미지가 있으면 발송 허용

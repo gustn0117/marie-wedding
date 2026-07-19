@@ -46,7 +46,7 @@ function htmlIsEmpty(html: string): boolean {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0;
 }
 
-interface Compose { to: string; subject: string; html: string; inReplyTo: string | null; }
+interface Compose { to: string; subject: string; mode: 'rich' | 'html'; html: string; inReplyTo: string | null; }
 
 export default function AdminMailClient() {
   const [folder, setFolder] = useState<Folder>('inbound');
@@ -107,10 +107,11 @@ export default function AdminMailClient() {
     try {
       // 본문에 넣은 사진 업로드가 끝날 때까지 대기(끝나면 최신 HTML 로 발송)
       await waitForUploads();
-      const finalHtml = htmlRef.current || html;
+      // 소스 모드는 textarea 값을 그대로, 리치 모드는 업로드 반영된 최신 htmlRef 를 쓴다.
+      const finalHtml = compose.mode === 'html' ? compose.html : (htmlRef.current || html);
       const res = await apiFetch('/api/admin/mail', {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ action: 'send', to: addrOnly(compose.to), subject: compose.subject, html: finalHtml, inReplyTo: compose.inReplyTo }),
+        body: JSON.stringify({ action: 'send', to: addrOnly(compose.to), subject: compose.subject, mode: compose.mode, html: finalHtml, inReplyTo: compose.inReplyTo }),
       }, 30000);
       const b = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(b.error || '발송 실패');
@@ -126,13 +127,24 @@ export default function AdminMailClient() {
 
   const openCompose = (c: Compose) => { htmlRef.current = c.html; setCompose(c); };
 
+  // 작성 모드 전환. 소스→편집기는 표/스타일이 정리될 수 있어 확인을 받는다.
+  const switchMode = (next: 'rich' | 'html') => {
+    if (!compose || compose.mode === next) return;
+    if (next === 'rich' && /<(table|style|center|font|h1|h4|h5|h6)\b/i.test(compose.html)
+      && !confirm('서식 편집기로 바꾸면 표·스타일 등 일부 HTML 이 단순화될 수 있습니다. 계속할까요?')) {
+      return;
+    }
+    htmlRef.current = compose.html;
+    setCompose({ ...compose, mode: next });
+  };
+
   const reply = (m: Mail) => {
     const to = addrOnly(m.from_addr);
     const subject = m.subject?.startsWith('Re:') ? m.subject : `Re: ${m.subject ?? ''}`;
     // 원문을 HTML 인용 블록으로 프리필(에디터에서 위에 답장 작성).
     const quotedLines = escapeHtml(m.body_text ?? '').split('\n').map((l) => l || '<br>').join('<br>');
     const quoted = `<p><br></p><p>――――――――</p><p>${escapeHtml(fmt(m.created_at))} ${escapeHtml(addrOnly(m.from_addr))} 님이 작성:</p><div style="color:#888">${quotedLines}</div>`;
-    openCompose({ to, subject, html: quoted, inReplyTo: m.message_id });
+    openCompose({ to, subject, mode: 'rich', html: quoted, inReplyTo: m.message_id });
   };
 
   return (
@@ -142,7 +154,7 @@ export default function AdminMailClient() {
           <h1 className="text-xl font-bold text-ink">메일</h1>
           <p className="mt-0.5 text-xs text-gray-500">admin@marie.co.kr 송·수신 관리</p>
         </div>
-        <button type="button" onClick={() => openCompose({ to: '', subject: '', html: '', inReplyTo: null })} className="btn-primary text-sm">＋ 메일 작성</button>
+        <button type="button" onClick={() => openCompose({ to: '', subject: '', mode: 'rich', html: '', inReplyTo: null })} className="btn-primary text-sm">＋ 메일 작성</button>
       </div>
 
       {/* 탭 */}
@@ -250,17 +262,49 @@ export default function AdminMailClient() {
                 <input value={compose.subject} onChange={(e) => setCompose({ ...compose, subject: e.target.value })} className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none" />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-500">내용</label>
-                <p className="mb-1 text-[11px] text-gray-400">굵기·기울임·제목 크기·정렬·목록과 사진 첨부를 사용할 수 있어요.</p>
-                <RichTextEditor
-                  value={compose.html}
-                  onChange={(html) => { htmlRef.current = html; setCompose((c) => (c ? { ...c, html } : c)); }}
-                  placeholder="내용을 입력하세요. 상단 도구모음으로 서식과 사진을 넣을 수 있어요."
-                  minHeight={260}
-                  imageUploadEndpoint="/api/admin/upload-image?target=mail"
-                  onUploadPromise={trackUpload}
-                  disabled={sending}
-                />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-500">내용</label>
+                  <div className="inline-flex overflow-hidden rounded border border-gray-300 text-[11px] font-bold">
+                    <button type="button" onClick={() => switchMode('rich')} disabled={sending}
+                      className={`px-2.5 py-1 ${compose.mode === 'rich' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>서식 편집기</button>
+                    <button type="button" onClick={() => switchMode('html')} disabled={sending}
+                      className={`px-2.5 py-1 border-l border-gray-300 ${compose.mode === 'html' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>HTML 소스</button>
+                  </div>
+                </div>
+                {compose.mode === 'rich' ? (
+                  <>
+                    <p className="mb-1 mt-1 text-[11px] text-gray-400">굵기·기울임·제목 크기·정렬·목록과 사진 첨부를 사용할 수 있어요.</p>
+                    <RichTextEditor
+                      value={compose.html}
+                      onChange={(html) => { htmlRef.current = html; setCompose((c) => (c ? { ...c, html } : c)); }}
+                      placeholder="내용을 입력하세요. 상단 도구모음으로 서식과 사진을 넣을 수 있어요."
+                      minHeight={260}
+                      imageUploadEndpoint="/api/admin/upload-image?target=mail"
+                      onUploadPromise={trackUpload}
+                      disabled={sending}
+                    />
+                  </>
+                ) : (
+                  <div className="mt-1 space-y-2">
+                    <p className="text-[11px] text-gray-400">완성된 HTML 코드를 붙여넣으세요. 표·링크·인라인 스타일이 그대로 발송됩니다. (<code>&lt;script&gt;</code>·이벤트핸들러 등 위험 요소는 발송 시 자동 제거)</p>
+                    <textarea
+                      value={compose.html}
+                      onChange={(e) => { htmlRef.current = e.target.value; setCompose((c) => (c ? { ...c, html: e.target.value } : c)); }}
+                      placeholder={'<table width="600" ...>\n  ...\n</table>'}
+                      spellCheck={false}
+                      className="h-56 w-full resize-y rounded border border-gray-300 p-3 font-mono text-[12px] leading-relaxed text-gray-800 focus:border-primary focus:outline-none"
+                    />
+                    <div>
+                      <p className="mb-1 text-[11px] font-bold text-gray-500">미리보기</p>
+                      <iframe
+                        title="HTML 미리보기"
+                        sandbox="allow-popups allow-popups-to-escape-sandbox"
+                        srcDoc={`<!doctype html><meta charset="utf-8"><base target="_blank"><style>body{margin:0;padding:8px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Apple SD Gothic Neo',sans-serif}img{max-width:100%}</style>${compose.html || '<p style="color:#999">미리볼 내용이 없습니다.</p>'}`}
+                        className="h-64 w-full rounded border border-gray-200 bg-white"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
