@@ -40,6 +40,9 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
       );
       setLiked(result.liked);
       setCount(result.likeCount);
+      // 상세 페이지 헤더/푸터의 SSR 좋아요·댓글 수를 실제값과 동기화(같은 화면 불일치 방지).
+      // 클라 컴포넌트 상태는 refresh 후에도 보존되므로 UX 튐 없음.
+      router.refresh();
     } catch {
       // revert
       setLiked(liked);

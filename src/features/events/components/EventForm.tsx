@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
@@ -10,6 +9,7 @@ import { withTimeout } from '@/shared/utils/withTimeout';
 import { createClient } from '@/lib/supabase/client';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { adminService } from '@/features/admin/services/admin-service';
 import { EVENT_TYPES, EVENT_TYPE_DESCRIPTIONS } from '../types';
 import type { EventFormData } from '../types';
@@ -35,7 +35,10 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
   const router = useRouter();
   const isEdit = !!eventId;
 
-  const [formData, setFormData] = useState<EventFormData>({ ...EMPTY, ...initialData });
+  const [formData, setFormDataRaw] = useState<EventFormData>({ ...EMPTY, ...initialData });
+  const [dirty, setDirty] = useState(false);
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  useUnsavedChangesWarning(dirty);
   const contentRef = useRef(formData.content);
   // 응답만 유실된 생성 요청을 동일 PK로 안전하게 재시도한다.
   const createIdRef = useRef<string | null>(null);
@@ -312,7 +315,11 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
       {/* Actions */}
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
-        <Link href="/admin/events" className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50">취소</Link>
+        <button
+          type="button"
+          onClick={() => { if (!dirty || confirm('작성 중인 내용이 저장되지 않습니다. 나가시겠어요?')) router.push('/admin/events'); }}
+          className="px-5 py-2.5 border border-gray-300 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >취소</button>
         <button
           type="submit"
           disabled={submitting}

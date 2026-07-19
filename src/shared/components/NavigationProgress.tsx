@@ -9,9 +9,12 @@ export default function NavigationProgress() {
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const prevUrl = useRef('');
 
   const start = useCallback(() => {
+    // 이전 네비게이션의 지연된 '숨김' 타이머가 새 네비게이션 진행바를 끄지 않게 취소.
+    if (hideTimerRef.current) { clearTimeout(hideTimerRef.current); hideTimerRef.current = null; }
     setVisible(true);
     setProgress(0);
 
@@ -27,10 +30,12 @@ export default function NavigationProgress() {
 
   const done = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     setProgress(100);
-    setTimeout(() => {
+    hideTimerRef.current = setTimeout(() => {
       setVisible(false);
       setProgress(0);
+      hideTimerRef.current = null;
     }, 200);
   }, []);
 
@@ -79,6 +84,7 @@ export default function NavigationProgress() {
       history.pushState = origPushState;
       history.replaceState = origReplaceState;
       if (timerRef.current) clearInterval(timerRef.current);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
   }, [pathname, searchParams, start]);
 

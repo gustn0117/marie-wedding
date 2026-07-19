@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { reportService } from '@/features/reports/services/report-service';
 import type { ReportTargetType } from '@/types/database';
@@ -26,6 +26,7 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
   const [reason, setReason] = useState<string>(REASONS[0]);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false); // 동기 재진입 가드 — disabled 리렌더 전 더블클릭 중복접수 방지
 
   // Escape 로 모달 닫기 + body scroll lock (모바일 배경 스크롤 방지)
   useEffect(() => {
@@ -41,6 +42,8 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
   }, [open]);
 
   const submit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setSubmitting(true);
     try {
       await withTimeout(reportService.createReport({
@@ -59,6 +62,7 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
       toast('신고 접수에 실패했습니다. 잠시 후 다시 시도해 주세요.', 'error');
     } finally {
       setSubmitting(false);
+      submittingRef.current = false;
     }
   };
 

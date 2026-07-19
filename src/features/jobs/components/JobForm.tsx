@@ -8,6 +8,7 @@ import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import type { JobFormData } from '../types';
 
 interface JobFormProps {
@@ -71,7 +72,11 @@ function stripHtml(html: string) {
 }
 
 export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
-  const [formData, setFormData] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
+  const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
+  // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
+  const [dirty, setDirty] = useState(false);
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  useUnsavedChangesWarning(dirty);
   const [sections, setSections] = useState<JobSectionMap>(() => {
     if (!initialData?.description) return { ...EMPTY_JOB_SECTIONS };
     const parsed = parseSections(initialData.description);
@@ -118,6 +123,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const plainComposed = stripHtml(composedDescription);
 
   const setSection = (key: JobSectionKey, value: string) => {
+    setDirty(true);
     const next = { ...sectionsRef.current, [key]: value };
     sectionsRef.current = next;
     setSections(next);
@@ -524,7 +530,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => window.history.back()}
+            onClick={() => { if (!dirty || confirm('작성 중인 내용이 저장되지 않습니다. 나가시겠어요?')) window.history.back(); }}
             className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary"
           >
             취소

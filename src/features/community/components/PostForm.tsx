@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import RichTextEditor from '@/shared/components/RichTextEditor';
@@ -21,12 +22,16 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
   const router = useRouter();
   const isEdit = !!postId;
 
-  const [formData, setFormData] = useState<PostFormData>({
+  const [formData, setFormDataRaw] = useState<PostFormData>({
     title: initialData?.title ?? '',
     content: initialData?.content ?? '',
     // 게시판(카테고리) 폐지 — 폼에서 선택 없이 기본값으로 저장(DB category 컬럼 호환)
     category: initialData?.category ?? 'jobtip',
   });
+  // 미저장 변경 추적 — 이탈 시 경고(긴 본문 소실 방지).
+  const [dirty, setDirty] = useState(false);
+  const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFormDataRaw(v); };
+  useUnsavedChangesWarning(dirty);
   const contentRef = useRef(formData.content);
   // 같은 작성 폼의 재시도는 동일 ID를 사용해 응답 유실 시 중복 글을 만들지 않는다.
   const createIdRef = useRef<string | null>(null);
@@ -152,7 +157,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => { if (!dirty || confirm('작성 중인 내용이 저장되지 않습니다. 나가시겠어요?')) router.back(); }}
           className="rounded border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary"
         >
           취소

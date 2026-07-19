@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { bookmarkService } from '@/features/bookmarks/services/bookmark-service';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -23,13 +23,20 @@ export default function BookmarkButton({ targetType, targetId, label = '저장',
   const { profile } = useAuth();
   const [saved, setSaved] = useState(initialSaved);
   const [loading, setLoading] = useState(false);
+  // 사용자가 토글하면 true — 이후 mount 조회 응답(토글 전 시작분)이 늦게 도착해도 덮어쓰지 않게 한다.
+  const interactedRef = useRef(false);
 
   useEffect(() => {
     if (!profile) return;
+    // 대상/프로필 변경(재실행)마다 초기화. cancelled 는 언마운트/재실행 취소,
+    // interactedRef 는 '토글 이후 stale 조회 무시' 를 담당(둘 다 필요).
+    let cancelled = false;
+    interactedRef.current = false;
     bookmarkService
       .getBookmark(profile.id, targetType, targetId)
-      .then((bookmark) => setSaved(!!bookmark))
+      .then((bookmark) => { if (!cancelled && !interactedRef.current) setSaved(!!bookmark); })
       .catch(() => {});
+    return () => { cancelled = true; };
   }, [profile, targetId, targetType]);
 
   const handleClick = async () => {
@@ -40,6 +47,7 @@ export default function BookmarkButton({ targetType, targetId, label = '저장',
       return;
     }
     if (loading) return;
+    interactedRef.current = true; // 이 시점 이후엔 mount 조회 결과보다 토글 결과가 우선.
     setLoading(true);
     try {
       const result = await withTimeout(

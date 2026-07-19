@@ -96,6 +96,11 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const viewer = await getCurrentVerifiedProfile();
   const isOwner = viewer.ok && viewer.profileId === profile.id;
 
+  // 디렉토리 노출을 끈(is_directory_listed=false) 프로필은 본인 외에는 상세 접근 차단 —
+  // 목록/홈은 이미 is_directory_listed=true 만 노출하므로 상세도 동일 조건을 강제해 '숨김'
+  // 옵트아웃이 실제로 동작하게 한다(공고/커뮤니티 작성자 id 로 우회 접근 차단).
+  if (!profile.is_directory_listed && !isOwner) notFound();
+
   const displayName = profile.company_name || profile.contact_name;
 
   return (

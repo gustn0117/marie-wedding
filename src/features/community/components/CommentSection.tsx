@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
@@ -21,6 +22,7 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ postId, postAuthorId, adoptedCommentId: initialAdopted, initialAuthenticated = false }: CommentSectionProps) {
+  const router = useRouter();
   const { profile, isLoading } = useAuth();
   // useAuth 가 아직 로딩중이면 SSR prop 을 신뢰 (로그인 CTA vs 폼 flash 방지)
   const isAuthenticated = profile ? true : (isLoading ? initialAuthenticated : false);
@@ -87,6 +89,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
       createIdRef.current = createId;
       const newComment = await withTimeout(communityService.createComment(postId, content.trim(), createId), 12000);
       setComments((prev) => [...prev, newComment]);
+      router.refresh(); // 상세 헤더/푸터 SSR 댓글 수 동기화
       setContent('');
       createIdRef.current = null;
     } catch (err) {
@@ -104,6 +107,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     try {
       await withTimeout(communityService.deleteComment(commentId), 10000, '댓글 삭제 지연');
       setComments((prev) => prev.filter((c) => c.id !== commentId));
+      router.refresh(); // 상세 헤더/푸터 SSR 댓글 수 동기화
       toast('삭제되었습니다.', 'success');
     } catch {
       toast('삭제에 실패했습니다.', 'error');

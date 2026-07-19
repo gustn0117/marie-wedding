@@ -8,6 +8,9 @@
 export function normalizeSearchTerm(value: string | null | undefined): string {
   if (!value) return '';
   return value
+    // 유니코드 NFC 정규화 — IME/붙여넣기로 들어온 자모분해형(NFD) 한글을 조합형으로 통일해
+    // ilike 매칭이 '같은 글자인데 0건'이 되지 않게 한다.
+    .normalize('NFC')
     .replace(/[,%_()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

@@ -18,12 +18,13 @@ export default async function Image({ params }: Props) {
     const supabase = createServerQueryClient();
     const { data: profile } = await supabase
       .from('profiles')
-      .select('company_name, contact_name, business_type, region, completed_deals_count')
+      .select('company_name, contact_name, business_type, region, completed_deals_count, is_directory_listed')
       .eq('id', id)
       .is('deleted_at', null)
       .single();
 
-    const name = profile?.company_name || profile?.contact_name || '마리에 업체';
+    // 디렉토리 노출 해제 프로필은 OG 카드에도 이름/회사를 싣지 않는다(옵트아웃 존중).
+    const name = (profile?.is_directory_listed && (profile?.company_name || profile?.contact_name)) || '마리에 업체';
     const deals = `진행 완료 ${profile?.completed_deals_count ?? 0}건`;
 
     return new ImageResponse(
