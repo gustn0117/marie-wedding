@@ -113,9 +113,21 @@ export async function GET(request: Request) {
   // ④ 기존 user 조회 (naver_sub 기준)
   const { data: existingByNaver } = await service
     .from('profiles')
-    .select('id, user_id, onboarded_at, deleted_at')
+    .select('id, user_id, onboarded_at, deleted_at, banned_at')
     .eq('naver_sub', naverSub)
     .maybeSingle();
+
+  // 관리자 삭제(GoTrue ban)면 재로그인 거부 — deleted_at 여부와 무관하게 '무조건' 최우선 확인.
+  // 네이버는 admin.generateLink+verifyOtp 로 세션을 mint 하므로(비밀번호 grant 의 ban 차단이
+  // 적용 안 됨) 이 확인이 세션 발급 전 '유일한' 잠금 장치다. 확인 자체가 실패해도 안전측(거부).
+  if (existingByNaver?.user_id) {
+    const { data: au, error: auErr } = await service.auth.admin.getUserById(existingByNaver.user_id);
+    const bu = (au?.user as { banned_until?: string } | undefined)?.banned_until;
+    const banned = !!bu && new Date(bu).getTime() > Date.now();
+    if (auErr || !au?.user || banned || existingByNaver.banned_at) {
+      return redirectWith(origin, '/login', 'account_removed');
+    }
+  }
 
   // 탈퇴한 프로필로 재로그인 시도 → reactivate_profile_clean 으로 완전 초기화 후
   // 새 온보딩. bio/phone/gallery/verification_* 등 모든 사용자 컬럼 리셋됨.
@@ -124,12 +136,9 @@ export async function GET(request: Request) {
       p_profile_id: existingByNaver.id,
     });
     if (rpcErr) {
+      // 부분 리셋(PII 잔존)으로 되살리지 않는다 — 초기화 실패 시 거부.
       console.error('[auth/naver/callback] reactivate_profile_clean failed:', rpcErr);
-      // fallback: 3개 컬럼만 (레거시)
-      await service
-        .from('profiles')
-        .update({ deleted_at: null, onboarded_at: null, is_directory_listed: false })
-        .eq('id', existingByNaver.id);
+      return redirectWith(origin, '/login', 'reactivate_failed');
     }
     // 아래 로직이 다시 세션 발급 + onboarded_at=null 이므로 /onboarding 으로 감
     existingByNaver.deleted_at = null;

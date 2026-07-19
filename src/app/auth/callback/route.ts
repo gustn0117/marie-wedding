@@ -98,9 +98,26 @@ export async function GET(request: Request) {
 
   const { data: existingProfile } = await serviceClient
     .from('profiles')
-    .select('id, onboarded_at, deleted_at')
+    .select('id, onboarded_at, deleted_at, banned_at')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  // 관리자 삭제(GoTrue ban)면 재로그인 거부 — deleted_at 여부와 무관하게 '무조건' 최우선 확인
+  // (purge 실패로 deleted_at 이 안 남아도 ban·banned_at 은 남으므로 여기서 잡는다).
+  // exchangeCodeForSession 이 이미 심은 세션 쿠키를 정리한다. 밴 확인 자체가 실패해도 안전측(거부).
+  if (existingProfile) {
+    const { data: au, error: auErr } = await serviceClient.auth.admin.getUserById(user.id);
+    const bu = (au?.user as { banned_until?: string } | undefined)?.banned_until;
+    const banned = !!bu && new Date(bu).getTime() > Date.now();
+    if (auErr || !au?.user || banned || existingProfile.banned_at) {
+      const expire = { httpOnly: true, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
+      for (const c of cookieStore.getAll()) {
+        if (c.name.startsWith('sb-')) cookieStore.set(c.name, '', expire);
+      }
+      cookieStore.set('marie_profile', '', { ...expire, httpOnly: false });
+      return NextResponse.redirect(`${origin}/login?error=account_removed`);
+    }
+  }
 
   // 탈퇴한 프로필로 재로그인 시도 → 완전 초기화 후 새로 온보딩.
   // reactivate_profile_clean RPC 가 bio/phone/gallery/verification_* 등 모든
@@ -111,12 +128,9 @@ export async function GET(request: Request) {
       p_profile_id: existingProfile.id,
     });
     if (rpcErr) {
+      // 부분 리셋(PII 잔존)으로 되살리지 않는다 — 초기화 실패 시 거부.
       console.error('[auth/callback] reactivate_profile_clean failed:', rpcErr);
-      // fallback: 최소 3개 컬럼만 리셋 (레거시 동작)
-      await serviceClient
-        .from('profiles')
-        .update({ deleted_at: null, onboarded_at: null, is_directory_listed: false })
-        .eq('id', existingProfile.id);
+      return NextResponse.redirect(`${origin}/login?error=reactivate_failed`);
     }
     await setProfileCookieFromUserId(user.id);
     return NextResponse.redirect(

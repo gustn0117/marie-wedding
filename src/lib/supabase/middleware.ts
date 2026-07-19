@@ -80,31 +80,17 @@ export async function updateSession(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
-        // 탈퇴된 프로필 검사 우선 — isAuthPage / '/' 무한 루프 방지.
-        // /login 자체는 그대로 표시 (redirect 하면 세션이 여전히 살아있어 다시 여기로 옴).
+        // 탈퇴 프로필인데 세션이 살아있음 = 방금 재로그인(탈퇴 시 로그아웃되므로 이 상태는
+        // 재로그인으로만 도달). /auth/reactivate 로 보내 소셜과 동일하게 재활성화한다.
+        // 관리자 삭제 계정은 GoTrue ban 되어 재로그인 자체가 막히고, 혹 세션이 남아도
+        // /auth/reactivate 가 ban 을 재확인해 거부한다 → 자가탈퇴만 부활.
+        // (세션 쿠키는 유지해야 그 라우트가 사용자를 식별하므로 clear 하지 않는다.)
         if (profile?.deleted_at) {
-          const expire = { httpOnly: false, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
-          if (isAuthPage) {
-            // 로그인 페이지에 이미 있음 — 쿠키만 clear
-            supabaseResponse.cookies.set('marie_profile', '', expire);
-            for (const c of request.cookies.getAll()) {
-              if (c.name.startsWith('sb-')) {
-                supabaseResponse.cookies.set(c.name, '', { ...expire, httpOnly: true });
-              }
-            }
-            return supabaseResponse;
-          }
           const url = request.nextUrl.clone();
-          url.pathname = '/login';
+          url.pathname = '/auth/reactivate';
           url.search = '';
-          const res = NextResponse.redirect(url);
-          res.cookies.set('marie_profile', '', expire);
-          for (const c of request.cookies.getAll()) {
-            if (c.name.startsWith('sb-')) {
-              res.cookies.set(c.name, '', { ...expire, httpOnly: true });
-            }
-          }
-          return res;
+          url.searchParams.set('next', isAuthPage ? '/jobs' : path);
+          return NextResponse.redirect(url);
         }
 
         // 로그인한 정상 사용자가 로그인/회원가입 페이지 접근 시 홈으로 리다이렉트

@@ -220,14 +220,38 @@ export async function POST(request: NextRequest) {
       }
 
       case 'softDeleteUser': {
-        // withdraw 라우트와 동일 정책 — purge_profile_cascade 로 관련 콘텐츠 전체 soft delete
+        // 관리자 삭제 = "다시 로그인 못 하게" 제거. GoTrue ban 을 먼저 걸어(부분 실패해도 잠금이
+        // 남도록) auth 계정 자체의 재로그인을 차단한 뒤 콘텐츠를 purge 한다. 자가탈퇴(withdraw)는
+        // ban 을 안 걸어 재로그인 시 /auth/reactivate 로 부활 가능 — 둘을 GoTrue ban 유무로 구분한다.
+        const { data: prof, error: profErr } = await supabase.from('profiles').select('user_id').eq('id', params.id).maybeSingle();
+        if (profErr) throw profErr; // 조회 오류를 무시하면 아래 ban 을 건너뛰어 잠금이 새므로 반드시 중단.
+        if (!prof?.user_id) return NextResponse.json({ error: '대상 사용자를 찾을 수 없습니다.' }, { status: 404 });
+        // 순서: banned_at(앱필드) → GoTrue ban → purge. banned_at 을 '먼저' 남기면 이후 어떤 단계가
+        // 실패해(deleted_at 미설정) 재로그인이 되더라도 미들웨어가 banned_at 으로 /banned 에 잡아
+        // 기존 세션·신규 세션 모두 활성으로 새지 않는다. GoTrue ban 은 재로그인·토큰갱신 자체를 차단.
+        const { error: markErr } = await supabase
+          .from('profiles')
+          .update({ banned_at: new Date().toISOString(), banned_reason: '관리자 삭제' })
+          .eq('id', params.id);
+        if (markErr) throw markErr;
+        const { error: banErr } = await supabase.auth.admin.updateUserById(prof.user_id, { ban_duration: '876600h' });
+        if (banErr) throw banErr;
         const { error } = await supabase.rpc('purge_profile_cascade', { p_profile_id: params.id });
         if (error) throw error;
         return NextResponse.json({ success: true });
       }
 
       case 'restoreUser': {
-        const { error } = await supabase.from('profiles').update({ deleted_at: null }).eq('id', params.id);
+        const { data: prof } = await supabase.from('profiles').select('user_id').eq('id', params.id).maybeSingle();
+        // GoTrue unban 을 먼저(실패 시 DB 미변경 → 반쪽상태 방지). 성공해야 프로필 잠금 해제.
+        if (prof?.user_id) {
+          const { error: unbanErr } = await supabase.auth.admin.updateUserById(prof.user_id, { ban_duration: 'none' });
+          if (unbanErr) throw unbanErr;
+        }
+        const { error } = await supabase
+          .from('profiles')
+          .update({ deleted_at: null, banned_at: null, banned_reason: null, banned_by: null })
+          .eq('id', params.id);
         if (error) throw error;
         return NextResponse.json({ success: true });
       }
