@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
+import { resolveExternalOrigin } from '@/lib/proxy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,9 @@ function redirectWithLogout(origin: string, request: NextRequest, path: string) 
  * 재활성화를 거부한다(자가탈퇴만 부활 허용).
  */
 export async function GET(request: NextRequest) {
-  const origin = request.nextUrl.origin;
+  // 프록시(nginx) 뒤에선 request.nextUrl.origin 이 내부주소(0.0.0.0:3000)라 리다이렉트가 깨진다.
+  // 콜백과 동일하게 외부 origin(X-Forwarded-Host)을 사용한다.
+  const origin = resolveExternalOrigin(request);
   const next = safeNext(request.nextUrl.searchParams.get('next'));
 
   const supabase = await createClient();
