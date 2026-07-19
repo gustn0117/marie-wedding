@@ -15,6 +15,8 @@ interface Mail {
   message_id: string | null;
   in_reply_to: string | null;
   read_at: string | null;
+  opened_at: string | null;
+  open_count: number;
   created_at: string;
 }
 
@@ -148,7 +150,14 @@ export default function AdminMailClient() {
                   <span className="shrink-0 text-[11px] text-gray-400">{fmt(m.created_at)}</span>
                 </div>
                 <div className={`truncate text-sm mt-0.5 ${unreadRow ? 'font-semibold text-gray-800' : 'text-gray-500'}`}>{m.subject || '(제목 없음)'}</div>
-                <div className="truncate text-xs text-gray-400 mt-0.5">{(m.body_text || '').replace(/\s+/g, ' ').slice(0, 80)}</div>
+                <div className="flex items-center gap-1.5">
+                  <div className="truncate text-xs text-gray-400 mt-0.5 flex-1">{(m.body_text || '').replace(/\s+/g, ' ').slice(0, 80)}</div>
+                  {m.direction === 'outbound' && (
+                    m.opened_at
+                      ? <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">읽음</span>
+                      : <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-400">안읽음</span>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -166,6 +175,16 @@ export default function AdminMailClient() {
                   <p className="mt-1 text-xs text-gray-500 break-all"><span className="text-gray-400">보낸사람</span> {selected.from_addr}</p>
                   <p className="text-xs text-gray-500 break-all"><span className="text-gray-400">받는사람</span> {selected.to_addr}</p>
                   <p className="text-xs text-gray-400">{fmt(selected.created_at)}</p>
+                  {selected.direction === 'outbound' && (
+                    <p className="mt-1.5 text-xs">
+                      <span className="text-gray-400">수신확인</span>{' '}
+                      {selected.opened_at ? (
+                        <span className="font-bold text-emerald-600">읽음 · {fmt(selected.opened_at)}{selected.open_count > 1 ? ` (${selected.open_count}회)` : ''}</span>
+                      ) : (
+                        <span className="font-bold text-gray-400">안읽음</span>
+                      )}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 gap-1.5">
                   {selected.direction === 'inbound' && (

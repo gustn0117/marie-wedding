@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
 import { sendEmail } from '@/features/notifications/lib/email';
+
+const APP_URL = 'https://marie.co.kr'; // 추적 픽셀은 외부 수신자가 로드하므로 공개 URL 고정
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -30,7 +33,7 @@ export async function GET(request: Request) {
   const supabase = createServiceClient();
   const { data, count, error } = await supabase
     .from('admin_mail')
-    .select('id, direction, from_addr, to_addr, subject, body_text, body_html, message_id, in_reply_to, read_at, created_at', { count: 'exact' })
+    .select('id, direction, from_addr, to_addr, subject, body_text, body_html, message_id, in_reply_to, read_at, opened_at, open_count, created_at', { count: 'exact' })
     .eq('direction', folder)
     .order('created_at', { ascending: false })
     .range(from, from + PAGE - 1);
@@ -89,23 +92,31 @@ export async function POST(request: Request) {
     if (!subject) return NextResponse.json({ error: '제목을 입력해주세요.' }, { status: 400 });
     if (!text.trim()) return NextResponse.json({ error: '내용을 입력해주세요.' }, { status: 400 });
 
-    const result = await sendEmail({ to, subject, html: bodyHtml(text), text });
+    // 수신확인(오픈 트래킹) — 보내는 메일에만 보이지 않는 추적 픽셀을 심는다. 상대가 열어
+    // 이미지를 로드하면 /api/mail/track/{id} 가 opened_at 을 기록. 저장본(body_html)에는
+    // 픽셀을 넣지 않아 관리자 본인이 보낸편지함을 열 때 오탐(읽음)이 나지 않게 한다.
+    const trackingId = randomUUID();
+    const cleanHtml = bodyHtml(text);
+    const pixel = `<img src="${APP_URL}/api/mail/track/${trackingId}" width="1" height="1" alt="" style="display:none;max-height:0;overflow:hidden"/>`;
+
+    const result = await sendEmail({ to, subject, html: cleanHtml + pixel, text });
     if (!result.ok) {
       console.error('[api/admin/mail] send failed:', result.error);
       return NextResponse.json({ error: `발송 실패: ${result.error ?? '알 수 없는 오류'}` }, { status: 502 });
     }
 
-    // 보낸편지함 사본 저장
+    // 보낸편지함 사본 저장 (id 를 추적 토큰으로 사용, body_html 은 픽셀 제외)
     await supabase.from('admin_mail').insert({
+      id: trackingId,
       direction: 'outbound',
       from_addr: process.env.MAIL_FROM || 'admin@marie.co.kr',
       to_addr: to.slice(0, 512),
       subject: subject.slice(0, 998),
       body_text: text.slice(0, 500_000),
-      body_html: bodyHtml(text).slice(0, 500_000),
+      body_html: cleanHtml.slice(0, 500_000),
       message_id: result.id ?? null,
       in_reply_to: inReplyTo?.slice(0, 998) ?? null,
-      read_at: new Date().toISOString(), // 보낸메일은 읽음 상태
+      read_at: new Date().toISOString(), // 보낸메일은 (관리자에게) 읽음 상태
     });
 
     return NextResponse.json({ ok: true, id: result.id });

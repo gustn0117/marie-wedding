@@ -101,6 +101,8 @@ MIGRATIONS=(
   "20260719000200_storage_security_hardening.sql"
   "20260719000300_purge_resync_like_count.sql"
   "20260719000400_admin_mail.sql"
+  "20260720000100_admin_mail_open_tracking.sql"
+  "20260720000200_mail_track_open_fn.sql"
 )
 
 psql_value() {
