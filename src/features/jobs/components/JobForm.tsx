@@ -29,39 +29,46 @@ import {
   type JobSectionMap,
 } from '@/features/jobs/lib/parse-job-description';
 
-// JobForm용 UI 메타 (placeholder · 필수 여부)
-const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; required: boolean }> = {
+// JobForm용 UI 메타 (placeholder · 한 줄 가이드 hint · 필수 여부)
+// 상세 섹션은 빈 글머리 목록으로 시작하므로 placeholder 는 거의 노출되지 않고, hint 로 예시를 안내한다.
+const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; hint: string; required: boolean }> = {
   duty: {
-    placeholder: '예) 예식 당일 진행, 상담·예약, 고객 응대\n팀 구성과 현장 분위기도 함께 적어주세요.',
+    placeholder: '한 줄에 하나씩 적어주세요.',
+    hint: '한 줄에 하나씩 · 예: 예식 당일 현장 진행 / 예약·상담 관리 / 고객 응대',
     required: true,
   },
   requirements: {
-    placeholder: '예) 경력 1년 이상, 주말 가능, 메이크업 자격증\n신입 가능 여부, 교육 제공 여부를 알려주세요.',
+    placeholder: '한 줄에 하나씩 적어주세요.',
+    hint: '한 줄에 하나씩 · 예: 경력 1년 이상(신입 가능) / 주말 근무 가능 / 관련 자격증 우대',
     required: true,
   },
   conditions: {
-    placeholder: '예) 강남, 월~금 10–18시, 월 320만원\n채용 인원, 시작 가능일, 고용 형태(정규/계약/단기 등)를 적어주세요.',
+    placeholder: '한 줄에 하나씩 적어주세요.',
+    hint: '한 줄에 하나씩 · 예: 근무지 서울 강남 / 평일 10–18시 / 월 300만원(협의) / 정규직',
     required: true,
   },
   apply: {
-    placeholder: '예) 이름·연락처·경력 요약·가능 일정·포트폴리오 링크',
+    placeholder: '한 줄에 하나씩 적어주세요.',
+    hint: '한 줄에 하나씩 · 예: 이름·연락처 / 경력 요약 / 근무 가능 시작일 / 포트폴리오 링크',
     required: false,
   },
   extra: {
-    placeholder: '복지·휴가·차량 지원·식대·우대 사항 등 자유롭게 작성해 주세요. (선택)',
+    placeholder: '한 줄에 하나씩 적어주세요.',
+    hint: '한 줄에 하나씩 · 예: 4대 보험·퇴직금 / 중식 제공 / 경조사 지원 (선택)',
     required: false,
   },
 };
 
-// 섹션별 '예시 넣기' 골격 — 한 줄에 한 항목씩(불릿) 쓰도록 형식을 채워준다. 값은 그대로 편집.
-const SECTION_GUIDE: Record<JobSectionKey, string[]> = {
-  duty: ['예식 당일 현장 진행과 고객 응대', '예약·상담 및 일정 관리', '협력 업체와 커뮤니케이션'],
-  requirements: ['관련 경력 1년 이상 (신입 지원 가능)', '주말·성수기 근무 가능', '관련 자격증 소지자 우대'],
-  conditions: ['근무지 · 예: 서울 강남', '근무시간 · 예: 평일 10:00–18:00', '급여 · 예: 월 300만원 (협의 가능)', '고용형태 · 예: 정규직', '모집 인원 · 예: 1명'],
-  apply: ['이름 · 연락처', '간단한 경력 요약', '근무 가능 시작일', '포트폴리오 링크 (선택)'],
-  extra: ['4대 보험 · 퇴직금', '중식 제공', '경조사·명절 지원'],
-};
-const guideBulletsHtml = (items: string[]) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+// 상세 섹션 시작값 — 빈 글머리 목록. Enter 로 다음 줄이 자동 글머리(인덱스)로 이어진다.
+// sectionHasContent 는 빈 <li> 를 '내용 없음' 으로 보므로 저장/필수검증에 영향 없음.
+const SECTION_STARTER = '<ul><li></li></ul>';
+function seedSectionLists(map: JobSectionMap): JobSectionMap {
+  const out = { ...map };
+  for (const sec of JOB_SECTIONS) {
+    if (!sectionHasContent(out[sec.key])) out[sec.key] = SECTION_STARTER;
+  }
+  return out;
+}
 
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
@@ -92,14 +99,15 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
   useUnsavedChangesWarning(dirty);
   const [sections, setSections] = useState<JobSectionMap>(() => {
-    if (!initialData?.description) return { ...EMPTY_JOB_SECTIONS };
+    // 빈 섹션은 글머리 목록으로 시작해 '한 줄에 하나씩(인덱스)' 작성이 기본이 되게 한다.
+    if (!initialData?.description) return seedSectionLists({ ...EMPTY_JOB_SECTIONS });
     const parsed = parseSections(initialData.description);
     // 구(舊) 공고: 5섹션 헤더 없이 저장돼 파싱이 전체를 extra 로만 담으면(fallbackUsed) 필수 섹션
     // (담당 업무 등)이 비어 수정 저장이 영구 차단된다. 본문을 첫 필수 섹션(duty)에 실어 편집 가능하게 한다.
     if (parsed.fallbackUsed) {
-      return { ...EMPTY_JOB_SECTIONS, duty: parsed.sections.extra };
+      return seedSectionLists({ ...EMPTY_JOB_SECTIONS, duty: parsed.sections.extra });
     }
-    return parsed.sections;
+    return seedSectionLists(parsed.sections);
   });
   // 레거시 공고 수정: 본문이 duty 한 곳에 seed 됐고 나머지 필수 섹션(지원 자격/근무 조건)은
   // 비어 있다. 이 세션에선 개별 필수 섹션 강제를 풀고 '본문 존재'만 요구해 저장 차단을 없앤다.
@@ -403,12 +411,11 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠, 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 비어 있는 예시는 ‘예시 넣기’로 채운 뒤 내용만 바꿔도 됩니다. 빈 항목은 등록 후 보이지 않습니다.">
+      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠, 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 글머리(•)로 시작하니 Enter 로 다음 줄을 이어 적으면 됩니다. 빈 항목은 등록 후 보이지 않습니다.">
         <div className="space-y-5">
           {JOB_SECTIONS.map((sec) => {
             const meta = FORM_SECTION_META[sec.key];
             const secErr = fieldError?.field === `section:${sec.key}` ? fieldError.message : undefined;
-            const hasContent = sectionHasContent(sections[sec.key]);
             return (
             <div key={sec.key} id={`jobfield-section:${sec.key}`} className={`scroll-mt-24 ${secErr ? 'rounded-lg p-2.5 -m-2.5 ring-2 ring-state-urgent/50 bg-state-urgent-bg/40' : ''}`}>
               <div className="flex items-center justify-between mb-1.5">
@@ -417,19 +424,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                   {meta.required && <span className="text-state-urgent ml-1">*</span>}
                   {!meta.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
                 </label>
-                {hasContent ? (
-                  <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setSection(sec.key, guideBulletsHtml(SECTION_GUIDE[sec.key]))}
-                    disabled={loading}
-                    className="inline-flex items-center gap-1 rounded-full border border-primary/40 px-2.5 py-0.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-40"
-                  >
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12M8.25 17.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
-                    예시 넣기
-                  </button>
-                )}
+                <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
               </div>
               <RichTextEditor
                 value={sections[sec.key]}
@@ -440,6 +435,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 onUploadPromise={(promise) => trackSectionUpload(sec.key, promise)}
                 disabled={loading}
               />
+              <p className="mt-1 text-[11px] text-gray-400">{meta.hint}</p>
               {secErr && <FieldWarning message={secErr} />}
             </div>
             );

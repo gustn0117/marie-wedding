@@ -77,15 +77,26 @@ export function htmlToPlain(html: string): string {
 /** 섹션에 실질 내용(텍스트 또는 이미지)이 있는지 */
 export function sectionHasContent(html: string): boolean {
   if (!html) return false;
-  return htmlToPlain(html).trim().length > 0 || /<img/i.test(html);
+  // 태그를 제거해 '실제 텍스트'만 확인한다. htmlToPlain 은 <li> 를 '· ' 로 치환하므로
+  // 빈 글머리(<ul><li></li></ul>)를 '내용 있음'으로 오판한다 — 여기선 마커 없이 검사.
+  const text = html
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&').replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+    .trim();
+  return text.length > 0 || /<img/i.test(html);
 }
 
 // 섹션은 이제 RichTextEditor 가 만든 HTML(문단·이미지·서식 포함)을 그대로 담는다.
 export function serializeSections(s: JobSectionMap): string {
   const blocks: string[] = [];
   for (const sec of JOB_SECTIONS) {
-    const v = (s[sec.key] || '').trim();
+    let v = (s[sec.key] || '').trim();
     if (!sectionHasContent(v)) continue;
+    // 빈 글머리 항목(<li></li>, <li><br></li>) 제거 — 마지막 줄에서 Enter 로 남긴 빈 불릿 정리.
+    v = v.replace(/<li>(?:\s|&nbsp;|<br\s*\/?>)*<\/li>/gi, '');
+    // 항목이 모두 빠져 껍데기만 남은 목록 태그도 제거.
+    v = v.replace(/<(ul|ol)>\s*<\/\1>/gi, '');
     blocks.push(`<h3>${escapeHtml(sec.title)}</h3>${v}`);
   }
   return blocks.join('');
