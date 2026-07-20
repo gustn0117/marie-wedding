@@ -5,9 +5,8 @@ import { BUSINESS_TYPES, EMPLOYMENT_TYPES, REGIONS } from '@/shared/constants';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
-import RichTextEditor from '@/shared/components/RichTextEditor';
+import BulletListInput from '@/shared/components/BulletListInput';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
-import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { useFieldError } from '@/shared/hooks/useFieldError';
 import { FieldWarning } from '@/shared/components/FieldWarning';
@@ -115,7 +114,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const sectionsRef = useRef(sections);
   const [loading, setLoading] = useState(false);
   const savingRef = useRef(false);
-  const pendingSectionsRef = useRef(new Map<JobSectionKey, number>());
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageUpload = useImageUpload({
@@ -129,16 +127,6 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     quality: 0.82,
     buildPath: (compressed) => `covers/${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
   });
-  const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
-
-  const trackSectionUpload = (key: JobSectionKey, promise: Promise<unknown>) => {
-    pendingSectionsRef.current.set(key, (pendingSectionsRef.current.get(key) ?? 0) + 1);
-    void promise.then(
-      () => pendingSectionsRef.current.set(key, Math.max(0, (pendingSectionsRef.current.get(key) ?? 1) - 1)),
-      () => pendingSectionsRef.current.set(key, Math.max(0, (pendingSectionsRef.current.get(key) ?? 1) - 1)),
-    );
-    trackUpload(promise);
-  };
 
   // 합쳐진 description (검증·미리보기·submit용)
   const composedDescription = serializeSections(sections);
@@ -202,14 +190,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     return null;
   };
 
-  const validateSections = (currentSections: JobSectionMap, deferPendingSection = false): FieldIssue | null => {
+  const validateSections = (currentSections: JobSectionMap): FieldIssue | null => {
     // 레거시 seed 수정: 개별 필수 섹션 대신 '본문이 하나라도 있으면' 통과(내용 소실 없이 저장 가능).
     if (isLegacySeed) {
       return JOB_SECTIONS.some((sec) => sectionHasContent(currentSections[sec.key])) ? null : { field: 'section:duty', message: '내용을 입력해주세요.' };
     }
     for (const sec of JOB_SECTIONS) {
       if (FORM_SECTION_META[sec.key].required && !sectionHasContent(currentSections[sec.key])) {
-        if (deferPendingSection && (pendingSectionsRef.current.get(sec.key) ?? 0) > 0) continue;
         return { field: `section:${sec.key}`, message: `${sec.title}를 입력해주세요.` };
       }
     }
@@ -220,8 +207,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     e.preventDefault();
     if (savingRef.current) return;
     setError(null);
-    const issue = validateFields() || validateSections(sectionsRef.current, true);
-    // 업로드 중인 바로 그 섹션만 검증을 유예한다. 다른 필수 섹션 오류는 즉시 보여준다.
+    const issue = validateFields() || validateSections(sectionsRef.current);
     if (issue) {
       showFieldIssue(issue);
       return;
@@ -229,12 +215,8 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     savingRef.current = true;
     setLoading(true);
     try {
-      // 대표 이미지와 본문 이미지를 함께 기다린 뒤, 업로드 완료 콜백이 반영한
-      // 최신 섹션 ref로 검증·직렬화한다.
-      const [imagePath] = await Promise.all([
-        imageUpload.waitForUpload(),
-        waitForUploads(),
-      ]);
+      // 대표 이미지 업로드 완료를 기다린 뒤 최신 섹션 ref로 검증·직렬화한다.
+      const imagePath = await imageUpload.waitForUpload();
       const latestSections = sectionsRef.current;
       const validationError = validateSections(latestSections);
       if (validationError) {
@@ -411,7 +393,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠, 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 글머리(•)로 시작하니 Enter 로 다음 줄을 이어 적으면 됩니다. 빈 항목은 등록 후 보이지 않습니다.">
+      <Section step={3} title="상세 내용을 작성하세요" description="각 줄이 하나의 항목(*)이 됩니다. Enter 로 다음 줄, 빈 줄에서 Backspace 로 삭제하세요. 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 빈 항목은 등록 후 보이지 않습니다.">
         <div className="space-y-5">
           {JOB_SECTIONS.map((sec) => {
             const meta = FORM_SECTION_META[sec.key];
@@ -426,13 +408,11 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 </label>
                 <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
               </div>
-              <RichTextEditor
+              <BulletListInput
                 value={sections[sec.key]}
                 onChange={(html) => setSection(sec.key, html)}
                 placeholder={meta.placeholder}
-                minHeight={sec.key === 'extra' ? 90 : 120}
-                imageBucket="job-images"
-                onUploadPromise={(promise) => trackSectionUpload(sec.key, promise)}
+                minHeight={sec.key === 'extra' ? 80 : 110}
                 disabled={loading}
               />
               <p className="mt-1 text-[11px] text-gray-400">{meta.hint}</p>
@@ -571,11 +551,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             className="rounded bg-primary px-10 py-3 text-sm font-bold text-white hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading
-              ? (imageUpload.uploading
-                ? imageUpload.statusText
-                : pendingCount > 0
-                  ? `본문 사진 ${pendingCount}건 마무리 중...`
-                  : '저장 중...')
+              ? (imageUpload.uploading ? imageUpload.statusText : '저장 중...')
               : submitLabel}
           </button>
         </div>
