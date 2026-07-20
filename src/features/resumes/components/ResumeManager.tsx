@@ -25,6 +25,12 @@ import {
   type ResumeLink,
   type ResumeRecord,
 } from '@/features/resumes/types';
+import { BUSINESS_TYPES, REGIONS, EMPLOYMENT_TYPES } from '@/shared/constants';
+
+// 희망 조건 빠른 선택용 프리셋(도메인 상수 라벨). 공고의 업종/지역/고용형태와 값이 일치해 매칭에 유리.
+const DESIRED_ROLE_PRESETS = BUSINESS_TYPES.map((t) => t.label);
+const DESIRED_REGION_PRESETS = REGIONS.filter((r) => r.value !== 'all').map((r) => r.label);
+const DESIRED_EMPLOYMENT_PRESETS = EMPLOYMENT_TYPES.map((t) => t.label);
 
 // 완성도 배점(calculateResumeCompleteness)과 1:1로 대응하는 체크리스트 —
 // "무엇을 채우면 제출 가능한지"를 사용자에게 그대로 보여준다.
@@ -514,11 +520,11 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                   </div>
                 </FormSection>
 
-                <FormSection title="희망 조건" description="직무·지역·고용형태를 입력하고 Enter로 추가하세요.">
+                <FormSection title="희망 조건" description="자주 찾는 항목은 아래에서 바로 선택하세요. 공고 조건과 맞춰두면 더 잘 매칭됩니다.">
                   <div className="grid gap-4 md:grid-cols-3">
-                    <TagInput label="희망 직무" values={draft.desiredRoles} onChange={(values) => patch('desiredRoles', values)} placeholder="웨딩 플래너" maxItems={10} maxLength={60} />
-                    <TagInput label="희망 지역" values={draft.desiredRegions} onChange={(values) => patch('desiredRegions', values)} placeholder="서울" maxItems={10} maxLength={40} />
-                    <TagInput label="희망 고용형태" values={draft.desiredEmploymentTypes} onChange={(values) => patch('desiredEmploymentTypes', values)} placeholder="정규직" maxItems={10} maxLength={40} />
+                    <TagInput label="희망 직무" values={draft.desiredRoles} onChange={(values) => patch('desiredRoles', values)} placeholder="직접 입력 (예: 웨딩 플래너)" maxItems={10} maxLength={60} presets={DESIRED_ROLE_PRESETS} />
+                    <TagInput label="희망 지역" values={draft.desiredRegions} onChange={(values) => patch('desiredRegions', values)} placeholder="직접 입력 (예: 서울)" maxItems={10} maxLength={40} presets={DESIRED_REGION_PRESETS} />
+                    <TagInput label="희망 고용형태" values={draft.desiredEmploymentTypes} onChange={(values) => patch('desiredEmploymentTypes', values)} placeholder="직접 입력 (예: 정규직)" maxItems={10} maxLength={40} presets={DESIRED_EMPLOYMENT_PRESETS} />
                   </div>
                 </FormSection>
 
@@ -698,14 +704,19 @@ function DateField({ label, value, onChange, granularity = 'month', disabled, pl
   );
 }
 
-function TagInput({ label, values, onChange, placeholder, maxItems, maxLength }: { label: string; values: string[]; onChange: (values: string[]) => void; placeholder: string; maxItems: number; maxLength: number }) {
+function TagInput({ label, values, onChange, placeholder, maxItems, maxLength, presets }: { label: string; values: string[]; onChange: (values: string[]) => void; placeholder: string; maxItems: number; maxLength: number; presets?: readonly string[] }) {
   const [input, setInput] = useState('');
   const full = values.length >= maxItems;
-  function add() {
-    const value = input.trim();
-    if (value && value.length <= maxLength && !full && !values.includes(value)) onChange([...values, value]);
+  function addValue(raw: string) {
+    const value = raw.trim();
+    if (value && value.length <= maxLength && values.length < maxItems && !values.includes(value)) onChange([...values, value]);
+  }
+  function addFromInput() {
+    addValue(input);
     setInput('');
   }
+  // 아직 선택하지 않은 프리셋만 빠른 추가로 노출
+  const openPresets = (presets ?? []).filter((p) => !values.includes(p));
   return (
     <div>
       <label className="block text-sm font-semibold text-gray-700" htmlFor={`tag-${label}`}>{label}</label>
@@ -717,17 +728,27 @@ function TagInput({ label, values, onChange, placeholder, maxItems, maxLength }:
           disabled={full}
           onChange={(e) => setInput(e.target.value)}
           // 한글 IME 조합 중(마지막 글자 확정용 스페이스/엔터)엔 추가하지 않는다.
-          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); add(); } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !e.nativeEvent.isComposing) { e.preventDefault(); addFromInput(); } }}
           className="input-field disabled:bg-gray-100"
           placeholder={full ? `최대 ${maxItems}개` : placeholder}
         />
-        <button type="button" onClick={add} disabled={full || !input.trim()} className="btn-outline shrink-0 px-4 text-sm disabled:opacity-40">추가</button>
+        <button type="button" onClick={addFromInput} disabled={full || !input.trim()} className="btn-outline shrink-0 px-4 text-sm disabled:opacity-40">추가</button>
       </div>
-      <p className="mt-1 text-[11px] text-gray-400">입력 후 Enter 또는 &lsquo;추가&rsquo; · 최대 {maxItems}개</p>
+      {/* 빠른 선택 — 자주 찾는 항목을 탭 한 번으로 추가 */}
+      {!full && openPresets.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {openPresets.map((preset) => (
+            <button key={preset} type="button" onClick={() => addValue(preset)} className="inline-flex items-center gap-0.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-500 transition-colors hover:border-primary hover:text-primary">
+              <span className="text-gray-300">+</span> {preset}
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="mt-1 text-[11px] text-gray-400">{presets ? '위에서 선택하거나, ' : ''}직접 입력 후 Enter · 최대 {maxItems}개</p>
       {values.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {values.map((value) => (
-            <button key={value} type="button" onClick={() => onChange(values.filter((item) => item !== value))} className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-semibold text-gray-600 hover:border-state-urgent hover:text-state-urgent">
+            <button key={value} type="button" onClick={() => onChange(values.filter((item) => item !== value))} className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary-50/50 px-2.5 py-1 text-xs font-semibold text-primary hover:border-state-urgent hover:bg-state-urgent-bg/40 hover:text-state-urgent">
               {value}
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
             </button>

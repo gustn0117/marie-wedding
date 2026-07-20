@@ -53,6 +53,16 @@ const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; required: 
   },
 };
 
+// 섹션별 '예시 넣기' 골격 — 한 줄에 한 항목씩(불릿) 쓰도록 형식을 채워준다. 값은 그대로 편집.
+const SECTION_GUIDE: Record<JobSectionKey, string[]> = {
+  duty: ['예식 당일 현장 진행과 고객 응대', '예약·상담 및 일정 관리', '협력 업체와 커뮤니케이션'],
+  requirements: ['관련 경력 1년 이상 (신입 지원 가능)', '주말·성수기 근무 가능', '관련 자격증 소지자 우대'],
+  conditions: ['근무지 · 예: 서울 강남', '근무시간 · 예: 평일 10:00–18:00', '급여 · 예: 월 300만원 (협의 가능)', '고용형태 · 예: 정규직', '모집 인원 · 예: 1명'],
+  apply: ['이름 · 연락처', '간단한 경력 요약', '근무 가능 시작일', '포트폴리오 링크 (선택)'],
+  extra: ['4대 보험 · 퇴직금', '중식 제공', '경조사·명절 지원'],
+};
+const guideBulletsHtml = (items: string[]) => `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`;
+
 const EMPTY_FORM: JobFormData = {
   postingType: 'hiring',
   title: '',
@@ -393,11 +403,12 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠 적으면 지원자가 한눈에 파악할 수 있어요. 빈 항목은 등록 후에도 보이지 않습니다.">
+      <Section step={3} title="상세 내용을 작성하세요" description="항목별로 나눠, 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 비어 있는 예시는 ‘예시 넣기’로 채운 뒤 내용만 바꿔도 됩니다. 빈 항목은 등록 후 보이지 않습니다.">
         <div className="space-y-5">
           {JOB_SECTIONS.map((sec) => {
             const meta = FORM_SECTION_META[sec.key];
             const secErr = fieldError?.field === `section:${sec.key}` ? fieldError.message : undefined;
+            const hasContent = sectionHasContent(sections[sec.key]);
             return (
             <div key={sec.key} id={`jobfield-section:${sec.key}`} className={`scroll-mt-24 ${secErr ? 'rounded-lg p-2.5 -m-2.5 ring-2 ring-state-urgent/50 bg-state-urgent-bg/40' : ''}`}>
               <div className="flex items-center justify-between mb-1.5">
@@ -406,7 +417,19 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                   {meta.required && <span className="text-state-urgent ml-1">*</span>}
                   {!meta.required && <span className="ml-2 text-[11px] font-normal text-gray-400">선택</span>}
                 </label>
-                <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
+                {hasContent ? (
+                  <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setSection(sec.key, guideBulletsHtml(SECTION_GUIDE[sec.key]))}
+                    disabled={loading}
+                    className="inline-flex items-center gap-1 rounded-full border border-primary/40 px-2.5 py-0.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary hover:text-white disabled:opacity-40"
+                  >
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12M8.25 17.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                    예시 넣기
+                  </button>
+                )}
               </div>
               <RichTextEditor
                 value={sections[sec.key]}

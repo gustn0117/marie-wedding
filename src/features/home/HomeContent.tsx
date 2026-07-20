@@ -58,9 +58,12 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
         <div className="max-w-[1280px] mx-auto px-5 pt-10 pb-10 sm:pt-20 sm:pb-14">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-[26px] sm:text-[40px] font-bold leading-[1.25] tracking-tight text-ink">
-              조건에 맞는 웨딩 일자리와<br className="lg:hidden" />
-              {' '}인재를 찾아보세요
+              웨딩 업계 <span className="text-primary">No.1</span> 채용 플랫폼
             </h1>
+            <p className="mt-3 text-[15px] sm:text-lg leading-relaxed text-gray-500">
+              예식장·드레스·스튜디오·헤어메이크업·플래너까지<br className="sm:hidden" />
+              {' '}웨딩 일자리와 인재를 한 곳에서
+            </p>
             {/* 제목 → 검색바: 충분한 호흡 */}
             <form onSubmit={handleSearch} className="mt-6 sm:mt-10 flex h-14 sm:h-16 overflow-hidden rounded-2xl border-2 border-ink bg-white shadow-sm w-full max-w-[600px]">
               <input

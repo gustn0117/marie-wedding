@@ -44,9 +44,12 @@ async function getMyData(profileId: string) {
       .range(0, 49),
     supabase
       .from('applications')
-      .select('id, job_id, status, message, created_at, hiring_completed_at, applicant_completed_at, job:jobs(id, title, author:profiles!author_id(company_name, contact_name))')
+      // job:jobs!inner + job.deleted_at IS NULL — 업체가 삭제한 공고에 보낸 지원은 목록에서 제외
+      // (applicationService.getSentApplications 와 동일 정책. 이전엔 left join+필터누락으로 남아 있었음)
+      .select('id, job_id, status, message, created_at, hiring_completed_at, applicant_completed_at, job:jobs!inner(id, title, author:profiles!author_id(company_name, contact_name))')
       .eq('applicant_id', profileId)
       .is('deleted_at', null)
+      .is('job.deleted_at', null)
       .order('created_at', { ascending: false })
       .range(0, 49),
     supabase
