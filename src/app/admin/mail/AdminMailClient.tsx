@@ -48,6 +48,9 @@ function htmlIsEmpty(html: string): boolean {
 
 interface Compose { to: string; subject: string; mode: 'rich' | 'html'; html: string; inReplyTo: string | null; }
 
+interface Bounce { at: string; from: string; subject: string | null; snippet: string; }
+interface Delivery { id: string; opened_at: string | null; open_count: number; bounce: Bounce | null; }
+
 export default function AdminMailClient() {
   const [folder, setFolder] = useState<Folder>('inbound');
   const [items, setItems] = useState<Mail[]>([]);
@@ -56,6 +59,8 @@ export default function AdminMailClient() {
   const [selected, setSelected] = useState<Mail | null>(null);
   const [compose, setCompose] = useState<Compose | null>(null);
   const [sending, setSending] = useState(false);
+  const [delivery, setDelivery] = useState<Delivery | null>(null);
+  const [checking, setChecking] = useState(false);
   const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
   // 최신 본문 HTML — 이미지 업로드 완료가 onChange 로 반영되기 전 발송 눌러도 최신값을 쓴다.
   const htmlRef = useRef('');
@@ -75,10 +80,40 @@ export default function AdminMailClient() {
     }
   }, []);
 
-  useEffect(() => { load(folder); setSelected(null); }, [folder, load]);
+  useEffect(() => { load(folder); setSelected(null); setDelivery(null); }, [folder, load]);
+
+  // 보낸 메일 전달 상태(열람/반송) 확인. silent=true 면 토스트 없이 조용히 갱신.
+  const checkStatus = useCallback(async (id: string, silent = false) => {
+    setChecking(true);
+    try {
+      const res = await apiFetch('/api/admin/mail', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ action: 'status', id }),
+      }, 12000);
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(b.error || '상태를 확인하지 못했습니다.');
+      const opened = b.opened_at ?? null;
+      const count = b.open_count ?? 0;
+      const bounce = (b.bounce ?? null) as Bounce | null;
+      setDelivery({ id, opened_at: opened, open_count: count, bounce });
+      setItems((prev) => prev.map((x) => (x.id === id ? { ...x, opened_at: opened ?? x.opened_at, open_count: count || x.open_count } : x)));
+      setSelected((prev) => (prev && prev.id === id ? { ...prev, opened_at: opened ?? prev.opened_at, open_count: count || prev.open_count } : prev));
+      if (!silent) {
+        if (bounce) toast('전달 실패(반송)가 감지됐어요. 받는 주소를 확인해주세요.', 'error');
+        else if (opened) toast('상대가 메일을 받아 열람했습니다.', 'success');
+        else toast('전달 접수 상태입니다. 아직 열람 전이에요.', 'info');
+      }
+    } catch (e) {
+      if (!silent) toast(e instanceof Error ? e.message : '상태 확인에 실패했습니다.', 'error');
+    } finally {
+      setChecking(false);
+    }
+  }, []);
 
   const openMail = async (m: Mail) => {
     setSelected(m);
+    setDelivery(null);
+    if (m.direction === 'outbound') checkStatus(m.id, true);
     if (m.direction === 'inbound' && !m.read_at) {
       setItems((prev) => prev.map((x) => (x.id === m.id ? { ...x, read_at: new Date().toISOString() } : x)));
       setUnread((u) => Math.max(0, u - 1));
@@ -191,8 +226,8 @@ export default function AdminMailClient() {
                   <div className="truncate text-xs text-gray-400 mt-0.5 flex-1">{(m.body_text || '').replace(/\s+/g, ' ').slice(0, 80)}</div>
                   {m.direction === 'outbound' && (
                     m.opened_at
-                      ? <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">읽음</span>
-                      : <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-400">안읽음</span>
+                      ? <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600">열람</span>
+                      : <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-bold text-gray-500">발송</span>
                   )}
                 </div>
               </button>
@@ -212,16 +247,6 @@ export default function AdminMailClient() {
                   <p className="mt-1 text-xs text-gray-500 break-all"><span className="text-gray-400">보낸사람</span> {selected.from_addr}</p>
                   <p className="text-xs text-gray-500 break-all"><span className="text-gray-400">받는사람</span> {selected.to_addr}</p>
                   <p className="text-xs text-gray-400">{fmt(selected.created_at)}</p>
-                  {selected.direction === 'outbound' && (
-                    <p className="mt-1.5 text-xs">
-                      <span className="text-gray-400">수신확인</span>{' '}
-                      {selected.opened_at ? (
-                        <span className="font-bold text-emerald-600">읽음 · {fmt(selected.opened_at)}{selected.open_count > 1 ? ` (${selected.open_count}회)` : ''}</span>
-                      ) : (
-                        <span className="font-bold text-gray-400">안읽음</span>
-                      )}
-                    </p>
-                  )}
                 </div>
                 <div className="flex shrink-0 gap-1.5">
                   {selected.direction === 'inbound' && (
@@ -230,6 +255,56 @@ export default function AdminMailClient() {
                   <button type="button" onClick={() => remove(selected)} className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-500 hover:border-rose-400 hover:text-rose-500">삭제</button>
                 </div>
               </div>
+
+              {/* 전달 상태 — 발송 접수 / 반송(실패) / 수신확인(열람) + 실시간 확인 버튼 */}
+              {selected.direction === 'outbound' && (() => {
+                const d = delivery && delivery.id === selected.id ? delivery : null;
+                const openedAt = d?.opened_at ?? selected.opened_at;
+                const openCount = d?.open_count ?? selected.open_count;
+                const bounce = d?.bounce ?? null;
+                return (
+                  <div className="rounded-lg border border-gray-200 bg-gray-50/70 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-bold text-gray-700">전달 상태</span>
+                      <button
+                        type="button"
+                        onClick={() => checkStatus(selected.id)}
+                        disabled={checking}
+                        className="inline-flex items-center gap-1 rounded border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary disabled:opacity-50"
+                      >
+                        <svg className={`h-3 w-3 ${checking ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992V4.356M19.5 9.348A7.5 7.5 0 106.83 15.6" /></svg>
+                        {checking ? '확인 중…' : '전달 상태 확인'}
+                      </button>
+                    </div>
+                    <ul className="mt-2 space-y-1.5 text-xs">
+                      <li className="flex items-start gap-2 text-gray-600">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
+                        <span>발송 접수됨 · {fmt(selected.created_at)}</span>
+                      </li>
+                      {bounce ? (
+                        <li className="flex items-start gap-2 text-rose-600">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rose-500" />
+                          <span><b>전달 실패(반송)</b> · {fmt(bounce.at)} — 받는 주소를 확인하고 다시 보내주세요.</span>
+                        </li>
+                      ) : openedAt ? (
+                        <li className="flex items-start gap-2 text-emerald-600">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                          <span><b>수신확인됨(열람)</b> · {fmt(openedAt)}{openCount > 1 ? ` · ${openCount}회` : ''} — 상대가 받아서 열어봤어요.</span>
+                        </li>
+                      ) : (
+                        <li className="flex items-start gap-2 text-gray-500">
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full border border-gray-300" />
+                          <span>전달됨(접수 완료) · 아직 열람 전 — 상대가 열어보면 여기에 표시돼요.</span>
+                        </li>
+                      )}
+                    </ul>
+                    <p className="mt-2 text-[11px] leading-relaxed text-gray-400">
+                      메일은 상대 서버 사정으로 몇 분 지연될 수 있어요. 주소 오류 등으로 전달되지 않으면 ‘전달 실패(반송)’로 표시됩니다. 열람은 상대가 이미지를 차단하면 표시되지 않을 수 있어요.
+                    </p>
+                  </div>
+                );
+              })()}
+
               {selected.body_html ? (
                 // 신뢰 불가한 수신 HTML → sandbox iframe 으로 격리 렌더(스크립트 실행·부모접근 차단).
                 // allow-popups 로 사용자 클릭 링크만 새 탭 허용. 스크립트 없으므로 자동 팝업 불가.

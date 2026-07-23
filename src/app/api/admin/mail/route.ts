@@ -98,6 +98,55 @@ export async function POST(request: Request) {
   const action = body.action;
   const supabase = createServiceClient();
 
+  // 보낸 메일 전달 상태 — 최신 열람(수신확인) + 반송(전달 실패) 감지.
+  // 반송: 발송 이후 받은편지함에서 이 메일을 참조하는 실패 통지(mailer-daemon/postmaster,
+  // 제목에 deliver/failure/반송 등)를 찾아, 본문이 우리 Message-ID 나 수신자 주소를 담으면 매칭.
+  if (action === 'status') {
+    const id = typeof body.id === 'string' ? body.id : null;
+    if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
+    const { data: mail } = await supabase
+      .from('admin_mail')
+      .select('id, direction, to_addr, message_id, opened_at, open_count, created_at')
+      .eq('id', id)
+      .maybeSingle();
+    if (!mail || mail.direction !== 'outbound') {
+      return NextResponse.json({ error: '보낸 메일을 찾을 수 없습니다.' }, { status: 404 });
+    }
+
+    const recipient = (mail.to_addr || '').replace(/^.*<([^>]+)>.*$/, '$1').trim().toLowerCase();
+    const innerMid = (mail.message_id || '').replace(/^<|>$/g, '').trim();
+    let bounce: { at: string; from: string; subject: string | null; snippet: string } | null = null;
+
+    const { data: candidates } = await supabase
+      .from('admin_mail')
+      .select('id, from_addr, subject, body_text, created_at')
+      .eq('direction', 'inbound')
+      .gte('created_at', mail.created_at)
+      .or('from_addr.ilike.%mailer-daemon%,from_addr.ilike.%postmaster%,subject.ilike.%deliver%,subject.ilike.%failure%,subject.ilike.%반송%,subject.ilike.%실패%,subject.ilike.%returned%,subject.ilike.%undeliverable%')
+      .order('created_at', { ascending: true })
+      .limit(30);
+
+    for (const c of candidates ?? []) {
+      const bt = (c.body_text || '').toLowerCase();
+      const refsMid = innerMid.length > 0 && bt.includes(innerMid.toLowerCase());
+      const refsRcpt = recipient.length > 0 && bt.includes(recipient);
+      // 시스템 발신(메일 배달 시스템)만 반송으로 인정 — 사람이 보낸 답장의 오탐 방지.
+      const fromSystem = /mailer-daemon|postmaster|mail delivery|delivery sub|delivery system/i.test(c.from_addr || '');
+      // Message-ID 일치는 강한 증거. 수신자 주소만 일치할 땐 시스템 발신일 때만 반송으로 본다.
+      if (refsMid || (refsRcpt && fromSystem)) {
+        bounce = {
+          at: c.created_at,
+          from: c.from_addr,
+          subject: c.subject,
+          snippet: (c.body_text || '').replace(/\s+/g, ' ').trim().slice(0, 200),
+        };
+        break;
+      }
+    }
+
+    return NextResponse.json({ ok: true, opened_at: mail.opened_at, open_count: mail.open_count ?? 0, bounce });
+  }
+
   if (action === 'read') {
     const id = typeof body.id === 'string' ? body.id : null;
     if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
