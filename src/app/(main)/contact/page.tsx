@@ -7,7 +7,7 @@ export const metadata = {
 /**
  * 연락처는 env 로 관리 — 변경 시 코드 수정 없이 배포.
  */
-const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'help@marie.co.kr';
+const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin@marie.co.kr';
 const CONTACT_HOURS = process.env.NEXT_PUBLIC_CONTACT_HOURS || '평일 10:00 ~ 18:00';
 
 export default function ContactPage() {

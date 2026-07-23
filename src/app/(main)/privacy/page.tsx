@@ -34,7 +34,7 @@ export default function PrivacyPage() {
         <section>
           <h2 className="text-lg font-semibold text-text-primary mb-2">5. 개인정보 보호책임자</h2>
           <p>개인정보 처리에 관한 업무를 총괄하는 개인정보 보호책임자는 다음과 같습니다.</p>
-          <p className="mt-2">이메일: privacy@marie.co.kr</p>
+          <p className="mt-2">이메일: admin@marie.co.kr</p>
         </section>
       </div>
     </div>
