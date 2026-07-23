@@ -19,8 +19,9 @@ export const viewport: Viewport = {
 const DEFAULT_TITLE = `${SITE_NAME} — ${SITE_TAGLINE}`;
 
 // 검색엔진 등록용 소유확인 토큰(설정 시에만 주입). 구글 서치콘솔·네이버 서치어드바이저·빙.
+// 검증 토큰은 <head> 에 공개되는 비밀 아닌 값 → 기본값 하드코딩(env 로 덮어쓰기 가능).
 const googleVerification = process.env.GOOGLE_SITE_VERIFICATION;
-const naverVerification = process.env.NAVER_SITE_VERIFICATION;
+const naverVerification = process.env.NAVER_SITE_VERIFICATION || '54ad43cc5fe326b2b153918445cf8759b2aeb344';
 const bingVerification = process.env.BING_SITE_VERIFICATION;
 const otherVerification: Record<string, string> = {};
 if (naverVerification) otherVerification['naver-site-verification'] = naverVerification;
