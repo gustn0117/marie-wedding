@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 // title/description 는 루트 layout.tsx 기본값 상속. canonical 만 홈 자신으로 명시.
 export const metadata = {
-  alternates: { canonical: '/' },
+  alternates: { canonical: '/', types: { 'application/rss+xml': '/rss.xml' } },
 };
 
 // 사이트 전역 구조화 데이터 — 브랜드 인지 + 사이트링크 검색창(SearchAction).

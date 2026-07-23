@@ -46,6 +46,10 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false, email: false, address: false },
   // 주의: 루트에 alternates.canonical 을 두면 자체 canonical 이 없는 하위 페이지가
   // 전부 '/'(홈)로 정규화돼 중복 취급된다. canonical 은 각 페이지에서 자기 자신으로 지정.
+  // RSS 피드 자동발견 링크(canonical 과 달리 types 는 전파돼도 무해).
+  alternates: {
+    types: { 'application/rss+xml': '/rss.xml' },
+  },
   robots: {
     index: true,
     follow: true,
