@@ -12,8 +12,10 @@ import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '웨딩 행사·박람회 | Marié',
-  description: '웨딩박람회, 채용행사, 쇼케이스 일정을 확인하고 관련 스태프·상담 공고를 찾아보세요.',
+  title: '웨딩 행사·박람회',
+  description: '웨딩 박람회, 채용 행사, 쇼케이스 일정을 확인하고 관련 스태프·상담 공고를 찾아보세요.',
+  alternates: { canonical: '/events' },
+  openGraph: { title: '웨딩 행사·박람회 | Marié', description: '웨딩 박람회·채용 행사·쇼케이스 일정.', url: '/events' },
 };
 
 interface PageProps {

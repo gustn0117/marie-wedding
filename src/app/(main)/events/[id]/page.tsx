@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
@@ -12,6 +14,8 @@ import type { Event, Job } from '@/types/database';
 import RichTextView from '@/shared/components/RichTextView';
 import { ROUTES } from '@/shared/constants';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import JsonLd from '@/shared/components/JsonLd';
+import { absoluteUrl, breadcrumbJsonLd, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +23,10 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getEvent(id: string): Promise<Event | null> {
+const eventImageUrl = (event: Event): string | null =>
+  event.image ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/event-images/${event.image}` : null;
+
+const getEvent = cache(async (id: string): Promise<Event | null> => {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('events')
@@ -31,6 +38,65 @@ async function getEvent(id: string): Promise<Event | null> {
 
   // 조회수 시스템 제거됨 — 증가 없음.
   return data as Event;
+});
+
+// 행사('event')는 Event, 소식/공지('news'/'notice')는 Article 구조화 데이터.
+function buildEventJsonLd(event: Event): Record<string, unknown> {
+  const url = absoluteUrl(`/events/${event.id}`);
+  const image = eventImageUrl(event);
+  const description = toPlainText(event.content, 200);
+  // 오프라인 행사(장소가 있는 'event')만 Event 로 — 장소 없는 행사는 모순된
+  // Offline+VirtualLocation 조합을 피하려 Article 로 폴백한다(웨딩 박람회는 대개 오프라인).
+  if (event.type === 'event' && event.start_date && event.location) {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      name: event.title,
+      startDate: event.start_date,
+      ...(event.end_date ? { endDate: event.end_date } : {}),
+      eventStatus: 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+      location: { '@type': 'Place', name: event.location, address: { '@type': 'PostalAddress', addressCountry: 'KR' } },
+      ...(image ? { image: [image] } : {}),
+      ...(description ? { description } : {}),
+      url,
+      organizer: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    };
+  }
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: event.title,
+    datePublished: event.created_at,
+    dateModified: event.updated_at || event.created_at,
+    ...(image ? { image: [image] } : {}),
+    ...(description ? { description } : {}),
+    author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+    publisher: {
+      '@type': 'Organization',
+      name: SITE_NAME,
+      logo: { '@type': 'ImageObject', url: absoluteUrl('/og-marie.png') },
+    },
+    mainEntityOfPage: url,
+    url,
+  };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const event = await getEvent(id);
+  if (!event) return { title: '행사·소식', robots: { index: false, follow: true } };
+  const title = event.title;
+  const description = toPlainText(event.content, 155) || `${SITE_NAME} 웨딩 행사·소식`;
+  const canonical = `/events/${event.id}`;
+  const image = eventImageUrl(event);
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'article', title, description, url: canonical, ...(image ? { images: [image] } : {}) },
+    twitter: { title, description, ...(image ? { images: [image] } : {}) },
+  };
 }
 
 function getStaffSearchKeyword(event: Event) {
@@ -74,6 +140,14 @@ export default async function EventDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-[920px] mx-auto space-y-4">
+      <JsonLd data={buildEventJsonLd(event)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: '홈', path: '/' },
+          { name: '웨딩 행사·박람회', path: '/events' },
+          { name: event.title, path: `/events/${event.id}` },
+        ])}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href="/events" className="text-gray-500 hover:text-primary transition-colors">웨딩 행사·박람회</Link>

@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
@@ -18,6 +20,8 @@ import StartMessageButton from '@/features/messages/components/StartMessageButto
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import GalleryLightbox from '@/shared/components/GalleryLightbox';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import JsonLd from '@/shared/components/JsonLd';
+import { absoluteUrl, breadcrumbJsonLd, toPlainText, normalizeExternalUrl } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +29,38 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getData(id: string) {
+// 공개 디렉토리 프로필 Organization 구조화 데이터.
+function buildProfileJsonLd(profile: Profile): Record<string, unknown> {
+  const name = profile.company_name || profile.contact_name || '프로필';
+  const biz = getBusinessTypeLabel(profile.business_type || '');
+  const firstRegion = profile.region ? profile.region.split(',')[0] : '';
+  const logo = resolveStorageUrl(profile.profile_image, 'avatars');
+  const cover = resolveStorageUrl(profile.cover_image, 'avatars');
+  const data: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name,
+    url: absoluteUrl(`/directory/${profile.id}`),
+    ...(biz ? { description: toPlainText(profile.bio, 200) || `${biz} 웨딩 업체` } : {}),
+    ...(logo ? { logo } : {}),
+    ...(cover ? { image: cover } : {}),
+    ...(normalizeExternalUrl(profile.website) ? { sameAs: [normalizeExternalUrl(profile.website)] } : {}),
+    ...(profile.established_year ? { foundingDate: String(profile.established_year) } : {}),
+    ...(firstRegion || profile.address
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            addressCountry: 'KR',
+            ...(firstRegion ? { addressRegion: getRegionLabel(firstRegion) } : {}),
+            ...(profile.address ? { streetAddress: profile.address } : {}),
+          },
+        }
+      : {}),
+  };
+  return data;
+}
+
+const getData = cache(async (id: string) => {
   const supabase = createServerQueryClient();
 
   // 1) profile 먼저 확인 (없으면 즉시 종료)
@@ -84,6 +119,30 @@ async function getData(id: string) {
     reviews,
     tagMap,
   };
+});
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const result = await getData(id);
+  const profile = result?.profile;
+  if (!profile || !profile.is_directory_listed) {
+    return { title: '업체·인재 프로필', robots: { index: false, follow: true } };
+  }
+  const name = profile.company_name || profile.contact_name || '프로필';
+  const biz = getBusinessTypeLabel(profile.business_type || '');
+  const firstRegion = profile.region ? profile.region.split(',')[0] : '';
+  const region = firstRegion ? getRegionLabel(firstRegion) : '';
+  const title = biz ? `${name} · ${biz}` : name;
+  const description = toPlainText(profile.bio, 150)
+    || `${[region, biz].filter(Boolean).join(' · ')} — ${name} 웨딩 업체·인재 프로필`;
+  const canonical = `/directory/${profile.id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'profile', title, description, url: canonical },
+    twitter: { title, description },
+  };
 }
 
 export default async function CompanyDetailPage({ params }: PageProps) {
@@ -105,6 +164,14 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-4">
+      {profile.is_directory_listed && <JsonLd data={buildProfileJsonLd(profile)} />}
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: '홈', path: '/' },
+          { name: '인재·업체 프로필', path: '/directory' },
+          { name: displayName || '프로필', path: `/directory/${profile.id}` },
+        ])}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-gray-500">
         <Link href={ROUTES.DIRECTORY} className="hover:text-primary transition-colors">업체 디렉토리</Link>

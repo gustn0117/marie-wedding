@@ -9,8 +9,10 @@ import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '채용정보 | 마리에',
-  description: '웨딩 업계 채용 공고를 확인하고 지원하세요.',
+  title: '웨딩 채용정보',
+  description: '예식장·스튜디오·드레스샵·헤어메이크업·플래너 등 웨딩 업계 채용 공고를 지역·업종별로 확인하고 지원하세요.',
+  alternates: { canonical: '/jobs' },
+  openGraph: { title: '웨딩 채용정보 | Marié', description: '웨딩 업계 채용 공고를 지역·업종별로 확인하고 지원하세요.', url: '/jobs' },
 };
 
 interface PageProps {

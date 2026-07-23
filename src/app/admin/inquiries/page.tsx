@@ -6,7 +6,7 @@ import InquiryStatusToggle from './InquiryStatusToggle';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '고객 문의 | Marié Admin' };
+export const metadata = { title: '고객 문의' };
 
 interface Inquiry {
   id: string;

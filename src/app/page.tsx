@@ -5,13 +5,44 @@ import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
 import HeroBanner from '@/features/home/HeroBanner';
+import JsonLd from '@/shared/components/JsonLd';
+import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, absoluteUrl } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
+// title/description 는 루트 layout.tsx 기본값 상속. canonical 만 홈 자신으로 명시.
 export const metadata = {
-  title: 'Marié - 웨딩 업계 구인구직 플랫폼',
-  description: '웨딩 업계 종사자와 업체를 위한 채용, 프로필, 커뮤니티 플랫폼',
+  alternates: { canonical: '/' },
 };
+
+// 사이트 전역 구조화 데이터 — 브랜드 인지 + 사이트링크 검색창(SearchAction).
+const SITE_JSONLD: Record<string, unknown>[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: `${SITE_NAME_KO} ${SITE_NAME}`,
+    alternateName: ['마리에', 'Marié', 'Marie', 'marie.co.kr'],
+    url: SITE_URL,
+    inLanguage: 'ko-KR',
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: `${SITE_NAME_KO} ${SITE_NAME}`,
+    alternateName: '마리에',
+    url: SITE_URL,
+    logo: absoluteUrl('/og-marie.png'),
+    image: absoluteUrl('/og-marie.png'),
+    description: SITE_DESCRIPTION,
+    email: 'admin@marie.co.kr',
+    areaServed: 'KR',
+  },
+];
 
 // 공개 홈('/'는 middleware public path)은 비로그인 방문자도 접근 가능하다.
 // 서버→클라이언트 컴포넌트 경계로 넘기는 profiles 객체는 화면 렌더 여부와 무관하게
@@ -115,6 +146,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <JsonLd data={SITE_JSONLD} />
       <Header />
       <HeroBanner />
       <HomeContent

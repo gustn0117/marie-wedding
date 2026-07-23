@@ -52,7 +52,7 @@ export default async function Image({ params }: Props) {
             <div style={{ fontSize: 28, color: '#6b7280' }}>{company}</div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 22, color: '#374151' }}>
-            <span>marie-wedding.hsweb.pics</span>
+            <span>marie.co.kr</span>
             <span>웨딩업계 구인구직 플랫폼</span>
           </div>
         </div>

@@ -1,7 +1,8 @@
 import SupportInquiryForm from '@/features/support/components/SupportInquiryForm';
 
 export const metadata = {
-  title: '마리에 고객센터 | 마리에',
+  title: '마리에 고객센터',
+  alternates: { canonical: '/contact' },
 };
 
 /**

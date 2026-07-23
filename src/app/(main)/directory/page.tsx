@@ -12,8 +12,10 @@ import LoadErrorState from '@/shared/components/LoadErrorState';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '인재·업체 프로필 | Marié',
-  description: '웨딩 업계 인재와 업체 프로필을 업종, 지역별로 검색할 수 있습니다.',
+  title: '웨딩 인재·업체 프로필',
+  description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요. 예식장·스튜디오·드레스·헤어메이크업·플래너.',
+  alternates: { canonical: '/directory' },
+  openGraph: { title: '웨딩 인재·업체 프로필 | Marié', description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요.', url: '/directory' },
 };
 
 interface PageProps {

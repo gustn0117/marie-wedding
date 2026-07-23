@@ -13,8 +13,9 @@ export const dynamic = 'force-dynamic';
 const getStats = unstable_cache(loadStats, ['platform-stats'], { revalidate: 300 });
 
 export const metadata = {
-  title: '플랫폼 통계 | Marié',
+  title: '플랫폼 통계',
   description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 공공 통계.',
+  alternates: { canonical: '/stats' },
 };
 
 async function loadStats() {

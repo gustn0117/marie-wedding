@@ -1,7 +1,7 @@
 import ForgotPasswordForm from '@/features/auth/components/ForgotPasswordForm';
 
 export const metadata = {
-  title: '비밀번호 찾기 | Marié',
+  title: '비밀번호 찾기',
 };
 
 export default function ForgotPasswordPage() {

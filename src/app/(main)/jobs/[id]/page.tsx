@@ -1,8 +1,10 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
-import { ROUTES } from '@/shared/constants';
+import { ROUTES, BUSINESS_TYPES, EMPLOYMENT_TYPES } from '@/shared/constants';
 import type { Job } from '@/types/database';
 import JobDescriptionView from '@/features/jobs/components/JobDescriptionView';
 import JobDetailActions from '@/features/jobs/components/JobDetailActions';
@@ -13,6 +15,10 @@ import JobDetailSidebar from '@/features/jobs/components/JobDetailSidebar';
 import JobMobileApplyBar from '@/features/jobs/components/JobMobileApplyBar';
 import RelatedJobs from '@/features/jobs/components/RelatedJobs';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import JsonLd from '@/shared/components/JsonLd';
+import { buildJobPostingJsonLd } from '@/features/jobs/lib/jobJsonLd';
+import { toPlainText, breadcrumbJsonLd, SITE_NAME } from '@/shared/seo';
+import { getRegionLabel } from '@/shared/utils/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +26,8 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getJob(id: string): Promise<Job | null> {
+// generateMetadata 와 페이지 본문이 같은 요청에서 두 번 쿼리하지 않도록 캐시.
+const getJob = cache(async (id: string): Promise<Job | null> => {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('jobs')
@@ -29,6 +36,31 @@ async function getJob(id: string): Promise<Job | null> {
     .is('deleted_at', null)
     .single();
   return data as Job | null;
+});
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const job = await getJob(id);
+  if (!job || job.hidden_by_admin || job.status === 'hidden') {
+    return { title: '채용 공고', robots: { index: false, follow: true } };
+  }
+  const org = job.author?.company_name || job.author?.contact_name || '';
+  const region = job.region && job.region !== 'all' ? getRegionLabel(job.region) : '';
+  const biz = BUSINESS_TYPES.find((b) => b.value === job.business_type)?.label || '';
+  const emp = EMPLOYMENT_TYPES.find((e) => e.value === job.employment_type)?.label || '';
+  const title = org ? `${job.title} - ${org}` : job.title;
+  const facets = [region, biz, emp, job.salary_info].filter(Boolean).join(' · ');
+  const body = toPlainText(job.description, 120);
+  const description = [facets, body].filter(Boolean).join(' · ').slice(0, 160)
+    || `${SITE_NAME} 웨딩 업계 채용 공고`;
+  const canonical = `/jobs/${job.id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'article', title, description, url: canonical },
+    twitter: { title, description },
+  };
 }
 
 export default async function JobDetailPage({ params }: PageProps) {
@@ -53,8 +85,21 @@ export default async function JobDetailPage({ params }: PageProps) {
   const isAuthorViewer = !!viewer && viewer.profileId === job.author_id;
   const isBusinessViewer = viewer?.accountType === 'business' && !isAuthorViewer;
 
+  const isPubliclyVisible = !job.hidden_by_admin && job.status !== 'hidden';
+  // 마감/충원/마감일 경과 공고는 JobPosting 마크업을 내지 않는다(구글 채용 정책:
+  // 지원 불가 공고에 열린 것처럼 보이는 구조화데이터를 노출하면 제재 대상). 페이지 자체는 유지.
+  const emitJobPosting = isPubliclyVisible && !isClosed;
+
   return (
     <div className="max-w-[1200px] mx-auto space-y-4 pb-24 lg:pb-8">
+      {emitJobPosting && <JsonLd data={buildJobPostingJsonLd(job)} />}
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: '홈', path: '/' },
+          { name: '채용정보', path: '/jobs' },
+          { name: job.title, path: `/jobs/${job.id}` },
+        ])}
+      />
       <JobViewTracker jobId={job.id} />
 
       {/* Breadcrumb */}

@@ -7,7 +7,7 @@ import EmptyState from '@/shared/components/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '결제 내역 | Marié' };
+export const metadata = { title: '결제 내역' };
 
 const PRODUCT_LABELS: Record<string, string> = {
   premium_tier: '프리미엄 등급',

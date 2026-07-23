@@ -1,3 +1,5 @@
+import { cache } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
@@ -13,6 +15,8 @@ import LikeButton from '@/features/community/components/LikeButton';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import JsonLd from '@/shared/components/JsonLd';
+import { absoluteUrl, breadcrumbJsonLd, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,9 +24,9 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-async function getPostData(id: string, viewerProfileId: string | null) {
+// 뷰어 무관한 글 데이터 — generateMetadata·JSON-LD·본문이 공유(요청당 1회).
+const getPost = cache(async (id: string): Promise<{ post: Post; commentCount: number } | null> => {
   const supabase = createServerQueryClient();
-
   const { data: post } = await supabase
     .from('posts')
     .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS}), comments:comments!comments_post_id_fkey(count)`)
@@ -30,24 +34,63 @@ async function getPostData(id: string, viewerProfileId: string | null) {
     .is('deleted_at', null)
     .filter('comments.deleted_at', 'is', null)
     .single();
-
   if (!post) return null;
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commentCount = ((post as any).comments?.[0]?.count as number) ?? 0;
+  return { post: post as Post, commentCount };
+});
 
-  let isLiked = false;
-  if (viewerProfileId) {
-    const { data: like } = await supabase
-      .from('post_likes')
-      .select('id')
-      .eq('post_id', id)
-      .eq('profile_id', viewerProfileId)
-      .maybeSingle();
-    isLiked = !!like;
+// 공지는 Article, 일반 글은 DiscussionForumPosting.
+function buildPostJsonLd(post: Post, commentCount: number): Record<string, unknown> {
+  const url = absoluteUrl(`/community/${post.id}`);
+  const description = toPlainText(post.content, 200);
+  if (post.is_notice) {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      datePublished: post.created_at,
+      dateModified: post.updated_at || post.created_at,
+      ...(description ? { description } : {}),
+      author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
+      publisher: { '@type': 'Organization', name: SITE_NAME, logo: { '@type': 'ImageObject', url: absoluteUrl('/og-marie.png') } },
+      mainEntityOfPage: url,
+      url,
+    };
   }
+  const author = post.author?.company_name || post.author?.contact_name || '익명';
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DiscussionForumPosting',
+    headline: post.title,
+    ...(description ? { text: description } : {}),
+    datePublished: post.created_at,
+    dateModified: post.updated_at || post.created_at,
+    author: { '@type': 'Person', name: author },
+    interactionStatistic: [
+      { '@type': 'InteractionCounter', interactionType: 'https://schema.org/LikeAction', userInteractionCount: post.like_count ?? 0 },
+      { '@type': 'InteractionCounter', interactionType: 'https://schema.org/CommentAction', userInteractionCount: commentCount },
+    ],
+    mainEntityOfPage: url,
+    url,
+  };
+}
 
-  return { post: { ...post, comment_count: commentCount, is_liked: isLiked } as Post, commentCount };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const base = await getPost(id);
+  if (!base) return { title: '커뮤니티 글', robots: { index: false, follow: true } };
+  const { post } = base;
+  const title = post.title;
+  const description = toPlainText(post.content, 155) || `${SITE_NAME} 웨딩 업계 커뮤니티`;
+  const canonical = `/community/${post.id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { type: 'article', title, description, url: canonical },
+    twitter: { title, description },
+  };
 }
 
 export default async function PostDetailPage({ params }: PageProps) {
@@ -56,13 +99,33 @@ export default async function PostDetailPage({ params }: PageProps) {
   const viewerProfileId = viewer.ok ? viewer.profileId : null;
   const viewerRole = viewer.ok ? viewer.role : null;
 
-  const result = await getPostData(id, viewerProfileId);
-  if (!result) notFound();
+  const base = await getPost(id);
+  if (!base) notFound();
+  const commentCount = base.commentCount;
 
-  const { post, commentCount } = result;
+  let isLiked = false;
+  if (viewerProfileId) {
+    const supabase = createServerQueryClient();
+    const { data: like } = await supabase
+      .from('post_likes')
+      .select('id')
+      .eq('post_id', id)
+      .eq('profile_id', viewerProfileId)
+      .maybeSingle();
+    isLiked = !!like;
+  }
+  const post = { ...base.post, comment_count: commentCount, is_liked: isLiked } as Post;
 
   return (
     <div className="max-w-[980px] mx-auto space-y-4">
+      <JsonLd data={buildPostJsonLd(post, commentCount)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: '홈', path: '/' },
+          { name: '커뮤니티', path: '/community' },
+          { name: post.title, path: `/community/${post.id}` },
+        ])}
+      />
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm">
         <Link href={ROUTES.COMMUNITY} className="text-gray-500 hover:text-primary transition-colors">커뮤니티</Link>

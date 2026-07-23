@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 export const metadata = {
-  title: '시작하기 - Marie',
+  title: '시작하기',
   description: '간단한 정보를 입력하면 맞춤 공고를 보여드립니다.',
 };
 

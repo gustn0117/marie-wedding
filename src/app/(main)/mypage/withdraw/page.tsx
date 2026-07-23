@@ -3,7 +3,7 @@ import { ROUTES } from '@/shared/constants';
 import AccountWithdrawalSection from '@/features/mypage/components/AccountWithdrawalSection';
 
 export const metadata = {
-  title: '회원 탈퇴 | Marié',
+  title: '회원 탈퇴',
 };
 
 export default function WithdrawPage() {

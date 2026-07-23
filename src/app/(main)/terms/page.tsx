@@ -1,5 +1,6 @@
 export const metadata = {
-  title: '이용약관 | 마리에',
+  title: '이용약관',
+  alternates: { canonical: '/terms' },
 };
 
 export default function TermsPage() {

@@ -13,8 +13,10 @@ import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '커뮤니티 | 마리에',
-  description: '웨딩업계 종사자들의 커뮤니티. 업계뉴스, 노하우 공유, 자유게시판.',
+  title: '웨딩 업계 커뮤니티',
+  description: '웨딩 업계 종사자들의 커뮤니티. 업계 뉴스, 실무 노하우, 취업·채용 팁, 후기와 자유게시판.',
+  alternates: { canonical: '/community' },
+  openGraph: { title: '웨딩 업계 커뮤니티 | Marié', description: '웨딩 업계 종사자들의 커뮤니티. 업계 뉴스·노하우·후기.', url: '/community' },
 };
 
 interface PageProps {

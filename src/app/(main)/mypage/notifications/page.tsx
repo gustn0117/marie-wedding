@@ -8,7 +8,7 @@ import LoadErrorState from '@/shared/components/LoadErrorState';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '알림 | Marié' };
+export const metadata = { title: '알림' };
 
 export default async function NotificationsPage() {
   const viewer = await getCurrentVerifiedProfile();

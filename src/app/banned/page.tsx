@@ -5,7 +5,7 @@ import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '계정 이용 제한 | Marié',
+  title: '계정 이용 제한',
 };
 
 export default async function BannedPage() {

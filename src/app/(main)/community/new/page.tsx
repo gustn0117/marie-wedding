@@ -7,7 +7,7 @@ import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '새 글 작성 | Marié',
+  title: '새 글 작성',
 };
 
 export default async function NewPostPage() {

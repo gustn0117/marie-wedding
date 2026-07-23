@@ -16,7 +16,7 @@ import type { Job, Profile, Post } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '저장한 항목 | Marié' };
+export const metadata = { title: '저장한 항목' };
 
 type TabKey = 'jobs' | 'profiles' | 'posts';
 const TABS: { key: TabKey; label: string; targetType: 'job' | 'profile' | 'post' }[] = [

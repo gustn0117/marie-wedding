@@ -9,7 +9,7 @@ import type { Application, ApplicationStatus, Job } from '@/types/database';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '공고 성과 | Marié' };
+export const metadata = { title: '공고 성과' };
 
 const DASHBOARD_STATUS_LABELS: Record<ApplicationStatus, string> = {
   pending: '접수',

@@ -16,7 +16,9 @@ import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: '검색 결과 | Marié',
+  title: '검색 결과',
+  // 검색 결과는 크롤 허용(사이트링크 검색창)하되 색인은 제외(썸씬 콘텐츠 방지).
+  robots: { index: false, follow: true },
 };
 
 interface PageProps {

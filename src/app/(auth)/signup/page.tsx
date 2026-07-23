@@ -1,7 +1,7 @@
 import SignupForm from '@/features/auth/components/SignupForm';
 
 export const metadata = {
-  title: '회원가입 - Marie',
+  title: '회원가입',
   description: '마리에 웨딩 구인구직 플랫폼에 가입하세요.',
 };
 
