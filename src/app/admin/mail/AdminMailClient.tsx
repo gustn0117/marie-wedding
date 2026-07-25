@@ -67,6 +67,12 @@ export default function AdminMailClient() {
   const [items, setItems] = useState<Mail[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [count, setCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // 검색 — queryInput 은 입력값, search 는 디바운스 후 실제 조회에 쓰인 값.
+  const [queryInput, setQueryInput] = useState('');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Mail | null>(null);
   const [compose, setCompose] = useState<Compose | null>(null);
   const [sending, setSending] = useState(false);
@@ -79,22 +85,41 @@ export default function AdminMailClient() {
   // 최신 본문 HTML — 이미지 업로드 완료가 onChange 로 반영되기 전 발송 눌러도 최신값을 쓴다.
   const htmlRef = useRef('');
 
-  const load = useCallback(async (f: Folder) => {
-    setLoading(true);
+  // append=true 면 다음 페이지를 기존 목록 뒤에 이어붙인다(더 보기).
+  const load = useCallback(async (f: Folder, q = '', p = 1, append = false) => {
+    if (append) setLoadingMore(true);
+    else setLoading(true);
     try {
-      const res = await apiFetch(`/api/admin/mail?folder=${f}`, { credentials: 'include' }, 12000);
+      const params = new URLSearchParams({ folder: f, page: String(p) });
+      if (q) params.set('q', q);
+      const res = await apiFetch(`/api/admin/mail?${params.toString()}`, { credentials: 'include' }, 12000);
       if (!res.ok) throw new Error();
       const body = await res.json();
-      setItems((body.items ?? []) as Mail[]);
+      const next = (body.items ?? []) as Mail[];
+      setItems((prev) => {
+        if (!append) return next;
+        // 이어붙일 때 중간에 새 메일이 와서 밀린 중복분은 제거
+        const seen = new Set(prev.map((m) => m.id));
+        return [...prev, ...next.filter((m) => !seen.has(m.id))];
+      });
+      setCount(body.count ?? 0);
+      setPage(p);
       setUnread(body.unread ?? 0);
     } catch {
       toast('메일을 불러오지 못했습니다.', 'error');
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
-  useEffect(() => { load(folder); setSelected(null); setDelivery(null); }, [folder, load]);
+  // 검색어 디바운스 — 입력 멈춘 뒤 300ms 후 조회
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(queryInput.trim()), 300);
+    return () => clearTimeout(t);
+  }, [queryInput]);
+
+  useEffect(() => { load(folder, search, 1); setSelected(null); setDelivery(null); }, [folder, search, load]);
 
   // 보낸 메일 전달 상태(열람/반송) 확인. silent=true 면 토스트 없이 조용히 갱신.
   const checkStatus = useCallback(async (id: string, silent = false) => {
@@ -138,11 +163,12 @@ export default function AdminMailClient() {
   const remove = async (m: Mail) => {
     if (!confirm('이 메일을 삭제할까요?')) return;
     setItems((prev) => prev.filter((x) => x.id !== m.id));
+    setCount((c) => Math.max(0, c - 1));
     if (selected?.id === m.id) setSelected(null);
     try {
       const res = await apiFetch('/api/admin/mail', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ action: 'delete', id: m.id }) }, 8000);
       if (!res.ok) throw new Error();
-    } catch { toast('삭제에 실패했습니다.', 'error'); load(folder); }
+    } catch { toast('삭제에 실패했습니다.', 'error'); load(folder, search, 1); }
   };
 
   const send = async () => {
@@ -190,7 +216,7 @@ export default function AdminMailClient() {
       }
       if (ok > 0) {
         setCompose(null);
-        if (folder === 'outbound') load('outbound');
+        if (folder === 'outbound') load('outbound', search, 1);
       }
     } finally {
       setSending(false);
@@ -266,11 +292,38 @@ export default function AdminMailClient() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,380px)_1fr] gap-4">
         {/* 목록 */}
-        <div className="platform-panel divide-y divide-gray-100 overflow-hidden">
+        <div className="space-y-2">
+          {/* 검색 */}
+          <div className="relative">
+            <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+            </svg>
+            <input
+              type="search"
+              value={queryInput}
+              onChange={(e) => setQueryInput(e.target.value)}
+              placeholder="보낸사람·제목·내용 검색"
+              className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-8 text-sm focus:border-primary focus:outline-none"
+            />
+            {queryInput && (
+              <button type="button" onClick={() => setQueryInput('')} aria-label="검색어 지우기"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-gray-400 hover:text-gray-600">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            )}
+          </div>
+          {!loading && (
+            <p className="px-1 text-[11px] text-gray-400">
+              {search ? `'${search}' 검색 결과 ${count}건` : `전체 ${count}건`}
+            </p>
+          )}
+          <div className="platform-panel divide-y divide-gray-100 overflow-hidden">
           {loading ? (
             <div className="p-8 text-center text-sm text-gray-400">불러오는 중…</div>
           ) : items.length === 0 ? (
-            <div className="p-10 text-center text-sm text-gray-400">{folder === 'inbound' ? '받은 메일이 없습니다.' : '보낸 메일이 없습니다.'}</div>
+            <div className="p-10 text-center text-sm text-gray-400">
+              {search ? '검색 결과가 없습니다.' : folder === 'inbound' ? '받은 메일이 없습니다.' : '보낸 메일이 없습니다.'}
+            </div>
           ) : items.map((m) => {
             const unreadRow = m.direction === 'inbound' && !m.read_at;
             const who = folder === 'inbound' ? addrOnly(m.from_addr) : addrOnly(m.to_addr);
@@ -293,6 +346,18 @@ export default function AdminMailClient() {
               </button>
             );
           })}
+          {/* 더 보기 — 서버 페이지네이션으로 전체 메일을 이어서 불러온다(개수 제한 없음) */}
+          {!loading && items.length < count && (
+            <button
+              type="button"
+              onClick={() => load(folder, search, page + 1, true)}
+              disabled={loadingMore}
+              className="w-full px-4 py-3 text-center text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-primary disabled:opacity-50"
+            >
+              {loadingMore ? '불러오는 중…' : `더 보기 (${items.length}/${count})`}
+            </button>
+          )}
+          </div>
         </div>
 
         {/* 상세 */}

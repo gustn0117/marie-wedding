@@ -80,12 +80,18 @@ export async function GET(request: Request) {
   const folder = url.searchParams.get('folder') === 'outbound' ? 'outbound' : 'inbound';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
   const from = (page - 1) * PAGE;
+  // 검색어 — 보낸사람/받는사람/제목/본문 부분일치. PostgREST or() 구문을 깨는 문자는 제거.
+  const q = (url.searchParams.get('q') || '').replace(/[,()%_\\]/g, ' ').trim().slice(0, 100);
 
   const supabase = createServiceClient();
-  const { data, count, error } = await supabase
+  let query = supabase
     .from('admin_mail')
     .select('id, direction, from_addr, to_addr, subject, body_text, body_html, message_id, in_reply_to, read_at, opened_at, open_count, created_at', { count: 'exact' })
-    .eq('direction', folder)
+    .eq('direction', folder);
+  if (q) {
+    query = query.or(`from_addr.ilike.%${q}%,to_addr.ilike.%${q}%,subject.ilike.%${q}%,body_text.ilike.%${q}%`);
+  }
+  const { data, count, error } = await query
     .order('created_at', { ascending: false })
     .range(from, from + PAGE - 1);
 
