@@ -46,6 +46,17 @@ function htmlIsEmpty(html: string): boolean {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length === 0;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// 여러 수신자 입력(쉼표/세미콜론/줄바꿈 구분) → 유효 이메일 목록(중복 제거).
+function parseRecipients(raw: string): string[] {
+  const list = raw
+    .split(/[\n,;]+/)
+    .map((s) => addrOnly(s.trim()))
+    .filter((s) => EMAIL_RE.test(s));
+  return Array.from(new Set(list));
+}
+
 interface Compose { to: string; subject: string; mode: 'rich' | 'html'; html: string; inReplyTo: string | null; }
 
 interface Bounce { at: string; from: string; subject: string | null; snippet: string; }
@@ -59,6 +70,7 @@ export default function AdminMailClient() {
   const [selected, setSelected] = useState<Mail | null>(null);
   const [compose, setCompose] = useState<Compose | null>(null);
   const [sending, setSending] = useState(false);
+  const [sendProgress, setSendProgress] = useState<{ done: number; total: number } | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [checking, setChecking] = useState(false);
   const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
@@ -134,30 +146,66 @@ export default function AdminMailClient() {
   const send = async () => {
     if (!compose) return;
     const html = htmlRef.current || compose.html;
-    if (!compose.to.trim() || !compose.subject.trim() || htmlIsEmpty(html)) {
-      toast('받는사람·제목·내용을 모두 입력해주세요.', 'error');
+    const recipients = parseRecipients(compose.to);
+    if (recipients.length === 0 || !compose.subject.trim() || htmlIsEmpty(html)) {
+      toast('받는사람(1명 이상)·제목·내용을 모두 입력해주세요.', 'error');
       return;
     }
+    if (recipients.length > 1 && !confirm(`${recipients.length}곳에 같은 메일을 각각 발송합니다. 계속할까요?`)) return;
+
     setSending(true);
+    setSendProgress({ done: 0, total: recipients.length });
     try {
       // 본문에 넣은 사진 업로드가 끝날 때까지 대기(끝나면 최신 HTML 로 발송)
       await waitForUploads();
       // 소스 모드는 textarea 값을 그대로, 리치 모드는 업로드 반영된 최신 htmlRef 를 쓴다.
       const finalHtml = compose.mode === 'html' ? compose.html : (htmlRef.current || html);
-      const res = await apiFetch('/api/admin/mail', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify({ action: 'send', to: addrOnly(compose.to), subject: compose.subject, mode: compose.mode, html: finalHtml, inReplyTo: compose.inReplyTo }),
-      }, 30000);
-      const b = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(b.error || '발송 실패');
-      toast('메일을 발송했습니다.', 'success');
-      setCompose(null);
-      if (folder === 'outbound') load('outbound');
-    } catch (e) {
-      toast(e instanceof Error ? e.message : '발송에 실패했습니다.', 'error');
+      // 각 수신자에게 개별 발송(각자 별도 보낸편지함 사본 + 수신확인 추적). 순차 발송.
+      let ok = 0;
+      const failed: string[] = [];
+      for (let i = 0; i < recipients.length; i += 1) {
+        setSendProgress({ done: i, total: recipients.length });
+        try {
+          const res = await apiFetch('/api/admin/mail', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({
+              action: 'send', to: recipients[i], subject: compose.subject, mode: compose.mode, html: finalHtml,
+              // 답장(단일 수신)일 때만 스레드 연결. 여러 곳 발송은 독립 메일.
+              inReplyTo: recipients.length === 1 ? compose.inReplyTo : null,
+            }),
+          }, 30000);
+          const b = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(b.error || '발송 실패');
+          ok += 1;
+        } catch {
+          failed.push(recipients[i]);
+        }
+      }
+      if (failed.length === 0) {
+        toast(recipients.length === 1 ? '메일을 발송했습니다.' : `${ok}곳에 발송했습니다.`, 'success');
+      } else {
+        toast(`${ok}곳 발송 · ${failed.length}곳 실패 (${failed.slice(0, 3).join(', ')}${failed.length > 3 ? ' 외' : ''})`, 'error');
+      }
+      if (ok > 0) {
+        setCompose(null);
+        if (folder === 'outbound') load('outbound');
+      }
     } finally {
       setSending(false);
+      setSendProgress(null);
     }
+  };
+
+  // 보낸 메일을 템플릿처럼 재사용 — 제목·내용 그대로, 받는사람만 비워 다른 곳에 발송.
+  const reuse = (m: Mail) => {
+    openCompose({
+      to: '',
+      subject: m.subject ?? '',
+      // 저장된 발송본(HTML) 을 그대로 살리려 소스 모드로 연다.
+      mode: 'html',
+      html: m.body_html || `<div style="white-space:pre-wrap">${escapeHtml(m.body_text ?? '')}</div>`,
+      inReplyTo: null,
+    });
   };
 
   const openCompose = (c: Compose) => { htmlRef.current = c.html; setCompose(c); };
@@ -252,6 +300,9 @@ export default function AdminMailClient() {
                   {selected.direction === 'inbound' && (
                     <button type="button" onClick={() => reply(selected)} className="rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark">답장</button>
                   )}
+                  {selected.direction === 'outbound' && (
+                    <button type="button" onClick={() => reuse(selected)} className="rounded border border-primary bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-dark">다시 보내기</button>
+                  )}
                   <button type="button" onClick={() => remove(selected)} className="rounded border border-gray-300 px-3 py-1.5 text-xs font-bold text-gray-500 hover:border-rose-400 hover:text-rose-500">삭제</button>
                 </div>
               </div>
@@ -329,8 +380,18 @@ export default function AdminMailClient() {
             <h3 className="text-base font-bold text-ink">{compose.inReplyTo ? '답장' : '새 메일'}</h3>
             <div className="mt-4 space-y-3">
               <div>
-                <label className="text-xs font-bold text-gray-500">받는사람</label>
-                <input value={compose.to} onChange={(e) => setCompose({ ...compose, to: e.target.value })} placeholder="name@example.com" className="mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-gray-500">받는사람</label>
+                  {(() => { const n = parseRecipients(compose.to).length; return n > 1 ? <span className="text-[11px] font-bold text-primary">{n}곳</span> : null; })()}
+                </div>
+                <textarea
+                  value={compose.to}
+                  onChange={(e) => setCompose({ ...compose, to: e.target.value })}
+                  rows={2}
+                  placeholder="name@example.com — 여러 곳은 쉼표 또는 줄바꿈으로 구분"
+                  className="mt-1 w-full resize-y rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-gray-400">여러 웨딩홀에 같은 내용을 보내려면 주소를 줄바꿈/쉼표로 나눠 넣으면 각각 개별 발송됩니다.</p>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-500">제목</label>
@@ -384,7 +445,15 @@ export default function AdminMailClient() {
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={() => setCompose(null)} disabled={sending} className="rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50">취소</button>
-              <button type="button" onClick={send} disabled={sending} className="btn-primary text-sm disabled:opacity-50">{sending ? (pendingCount > 0 ? `사진 ${pendingCount}장 마무리 중…` : '발송 중…') : '발송'}</button>
+              <button type="button" onClick={send} disabled={sending} className="btn-primary text-sm disabled:opacity-50">
+                {sending
+                  ? (pendingCount > 0
+                    ? `사진 ${pendingCount}장 마무리 중…`
+                    : sendProgress && sendProgress.total > 1
+                      ? `발송 중… ${sendProgress.done}/${sendProgress.total}`
+                      : '발송 중…')
+                  : (() => { const n = parseRecipients(compose.to).length; return n > 1 ? `${n}곳 발송` : '발송'; })()}
+              </button>
             </div>
           </div>
         </div>
