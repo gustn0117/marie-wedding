@@ -95,9 +95,26 @@ export async function GET(request: Request) {
     .order('created_at', { ascending: false })
     .range(from, from + PAGE - 1);
 
+  let rows = data ?? [];
+  let total = count ?? 0;
+
   if (error) {
-    console.error('[api/admin/mail] list failed:', error);
-    return NextResponse.json({ error: '목록을 불러오지 못했습니다.' }, { status: 500 });
+    // 시작 위치가 전체 행 수를 넘으면 PostgREST 는 416(PGRST103) 을 준다.
+    // 마지막 페이지 뒤를 요청한 정상 상황이므로 오류가 아닌 빈 페이지로 응답한다.
+    if (error.code !== 'PGRST103') {
+      console.error('[api/admin/mail] list failed:', error);
+      return NextResponse.json({ error: '목록을 불러오지 못했습니다.' }, { status: 500 });
+    }
+    let countQuery = supabase
+      .from('admin_mail')
+      .select('id', { count: 'exact', head: true })
+      .eq('direction', folder);
+    if (q) {
+      countQuery = countQuery.or(`from_addr.ilike.%${q}%,to_addr.ilike.%${q}%,subject.ilike.%${q}%,body_text.ilike.%${q}%`);
+    }
+    const { count: c } = await countQuery;
+    rows = [];
+    total = c ?? 0;
   }
 
   // 받은편지함 안읽음 수(배지용)
@@ -111,7 +128,7 @@ export async function GET(request: Request) {
     unread = uc ?? 0;
   }
 
-  return NextResponse.json({ items: data ?? [], count: count ?? 0, page, pageSize: PAGE, unread });
+  return NextResponse.json({ items: rows, count: total, page, pageSize: PAGE, unread });
 }
 
 // ── 액션(발송/읽음/삭제) ─────────────────────────────────────────────
