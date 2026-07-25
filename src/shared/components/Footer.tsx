@@ -7,6 +7,9 @@ const SERVICE_LINKS = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
+  // 키워드 랜딩 — 검색 유입 대상 앵커 링크
+  { href: '/guide/wedding-hall-recruit', label: '웨딩홀 채용' },
+  { href: '/guide/wedding-jobs', label: '웨딩 구인구직' },
 ] as const;
 
 export default function Footer() {

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { SITE_URL } from '@/shared/seo';
+import { LANDINGS } from '@/features/seo/landings';
 
 // 매 크롤 시 최신 목록을 반영하도록 동적 생성.
 // (force-dynamic 이면 Next 15 가 revalidate 를 0 으로 강제하므로 revalidate 는 두지 않는다.)
@@ -52,6 +53,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/contact', undefined, 'monthly', 0.3),
     entry('/terms', undefined, 'yearly', 0.2),
     entry('/privacy', undefined, 'yearly', 0.2),
+    // 키워드 랜딩(가이드)
+    ...LANDINGS.map((l) => entry(`/guide/${l.slug}`, undefined, 'monthly', 0.7)),
   ];
 
   try {
