@@ -116,6 +116,12 @@ export default async function PostDetailPage({ params }: PageProps) {
   }
   const post = { ...base.post, comment_count: commentCount, is_liked: isLiked } as Post;
 
+  // 비로그인 열람 제한 — 일반 글은 미리보기(앞부분 텍스트)만 내려보내고 로그인 유도.
+  // 공지(is_notice)는 운영 안내이므로 계속 전체 공개. 검색엔진에는 미리보기가 색인된다.
+  const isGated = !viewerProfileId && !post.is_notice;
+  const preview = isGated ? toPlainText(post.content, 300) : '';
+  const loginHref = `/login?redirect=${encodeURIComponent(`/community/${post.id}`)}`;
+
   return (
     <div className="max-w-[980px] mx-auto space-y-4">
       <JsonLd data={buildPostJsonLd(post, commentCount)} />
@@ -185,25 +191,49 @@ export default async function PostDetailPage({ params }: PageProps) {
           </div>
         </header>
 
-        {/* Content */}
+        {/* Content — 비로그인은 서버에서 잘라낸 미리보기만 전송(전체 본문이 HTML 에 실리지 않음) */}
         <div className="p-6 md:p-8">
-          <RichTextView html={post.content} className="text-[15px] text-gray-700 leading-relaxed min-h-[200px]" />
+          {isGated ? (
+            <div>
+              <div className="relative overflow-hidden">
+                <p className="whitespace-pre-wrap text-[15px] text-gray-700 leading-relaxed">
+                  {preview || '내용을 보려면 로그인이 필요합니다.'}
+                </p>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent" />
+              </div>
+              <div className="mt-4 rounded-xl border border-gray-200 bg-secondary-50 px-6 py-8 text-center">
+                <p className="text-base font-bold text-gray-900">전체 내용은 로그인 후 볼 수 있어요</p>
+                <p className="mt-1 text-sm text-gray-500">웨딩 업계 이웃들의 이야기를 끝까지 읽어보세요.</p>
+                <div className="mt-4 flex flex-col items-center gap-2">
+                  <Link href={loginHref} className="btn-primary text-sm">로그인하고 전체 글 보기</Link>
+                  <p className="text-xs text-gray-400">
+                    아직 회원이 아니신가요?{' '}
+                    <Link href="/signup" className="font-semibold text-primary hover:underline">회원가입</Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <RichTextView html={post.content} className="text-[15px] text-gray-700 leading-relaxed min-h-[200px]" />
+          )}
         </div>
 
         {/* Like Button */}
-        <div className="flex justify-center pb-6 md:pb-8">
-          <div className="flex flex-wrap justify-center gap-2">
-            <LikeButton
-              postId={post.id}
-              initialLiked={post.is_liked ?? false}
-              initialCount={post.like_count}
-              canLike={!!viewerProfileId}
-              viewerProfileId={viewerProfileId}
-            />
-            <BookmarkButton targetType="post" targetId={post.id} label="글 저장" />
-            <ReportButton targetType="post" targetId={post.id} />
+        {!isGated && (
+          <div className="flex justify-center pb-6 md:pb-8">
+            <div className="flex flex-wrap justify-center gap-2">
+              <LikeButton
+                postId={post.id}
+                initialLiked={post.is_liked ?? false}
+                initialCount={post.like_count}
+                canLike={!!viewerProfileId}
+                viewerProfileId={viewerProfileId}
+              />
+              <BookmarkButton targetType="post" targetId={post.id} label="글 저장" />
+              <ReportButton targetType="post" targetId={post.id} />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Footer */}
         <div className="px-6 md:px-8 py-4 border-t border-gray-100 flex items-center justify-between bg-secondary-50">
@@ -224,12 +254,23 @@ export default async function PostDetailPage({ params }: PageProps) {
         </div>
       </article>
 
-      <CommentSection
-        postId={post.id}
-        postAuthorId={post.author_id}
-        adoptedCommentId={post.adopted_comment_id}
-        initialAuthenticated={!!viewerProfileId}
-      />
+      {isGated ? (
+        <div className="bg-white border-y border-gray-200 px-6 py-8 text-center">
+          <p className="text-sm font-bold text-gray-900">댓글 {commentCount}개</p>
+          <p className="mt-1 text-sm text-gray-500">
+            댓글은{' '}
+            <Link href={loginHref} className="font-semibold text-primary hover:underline">로그인</Link>
+            {' '}후 확인할 수 있어요.
+          </p>
+        </div>
+      ) : (
+        <CommentSection
+          postId={post.id}
+          postAuthorId={post.author_id}
+          adoptedCommentId={post.adopted_comment_id}
+          initialAuthenticated={!!viewerProfileId}
+        />
+      )}
     </div>
   );
 }
