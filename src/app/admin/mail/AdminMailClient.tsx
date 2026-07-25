@@ -73,6 +73,8 @@ export default function AdminMailClient() {
   const [sendProgress, setSendProgress] = useState<{ done: number; total: number } | null>(null);
   const [delivery, setDelivery] = useState<Delivery | null>(null);
   const [checking, setChecking] = useState(false);
+  // 이미 보낸 수신자(소문자 이메일 → 최근 발송정보). 작성 시 중복 발송 경고용.
+  const [sentMap, setSentMap] = useState<Record<string, { at: string; count: number }>>({});
   const { trackUpload, waitForUploads, pendingCount } = usePendingUploads();
   // 최신 본문 HTML — 이미지 업로드 완료가 onChange 로 반영되기 전 발송 눌러도 최신값을 쓴다.
   const htmlRef = useRef('');
@@ -208,7 +210,17 @@ export default function AdminMailClient() {
     });
   };
 
-  const openCompose = (c: Compose) => { htmlRef.current = c.html; setCompose(c); };
+  // 이미 보낸 수신자 맵 로드(작성창 열 때). 실패해도 조용히 통과.
+  const loadSentRecipients = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/admin/mail?recipients=1', { credentials: 'include' }, 12000);
+      if (!res.ok) return;
+      const b = await res.json();
+      setSentMap(b.recipients ?? {});
+    } catch { /* noop */ }
+  }, []);
+
+  const openCompose = (c: Compose) => { htmlRef.current = c.html; setCompose(c); loadSentRecipients(); };
 
   // 작성 모드 전환. 소스→편집기는 표/스타일이 정리될 수 있어 확인을 받는다.
   const switchMode = (next: 'rich' | 'html') => {
@@ -392,6 +404,28 @@ export default function AdminMailClient() {
                   className="mt-1 w-full resize-y rounded border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-gray-400">여러 웨딩홀에 같은 내용을 보내려면 주소를 줄바꿈/쉼표로 나눠 넣으면 각각 개별 발송됩니다.</p>
+                {(() => {
+                  const dup = parseRecipients(compose.to)
+                    .map((e) => ({ email: e, info: sentMap[e.toLowerCase()] }))
+                    .filter((x): x is { email: string; info: { at: string; count: number } } => !!x.info);
+                  if (dup.length === 0) return null;
+                  return (
+                    <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      <p className="flex items-center gap-1.5 font-bold">
+                        <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                        이미 보낸 곳 {dup.length}곳 — 중복 발송 주의
+                      </p>
+                      <ul className="mt-1 space-y-0.5 pl-5">
+                        {dup.slice(0, 8).map((x) => (
+                          <li key={x.email} className="break-all">
+                            <span className="font-semibold">{x.email}</span> · 마지막 {fmt(x.info.at)}{x.info.count > 1 ? ` (${x.info.count}회)` : ''}
+                          </li>
+                        ))}
+                        {dup.length > 8 && <li>… 외 {dup.length - 8}곳</li>}
+                      </ul>
+                    </div>
+                  );
+                })()}
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-500">제목</label>

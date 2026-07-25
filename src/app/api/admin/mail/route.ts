@@ -56,6 +56,27 @@ export async function GET(request: Request) {
   if (!(await hasValidAdminSession())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const url = new URL(request.url);
+
+  // 이미 보낸 수신자 맵 — 작성 시 중복 발송 경고용. 최근 발송분 집계(소문자 키).
+  if (url.searchParams.get('recipients') === '1') {
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from('admin_mail')
+      .select('to_addr, created_at')
+      .eq('direction', 'outbound')
+      .order('created_at', { ascending: false })
+      .limit(5000);
+    const recipients: Record<string, { at: string; count: number }> = {};
+    for (const row of data ?? []) {
+      const addr = (row.to_addr || '').replace(/^.*<([^>]+)>.*$/, '$1').trim().toLowerCase();
+      if (!addr) continue;
+      if (recipients[addr]) recipients[addr].count += 1;
+      // created_at desc 로 정렬돼 있어 첫 등장이 최신
+      else recipients[addr] = { at: row.created_at, count: 1 };
+    }
+    return NextResponse.json({ recipients });
+  }
+
   const folder = url.searchParams.get('folder') === 'outbound' ? 'outbound' : 'inbound';
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
   const from = (page - 1) * PAGE;
