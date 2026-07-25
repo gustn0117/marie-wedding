@@ -9,6 +9,8 @@ import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
 import LoadErrorState from '@/shared/components/LoadErrorState';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
+import { toPlainText } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +25,7 @@ interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;
 }
 
-async function getPosts(searchParams: Record<string, string | undefined>) {
+async function getPosts(searchParams: Record<string, string | undefined>, isAuthenticated: boolean) {
   const supabase = createServerQueryClient();
   const page = Number(searchParams.page) || 1;
   const pageSize = 10;
@@ -61,10 +63,17 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
   const { data, count, error } = await query;
 
+  // 비로그인에는 본문 전체를 보내지 않는다. 글 상세가 로그인 필수인데 목록 페이로드에
+  // 원문이 실려 있으면 소스만 봐도 다 읽히므로, 카드 미리보기에 필요한 만큼만 남긴다.
+  // 공지는 비로그인에도 전체 공개라 그대로 둔다.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const posts = (data ?? []).map((row: any) => {
     const { comments: commentAgg, ...rest } = row;
-    return { ...rest, comment_count: commentAgg?.[0]?.count ?? 0 } as Post;
+    const post = { ...rest, comment_count: commentAgg?.[0]?.count ?? 0 } as Post;
+    if (!isAuthenticated && !post.is_notice) {
+      post.content = toPlainText(post.content, 150);
+    }
+    return post;
   });
 
   return { posts, count: count ?? 0, error: !!error };
@@ -72,7 +81,8 @@ async function getPosts(searchParams: Record<string, string | undefined>) {
 
 export default async function CommunityPage({ searchParams }: PageProps) {
   const resolvedSearchParams = await searchParams;
-  const { posts, count, error } = await getPosts(resolvedSearchParams);
+  const viewer = await getCurrentVerifiedProfile();
+  const { posts, count, error } = await getPosts(resolvedSearchParams, viewer.ok);
   const activeFilterCount = ['category', 'search', 'sort'].filter((key) => resolvedSearchParams[key]).length;
 
   return (

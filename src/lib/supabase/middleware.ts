@@ -152,14 +152,17 @@ export async function updateSession(request: NextRequest) {
     } else {
       // 비로그인 사용자가 인증 필요 경로에 접근 시 → /login?redirect={path+search} 로 통일
       // (기존: 개별 페이지에서 redirect(ROUTES.LOGIN) 만 호출해 원경로 유실)
+      // 목록(/community, /directory)은 공개해 검색 색인을 유지하고, 상세는 로그인 필수로 막는다.
+      // 커뮤니티 글 상세는 공지(is_notice)만 예외로 공개해야 해서 미들웨어가 아닌
+      // 페이지에서 처리한다(글 종류를 알아야 하므로).
+      const isDirectoryDetail = /^\/directory\/[^/]+/.test(path);
       const needsAuth =
         !isPublicBypass &&
-        // 커뮤니티는 목록·글 상세(/community/[id])까지 공개해 검색 색인 가능하게 하고,
-        // 작성/수정(/community/new, /community/[id]/edit)만 로그인 필수로 남긴다.
         (path.startsWith('/mypage')
           || path.startsWith('/applications')
           || path.startsWith('/jobs/new')
           || path.startsWith('/community/new')
+          || isDirectoryDetail
           || (path.startsWith('/community/') && path.endsWith('/edit')));
       if (needsAuth) {
         const url = request.nextUrl.clone();

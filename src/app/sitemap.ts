@@ -70,16 +70,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     dyn.push(...jobs.map((r) => entry(`/jobs/${r.id}`, r.updated_at ?? r.created_at, 'daily', 0.8)));
     remaining -= jobs.length;
 
-    const profiles = remaining > 0
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? await fetchAll('profiles', (q) => (q as any).is('deleted_at', null).eq('is_directory_listed', true), remaining)
-      : [];
-    dyn.push(...profiles.map((r) => entry(`/directory/${r.id}`, r.updated_at ?? r.created_at, 'weekly', 0.6)));
-    remaining -= profiles.length;
+    // 프로필 상세(/directory/[id])는 로그인 필수라 사이트맵에서 제외한다.
+    // (색인 요청해도 /login 리다이렉트로 잡혀 서치콘솔에 오류로 쌓인다. 목록 /directory 는 위 정적 항목으로 유지)
 
+    // 커뮤니티 글 상세도 로그인 필수 — 비로그인에 열리는 공지만 사이트맵에 넣는다.
     const posts = remaining > 0
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ? await fetchAll('posts', (q) => (q as any).is('deleted_at', null), remaining)
+      ? await fetchAll('posts', (q) => (q as any).is('deleted_at', null).eq('is_notice', true), remaining)
       : [];
     dyn.push(...posts.map((r) => entry(`/community/${r.id}`, r.updated_at ?? r.created_at, 'weekly', 0.5)));
     remaining -= posts.length;
