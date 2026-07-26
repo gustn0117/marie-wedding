@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { toast } from '@/shared/components/Toast';
+import { compressImage } from '@/shared/utils/image';
 
 interface FaxRow {
   id: string;
@@ -141,8 +142,19 @@ export default function AdminFaxClient() {
   const upload = async (file: File) => {
     setUploading(true);
     try {
+      // 솔라피는 png·webp 를 받지 않는다(pdf·jpg·gif·bmp·tif 등만 가능).
+      // 화면에서 흔히 쓰는 png 스크린샷도 쓸 수 있게 이미지면 jpg 로 변환해 올린다.
+      let payload: File | Blob = file;
+      if (file.type.startsWith('image/') && file.type !== 'image/jpeg') {
+        try {
+          payload = await compressImage(file, { mimeType: 'image/jpeg', maxDimension: 2200, quality: 0.9 });
+        } catch {
+          toast('이미지를 변환하지 못했습니다. JPG 또는 PDF 로 올려주세요.', 'error');
+          return;
+        }
+      }
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('file', payload, 'fax.jpg');
       const res = await apiFetch('/api/admin/fax/upload', { method: 'POST', body: fd, credentials: 'include' }, 60000);
       const b = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(b.error || '업로드 실패');
@@ -393,7 +405,7 @@ export default function AdminFaxClient() {
                 ) : (
                   <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
                     className="mt-1 w-full rounded border border-dashed border-gray-300 px-3 py-4 text-sm font-semibold text-gray-500 hover:border-primary hover:text-primary disabled:opacity-50">
-                    {uploading ? '올리는 중…' : '문서 선택 (PDF · JPG · PNG, 15MB 이하)'}
+                    {uploading ? '올리는 중…' : '문서 선택 (PDF 권장 · 이미지는 JPG 로 변환됩니다)'}
                   </button>
                 )}
                 <input ref={fileRef} type="file" accept="application/pdf,image/*" className="hidden"

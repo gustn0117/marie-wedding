@@ -79,10 +79,13 @@ class SolapiFaxAdapter implements FaxAdapter {
       if (!fileRes.ok) return { ok: false, error: '보낼 문서를 읽지 못했습니다.' };
       const base64 = Buffer.from(await fileRes.arrayBuffer()).toString('base64');
 
+      // 솔라피는 파일명 확장자로 형식을 판별한다. 실제 파일과 다른 확장자를 보내면 거부당하므로
+      // 업로드 경로의 확장자를 그대로 쓴다(우리 업로드 라우트가 <uuid>.<ext> 로 저장).
+      const ext = (input.fileUrl.split('?')[0].split('.').pop() || 'pdf').toLowerCase();
       const upRes = await fetch('https://api.solapi.com/storage/v1/files', {
         method: 'POST',
         headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file: base64, type: 'FAX', name: 'fax.pdf' }),
+        body: JSON.stringify({ file: base64, type: 'FAX', name: `fax.${ext}` }),
       });
       const upBody = await upRes.json().catch(() => ({}));
       if (!upRes.ok || !upBody.fileId) {

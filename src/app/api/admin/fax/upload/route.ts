@@ -11,16 +11,24 @@ const BUCKET = 'event-images';
 const PREFIX = 'admin/fax';
 const MAX_BYTES = 15 * 1024 * 1024;
 
-/** 확장자를 믿지 않고 매직바이트로 판별한다. */
+/**
+ * 확장자를 믿지 않고 매직바이트로 판별한다.
+ *
+ * 팩스 공급자(솔라피)가 받는 형식만 허용한다 — bmp, gif, jpg, tif, doc(x), xls(x),
+ * ppt(x), htm(l), hwp, pdf. **png·webp 는 목록에 없다.** 여기서 통과시키면 발송 단계에서
+ * "형식의 파일만 사용가능합니다" 로 거부당하므로(실제로 겪음) 업로드 시점에 막는다.
+ * png 는 화면에서 업로드 전에 jpg 로 변환해 올린다.
+ */
 async function detectFormat(file: Blob): Promise<{ ext: string; contentType: string } | null> {
   const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
   const startsWith = (sig: number[]) => sig.every((b, i) => head[i] === b);
 
   if (startsWith([0x25, 0x50, 0x44, 0x46])) return { ext: 'pdf', contentType: 'application/pdf' }; // %PDF
   if (startsWith([0xff, 0xd8, 0xff])) return { ext: 'jpg', contentType: 'image/jpeg' };
-  if (startsWith([0x89, 0x50, 0x4e, 0x47])) return { ext: 'png', contentType: 'image/png' };
-  if (startsWith([0x52, 0x49, 0x46, 0x46]) && head[8] === 0x57 && head[9] === 0x45) {
-    return { ext: 'webp', contentType: 'image/webp' };
+  if (startsWith([0x47, 0x49, 0x46, 0x38])) return { ext: 'gif', contentType: 'image/gif' }; // GIF8
+  if (startsWith([0x42, 0x4d])) return { ext: 'bmp', contentType: 'image/bmp' }; // BM
+  if (startsWith([0x49, 0x49, 0x2a, 0x00]) || startsWith([0x4d, 0x4d, 0x00, 0x2a])) {
+    return { ext: 'tif', contentType: 'image/tiff' };
   }
   return null;
 }
@@ -42,7 +50,10 @@ export async function POST(request: Request) {
 
   const format = await detectFormat(file);
   if (!format) {
-    return NextResponse.json({ error: 'PDF 또는 이미지(JPG/PNG/WEBP)만 보낼 수 있습니다.' }, { status: 400 });
+    return NextResponse.json(
+      { error: '팩스로 보낼 수 없는 형식입니다. PDF 또는 JPG 로 올려주세요. (PNG 는 지원되지 않습니다)' },
+      { status: 400 },
+    );
   }
 
   const path = `${PREFIX}/${crypto.randomUUID()}.${format.ext}`;
