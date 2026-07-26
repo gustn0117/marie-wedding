@@ -10,7 +10,7 @@ interface JobCardProps {
 }
 
 export default function JobCard({ job }: JobCardProps) {
-  const company = job.author?.company_name || job.author?.contact_name || '업체명 미등록';
+  const company = job.author?.company_name || job.author?.contact_name || job.proxy_company_name || '업체명 미등록';
   const initial = company.charAt(0).toUpperCase();
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   const imageUrl = resolveStorageUrl(job.image, 'job-images');

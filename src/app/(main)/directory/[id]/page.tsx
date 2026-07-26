@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -77,7 +78,7 @@ const getData = cache(async (id: string) => {
   const [jobsRes, reviewsRes] = await Promise.all([
     supabase
       .from('jobs')
-      .select('*')
+      .select(`${PUBLIC_JOB_COLUMNS}`)
       .eq('author_id', id)
       .is('deleted_at', null)
       // 관리자가 숨긴 공고(hidden_by_admin)·작성자가 내린 공고(status='hidden')는
@@ -115,7 +116,7 @@ const getData = cache(async (id: string) => {
 
   return {
     profile: profile as Profile,
-    jobs: (jobsRes.data ?? []) as Job[],
+    jobs: (jobsRes.data ?? []) as unknown as Job[],
     reviews,
     tagMap,
   };

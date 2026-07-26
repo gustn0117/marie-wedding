@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import {
@@ -45,7 +46,7 @@ async function search(q: string) {
     // 채용 공고 — 제목·본문 매칭 OR 작성자(회사) 매칭
     supabase
       .from('jobs')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
@@ -73,7 +74,7 @@ async function search(q: string) {
   ]);
 
   return {
-    hiring: (hiringRes.data ?? []) as Job[],
+    hiring: (hiringRes.data ?? []) as unknown as Job[],
     directory: (directoryRes.data ?? []) as Profile[],
     posts: (postsRes.data ?? []) as Post[],
   };

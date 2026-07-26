@@ -23,7 +23,8 @@ const SALARY_UNIT_MAP: Record<string, string> = {
  * 급여 단위 함정: 월급/연봉은 '만원' 단위 저장(×10,000), 일급/시급은 '원' 단위 그대로.
  */
 export function buildJobPostingJsonLd(job: Job): Record<string, unknown> {
-  const orgName = job.author?.company_name || job.author?.contact_name || SITE_NAME;
+  // 대행 공고는 author 가 없다. 폴백이 없으면 구인 주체가 'Marié' 로 나가 사실과 달라진다.
+  const orgName = job.author?.company_name || job.author?.contact_name || job.proxy_company_name || SITE_NAME;
   const regionLabel = job.region && job.region !== 'all' ? getRegionLabel(job.region) : '';
   const jobImage = resolveStorageUrl(job.image, 'job-images');
   const orgLogo = resolveStorageUrl(job.author?.profile_image, 'avatars');

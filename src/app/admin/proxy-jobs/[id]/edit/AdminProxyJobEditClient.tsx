@@ -48,6 +48,11 @@ export default function AdminProxyJobEditClient({ jobId }: { jobId: string }) {
   useEffect(() => { load(); }, [load]);
 
   const handleSubmit = async (data: JobFormData) => {
+    // 등록 화면과 같은 규칙. 서버도 막지만 여기서 먼저 걸러 되돌아가기 쉽게 한다.
+    if (!companyName.trim() || !contact.trim() || consentNote.trim().length < 5) {
+      toast('업체명·연락처·동의 경위를 확인해주세요.', 'error');
+      throw new Error('대행 정보 미입력');
+    }
     const res = await apiFetch('/api/admin/proxy-jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -111,16 +116,16 @@ export default function AdminProxyJobEditClient({ jobId }: { jobId: string }) {
         <h2 className="text-sm font-bold text-ink">대행 정보</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-bold text-gray-500">업체명</label>
+            <label className="text-xs font-bold text-gray-500">업체명 *</label>
             <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="input-field mt-1" />
           </div>
           <div>
-            <label className="text-xs font-bold text-gray-500">업체 연락처</label>
+            <label className="text-xs font-bold text-gray-500">업체 연락처 *</label>
             <input value={contact} onChange={(e) => setContact(e.target.value)} className="input-field mt-1" />
           </div>
         </div>
         <div>
-          <label className="text-xs font-bold text-gray-500">동의를 받은 경위</label>
+          <label className="text-xs font-bold text-gray-500">동의를 받은 경위 * (법적 근거로 남습니다)</label>
           <textarea value={consentNote} onChange={(e) => setConsentNote(e.target.value)} rows={2} className="input-field mt-1 resize-y" />
         </div>
       </div>

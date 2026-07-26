@@ -1,4 +1,5 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import { todayKstIso } from '@/shared/utils/kstDate';
 import type { Event, Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
@@ -70,7 +71,7 @@ async function getHomeData() {
       .range(0, 4),
     supabase
       .from('jobs')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`)
+      .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
@@ -98,7 +99,7 @@ async function getHomeData() {
     // 인기 공고 — 관리자가 선정한 featured_at IS NOT NULL인 공고만
     supabase
       .from('jobs')
-      .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`)
+      .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id(${PUBLIC_PROFILE_COLS})`)
       .is('deleted_at', null)
       .eq('hidden_by_admin', false)
       .neq('status', 'hidden')
@@ -126,8 +127,8 @@ async function getHomeData() {
 
   return {
     posts,
-    jobs: (jobsRes.data ?? []) as Job[],
-    featuredJobs: (featuredJobsRes.data ?? []) as Job[],
+    jobs: (jobsRes.data ?? []) as unknown as Job[],
+    featuredJobs: (featuredJobsRes.data ?? []) as unknown as Job[],
     featuredProfiles: (featuredProfilesRes.data ?? []) as Profile[],
     profiles: (profilesRes.data ?? []) as Profile[],
     events: (eventsRes.data ?? []) as Event[],

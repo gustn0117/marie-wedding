@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import JobsPageContent from '@/features/jobs/components/JobsPageContent';
 import type { Job } from '@/types/database';
@@ -37,7 +38,7 @@ async function getJobs(searchParams: Record<string, string | undefined>) {
 
   let query = supabase
     .from('jobs')
-    .select(`*, ${authorEmbed}`, { count: 'exact' })
+    .select(`${PUBLIC_JOB_COLUMNS}, ${authorEmbed}`, { count: 'exact' })
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
     .eq('posting_type', 'hiring');

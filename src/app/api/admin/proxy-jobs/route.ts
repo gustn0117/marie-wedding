@@ -186,15 +186,25 @@ export async function POST(request: Request) {
     if ('error' in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     const patch: Record<string, unknown> = { ...parsed.fields, updated_at: new Date().toISOString() };
-    // 대행 정보는 값이 온 경우에만 갱신(빈 값으로 지워지지 않게)
-    if (typeof body.companyName === 'string' && body.companyName.trim()) {
-      patch.proxy_company_name = body.companyName.trim().slice(0, 200);
+    // 대행 정보는 등록과 같은 규칙으로 검증한다. 빈 값을 조용히 무시하면 화면은 '수정했습니다'
+    // 인데 예전 값이 남아 저장 실패를 성공으로 보고하게 되고, 동의 기록 최소 길이도 수정
+    // 경로로만 우회된다(이 필드가 이 기능의 법적 근거다).
+    if (body.companyName !== undefined) {
+      const v = typeof body.companyName === 'string' ? body.companyName.trim() : '';
+      if (!v) return NextResponse.json({ error: '업체명을 입력해주세요.' }, { status: 400 });
+      patch.proxy_company_name = v.slice(0, 200);
     }
-    if (typeof body.contact === 'string' && body.contact.trim()) {
-      patch.proxy_contact = body.contact.trim().slice(0, 200);
+    if (body.contact !== undefined) {
+      const v = typeof body.contact === 'string' ? body.contact.trim() : '';
+      if (!v) return NextResponse.json({ error: '업체 연락처를 입력해주세요.' }, { status: 400 });
+      patch.proxy_contact = v.slice(0, 200);
     }
-    if (typeof body.consentNote === 'string' && body.consentNote.trim()) {
-      patch.proxy_consent_note = body.consentNote.trim().slice(0, 1000);
+    if (body.consentNote !== undefined) {
+      const v = typeof body.consentNote === 'string' ? body.consentNote.trim() : '';
+      if (v.length < 5) {
+        return NextResponse.json({ error: '동의를 받은 경위를 적어주세요. (5자 이상)' }, { status: 400 });
+      }
+      patch.proxy_consent_note = v.slice(0, 1000);
     }
 
     const { error } = await supabase.from('jobs').update(patch).eq('id', id);
@@ -210,14 +220,20 @@ export async function POST(request: Request) {
   if (body.action === 'delete') {
     const id = typeof body.id === 'string' ? body.id : '';
     if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
-    const { error } = await supabase
+    // 이 엔드포인트는 대행 공고 전용이다. 업체가 직접 올린 공고까지 지울 수 있으면
+    // 화면 상태가 어긋났을 때 무관한 업체 공고가 조용히 내려간다.
+    const { data: deleted, error } = await supabase
       .from('jobs')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .not('proxy_company_name', 'is', null)
+      .select('id')
+      .maybeSingle();
     if (error) {
       console.error('[api/admin/proxy-jobs] delete failed:', error);
       return NextResponse.json({ error: '삭제에 실패했습니다.' }, { status: 500 });
     }
+    if (!deleted) return NextResponse.json({ error: '대행 등록 공고를 찾을 수 없습니다.' }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 
@@ -225,8 +241,15 @@ export async function POST(request: Request) {
   if (body.action === 'restore') {
     const id = typeof body.id === 'string' ? body.id : '';
     if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
-    const { error } = await supabase.from('jobs').update({ deleted_at: null }).eq('id', id);
+    const { data: restored, error } = await supabase
+      .from('jobs')
+      .update({ deleted_at: null })
+      .eq('id', id)
+      .not('proxy_company_name', 'is', null)
+      .select('id')
+      .maybeSingle();
     if (error) return NextResponse.json({ error: '복구에 실패했습니다.' }, { status: 500 });
+    if (!restored) return NextResponse.json({ error: '대행 등록 공고를 찾을 수 없습니다.' }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 
@@ -243,12 +266,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '업체 회원에게만 넘길 수 있습니다.' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    // 갱신된 행을 반드시 확인한다. 조건부 UPDATE 는 0행이어도 error 가 나지 않아,
+    // 그 사이 업체가 코드로 가져가 버린 경우에도 '넘겼습니다' 로 잘못 보고된다.
+    const { data: moved, error } = await supabase
       .from('jobs')
       .update({ author_id: profileId, claimed_at: new Date().toISOString(), claim_code: null })
       .eq('id', id)
-      .is('author_id', null);
+      .is('author_id', null)
+      .select('id')
+      .maybeSingle();
     if (error) return NextResponse.json({ error: '이관에 실패했습니다.' }, { status: 500 });
+    if (!moved) {
+      return NextResponse.json(
+        { error: '이미 다른 계정이 가져갔거나 존재하지 않는 공고입니다.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ ok: true });
   }
 
@@ -257,9 +290,22 @@ export async function POST(request: Request) {
     const id = typeof body.id === 'string' ? body.id : '';
     if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
     const code = makeClaimCode();
-    const { error } = await supabase
-      .from('jobs').update({ claim_code: code }).eq('id', id).is('author_id', null);
+    // 저장되지 않은 코드를 관리자에게 보여주면 업체에 무효한 코드를 전달하게 된다.
+    const { data: updated, error } = await supabase
+      .from('jobs')
+      .update({ claim_code: code })
+      .eq('id', id)
+      .is('author_id', null)
+      .is('deleted_at', null)
+      .select('id')
+      .maybeSingle();
     if (error) return NextResponse.json({ error: '코드 재발급에 실패했습니다.' }, { status: 500 });
+    if (!updated) {
+      return NextResponse.json(
+        { error: '이미 업체가 가져갔거나 삭제된 공고입니다. 목록을 새로고침해주세요.' },
+        { status: 409 },
+      );
+    }
     return NextResponse.json({ ok: true, claimCode: code });
   }
 

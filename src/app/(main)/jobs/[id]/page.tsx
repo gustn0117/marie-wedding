@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
@@ -32,11 +33,11 @@ const getJob = cache(async (id: string): Promise<Job | null> => {
   const supabase = createServerQueryClient();
   const { data } = await supabase
     .from('jobs')
-    .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
+    .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id(${PUBLIC_PROFILE_COLUMNS})`)
     .eq('id', id)
     .is('deleted_at', null)
     .single();
-  return data as Job | null;
+  return data as unknown as Job | null;
 });
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
