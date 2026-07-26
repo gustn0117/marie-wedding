@@ -20,6 +20,25 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const supabase = createServiceClient();
 
+  // 연결 상태 — 화면 배너가 실제 설정을 반영하도록 서버에서 알려준다(키 값은 내보내지 않는다).
+  if (url.searchParams.get('config') === '1') {
+    const provider = process.env.FAX_PROVIDER || 'console';
+    const hasKeys = provider === 'solapi'
+      ? !!(process.env.SOLAPI_API_KEY && process.env.SOLAPI_API_SECRET)
+      : provider === 'popbill'
+        ? !!(process.env.POPBILL_LINK_ID && process.env.POPBILL_SECRET_KEY)
+        : false;
+    const from = normalizeFaxNumber(process.env.FAX_SEND_NUMBER || '');
+    return NextResponse.json({
+      provider,
+      ready: provider === 'solapi' && hasKeys && !!from,
+      hasKeys,
+      from,
+      // 010 으로 시작하면 팩스번호가 아니라 휴대폰이다 — 발신번호로 거부될 수 있어 알린다.
+      senderIsMobile: from.startsWith('010'),
+    });
+  }
+
   // 이미 보낸 수신처 맵 — 작성 시 중복 발송 경고용(메일함과 같은 방식)
   if (url.searchParams.get('recipients') === '1') {
     const { data } = await supabase

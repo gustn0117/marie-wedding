@@ -18,6 +18,7 @@ interface FaxRow {
 }
 
 interface OptoutRow { number: string; reason: string | null; created_at: string }
+interface FaxConfig { provider: string; ready: boolean; hasKeys: boolean; from: string; senderIsMobile: boolean }
 
 function fmt(iso: string) {
   const d = new Date(new Date(iso).getTime() + 9 * 60 * 60 * 1000);
@@ -63,6 +64,7 @@ export default function AdminFaxClient() {
   const [sentMap, setSentMap] = useState<Record<string, { at: string; count: number }>>({});
   const [optouts, setOptouts] = useState<OptoutRow[]>([]);
   const [showOptout, setShowOptout] = useState(false);
+  const [config, setConfig] = useState<FaxConfig | null>(null);
 
   // 작성 상태
   const [to, setTo] = useState('');
@@ -101,6 +103,14 @@ export default function AdminFaxClient() {
   }, [queryInput]);
 
   useEffect(() => { load(search, 1); }, [search, load]);
+
+  // 연결 상태(공급자·발신번호)를 서버에서 읽어 배너에 반영한다.
+  useEffect(() => {
+    apiFetch('/api/admin/fax?config=1', { credentials: 'include' }, 10000)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => { if (b) setConfig(b as FaxConfig); })
+      .catch(() => {});
+  }, []);
 
   const loadOptouts = useCallback(async () => {
     try {
@@ -231,14 +241,35 @@ export default function AdminFaxClient() {
         </div>
       </div>
 
-      {/* 공급자 미연결 안내 */}
-      <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
-        <p className="font-bold">팩스 공급자가 아직 연결되지 않았습니다.</p>
-        <p className="mt-1 leading-relaxed">
-          화면·이력·수신거부·시간 제한은 모두 동작합니다. 솔라피 또는 팝빌 API 키를 발급받아
-          <code className="mx-1 rounded bg-amber-100 px-1">FAX_PROVIDER</code>와 키를 설정하면 실제 발송이 켜집니다.
-        </p>
-      </div>
+      {/* 연결 상태 — 서버 설정을 읽어 표시(하드코딩 아님) */}
+      {config && (
+        config.ready ? (
+          <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3 text-xs text-emerald-800">
+            <p className="font-bold">
+              팩스 발송이 연결되어 있습니다 · {config.provider} · 발신번호 {prettyNumber(config.from)}
+            </p>
+            <p className="mt-1 leading-relaxed">실제로 발송되며 1장당 요금이 부과됩니다.</p>
+            {config.senderIsMobile && (
+              <p className="mt-1 leading-relaxed text-amber-700">
+                발신번호가 휴대폰 번호입니다. 팩스 발신번호로 거부될 수 있으니 먼저 사장님이 받아볼 수 있는
+                번호로 한 장 시험 발송해 확인해주세요.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-800">
+            <p className="font-bold">팩스 공급자가 아직 연결되지 않았습니다.</p>
+            <p className="mt-1 leading-relaxed">
+              화면·이력·수신거부·시간 제한은 모두 동작합니다.
+              {!config.hasKeys
+                ? ' API 키가 설정되지 않았습니다.'
+                : !config.from
+                  ? ' 발신번호(FAX_SEND_NUMBER)가 설정되지 않았습니다.'
+                  : ''}
+            </p>
+          </div>
+        )
+      )}
 
       {showOptout && (
         <div className="platform-panel p-4">
