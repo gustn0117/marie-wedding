@@ -1,8 +1,10 @@
+import { createHmac, randomBytes } from 'node:crypto';
+
 // 팩스 어댑터 — 공급자 교체 가능 구조 (SMS 어댑터와 같은 패턴)
 // 환경 변수 FAX_PROVIDER=console (개발) / solapi / popbill
 //
-// 공급자 계약 전이라 실발송은 아직 붙어 있지 않다. 화면·DB·검증·수신거부까지
-// 전부 동작하고, 키를 넣고 FAX_PROVIDER 만 바꾸면 실발송이 켜진다.
+// 솔라피는 실제 호출로 규격을 확인해 구현했다. 팝빌은 자리만 잡아둔 상태.
+// 키는 서버 .env.production 에만 두고 저장소에는 절대 넣지 않는다.
 
 export interface FaxSendInput {
   /** 수신 팩스번호 — 숫자만 정규화된 값 */
@@ -41,14 +43,73 @@ class ConsoleFaxAdapter implements FaxAdapter {
 }
 
 /**
- * 솔라피 — 팩스 1장당 100원(2026-07 기준 공개 단가), 연동 비용 없음.
- * SOLAPI_API_KEY / SOLAPI_API_SECRET / FAX_SEND_NUMBER 필요.
- * 계약 후 실제 엔드포인트·서명 방식을 문서에 맞춰 채운다.
+ * 솔라피 — 팩스 1장당 100원(VAT 별도).
+ * 필요한 환경변수: SOLAPI_API_KEY / SOLAPI_API_SECRET / FAX_SEND_NUMBER
+ *
+ * 절차(실제 호출로 확인한 규격):
+ *  1) POST /storage/v1/files  { file: base64, type: 'FAX' } → fileId
+ *  2) POST /messages/v4/send  { message: { to, from, type: 'FAX', faxOptions: { fileIds } } }
+ *
+ * 인증: Authorization: HMAC-SHA256 apiKey=..., date=..., salt=..., signature=HMAC_SHA256(date+salt, secret)
  */
 class SolapiFaxAdapter implements FaxAdapter {
   readonly name = 'solapi';
-  async send(): Promise<FaxSendResult> {
-    return { ok: false, error: '솔라피 팩스 연동이 아직 구현되지 않았습니다. API 키 발급 후 연결해주세요.' };
+
+  private authHeader(): string {
+    const key = process.env.SOLAPI_API_KEY!;
+    const secret = process.env.SOLAPI_API_SECRET!;
+    const date = new Date().toISOString();
+    const salt = randomBytes(16).toString('hex');
+    const signature = createHmac('sha256', secret).update(date + salt).digest('hex');
+    return `HMAC-SHA256 apiKey=${key}, date=${date}, salt=${salt}, signature=${signature}`;
+  }
+
+  async send(input: FaxSendInput): Promise<FaxSendResult> {
+    const from = normalizeFaxNumber(process.env.FAX_SEND_NUMBER || '');
+    if (!process.env.SOLAPI_API_KEY || !process.env.SOLAPI_API_SECRET) {
+      return { ok: false, error: '솔라피 API 키가 설정되지 않았습니다.' };
+    }
+    if (!from) {
+      return { ok: false, error: '발신번호(FAX_SEND_NUMBER)가 설정되지 않았습니다.' };
+    }
+
+    try {
+      // 1) 문서를 내려받아 솔라피 저장소에 올린다(솔라피는 base64 업로드만 받는다).
+      const fileRes = await fetch(input.fileUrl);
+      if (!fileRes.ok) return { ok: false, error: '보낼 문서를 읽지 못했습니다.' };
+      const base64 = Buffer.from(await fileRes.arrayBuffer()).toString('base64');
+
+      const upRes = await fetch('https://api.solapi.com/storage/v1/files', {
+        method: 'POST',
+        headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ file: base64, type: 'FAX', name: 'fax.pdf' }),
+      });
+      const upBody = await upRes.json().catch(() => ({}));
+      if (!upRes.ok || !upBody.fileId) {
+        return { ok: false, error: `문서 업로드 실패: ${upBody.errorMessage ?? upRes.status}` };
+      }
+
+      // 2) 발송
+      const sendRes = await fetch('https://api.solapi.com/messages/v4/send', {
+        method: 'POST',
+        headers: { Authorization: this.authHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: { to: input.to, from, type: 'FAX', faxOptions: { fileIds: [upBody.fileId] } },
+        }),
+      });
+      const sendBody = await sendRes.json().catch(() => ({}));
+      if (!sendRes.ok) {
+        return { ok: false, error: `발송 실패: ${sendBody.errorMessage ?? sendRes.status}` };
+      }
+      // 접수 실패가 200 안에 담겨 오는 경우(failedMessageList)도 실패로 본다.
+      if (Array.isArray(sendBody.failedMessageList) && sendBody.failedMessageList.length > 0) {
+        const first = sendBody.failedMessageList[0];
+        return { ok: false, error: `발송 거부: ${first.statusMessage ?? first.statusCode ?? '알 수 없음'}` };
+      }
+      return { ok: true, providerId: sendBody.messageId ?? sendBody.groupId ?? undefined };
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : '발송 중 오류가 발생했습니다.' };
+    }
   }
 }
 
