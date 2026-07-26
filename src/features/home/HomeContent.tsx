@@ -61,7 +61,7 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
             {/* 컨테이너 비율을 이미지 실제 비율(240×405 ≒ 0.593)에 맞춘다.
                 어긋나면 object-contain 이 letterbox 를 만들어 반지가 박스보다 작게 보인다. */}
             <div
-              className="hero-ring-float relative mb-2.5 h-[61px] w-[36px] sm:mb-3 sm:h-[81px] sm:w-[48px]"
+              className="hero-ring-float relative mb-6 h-[61px] w-[36px] sm:mb-8 sm:h-[81px] sm:w-[48px]"
               aria-hidden="true"
             >
               <Image
