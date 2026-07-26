@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
@@ -55,8 +56,22 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
     <div className="pb-16">
       {/* Hero — 가운데 정렬 */}
       <section className="bg-white">
-        <div className="max-w-[1280px] mx-auto px-5 pt-10 pb-10 sm:pt-20 sm:pb-14">
+        <div className="max-w-[1280px] mx-auto px-5 pt-7 pb-10 sm:pt-12 sm:pb-14">
           <div className="flex flex-col items-center text-center">
+            <div
+              className="hero-ring-float relative mb-3 h-[100px] w-[84px] sm:mb-4 sm:h-[136px] sm:w-[114px]"
+              aria-hidden="true"
+            >
+              <Image
+                src="/images/hero-ring-premium-gold.png"
+                alt=""
+                fill
+                priority
+                draggable={false}
+                sizes="(min-width: 640px) 114px, 84px"
+                className="select-none object-contain"
+              />
+            </div>
             <h1 className="text-[26px] sm:text-[40px] font-bold leading-[1.25] tracking-tight text-ink">
               웨딩 업계 <span className="text-primary">전문</span> 채용 플랫폼
             </h1>
@@ -241,6 +256,3 @@ function CompanyBoardRow({ profile }: { profile: Profile }) {
     </Link>
   );
 }
-
-
-

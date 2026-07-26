@@ -582,6 +582,30 @@
   .promo-card-page {
     @apply absolute bottom-4 right-5 inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/70 rounded-full text-xs font-semibold text-gray-900;
   }
+
+  /* Hero ring — 타이틀 위에서 천천히 떠오르는 장식 오브젝트 */
+  .hero-ring-float {
+    transform-origin: 50% 64%;
+    animation: hero-ring-float 5.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    will-change: transform;
+  }
+}
+
+@keyframes hero-ring-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-1deg);
+  }
+  50% {
+    transform: translate3d(0, -7px, 0) rotate(1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-ring-float {
+    animation: none;
+    transform: none;
+  }
 }
 
 @layer utilities {
