@@ -229,6 +229,9 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         image: imageUpload.preview ? imagePath : null,
         description: serializeSections(latestSections), // 5개 섹션을 합친 최신 HTML
       });
+      // 저장에 성공했으면 미저장 변경이 아니다. 여기서 풀지 않으면 이탈 경고가
+      // 계속 붙어 있어 등록 직후 이동/새로고침에 "이 페이지에서 나갈까요?" 가 뜬다.
+      setDirty(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     } finally {

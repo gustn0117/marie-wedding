@@ -82,6 +82,7 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           12000,
           '게시글 수정 지연',
         );
+        setDirty(false); // 저장 성공 = 미저장 변경 없음(이탈 경고 해제)
         if (onSubmitSuccess) onSubmitSuccess(postId);
         else {
           router.push(ROUTES.COMMUNITY_DETAIL(postId));
@@ -95,6 +96,8 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
           12000,
           '게시글 등록 지연',
         );
+        // 저장 성공 = 미저장 변경 없음. 안 풀면 이탈 경고가 남아 등록 직후에도 뜬다.
+        setDirty(false);
         if (onSubmitSuccess) onSubmitSuccess(post.id);
         else {
           router.push(ROUTES.COMMUNITY_DETAIL(post.id));

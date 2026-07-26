@@ -134,12 +134,14 @@ export default function EventForm({ initialData, eventId }: EventFormProps) {
 
       if (isEdit && eventId) {
         await adminService.updateEvent(eventId, payload);
+        setDirty(false); // 저장 성공 = 미저장 변경 없음(이탈 경고 해제)
         router.push(`/admin/events`);
         router.refresh();
       } else {
         const createId = createIdRef.current ?? crypto.randomUUID();
         createIdRef.current = createId;
         await adminService.createEvent(payload, createId);
+        setDirty(false);
         router.push(`/admin/events`);
         router.refresh();
       }
