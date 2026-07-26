@@ -39,6 +39,62 @@ function normalizeImages(value: unknown): string[] | null {
   return cleaned.length > 0 ? cleaned.slice(0, JOB_IMAGES_MAX) : null;
 }
 
+
+/**
+ * 공고 본문 필드 파싱·검증 — 등록과 수정이 같은 규칙을 쓰도록 한 곳에 모은다.
+ * (사용자 등록 경로 /api/jobs/write 와 동일한 상한·역전 검사)
+ */
+function readJobFields(body: Record<string, unknown>):
+  | { error: string }
+  | { fields: Record<string, unknown> } {
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const description = typeof body.description === 'string' ? body.description.trim() : '';
+  const businessType = typeof body.businessType === 'string' ? body.businessType : '';
+  const employmentType = typeof body.employmentType === 'string' ? body.employmentType : '';
+  const region = typeof body.region === 'string' ? body.region : '';
+  const salaryInfo = typeof body.salaryInfo === 'string' ? body.salaryInfo.trim() : '';
+  const num = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : null);
+  const salaryMin = num(body.salaryMin);
+  const salaryMax = num(body.salaryMax);
+  const salaryUnit = ['monthly', 'yearly', 'daily', 'hourly'].includes(String(body.salaryUnit))
+    ? String(body.salaryUnit) : 'monthly';
+  const experienceMin = num(body.experienceMin);
+  const deadline = typeof body.deadline === 'string' ? body.deadline : '';
+  const image = typeof body.image === 'string' && body.image.trim() ? body.image.trim() : null;
+  const images = normalizeImages(body.images);
+
+  if (!title || !description || !businessType || !employmentType || !region) {
+    return { error: '공고 제목·내용·업종·고용형태·지역은 필수입니다.' };
+  }
+  for (const [label, v] of [['최소', salaryMin], ['최대', salaryMax]] as const) {
+    if (v !== null && (v < 0 || v > MAX_SALARY)) return { error: `급여 ${label}값이 올바르지 않습니다.` };
+  }
+  if (salaryMin !== null && salaryMax !== null && salaryMin > salaryMax) {
+    return { error: '급여 최소값이 최대값보다 클 수 없습니다.' };
+  }
+  if (experienceMin !== null && (experienceMin < 0 || experienceMin > 50)) {
+    return { error: '최소 경력 값이 올바르지 않습니다.' };
+  }
+
+  return {
+    fields: {
+      title: title.slice(0, 200),
+      description,
+      business_type: businessType,
+      employment_type: employmentType,
+      region,
+      salary_info: salaryInfo || null,
+      salary_min: salaryMin,
+      salary_max: salaryMax,
+      salary_unit: salaryUnit,
+      experience_min: experienceMin,
+      deadline: normalizeDeadline(deadline),
+      image,
+      images,
+    },
+  };
+}
+
 /** 업체에 전달할 짧은 코드. 헷갈리는 글자(0/O/1/I)는 뺀다. */
 function makeClaimCode(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -51,6 +107,22 @@ export async function GET(request: Request) {
   if (!(await hasValidAdminSession())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const url = new URL(request.url);
+  // 단건 조회 — 수정 화면이 폼을 채울 때 쓴다.
+  const one = url.searchParams.get('id');
+  if (one) {
+    const supabase = createServiceClient();
+    const { data } = await supabase
+      .from('jobs')
+      .select('*')
+      .eq('id', one)
+      .maybeSingle();
+    if (!data) return NextResponse.json({ error: '공고를 찾을 수 없습니다.' }, { status: 404 });
+    if (!data.proxy_company_name) {
+      return NextResponse.json({ error: '대행 등록 공고가 아닙니다.' }, { status: 403 });
+    }
+    return NextResponse.json({ job: data });
+  }
+
   const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10) || 1);
   const from = (page - 1) * PAGE;
   const q = (url.searchParams.get('q') || '').replace(/[,()%_\\]/g, ' ').trim().slice(0, 100);
@@ -90,6 +162,48 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 });
   }
   const supabase = createServiceClient();
+
+  // 수정 — 등록과 같은 필드를 받는다. 대행 정보(업체명·연락처·동의 경위)도 고칠 수 있다.
+  // 소유권 관련 값(author_id / claim_code / claimed_at)은 건드리지 않는다. 수정으로 주인이
+  // 바뀌거나 이미 발급된 코드가 무효화되면 업체가 가져가지 못한다.
+  if (body.action === 'update') {
+    const id = typeof body.id === 'string' ? body.id : '';
+    if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });
+
+    const { data: existing } = await supabase
+      .from('jobs')
+      .select('id, proxy_company_name, deleted_at')
+      .eq('id', id)
+      .maybeSingle();
+    if (!existing) return NextResponse.json({ error: '공고를 찾을 수 없습니다.' }, { status: 404 });
+    if (existing.deleted_at) return NextResponse.json({ error: '삭제된 공고는 수정할 수 없습니다.' }, { status: 400 });
+    // 대행 공고만 이 화면에서 다룬다(일반 공고는 업체 소유라 여기서 손대지 않는다).
+    if (!existing.proxy_company_name) {
+      return NextResponse.json({ error: '대행 등록 공고만 수정할 수 있습니다.' }, { status: 403 });
+    }
+
+    const parsed = readJobFields(body);
+    if ('error' in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
+
+    const patch: Record<string, unknown> = { ...parsed.fields, updated_at: new Date().toISOString() };
+    // 대행 정보는 값이 온 경우에만 갱신(빈 값으로 지워지지 않게)
+    if (typeof body.companyName === 'string' && body.companyName.trim()) {
+      patch.proxy_company_name = body.companyName.trim().slice(0, 200);
+    }
+    if (typeof body.contact === 'string' && body.contact.trim()) {
+      patch.proxy_contact = body.contact.trim().slice(0, 200);
+    }
+    if (typeof body.consentNote === 'string' && body.consentNote.trim()) {
+      patch.proxy_consent_note = body.consentNote.trim().slice(0, 1000);
+    }
+
+    const { error } = await supabase.from('jobs').update(patch).eq('id', id);
+    if (error) {
+      console.error('[api/admin/proxy-jobs] update failed:', error);
+      return NextResponse.json({ error: `수정에 실패했습니다: ${error.message}` }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, id });
+  }
 
   // 삭제 — soft delete(다른 공고 삭제와 같은 방식). 이미 이관된 공고도 지울 수 있게 두되,
   // 그 경우 업체 화면에서도 사라지므로 화면에서 한 번 더 확인을 받는다.
@@ -153,21 +267,6 @@ export async function POST(request: Request) {
     const companyName = typeof body.companyName === 'string' ? body.companyName.trim() : '';
     const contact = typeof body.contact === 'string' ? body.contact.trim() : '';
     const consentNote = typeof body.consentNote === 'string' ? body.consentNote.trim() : '';
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    const businessType = typeof body.businessType === 'string' ? body.businessType : '';
-    const employmentType = typeof body.employmentType === 'string' ? body.employmentType : '';
-    const region = typeof body.region === 'string' ? body.region : '';
-    const salaryInfo = typeof body.salaryInfo === 'string' ? body.salaryInfo.trim() : '';
-    const num = (v: unknown) => (typeof v === 'number' && Number.isInteger(v) ? v : null);
-    const salaryMin = num(body.salaryMin);
-    const salaryMax = num(body.salaryMax);
-    const salaryUnit = ['monthly', 'yearly', 'daily', 'hourly'].includes(String(body.salaryUnit))
-      ? String(body.salaryUnit) : 'monthly';
-    const experienceMin = num(body.experienceMin);
-    const deadline = typeof body.deadline === 'string' ? body.deadline : '';
-    const image = typeof body.image === 'string' && body.image.trim() ? body.image.trim() : null;
-    const images = normalizeImages(body.images);
 
     if (!companyName) return NextResponse.json({ error: '업체명을 입력해주세요.' }, { status: 400 });
     if (!contact) return NextResponse.json({ error: '업체 연락처를 입력해주세요.' }, { status: 400 });
@@ -178,21 +277,9 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    if (!title || !description || !businessType || !employmentType || !region) {
-      return NextResponse.json({ error: '공고 제목·내용·업종·고용형태·지역은 필수입니다.' }, { status: 400 });
-    }
-    // 급여·경력 범위 — 사용자 등록 경로와 동일하게 서버에서 다시 막는다(INTEGER 초과·역전 방지).
-    for (const [label, v] of [['최소', salaryMin], ['최대', salaryMax]] as const) {
-      if (v !== null && (v < 0 || v > MAX_SALARY)) {
-        return NextResponse.json({ error: `급여 ${label}값이 올바르지 않습니다.` }, { status: 400 });
-      }
-    }
-    if (salaryMin !== null && salaryMax !== null && salaryMin > salaryMax) {
-      return NextResponse.json({ error: '급여 최소값이 최대값보다 클 수 없습니다.' }, { status: 400 });
-    }
-    if (experienceMin !== null && (experienceMin < 0 || experienceMin > 50)) {
-      return NextResponse.json({ error: '최소 경력 값이 올바르지 않습니다.' }, { status: 400 });
-    }
+
+    const parsed = readJobFields(body);
+    if ('error' in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
     const claimCode = makeClaimCode();
     const { data, error } = await supabase
@@ -201,19 +288,7 @@ export async function POST(request: Request) {
         id: randomUUID(),
         author_id: null, // 아직 주인이 없다
         posting_type: 'hiring',
-        title: title.slice(0, 200),
-        description,
-        business_type: businessType,
-        employment_type: employmentType,
-        region,
-        salary_info: salaryInfo || null,
-        salary_min: salaryMin,
-        salary_max: salaryMax,
-        salary_unit: salaryUnit,
-        experience_min: experienceMin,
-        deadline: normalizeDeadline(deadline),
-        image,
-        images,
+        ...parsed.fields,
         proxy_company_name: companyName.slice(0, 200),
         proxy_contact: contact.slice(0, 200),
         proxy_consent_note: consentNote.slice(0, 1000),

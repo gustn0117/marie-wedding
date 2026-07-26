@@ -177,6 +177,10 @@ export default function AdminProxyJobsClient() {
                         className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">직접 이관</button>
                     </>
                   )}
+                  {!j.deleted_at && (
+                    <Link href={`/admin/proxy-jobs/${j.id}/edit`}
+                      className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">수정</Link>
+                  )}
                   {j.deleted_at ? (
                     <button type="button" onClick={() => restore(j)}
                       className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">복구</button>
