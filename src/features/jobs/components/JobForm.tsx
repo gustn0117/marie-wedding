@@ -7,6 +7,8 @@ import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import BulletListInput from '@/shared/components/BulletListInput';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
+import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
+import JobImagesInput from './JobImagesInput';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { useFieldError } from '@/shared/hooks/useFieldError';
 import { FieldWarning } from '@/shared/components/FieldWarning';
@@ -93,6 +95,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
   const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
   const [dirty, setDirty] = useState(false);
+  // 추가 사진(갤러리) — 업로드 완료된 storage 경로만 순서대로 담긴다.
+  const [galleryImagesRaw, setGalleryImagesRaw] = useState<string[]>(initialData?.images ?? []);
+  const setGalleryImages = (paths: string[]) => { setDirty(true); setGalleryImagesRaw(paths); };
+  const galleryImages = galleryImagesRaw;
+  const galleryRef = useRef(galleryImagesRaw);
+  galleryRef.current = galleryImagesRaw;
+  const { trackUpload, waitForUploads } = usePendingUploads();
   // 필드별 검증 경고 + 누락 필드로 스크롤(공용 훅). id 접두사 'jobfield'.
   const { fieldError, setFieldError, showFieldIssue } = useFieldError('jobfield');
   const setFormData = (v: Parameters<typeof setFormDataRaw>[0]) => { setDirty(true); setFieldError(null); setFormDataRaw(v); };
@@ -215,8 +224,10 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     savingRef.current = true;
     setLoading(true);
     try {
-      // 대표 이미지 업로드 완료를 기다린 뒤 최신 섹션 ref로 검증·직렬화한다.
+      // 대표 이미지 + 추가 사진 업로드가 모두 끝난 뒤 최신 섹션 ref로 검증·직렬화한다.
+      // (추가 사진이 올라가는 중에 제출하면 경로가 빠진 채 저장된다)
       const imagePath = await imageUpload.waitForUpload();
+      await waitForUploads();
       const latestSections = sectionsRef.current;
       const validationError = validateSections(latestSections);
       if (validationError) {
@@ -227,6 +238,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         ...formData,
         postingType: 'hiring',
         image: imageUpload.preview ? imagePath : null,
+        images: galleryRef.current.length > 0 ? galleryRef.current : null,
         description: serializeSections(latestSections), // 5개 섹션을 합친 최신 HTML
       });
       // 저장에 성공했으면 미저장 변경이 아니다. 여기서 풀지 않으면 이탈 경고가
@@ -392,6 +404,13 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             )}
             </div>
           </div>
+
+          <JobImagesInput
+            value={galleryImages}
+            onChange={setGalleryImages}
+            onUploadPromise={trackUpload}
+            disabled={loading}
+          />
         </div>
       </Section>
 

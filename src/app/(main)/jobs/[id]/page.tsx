@@ -11,6 +11,7 @@ import JobDetailActions from '@/features/jobs/components/JobDetailActions';
 import JobApplicationBox from '@/features/applications/components/JobApplicationBox';
 import JobViewTracker from '@/features/jobs/components/JobViewTracker';
 import JobDetailHero from '@/features/jobs/components/JobDetailHero';
+import JobImageGallery from '@/features/jobs/components/JobImageGallery';
 import JobDetailSidebar from '@/features/jobs/components/JobDetailSidebar';
 import JobMobileApplyBar from '@/features/jobs/components/JobMobileApplyBar';
 import RelatedJobs from '@/features/jobs/components/RelatedJobs';
@@ -133,6 +134,9 @@ export default async function JobDetailPage({ params }: PageProps) {
             <h2 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">상세 내용</h2>
             <JobDescriptionView html={job.description} />
           </section>
+
+          {/* 추가 사진 갤러리 — 등록자가 올린 순서대로. 없으면 렌더링되지 않는다. */}
+          {job.images && job.images.length > 0 && <JobImageGallery images={job.images} />}
 
           {/* Application box (anchor target) — 본문 직후 사용자의 다음 행동 */}
           <div id="apply" className="scroll-mt-20">

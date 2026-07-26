@@ -35,6 +35,7 @@ interface JobPayload {
   experienceMin?: number | null;
   deadline?: string | null;
   image?: string | null;
+  images?: unknown;
 }
 
 /**
@@ -125,6 +126,27 @@ export async function POST(request: Request) {
     }
   }
 
+  // 추가 사진(갤러리) — 클라이언트가 보낸 storage 경로 목록. 개수·형식을 서버에서 다시 강제한다.
+  // 경로만 받으므로 버킷 밖을 가리키거나 상위 경로로 빠져나가는 문자열은 거른다.
+  const JOB_IMAGES_MAX = 8;
+  let normalizedImages: string[] | null | undefined;
+  if (payload.images !== undefined) {
+    if (payload.images === null) {
+      normalizedImages = null;
+    } else if (!Array.isArray(payload.images)) {
+      return NextResponse.json({ error: '추가 사진 형식이 올바르지 않습니다.' }, { status: 400 });
+    } else {
+      const cleaned = payload.images
+        .filter((p): p is string => typeof p === 'string')
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0 && p.length <= 300 && !p.includes('..') && !p.startsWith('/') && !/^https?:/i.test(p));
+      if (cleaned.length > JOB_IMAGES_MAX) {
+        return NextResponse.json({ error: `추가 사진은 최대 ${JOB_IMAGES_MAX}장까지 가능합니다.` }, { status: 400 });
+      }
+      normalizedImages = cleaned.length > 0 ? cleaned : null;
+    }
+  }
+
   if (mode === 'create') {
     const jobId = body.id?.trim();
     if (!isUuid(jobId)) {
@@ -154,6 +176,7 @@ export async function POST(request: Request) {
       experience_min: payload.experienceMin ?? null,
       deadline: normalizeDeadline(payload.deadline),
       image: payload.image || null,
+      images: normalizedImages ?? null,
     };
     // 클라이언트가 폼 생명주기 동안 유지하는 ID를 그대로 INSERT한다. commit 뒤 응답만
     // 유실되어 같은 요청이 재시도돼도 PK 충돌을 성공 replay로 복구할 수 있다.
@@ -250,6 +273,7 @@ export async function POST(request: Request) {
   if (payload.experienceMin !== undefined) updateData.experience_min = payload.experienceMin;
   if (payload.deadline !== undefined) updateData.deadline = normalizeDeadline(payload.deadline);
   if (payload.image !== undefined) updateData.image = payload.image || null;
+  if (normalizedImages !== undefined) updateData.images = normalizedImages;
 
   const { error: updErr } = await service
     .from('jobs')

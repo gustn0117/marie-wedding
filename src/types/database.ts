@@ -81,6 +81,8 @@ export interface Job {
   is_urgent: boolean;
   deadline: string | null;
   image: string | null;
+  /** 추가 사진(갤러리) storage 경로. 기존 공고는 null */
+  images: string[] | null;
   view_count: number;
   hidden_by_admin: boolean;
   is_promoted: boolean;

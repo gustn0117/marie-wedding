@@ -12,6 +12,8 @@ export interface JobFormData {
   experienceMin?: number | null;
   deadline: string;
   image?: string | null;
+  /** 추가 사진(갤러리) storage 경로 목록 — 최대 8장, 사용자가 정한 순서 */
+  images?: string[] | null;
 }
 
 export interface JobFilters {

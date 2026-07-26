@@ -58,6 +58,7 @@ export default async function EditJobPage({ params }: PageProps) {
     experienceMin: job.experience_min,
     deadline: job.deadline ? job.deadline.split('T')[0] : '',
     image: job.image ?? null,
+    images: job.images ?? [],
   };
 
   return (
