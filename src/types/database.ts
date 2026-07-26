@@ -70,7 +70,7 @@ export interface ModerationKeyword {
 
 export interface Job {
   id: string;
-  author_id: string;
+  author_id: string | null;
   posting_type: PostingType;
   title: string;
   description: string;
@@ -83,6 +83,17 @@ export interface Job {
   image: string | null;
   /** 추가 사진(갤러리) storage 경로. 기존 공고는 null */
   images: string[] | null;
+  /**
+   * 대행 등록 공고 — 업체 동의를 받아 관리자가 대신 올린 공고.
+   * 아직 주인이 없으므로 author_id 가 null 이고, 표시용 업체명은 여기 담긴다.
+   * 업체가 가입 후 claim_code 를 입력하면 author_id 가 채워지고 claimed_at 이 찍힌다.
+   */
+  proxy_company_name: string | null;
+  proxy_contact: string | null;
+  proxy_consent_note: string | null;
+  proxy_consent_at: string | null;
+  claim_code: string | null;
+  claimed_at: string | null;
   view_count: number;
   hidden_by_admin: boolean;
   is_promoted: boolean;

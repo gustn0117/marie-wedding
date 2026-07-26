@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import ClaimJobBox from '@/features/jobs/components/ClaimJobBox';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
 import { ROUTES } from '@/shared/constants';
@@ -126,6 +127,9 @@ export default async function MyPage() {
           )
         }
       />
+
+      {/* 대행 등록 공고 가져오기 — 업체 회원에게만 노출 */}
+      {isBusinessAcc && <ClaimJobBox />}
 
       {/* Profile Card */}
       <div className="surface p-5 sm:p-6">

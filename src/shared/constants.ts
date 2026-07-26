@@ -102,6 +102,7 @@ export const ROUTES = {
   ADMIN_INQUIRIES: '/admin/inquiries',
   ADMIN_MAIL: '/admin/mail',
   ADMIN_FAX: '/admin/fax',
+  ADMIN_PROXY_JOBS: '/admin/proxy-jobs',
   ADMIN_BROADCAST: '/admin/broadcast',
   ADMIN_EVENTS: '/admin/events',
   ADMIN_EVENTS_NEW: '/admin/events/new',

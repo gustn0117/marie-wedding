@@ -59,6 +59,16 @@ export default function JobDetailHero({ job }: Props) {
         {/* Title */}
         <h1 className="text-2xl md:text-[28px] font-bold text-gray-900 leading-tight mb-4">{job.title}</h1>
 
+        {/* 대행 등록(미이관) — 아직 주인이 없어 연결할 업체 페이지가 없다. 이름만 표기한다. */}
+        {!job.author && job.proxy_company_name && (
+          <div className="pb-5 mb-5 border-b border-gray-100">
+            <p className="text-sm font-bold text-gray-900">{job.proxy_company_name}</p>
+            <p className="mt-1 text-xs text-gray-500">
+              업체 동의를 받아 마리에가 대신 등록한 공고입니다 · <time>{formatRelativeTime(job.created_at)}</time> 등록
+            </p>
+          </div>
+        )}
+
         {/* Company link */}
         {job.author && (
           <Link

@@ -83,6 +83,8 @@ export default async function JobDetailPage({ params }: PageProps) {
   const isExpired = job.deadline ? new Date(job.deadline) < new Date() : false;
   // 마감(마감일 경과 또는 수동 closed/filled/hidden) — 지원 폼 대신 마감 안내를 노출
   const isClosed = isExpired || ['closed', 'filled', 'hidden'].includes(job.status);
+  // 대행 등록 후 미이관 상태(주인 없음)
+  const isUnclaimed = !job.author_id;
   const isAuthorViewer = !!viewer && viewer.profileId === job.author_id;
   const isBusinessViewer = viewer?.accountType === 'business' && !isAuthorViewer;
 
@@ -121,7 +123,7 @@ export default async function JobDetailPage({ params }: PageProps) {
               SSR 에서 viewer 판정한 canManage 를 prop 으로 넘겨 flash 방지. */}
           <JobDetailActions
             jobId={job.id}
-            authorId={job.author_id}
+            authorId={job.author_id ?? ''}
             initialCanManage={
               !!viewer && (viewer.profileId === job.author_id || viewer.role === 'admin')
             }
@@ -138,13 +140,27 @@ export default async function JobDetailPage({ params }: PageProps) {
           {/* 추가 사진 갤러리 — 등록자가 올린 순서대로. 없으면 렌더링되지 않는다. */}
           {job.images && job.images.length > 0 && <JobImageGallery images={job.images} />}
 
-          {/* Application box (anchor target) — 본문 직후 사용자의 다음 행동 */}
+          {/* Application box (anchor target) — 본문 직후 사용자의 다음 행동.
+              대행 등록 후 아직 업체가 가져가지 않은 공고는 지원을 받지 않는다.
+              받는 사람이 없는 상태에서 지원서를 받으면 지원자가 답을 못 받고 끝난다. */}
           <div id="apply" className="scroll-mt-20">
-            <JobApplicationBox jobId={job.id} authorId={job.author_id} isClosed={isClosed} />
+            {isUnclaimed ? (
+              <section className="rounded-xl border border-gray-200 bg-gray-50 p-6 text-center">
+                <p className="text-sm font-bold text-gray-800">아직 지원을 받지 않는 공고입니다</p>
+                <p className="mt-1.5 text-sm text-gray-600">
+                  업체 동의를 받아 마리에가 대신 등록한 공고로, 업체가 마리에에 합류하면 지원이 열립니다.
+                </p>
+                <p className="mt-3 text-xs text-gray-500">
+                  이 공고의 업체시라면 가입 후 마이페이지에서 공고를 가져가실 수 있습니다.
+                </p>
+              </section>
+            ) : (
+              <JobApplicationBox jobId={job.id} authorId={job.author_id ?? ''} isClosed={isClosed} />
+            )}
           </div>
 
           {/* Related jobs — 지원 결정 후 추가 탐색 */}
-          <RelatedJobs authorId={job.author_id} currentJobId={job.id} />
+          {job.author_id && <RelatedJobs authorId={job.author_id} currentJobId={job.id} />}
         </div>
 
         {/* Sidebar */}

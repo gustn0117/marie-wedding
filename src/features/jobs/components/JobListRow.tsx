@@ -26,7 +26,8 @@ interface Props {
 export default function JobListRow({ job }: Props) {
   const dDay = getDDayLabel(job.deadline);
   const urgent = isUrgent(job.deadline);
-  const companyName = job.author?.company_name ?? job.author?.contact_name ?? '미상';
+  // 대행 등록 공고는 주인이 없으므로 공고에 저장된 업체명을 쓴다.
+  const companyName = job.author?.company_name ?? job.author?.contact_name ?? job.proxy_company_name ?? '미상';
   const region = getRegionLabel(job.region);
   const employmentLabel = getEmploymentTypeLabel(job.employment_type);
   const businessLabel = getBusinessTypeLabel(job.business_type);
