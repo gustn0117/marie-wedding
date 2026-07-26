@@ -10,6 +10,7 @@ const SERVICE_LINKS = [
   // 키워드 랜딩 — 검색 유입 대상 앵커 링크
   { href: '/guide/wedding-hall-recruit', label: '웨딩홀 채용' },
   { href: '/guide/wedding-jobs', label: '웨딩 구인구직' },
+  { href: '/guide/wedding-venue-recruit', label: '예식장 채용' },
 ] as const;
 
 export default function Footer() {

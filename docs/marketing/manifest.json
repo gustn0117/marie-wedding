@@ -10,46 +10,55 @@
       "format": "PDF",
       "pages": 2,
       "pageSize": "A4",
-      "sha256": "25fc61fc1db9e7fc16196fd57f6ac2f6b19897eb9e6493f22d58e8ed64f50ae7"
+      "sha256": "68a27ef53bf716d650e4bce3b744d7e9b66bfff06edc3be7c7df61326f716848"
     },
     {
       "path": "docs/marketing/마리에-소개-1장요약.pdf",
       "format": "PDF",
       "pages": 1,
       "pageSize": "A4",
-      "sha256": "a135aee88c1a0325472c80a90d29117c4e76e7f07ec5603708c3d38477a3d57f"
+      "sha256": "aa2c2b7d2c1bee7d9d3c859672bf306dfe7788be1bcc6defa2626aff4dd20c3e"
+    }
+  ],
+  "assets": [
+    {
+      "path": "docs/marketing/assets/wedding-hall-line-art.png",
+      "type": "generated-illustration",
+      "sha256": "6fd3fa65de5c05d1ce828dacbeb68a77b450c0cb5197a65f6271f91c13f9ff02",
+      "generationMode": "built-in image generation",
+      "promptSummary": "고급 웨딩홀 내부의 아치와 버진로드를 딥네이비 잉크와 샴페인 골드 선으로 표현한 아이보리 배경의 고대비 건축 라인 일러스트. 사람·문구·로고·워터마크·그라데이션·사진 질감 제외."
     }
   ],
   "previews": [
     {
       "path": "docs/marketing/previews/detailed-page-1.png",
       "type": "render",
-      "sha256": "e9836a557863b19070015dc4c04ab722dd10a3d1fb2369922e57a7bb292e3478"
+      "sha256": "9910aab3bff8769ead440e0602e9449a742228d0ad03de7ebe2eeef88cd236fb"
     },
     {
       "path": "docs/marketing/previews/detailed-page-2.png",
       "type": "render",
-      "sha256": "c76a829a5dfc9e7e41667c743fbb4a7f3d392f4bb055947f19535548f524e6e0"
+      "sha256": "6c6c363e118feb60f6d5dd94eabbb60270d6076c95e7522840e015fa5989b3af"
     },
     {
       "path": "docs/marketing/previews/summary-page-1.png",
       "type": "render",
-      "sha256": "e9836a557863b19070015dc4c04ab722dd10a3d1fb2369922e57a7bb292e3478"
+      "sha256": "9910aab3bff8769ead440e0602e9449a742228d0ad03de7ebe2eeef88cd236fb"
     },
     {
       "path": "docs/marketing/previews/fax-page-1.png",
       "type": "fax-simulation",
-      "sha256": "961d9a3a5e33c311db0ce41b1cb66ce8c042ce31c4b2e9407b3a690643a1c4ae"
+      "sha256": "dda04dcb53abb78f48f0cbdbf9398c9cccef4376f90d4d5a7413861b50680831"
     },
     {
       "path": "docs/marketing/previews/fax-page-2.png",
       "type": "fax-simulation",
-      "sha256": "15185ed04aac2604502a8462c2bff2fa14e92ee2b999095d87351b5721c45afb"
+      "sha256": "0e084880827a78579366e2b0f06bed8d4f060e2dc4dfb1aea5f2108bf5498765"
     },
     {
       "path": "docs/marketing/previews/fax-summary.png",
       "type": "fax-simulation",
-      "sha256": "7fabb8557edb5ce024dacf05179c3bebb69410bc20d0db8f80f69a16597a74d8"
+      "sha256": "ad6c4a6d84001fea48beb6886f0af67a85c131c70850d3038970b4905f6ae86a"
     }
   ],
   "provenance": {

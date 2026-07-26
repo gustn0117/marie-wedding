@@ -58,7 +58,7 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
         <div className="max-w-[1280px] mx-auto px-5 pt-10 pb-10 sm:pt-20 sm:pb-14">
           <div className="flex flex-col items-center text-center">
             <h1 className="text-[26px] sm:text-[40px] font-bold leading-[1.25] tracking-tight text-ink">
-              웨딩 업계 <span className="text-primary">No.1</span> 채용 플랫폼
+              웨딩 업계 <span className="text-primary">전문</span> 채용 플랫폼
             </h1>
             <p className="mt-3 text-[15px] sm:text-lg leading-relaxed text-gray-500">
               예식장·드레스·스튜디오·헤어메이크업·플래너까지<br className="sm:hidden" />

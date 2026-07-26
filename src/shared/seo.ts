@@ -5,7 +5,9 @@
 export const SITE_URL = 'https://marie.co.kr';
 export const SITE_NAME = 'Marié';
 export const SITE_NAME_KO = '마리에';
-export const SITE_TAGLINE = '웨딩 업계 No.1 채용 플랫폼';
+// 근거 없는 최상급('No.1')은 표시광고법상 부당표시 소지가 있어 쓰지 않는다.
+// 전문성(웨딩만 다룬다)은 사실이라 근거를 요구받지 않으면서도 차별점이 된다.
+export const SITE_TAGLINE = '웨딩 업계 전문 채용 플랫폼';
 export const SITE_DESCRIPTION =
   '예식장·드레스·스튜디오·헤어메이크업·플래너까지, 웨딩 업계 채용 공고와 인재·업체 프로필을 한 곳에서. 마리에에서 웨딩 일자리와 인재를 찾아보세요.';
 
