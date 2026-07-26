@@ -6,6 +6,7 @@ import { REGION_DETAILS } from '@/shared/constants/regions';
 import DatePicker from '@/shared/components/DatePicker';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
 import BulletListInput from '@/shared/components/BulletListInput';
+import RichTextEditor from '@/shared/components/RichTextEditor';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
 import JobImagesInput from './JobImagesInput';
@@ -54,8 +55,8 @@ const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; hint: stri
     required: false,
   },
   extra: {
-    placeholder: '한 줄에 하나씩 적어주세요.',
-    hint: '한 줄에 하나씩 · 예: 4대 보험·퇴직금 / 중식 제공 / 경조사 지원 (선택)',
+    placeholder: '자유롭게 작성하세요. 위 도구모음으로 굵기·크기·정렬과 사진을 넣을 수 있어요.',
+    hint: '줄 나눔 없이 자유롭게 · 굵기·크기·정렬·목록·사진 사용 가능 (선택)',
     required: false,
   },
 };
@@ -63,9 +64,13 @@ const FORM_SECTION_META: Record<JobSectionKey, { placeholder: string; hint: stri
 // 상세 섹션 시작값 — 빈 글머리 목록. Enter 로 다음 줄이 자동 글머리(인덱스)로 이어진다.
 // sectionHasContent 는 빈 <li> 를 '내용 없음' 으로 보므로 저장/필수검증에 영향 없음.
 const SECTION_STARTER = '<ul><li></li></ul>';
+// 기타 상세 내용은 줄 단위 항목이 아니라 자유 서식(굵기·크기·정렬)으로 쓰는 칸이라
+// 글머리 목록으로 시작시키지 않는다.
+const FREEFORM_SECTIONS: readonly JobSectionKey[] = ['extra'];
 function seedSectionLists(map: JobSectionMap): JobSectionMap {
   const out = { ...map };
   for (const sec of JOB_SECTIONS) {
+    if (FREEFORM_SECTIONS.includes(sec.key)) continue;
     if (!sectionHasContent(out[sec.key])) out[sec.key] = SECTION_STARTER;
   }
   return out;
@@ -415,7 +420,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       </Section>
 
       {/* STEP 3: 상세 내용 — 5개 섹션별 입력 */}
-      <Section step={3} title="상세 내용을 작성하세요" description="각 줄이 하나의 항목(*)이 됩니다. Enter 로 다음 줄, 빈 줄에서 Backspace 로 삭제하세요. 한 줄에 한 가지씩 적으면 지원자가 한눈에 파악해요. 빈 항목은 등록 후 보이지 않습니다.">
+      <Section step={3} title="상세 내용을 작성하세요" description="담당 업무·지원 자격·근무 조건·지원 시 알려주세요는 각 줄이 하나의 항목(*)이 됩니다. Enter 로 다음 줄, 빈 줄에서 Backspace 로 삭제하세요. 기타 상세 내용은 줄 나눔 없이 자유롭게 쓰고 굵기·크기·정렬을 쓸 수 있어요. 빈 항목은 등록 후 보이지 않습니다.">
         <div className="space-y-5">
           {JOB_SECTIONS.map((sec) => {
             const meta = FORM_SECTION_META[sec.key];
@@ -430,13 +435,26 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                 </label>
                 <span className="text-[11px] text-gray-400 tabular-nums">{stripHtml(sections[sec.key]).length}자</span>
               </div>
-              <BulletListInput
-                value={sections[sec.key]}
-                onChange={(html) => setSection(sec.key, html)}
-                placeholder={meta.placeholder}
-                minHeight={sec.key === 'extra' ? 80 : 110}
-                disabled={loading}
-              />
+              {FREEFORM_SECTIONS.includes(sec.key) ? (
+                // 자유 서식 — 줄 나눔 없이 쓰고 굵기·크기·정렬·목록·사진을 쓸 수 있다.
+                <RichTextEditor
+                  value={sections[sec.key]}
+                  onChange={(html) => setSection(sec.key, html)}
+                  placeholder={meta.placeholder}
+                  minHeight={160}
+                  disabled={loading}
+                  imageBucket="job-images"
+                  onUploadPromise={trackUpload}
+                />
+              ) : (
+                <BulletListInput
+                  value={sections[sec.key]}
+                  onChange={(html) => setSection(sec.key, html)}
+                  placeholder={meta.placeholder}
+                  minHeight={110}
+                  disabled={loading}
+                />
+              )}
               <p className="mt-1 text-[11px] text-gray-400">{meta.hint}</p>
               {secErr && <FieldWarning message={secErr} />}
             </div>
