@@ -58,17 +58,19 @@ export default function HomeContent({ posts, jobs, featuredJobs: adminFeaturedJo
       <section className="bg-white">
         <div className="max-w-[1280px] mx-auto px-5 pt-7 pb-10 sm:pt-12 sm:pb-14">
           <div className="flex flex-col items-center text-center">
+            {/* 컨테이너 비율을 이미지 실제 비율(240×405 ≒ 0.593)에 맞춘다.
+                어긋나면 object-contain 이 letterbox 를 만들어 반지가 박스보다 작게 보인다. */}
             <div
-              className="hero-ring-float relative mb-3 h-[100px] w-[84px] sm:mb-4 sm:h-[136px] sm:w-[114px]"
+              className="hero-ring-float relative mb-3 h-[81px] w-[48px] sm:mb-4 sm:h-[108px] sm:w-[64px]"
               aria-hidden="true"
             >
               <Image
-                src="/images/hero-ring-premium-gold.png"
+                src="/images/hero-ring-premium-silver.png"
                 alt=""
                 fill
                 priority
                 draggable={false}
-                sizes="(min-width: 640px) 114px, 84px"
+                sizes="(min-width: 640px) 64px, 48px"
                 className="select-none object-contain"
               />
             </div>
