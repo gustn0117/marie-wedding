@@ -145,16 +145,18 @@ export default function AdminFaxClient() {
       // 솔라피는 png·webp 를 받지 않는다(pdf·jpg·gif·bmp·tif 등만 가능).
       // 화면에서 흔히 쓰는 png 스크린샷도 쓸 수 있게 이미지면 jpg 로 변환해 올린다.
       let payload: File | Blob = file;
+      let filename = file.name;
       if (file.type.startsWith('image/') && file.type !== 'image/jpeg') {
         try {
           payload = await compressImage(file, { mimeType: 'image/jpeg', maxDimension: 2200, quality: 0.9 });
+          filename = 'fax.jpg';
         } catch {
           toast('이미지를 변환하지 못했습니다. JPG 또는 PDF 로 올려주세요.', 'error');
           return;
         }
       }
       const fd = new FormData();
-      fd.append('file', payload, 'fax.jpg');
+      fd.append('file', payload, filename);
       const res = await apiFetch('/api/admin/fax/upload', { method: 'POST', body: fd, credentials: 'include' }, 60000);
       const b = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(b.error || '업로드 실패');

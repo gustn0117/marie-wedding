@@ -6,9 +6,10 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // 팩스로 보낼 문서 — PDF 또는 이미지.
-// 공급자가 URL 로 문서를 가져가는 방식이라 공개 버킷에 올린다(영업용 문서라 민감정보 아님).
-const BUCKET = 'event-images';
-const PREFIX = 'admin/fax';
+// 발송 시 서버가 이 URL 로 문서를 내려받아 공급자에 올리므로 공개 버킷을 쓴다(영업용 문서라 민감정보 아님).
+// event-images 를 쓰면 그 버킷이 이미지 MIME 만 허용해 PDF 가 저장소 단계에서 거부된다 — 전용 버킷 사용.
+const BUCKET = 'fax-documents';
+const PREFIX = 'documents';
 const MAX_BYTES = 15 * 1024 * 1024;
 
 /**
