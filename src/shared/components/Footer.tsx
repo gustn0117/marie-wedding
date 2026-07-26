@@ -46,11 +46,13 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs md:text-right">
-            <Link href={ROUTES.JOBS_NEW} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">
+          {/* 두 칸은 같은 너비(grid-cols-2)인데 라벨을 오른쪽 정렬하면 글자 수가 다른
+              '공고 등록' 쪽만 왼쪽 여백이 크게 남아 비율이 어긋나 보인다 → 가운데 정렬. */}
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <Link href={ROUTES.JOBS_NEW} className="rounded border border-gray-200 px-3 py-2 text-center font-semibold whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
               공고 등록
             </Link>
-            <Link href={ROUTES.DIRECTORY_REGISTER} className="rounded border border-gray-200 px-3 py-2 font-semibold hover:border-primary hover:text-primary transition-colors">
+            <Link href={ROUTES.DIRECTORY_REGISTER} className="rounded border border-gray-200 px-3 py-2 text-center font-semibold whitespace-nowrap hover:border-primary hover:text-primary transition-colors">
               프로필 등록
             </Link>
           </div>
