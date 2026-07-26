@@ -109,6 +109,38 @@ export async function POST(request: Request) {
   }
   const supabase = createServiceClient();
 
+  // 전달 결과 재조회 — 발송 응답 200 은 '접수'일 뿐이라 최종 판정을 다시 물어 갱신한다.
+  if (body.action === 'refresh-status') {
+    const adapter = getFaxAdapter();
+    if (!adapter.checkStatus) {
+      return NextResponse.json({ error: '이 공급자는 상태 조회를 지원하지 않습니다.' }, { status: 400 });
+    }
+    const { data: rows } = await supabase
+      .from('admin_fax')
+      .select('id, provider_id, status')
+      .not('provider_id', 'is', null)
+      .neq('status', 'failed')
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    let updated = 0;
+    for (const row of rows ?? []) {
+      const r = await adapter.checkStatus(row.provider_id as string);
+      if (r.status === 'unknown' || r.status === 'pending') continue;
+      const next = r.status === 'sent' ? 'sent' : 'failed';
+      if (next === row.status && next === 'sent') continue;
+      await supabase
+        .from('admin_fax')
+        .update({
+          status: next,
+          error: next === 'failed' ? `전달 실패 (${r.statusCode ?? '코드 없음'}) ${r.reason ?? ''}`.trim() : null,
+        })
+        .eq('id', row.id);
+      updated += 1;
+    }
+    return NextResponse.json({ ok: true, checked: rows?.length ?? 0, updated });
+  }
+
   if (body.action === 'delete') {
     const id = typeof body.id === 'string' ? body.id : null;
     if (!id) return NextResponse.json({ error: 'id 필요' }, { status: 400 });

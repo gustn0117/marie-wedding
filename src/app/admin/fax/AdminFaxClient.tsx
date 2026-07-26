@@ -66,6 +66,7 @@ export default function AdminFaxClient() {
   const [optouts, setOptouts] = useState<OptoutRow[]>([]);
   const [showOptout, setShowOptout] = useState(false);
   const [config, setConfig] = useState<FaxConfig | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // 작성 상태
   const [to, setTo] = useState('');
@@ -225,6 +226,25 @@ export default function AdminFaxClient() {
     else toast('해제에 실패했습니다.', 'error');
   };
 
+  // 접수 직후에는 이통사 판정이 아직 안 온다. 눌러서 최종 결과를 다시 받아온다.
+  const refreshStatus = async () => {
+    setRefreshing(true);
+    try {
+      const res = await apiFetch('/api/admin/fax', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+        body: JSON.stringify({ action: 'refresh-status' }),
+      }, 60000);
+      const b = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(b.error || '조회 실패');
+      toast(b.updated > 0 ? `${b.updated}건의 상태가 바뀌었습니다.` : '바뀐 상태가 없습니다.', 'success');
+      load(search, 1);
+    } catch (e) {
+      toast(e instanceof Error ? e.message : '상태를 조회하지 못했습니다.', 'error');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const remove = async (row: FaxRow) => {
     if (!confirm('이 발송 기록을 삭제할까요?')) return;
     setItems((prev) => prev.filter((x) => x.id !== row.id));
@@ -247,6 +267,10 @@ export default function AdminFaxClient() {
           <p className="mt-0.5 text-xs text-gray-500">웨딩홀 대상 문서 발송 · 발송 이력과 수신거부 관리</p>
         </div>
         <div className="flex gap-2">
+          <button type="button" onClick={refreshStatus} disabled={refreshing}
+            className="rounded border border-gray-300 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary disabled:opacity-50">
+            {refreshing ? '조회 중…' : '전달 결과 확인'}
+          </button>
           <button type="button" onClick={() => { setShowOptout((v) => !v); loadOptouts(); }}
             className="rounded border border-gray-300 px-3 py-2 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">
             수신거부 목록

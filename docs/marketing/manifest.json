@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "createdAt": "2026-07-26",
+  "project": "Marié",
+  "purpose": "웨딩홀 대상 팩스용 채용 플랫폼 소개",
+  "source": "scripts/generate-intro-pdf.mjs",
+  "exports": [
+    {
+      "path": "docs/marketing/마리에-소개.pdf",
+      "format": "PDF",
+      "pages": 2,
+      "pageSize": "A4",
+      "sha256": "25fc61fc1db9e7fc16196fd57f6ac2f6b19897eb9e6493f22d58e8ed64f50ae7"
+    },
+    {
+      "path": "docs/marketing/마리에-소개-1장요약.pdf",
+      "format": "PDF",
+      "pages": 1,
+      "pageSize": "A4",
+      "sha256": "a135aee88c1a0325472c80a90d29117c4e76e7f07ec5603708c3d38477a3d57f"
+    }
+  ],
+  "previews": [
+    {
+      "path": "docs/marketing/previews/detailed-page-1.png",
+      "type": "render",
+      "sha256": "e9836a557863b19070015dc4c04ab722dd10a3d1fb2369922e57a7bb292e3478"
+    },
+    {
+      "path": "docs/marketing/previews/detailed-page-2.png",
+      "type": "render",
+      "sha256": "c76a829a5dfc9e7e41667c743fbb4a7f3d392f4bb055947f19535548f524e6e0"
+    },
+    {
+      "path": "docs/marketing/previews/summary-page-1.png",
+      "type": "render",
+      "sha256": "e9836a557863b19070015dc4c04ab722dd10a3d1fb2369922e57a7bb292e3478"
+    },
+    {
+      "path": "docs/marketing/previews/fax-page-1.png",
+      "type": "fax-simulation",
+      "sha256": "961d9a3a5e33c311db0ce41b1cb66ce8c042ce31c4b2e9407b3a690643a1c4ae"
+    },
+    {
+      "path": "docs/marketing/previews/fax-page-2.png",
+      "type": "fax-simulation",
+      "sha256": "15185ed04aac2604502a8462c2bff2fa14e92ee2b999095d87351b5721c45afb"
+    },
+    {
+      "path": "docs/marketing/previews/fax-summary.png",
+      "type": "fax-simulation",
+      "sha256": "7fabb8557edb5ce024dacf05179c3bebb69410bc20d0db8f80f69a16597a74d8"
+    }
+  ],
+  "provenance": {
+    "renderer": "@react-pdf/renderer 4.5.1",
+    "font": "Pretendard 1.3.9",
+    "factsReviewedFrom": [
+      "src/features/jobs",
+      "src/features/applications",
+      "src/features/resumes",
+      "src/features/payments",
+      "src/shared/seo.ts"
+    ],
+    "faxSimulation": "150dpi raster, grayscale downsample/resample, 78% 1-bit threshold"
+  }
+}

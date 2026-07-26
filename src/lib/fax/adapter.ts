@@ -22,9 +22,18 @@ export interface FaxSendResult {
   error?: string;
 }
 
+export interface FaxStatusResult {
+  /** 공급자가 최종 판정한 상태. unknown 은 조회 불가. */
+  status: 'sent' | 'failed' | 'pending' | 'unknown';
+  statusCode?: string;
+  reason?: string;
+}
+
 export interface FaxAdapter {
   readonly name: string;
   send(input: FaxSendInput): Promise<FaxSendResult>;
+  /** 접수 후 이통사 판정이 늦게 오므로 나중에 다시 물어본다. */
+  checkStatus?(providerId: string): Promise<FaxStatusResult>;
 }
 
 /** 개발용 — 실제로 보내지 않고 로그만 남긴다. 운영에서는 거부한다. */
@@ -112,6 +121,33 @@ class SolapiFaxAdapter implements FaxAdapter {
       return { ok: true, providerId: sendBody.messageId ?? sendBody.groupId ?? undefined };
     } catch (e) {
       return { ok: false, error: e instanceof Error ? e.message : '발송 중 오류가 발생했습니다.' };
+    }
+  }
+
+  /**
+   * 최종 전달 결과 조회.
+   *
+   * 발송 요청이 200 이어도 그건 '접수'일 뿐이다. 이통사 판정은 몇 초~몇 분 뒤에 오고,
+   * 실제로 실패해도 접수 응답만 보면 성공으로 보인다(2026-07-26 실제로 이렇게 오판했다).
+   * 4000 이 수신 완료, 2000/3000 대는 진행 중, 그 외 3xxx 는 실패다.
+   */
+  async checkStatus(providerId: string): Promise<FaxStatusResult> {
+    try {
+      const res = await fetch(`https://api.solapi.com/messages/v4/list?messageId=${encodeURIComponent(providerId)}`, {
+        headers: { Authorization: this.authHeader() },
+      });
+      if (!res.ok) return { status: 'unknown' };
+      const body = await res.json().catch(() => null);
+      const msg = body?.messageList ? Object.values(body.messageList)[0] : null;
+      if (!msg || typeof msg !== 'object') return { status: 'unknown' };
+      const m = msg as { statusCode?: string; reason?: string };
+      const code = m.statusCode ?? '';
+      if (code === '4000') return { status: 'sent', statusCode: code, reason: m.reason };
+      if (code === '2000' || code === '3000') return { status: 'pending', statusCode: code, reason: m.reason };
+      if (code) return { status: 'failed', statusCode: code, reason: m.reason };
+      return { status: 'unknown' };
+    } catch {
+      return { status: 'unknown' };
     }
   }
 }
