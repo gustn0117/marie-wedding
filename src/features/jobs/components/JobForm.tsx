@@ -19,6 +19,16 @@ interface JobFormProps {
   initialData?: Partial<JobFormData>;
   onSubmit: (data: JobFormData) => Promise<void>;
   submitLabel?: string;
+  /**
+   * 관리자 화면처럼 Supabase 로그인 세션이 없는 곳에서 쓰는 업로드 우회 경로.
+   * 스토리지 정책이 authenticated 한정이라 세션 없이 클라이언트 직접 업로드는 실패한다.
+   * 넘기지 않으면 기존(사용자) 경로 그대로 동작한다.
+   */
+  uploadEndpoints?: { cover: string; gallery: string; content: string };
+  /** 취소 시 동작. 없으면 브라우저 뒤로가기(사용자 페이지 기본값). */
+  onCancel?: () => void;
+  /** 진행률 바 sticky 위치 — (main) 레이아웃 헤더 높이를 전제하므로 관리자에선 바꿔 넘긴다. */
+  stickyTopClass?: string;
 }
 
 import {
@@ -96,7 +106,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기' }: JobFormProps) {
+export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기', uploadEndpoints, onCancel, stickyTopClass = 'top-[138px]' }: JobFormProps) {
   const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
   const [dirty, setDirty] = useState(false);
@@ -136,6 +146,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
       ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/job-images/${initialData.image}`
       : null,
     bucket: 'job-images',
+    uploadEndpoint: uploadEndpoints?.cover,
     maxDimension: 1280,
     maxSizeMB: 0.8,
     quality: 0.82,
@@ -295,7 +306,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
     <form onSubmit={handleSubmit} className="space-y-5">
       <fieldset disabled={loading} className="contents">
       {/* Progress Bar */}
-      <div className="sticky top-[138px] z-10 rounded border border-gray-200 bg-white p-4">
+      <div className={`sticky ${stickyTopClass} z-10 rounded border border-gray-200 bg-white p-4`}>
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-xs text-gray-500">필수 항목 입력 <span className="font-semibold text-primary">{requiredFilled}/{totalRequired}</span></span>
           <span className="text-xs font-semibold text-primary">{progress}%</span>
@@ -415,6 +426,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
             onChange={setGalleryImages}
             onUploadPromise={trackUpload}
             disabled={loading}
+            uploadEndpoint={uploadEndpoints?.gallery}
           />
         </div>
       </Section>
@@ -444,6 +456,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
                   minHeight={160}
                   disabled={loading}
                   imageBucket="job-images"
+                  imageUploadEndpoint={uploadEndpoints?.content}
                   onUploadPromise={trackUpload}
                 />
               ) : (
@@ -580,7 +593,7 @@ export default function JobForm({ initialData, onSubmit, submitLabel = '공고 �
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => { if (!dirty || confirm('작성 중인 내용이 저장되지 않습니다. 나가시겠어요?')) window.history.back(); }}
+            onClick={() => { if (!dirty || confirm('작성 중인 내용이 저장되지 않습니다. 나가시겠어요?')) { if (onCancel) onCancel(); else window.history.back(); } }}
             className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary"
           >
             취소

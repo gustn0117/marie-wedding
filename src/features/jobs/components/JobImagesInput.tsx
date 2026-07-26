@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { uploadOptimizedImage, isAbortError } from '@/shared/utils/upload';
+import { uploadOptimizedImageToEndpoint } from '@/shared/utils/uploadEndpoint';
 import { MAX_IMAGE_INPUT_BYTES } from '@/shared/utils/image';
 
 export const JOB_IMAGES_MAX = 8;
@@ -26,6 +27,12 @@ interface JobImagesInputProps {
   /** 업로드 진행 중인 Promise 를 폼에 알려 제출 전 대기시킨다. */
   onUploadPromise?: (p: Promise<unknown>) => void;
   disabled?: boolean;
+  /**
+   * Supabase 세션 대신 서버 쿠키 권한으로 올려야 할 때 쓰는 same-origin API.
+   * 관리자 화면은 Supabase 로그인 세션이 없어 스토리지 정책(authenticated 한정)에 막히므로
+   * 반드시 이 경로를 써야 한다.
+   */
+  uploadEndpoint?: string;
 }
 
 /**
@@ -33,7 +40,7 @@ interface JobImagesInputProps {
  * 대표 이미지(useImageUpload)와 같은 압축·업로드 경로를 쓰되 여러 장을 다룬다.
  * 업로드가 끝난 순서가 아니라 사용자가 고른 순서를 유지한다.
  */
-export default function JobImagesInput({ value, onChange, onUploadPromise, disabled }: JobImagesInputProps) {
+export default function JobImagesInput({ value, onChange, onUploadPromise, disabled, uploadEndpoint }: JobImagesInputProps) {
   const [slots, setSlots] = useState<Slot[]>(() =>
     value.map((p, i) => ({ key: `init-${i}-${p}`, path: p, preview: jobImageUrl(p), uploading: false, error: null })),
   );
@@ -73,16 +80,18 @@ export default function JobImagesInput({ value, onChange, onUploadPromise, disab
         patch(slot.key, (s) => ({ ...s, uploading: false, error: '파일이 너무 큽니다' }));
         return;
       }
-      const task = uploadOptimizedImage(file, {
-        bucket: BUCKET,
-        maxDimension: 1600,
-        maxSizeMB: 0.9,
-        quality: 0.82,
-        buildPath: (compressed) =>
-          `gallery/${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
-      })
-        .then(({ path }) => {
-          patch(slot.key, (s) => ({ ...s, path, uploading: false, preview: jobImageUrl(path) }));
+      const compress = { maxDimension: 1600, maxSizeMB: 0.9, quality: 0.82 };
+      const task = (uploadEndpoint
+        ? uploadOptimizedImageToEndpoint(file, { endpoint: uploadEndpoint, ...compress })
+            .then((r) => ({ path: r.path, url: r.url as string | undefined }))
+        : uploadOptimizedImage(file, {
+            bucket: BUCKET,
+            ...compress,
+            buildPath: (compressed) =>
+              `gallery/${Date.now()}_${crypto.randomUUID()}.${compressed.name.split('.').pop() || 'webp'}`,
+          }).then((r) => ({ path: r.path, url: undefined })))
+        .then(({ path, url }) => {
+          patch(slot.key, (s) => ({ ...s, path, uploading: false, preview: url ?? jobImageUrl(path) }));
         })
         .catch((err) => {
           if (isAbortError(err)) return;
@@ -90,7 +99,7 @@ export default function JobImagesInput({ value, onChange, onUploadPromise, disab
         });
       onUploadPromise?.(task);
     });
-  }, [commit, patch, onUploadPromise]);
+  }, [commit, patch, onUploadPromise, uploadEndpoint]);
 
   const remove = (key: string) => commit(slotsRef.current.filter((s) => s.key !== key));
 

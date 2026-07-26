@@ -16,6 +16,10 @@ const TARGETS = {
   'event-content': { bucket: 'event-images', prefix: 'admin/content' },
   // 관리자 메일 본문 이미지 — 공개 버킷이어야 외부 수신자의 메일 클라이언트가 로드한다.
   mail: { bucket: 'event-images', prefix: 'admin/mail' },
+  // 대행 등록 공고 — 관리자는 Supabase 세션이 없어 클라이언트 직접 업로드가 안 된다.
+  'job-cover': { bucket: 'job-images', prefix: 'admin/job-covers' },
+  'job-gallery': { bucket: 'job-images', prefix: 'admin/job-gallery' },
+  'job-content': { bucket: 'job-images', prefix: 'admin/job-content' },
 } as const;
 
 type Target = keyof typeof TARGETS;
