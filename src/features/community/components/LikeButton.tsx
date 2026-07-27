@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { communityService } from '../services/community-service';
 import { ROUTES } from '@/shared/constants';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -16,6 +16,7 @@ interface LikeButtonProps {
 }
 
 export default function LikeButton({ postId, initialLiked, initialCount, canLike, viewerProfileId }: LikeButtonProps) {
+  const pathname = usePathname();
   const router = useRouter();
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
@@ -24,7 +25,7 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
   const handleClick = async () => {
     if (!canLike || !viewerProfileId) {
       if (confirm('좋아요를 누르려면 로그인이 필요합니다. 로그인 페이지로 이동할까요?')) {
-        router.push(loginHref());
+        router.push(loginHref(pathname));
       }
       return;
     }

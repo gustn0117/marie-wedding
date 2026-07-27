@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { messageService } from '@/features/messages/services/messageService';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -14,6 +14,7 @@ interface Props {
 }
 
 export default function StartMessageButton({ targetProfileId, variant = 'primary' }: Props) {
+  const pathname = usePathname();
   const { profile } = useAuth();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -21,7 +22,7 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
   if (profile?.id === targetProfileId) return null;
 
   async function onClick() {
-    if (!profile) { window.location.href = loginHref(); return; }
+    if (!profile) { window.location.href = loginHref(pathname); return; }
     setBusy(true);
     try {
       const conv = await withTimeout(messageService.startConversation(targetProfileId), 10000, '대화 시작 지연');

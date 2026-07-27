@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
@@ -23,6 +23,7 @@ interface CommentSectionProps {
 }
 
 export default function CommentSection({ postId, postAuthorId, adoptedCommentId: initialAdopted, initialAuthenticated = false }: CommentSectionProps) {
+  const pathname = usePathname();
   const router = useRouter();
   const { profile, isLoading } = useAuth();
   // useAuth 가 아직 로딩중이면 SSR prop 을 신뢰 (로그인 CTA vs 폼 flash 방지)
@@ -142,7 +143,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
           ) : (
             <div className="text-center py-4">
               <p className="text-sm text-gray-500 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
-              <Link href={loginHref()} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
+              <Link href={loginHref(pathname)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
                 로그인하기
               </Link>
             </div>
@@ -179,7 +180,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
         ) : (
           <div className="text-center py-4">
             <p className="text-sm text-gray-500 mb-3">댓글을 작성하려면 로그인이 필요합니다.</p>
-            <Link href={loginHref()} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
+            <Link href={loginHref(pathname)} className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary text-white text-sm font-bold rounded hover:bg-primary-dark transition-colors">
               로그인하기
             </Link>
           </div>
