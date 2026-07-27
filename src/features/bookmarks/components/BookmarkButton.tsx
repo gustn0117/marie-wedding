@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { loginHref } from '@/shared/utils/loginRedirect';
 import { useRouter } from 'next/navigation';
 import { bookmarkService } from '@/features/bookmarks/services/bookmark-service';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -42,7 +43,7 @@ export default function BookmarkButton({ targetType, targetId, label = '저장',
   const handleClick = async () => {
     if (!profile) {
       if (confirm('저장하려면 로그인이 필요합니다. 로그인 페이지로 이동할까요?')) {
-        router.push(ROUTES.LOGIN);
+        router.push(loginHref());
       }
       return;
     }

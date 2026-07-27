@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import type { Job, Profile } from '@/types/database';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
@@ -13,7 +14,7 @@ async function fetchRecommended(profile: Pick<Profile, 'id' | 'business_type' | 
   const supabase = createServerQueryClient();
   const baseQuery = supabase
     .from('jobs')
-    .select('*, author:profiles!author_id(id, company_name, contact_name)')
+    .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id(id, company_name, contact_name)`)
     .is('deleted_at', null)
     .eq('hidden_by_admin', false)
     .neq('status', 'hidden')
@@ -36,7 +37,7 @@ async function fetchRecommended(profile: Pick<Profile, 'id' | 'business_type' | 
     ? await baseQuery.or(orParts.join(','))
     : await baseQuery;
 
-  const rows = (matched ?? []) as Job[];
+  const rows = (matched ?? []) as unknown as Job[];
   return rows.filter((j) => !j.deadline || new Date(j.deadline) > new Date()).slice(0, 5);
 }
 

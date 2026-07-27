@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { loginHref } from '@/shared/utils/loginRedirect';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
@@ -397,7 +398,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
       <section className="bg-white border-y border-gray-200 p-6 md:p-8 text-center">
         <h2 className="text-lg font-bold text-gray-900 mb-2">{actionLabel}하려면 로그인이 필요합니다</h2>
         <p className="text-sm text-gray-500 mb-4">마리에 프로필로 로그인한 뒤 공고 작성자에게 바로 연락할 수 있습니다.</p>
-        <Link href={ROUTES.LOGIN} className="btn-primary inline-flex">로그인하기</Link>
+        <Link href={loginHref()} className="btn-primary inline-flex">로그인하기</Link>
       </section>
     );
   }

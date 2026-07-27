@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { loginHref } from '@/shared/utils/loginRedirect';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { messageService } from '@/features/messages/services/messageService';
@@ -20,7 +21,7 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
   if (profile?.id === targetProfileId) return null;
 
   async function onClick() {
-    if (!profile) { toast('로그인이 필요합니다.', 'error'); return; }
+    if (!profile) { window.location.href = loginHref(); return; }
     setBusy(true);
     try {
       const conv = await withTimeout(messageService.startConversation(targetProfileId), 10000, '대화 시작 지연');

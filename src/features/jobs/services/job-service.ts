@@ -1,4 +1,5 @@
 import { apiFetch } from '@/shared/utils/apiFetch';
+import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import { createClient } from '@/lib/supabase/client';
 import type { Job } from '@/types/database';
 import type { JobFormData, JobFilters } from '../types';
@@ -26,7 +27,7 @@ export const jobService = {
     let query = supabase
       .from('jobs')
       // author.deleted_at IS NULL — 탈퇴 업체 공고 은닉
-      .select(`*, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`, { count: 'exact' })
+      .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`, { count: 'exact' })
       .is('deleted_at', null)
       .is('author.deleted_at', null)
       .eq('posting_type', 'hiring')
@@ -64,7 +65,7 @@ export const jobService = {
     }
 
     return {
-      data: (data as Job[]) ?? [],
+      data: (data as unknown as Job[]) ?? [],
       count: count ?? 0,
     };
   },
@@ -78,7 +79,7 @@ export const jobService = {
     const { data, error } = await supabase
       .from('jobs')
       // author.deleted_at IS NULL — 탈퇴 업체의 공고 상세도 은닉
-      .select(`*, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`)
+      .select(`${PUBLIC_JOB_COLUMNS}, author:profiles!author_id!inner(${PUBLIC_PROFILE_COLUMNS})`)
       .eq('id', id)
       .is('deleted_at', null)
       .is('author.deleted_at', null)
@@ -89,7 +90,7 @@ export const jobService = {
       throw new Error(`채용 공고를 불러오는 데 실패했습니다: ${error.message}`);
     }
 
-    return data as Job;
+    return data as unknown as Job;
   },
 
   /**
@@ -168,6 +169,6 @@ export const jobService = {
       throw new Error(b.error || '상태 변경에 실패했습니다.');
     }
     const { data } = await res.json();
-    return data as Job;
+    return data as unknown as Job;
   },
 };

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { loginHref } from '@/shared/utils/loginRedirect';
 import { useRouter } from 'next/navigation';
 import { communityService } from '../services/community-service';
 import { ROUTES } from '@/shared/constants';
@@ -23,7 +24,7 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
   const handleClick = async () => {
     if (!canLike || !viewerProfileId) {
       if (confirm('좋아요를 누르려면 로그인이 필요합니다. 로그인 페이지로 이동할까요?')) {
-        router.push(ROUTES.LOGIN);
+        router.push(loginHref());
       }
       return;
     }
