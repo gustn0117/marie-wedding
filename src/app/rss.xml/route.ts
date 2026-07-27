@@ -36,12 +36,10 @@ export async function GET() {
         .neq('status', 'hidden')
         .order('created_at', { ascending: false })
         .limit(30),
-      // 일반 글 상세는 로그인 필수 — 비로그인에 열리는 공지만 피드에 싣는다.
       supabase
         .from('posts')
         .select('id, title, content, created_at')
         .is('deleted_at', null)
-        .eq('is_notice', true)
         .order('created_at', { ascending: false })
         .limit(30),
       supabase

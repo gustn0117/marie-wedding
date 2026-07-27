@@ -10,7 +10,6 @@ import {
   getBusinessTypeLabel,
   getRegionLabel,
   getEmploymentTypeLabel,
-  formatPhone,
   formatDate,
 } from '@/shared/utils/format';
 import type { Profile, Job } from '@/types/database';
@@ -31,7 +30,7 @@ interface PageProps {
 }
 
 // 공개 디렉토리 프로필 Organization 구조화 데이터.
-function buildProfileJsonLd(profile: Profile): Record<string, unknown> {
+function buildProfileJsonLd(profile: Profile, includeAddress: boolean): Record<string, unknown> {
   const name = profile.company_name || profile.contact_name || '프로필';
   const biz = getBusinessTypeLabel(profile.business_type || '');
   const firstRegion = profile.region ? profile.region.split(',')[0] : '';
@@ -53,7 +52,8 @@ function buildProfileJsonLd(profile: Profile): Record<string, unknown> {
             '@type': 'PostalAddress',
             addressCountry: 'KR',
             ...(firstRegion ? { addressRegion: getRegionLabel(firstRegion) } : {}),
-            ...(profile.address ? { streetAddress: profile.address } : {}),
+            // 번지수는 화면과 동일하게 로그인 뷰어에게만. 시/도 단위는 남겨 지역 검색은 유지한다.
+            ...(includeAddress && profile.address ? { streetAddress: profile.address } : {}),
           },
         }
       : {}),
@@ -165,7 +165,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
   return (
     <div className="max-w-[1000px] mx-auto space-y-4">
-      {profile.is_directory_listed && <JsonLd data={buildProfileJsonLd(profile)} />}
+      {profile.is_directory_listed && <JsonLd data={buildProfileJsonLd(profile, viewer.ok)} />}
       <JsonLd
         data={breadcrumbJsonLd([
           { name: '홈', path: '/' },
@@ -243,17 +243,6 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
         {/* Quick Contact Actions */}
         <div className="flex flex-wrap gap-2 mb-6 pb-6 border-b border-gray-100">
-            {profile.phone && (
-              <a
-                href={`tel:${profile.phone}`}
-                className="inline-flex items-center gap-2 rounded-lg bg-ink px-4 py-2 text-sm font-bold text-white hover:bg-gray-800 transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
-                </svg>
-                <span className="tabular-nums">{formatPhone(profile.phone)}</span>
-              </a>
-            )}
             {profile.website && (
               <a
                 href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
@@ -280,8 +269,10 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             <InfoCell label="설립" value={`${profile.established_year}년`} />
           )}
           <InfoCell label="등록일" value={formatDate(profile.created_at)} />
+          {/* 주소는 연락처급 정보다. 상세가 비로그인에 공개되므로 값만 가린다.
+              (셀 자체를 없애면 마지막 행 테두리 처리가 어긋나고, 가입 유인도 사라진다) */}
           {profile.address && (
-            <InfoCell label="주소" value={profile.address} wide />
+            <InfoCell label="주소" value={viewer.ok ? profile.address : '로그인 후 공개'} wide />
           )}
         </div>
       </div>

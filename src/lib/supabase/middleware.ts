@@ -152,39 +152,13 @@ export async function updateSession(request: NextRequest) {
     } else {
       // 비로그인 사용자가 인증 필요 경로에 접근 시 → /login?redirect={path+search} 로 통일
       // (기존: 개별 페이지에서 redirect(ROUTES.LOGIN) 만 호출해 원경로 유실)
-      // 목록(/community, /directory)은 공개해 검색 색인을 유지하고, 상세는 로그인 필수로 막는다.
-      const isDirectoryDetail = /^\/directory\/[^/]+/.test(path);
-
-      // 커뮤니티 글 상세는 공지(is_notice)만 공개 — 어떤 글인지 알아야 하므로 PK 조회 1회.
-      // 페이지 컴포넌트에서 redirect() 하면 loading.tsx 로 스트리밍이 이미 시작돼
-      // HTTP 307 이 아닌 클라이언트 리다이렉트로 나간다(크롤러·curl 에는 200 으로 보임).
-      // 여기서 처리해야 진짜 307 이 된다.
-      const postDetail = /^\/community\/([0-9a-fA-F-]{36})$/.exec(path);
-      let isGatedPost = false;
-      if (postDetail) {
-        const serviceClient = createClient(
-          SUPABASE_SERVER_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!,
-          { db: { schema: SUPABASE_SCHEMA } }
-        );
-        const { data: post } = await serviceClient
-          .from('posts')
-          .select('is_notice')
-          .eq('id', postDetail[1])
-          .is('deleted_at', null)
-          .maybeSingle();
-        // 없는 글은 통과시켜 페이지가 404 를 내게 한다(로그인으로 튕기면 존재 여부가 헷갈린다).
-        isGatedPost = post ? !post.is_notice : false;
-      }
-
+      // 목록·상세 모두 공개한다. 로그인은 쓰기와 개인 화면에서만 요구한다.
       const needsAuth =
         !isPublicBypass &&
         (path.startsWith('/mypage')
           || path.startsWith('/applications')
           || path.startsWith('/jobs/new')
           || path.startsWith('/community/new')
-          || isDirectoryDetail
-          || isGatedPost
           || (path.startsWith('/community/') && path.endsWith('/edit')));
       if (needsAuth) {
         const url = request.nextUrl.clone();
@@ -213,6 +187,14 @@ export async function updateSession(request: NextRequest) {
       path.startsWith('/_next/') ||
       path.startsWith('/favicon') ||
       path.startsWith('/banned') ||
+      // 공개 읽기 경로는 장애 중에도 로그인으로 튕기지 않는다.
+      // (쓰기 화면은 각 페이지의 서버 가드가 그대로 막는다)
+      path.startsWith('/jobs') ||
+      path.startsWith('/community') ||
+      path.startsWith('/directory') ||
+      path.startsWith('/events') ||
+      path.startsWith('/search') ||
+      path.startsWith('/guide') ||
       path.startsWith('/admin'); // admin 은 자체 게이트
     if (!isFailSafe) {
       const externalOrigin = resolveExternalOrigin(request);

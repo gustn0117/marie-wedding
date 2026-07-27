@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import NavigationProgress from "@/shared/components/NavigationProgress";
 import { ToastProvider } from "@/shared/components/Toast";
+import PageViewTracker from "@/shared/components/PageViewTracker";
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_TAGLINE, SITE_DESCRIPTION } from "@/shared/seo";
 import "./globals.css";
 
@@ -108,6 +109,10 @@ export default function RootLayout({
       <body className="antialiased">
         <Suspense fallback={null}>
           <NavigationProgress />
+        </Suspense>
+        {/* 자체 방문 측정 — useSearchParams 를 쓰므로 Suspense 로 감싼다 */}
+        <Suspense fallback={null}>
+          <PageViewTracker />
         </Suspense>
         <ToastProvider>
           {children}

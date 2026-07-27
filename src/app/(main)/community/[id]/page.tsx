@@ -1,6 +1,6 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { getCurrentVerifiedProfile } from '@/lib/supabase/verified-profile';
@@ -116,11 +116,6 @@ export default async function PostDetailPage({ params }: PageProps) {
   }
   const post = { ...base.post, comment_count: commentCount, is_liked: isLiked } as Post;
 
-  // 비로그인 열람 제한 — 일반 글 상세는 로그인 페이지로 보낸다(목록·제목은 공개 유지).
-  // 공지(is_notice)는 운영 안내라 계속 전체 공개. 목록에서 온 링크는 로그인 후 이 글로 복귀한다.
-  if (!viewerProfileId && !post.is_notice) {
-    redirect(`${ROUTES.LOGIN}?redirect=${encodeURIComponent(`/community/${post.id}`)}`);
-  }
 
   return (
     <div className="max-w-[980px] mx-auto space-y-4">
