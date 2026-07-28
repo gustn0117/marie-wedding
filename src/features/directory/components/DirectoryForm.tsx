@@ -8,7 +8,8 @@ import { directoryService } from '@/features/directory/services/directory-servic
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { useImageUpload } from '@/shared/hooks/useImageUpload';
 import { usePendingUploads } from '@/shared/hooks/usePendingUploads';
-import { isAbortError, mapWithConcurrency, uploadOptimizedImage } from '@/shared/utils/upload';
+import { isAbortError, mapWithConcurrency, uploadOptimizedImage, type UploadProgress } from '@/shared/utils/upload';
+import { uploadOptimizedImageToEndpoint } from '@/shared/utils/uploadEndpoint';
 import { MAX_IMAGE_INPUT_BYTES } from '@/shared/utils/image';
 import RichTextEditor from '@/shared/components/RichTextEditor';
 import ImageUploadHint from '@/shared/components/ImageUploadHint';
@@ -37,8 +38,39 @@ const GALLERY_BATCH_TIMEOUT_MS = 60_000;
 const GALLERY_QUEUE_PLACEHOLDER =
   'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22 viewBox=%220 0 800 600%22%3E%3Crect width=%22800%22 height=%22600%22 fill=%22%23f3f4f6%22/%3E%3Cpath d=%22M300 330l75-85 65 72 42-48 88 101H260z%22 fill=%22%23d1d5db%22/%3E%3Ccircle cx=%22475%22 cy=%22215%22 r=%2230%22 fill=%22%23d1d5db%22/%3E%3C/svg%3E';
 
+/** 저장할 프로필 내용 — 대행 모드에서 관리자 API 로 넘길 때도 같은 모양을 쓴다. */
+export interface DirectoryFormValues {
+  contact_name: string;
+  company_name: string | null;
+  business_type: string | null;
+  region: string;
+  bio: string | null;
+  website: string | null;
+  profile_image: string | null;
+  cover_image: string | null;
+  company_size: string | null;
+  established_year: string | null;
+  address: string | null;
+  gallery: string[] | null;
+}
+
+/**
+ * 관리자 대행 등록 모드.
+ *
+ * 관리자 화면에는 Supabase 로그인 세션이 없다. 스토리지 정책이 authenticated 한정이라
+ * 클라이언트 직접 업로드가 실패하므로 업로드를 전부 관리자 API 로 돌리고, 저장도
+ * 세션을 요구하는 directoryService 대신 주입받은 핸들러로 보낸다.
+ */
+interface ProxyMode {
+  onSave: (values: DirectoryFormValues) => Promise<void>;
+  uploadEndpoints: { avatar: string; cover: string; gallery: string; content: string };
+  cancelHref: string;
+  submitLabel: string;
+}
+
 interface DirectoryFormProps {
   profile: Profile;
+  proxy?: ProxyMode;
 }
 
 interface GalleryUploadItem {
@@ -52,7 +84,7 @@ interface GalleryUploadItem {
   localUrl?: boolean;
 }
 
-export default function DirectoryForm({ profile }: DirectoryFormProps) {
+export default function DirectoryForm({ profile, proxy }: DirectoryFormProps) {
   const router = useRouter();
   const [listed, setListed] = useState(profile.is_directory_listed);
   const [submitting, setSubmitting] = useState(false);
@@ -91,6 +123,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     maxSizeMB: 0.45,
     quality: 0.84,
     buildPath: (file) => `${profile.user_id}/avatar_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+    uploadEndpoint: proxy?.uploadEndpoints.avatar,
   });
   const coverUpload = useImageUpload({
     initialPath: profile.cover_image,
@@ -100,6 +133,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
     maxSizeMB: 0.8,
     quality: 0.82,
     buildPath: (file) => `${profile.user_id}/cover_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+    uploadEndpoint: proxy?.uploadEndpoints.cover,
   });
   const initialGalleryItems: GalleryUploadItem[] = (profile.gallery || []).map<GalleryUploadItem>((path) => ({
     id: `existing:${path}`,
@@ -233,15 +267,13 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
             throw new DOMException('사진 업로드가 취소되었습니다.', 'AbortError');
           }
           patchGalleryItem(item.id, { status: 'uploading', progress: 1, error: undefined });
-          const result = await uploadOptimizedImage(item.file!, {
-            bucket: 'avatars',
+          const commonOptions = {
             maxDimension: 1280,
             maxSizeMB: 0.75,
             quality: 0.82,
             signal: controller.signal,
-            buildPath: (file) => `${profile.user_id}/gallery_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
-            onUploadProgress: (progress) => patchGalleryItem(item.id, { progress: progress.percent }),
-            onCompressedPreview: (compressed) => {
+            onUploadProgress: (progress: UploadProgress) => patchGalleryItem(item.id, { progress: progress.percent }),
+            onCompressedPreview: (compressed: File) => {
               if (!galleryMountedRef.current || controller.signal.aborted) return;
               const current = galleryItemsRef.current.find((candidate) => candidate.id === item.id);
               if (!current) return;
@@ -253,7 +285,17 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               galleryObjectUrlsRef.current.add(optimizedUrl);
               patchGalleryItem(item.id, { preview: optimizedUrl, localUrl: true });
             },
-          });
+          };
+          const result = proxy
+            ? await uploadOptimizedImageToEndpoint(item.file!, {
+                ...commonOptions,
+                endpoint: proxy.uploadEndpoints.gallery,
+              })
+            : await uploadOptimizedImage(item.file!, {
+                ...commonOptions,
+                bucket: 'avatars',
+                buildPath: (file) => `${profile.user_id}/gallery_${Date.now()}_${crypto.randomUUID()}.${file.name.split('.').pop() || 'webp'}`,
+              });
           if (!galleryMountedRef.current || controller.signal.aborted) return;
           const current = galleryItemsRef.current.find((candidate) => candidate.id === item.id);
           if (!current) return;
@@ -407,21 +449,33 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
       const galleryPaths = galleryItemsRef.current
         .filter((item) => item.status === 'done' && item.path)
         .map((item) => item.path as string);
+      const values: DirectoryFormValues = {
+        contact_name: formData.contact_name.trim(),
+        company_name: formData.company_name.trim() || null,
+        business_type: formData.business_type || null,
+        region: formData.region,
+        bio: bioRef.current.trim() || null,
+        website: formData.website.trim() || null,
+        profile_image: profileImagePath,
+        cover_image: coverImagePath,
+        company_size: formData.company_size || null,
+        established_year: formData.established_year || null,
+        address: formData.address.trim() || null,
+        gallery: galleryPaths.length > 0 ? galleryPaths : null,
+      };
+
+      if (proxy) {
+        // 대행 모드는 저장 후 목록으로 이동하므로 성공 배너 대신 호출자가 안내한다.
+        await proxy.onSave(values);
+        setSavingStep(null);
+        return;
+      }
+
       await withTimeout(
         directoryService.updateProfile(profile.id, {
-          contact_name: formData.contact_name.trim() || undefined,
-          company_name: formData.company_name.trim() || null,
-          business_type: formData.business_type || null,
-          region: formData.region,
-          bio: bioRef.current.trim() || null,
+          ...values,
+          contact_name: values.contact_name || undefined,
           phone: formData.phone.trim() || null,
-          website: formData.website.trim() || null,
-          profile_image: profileImagePath,
-          cover_image: coverImagePath,
-          company_size: formData.company_size || null,
-          established_year: formData.established_year || null,
-          address: formData.address.trim() || null,
-          gallery: galleryPaths.length > 0 ? galleryPaths : null,
         }),
         15000,
         '프로필 저장이 너무 오래 걸려요.',
@@ -478,7 +532,9 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
 
       <fieldset disabled={saving} className="contents">
 
-      {/* Status Card — 기본 비공개(opt-in). 공개해야 디렉토리·검색에 노출. */}
+      {/* Status Card — 기본 비공개(opt-in). 공개해야 디렉토리·검색에 노출.
+          대행 모드에는 이 토글이 없다(등재 목적이라 항상 공개, 공개 여부는 관리자 목록에서 관리). */}
+      {!proxy && (
       <div className={`flex items-center justify-between rounded border-2 p-4 ${listed ? 'border-green-200 bg-state-new-bg/30' : 'border-gray-200 bg-gray-50'}`}>
         <div className="flex items-center gap-3">
           <div className={`w-10 h-10 rounded flex items-center justify-center ${listed ? 'bg-primary' : 'bg-gray-400'}`}>
@@ -514,6 +570,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           </button>
         </div>
       </div>
+      )}
 
       {/* STEP 1: 로고 · 커버 · 업체명 */}
       <Section step={1} title="로고 · 커버 · 업체명" description="로고(정사각)와 커버(가로 배너)를 각각 등록하세요. 디렉토리 카드와 상세 페이지에 표시됩니다.">
@@ -718,15 +775,18 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
                 className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
               />
             </FieldRow>
-            <FieldRow label="연락처" id="dirfield-phone" error={fieldError?.field === 'phone' ? fieldError.message : undefined}>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="010-0000-0000"
-                className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
-              />
-            </FieldRow>
+            {/* 대행 모드에서는 연락처를 '대행 정보'에 따로 받는다(업체 계정 연락처가 아니라 관리자 메모). */}
+            {!proxy && (
+              <FieldRow label="연락처" id="dirfield-phone" error={fieldError?.field === 'phone' ? fieldError.message : undefined}>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="010-0000-0000"
+                  className="w-full rounded border border-gray-300 px-4 py-2.5 text-[15px] focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary-100"
+                />
+              </FieldRow>
+            )}
           </div>
 
           <FieldRow label="주소">
@@ -760,6 +820,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               minHeight={180}
               onUploadPromise={trackUpload}
               disabled={saving}
+              imageUploadEndpoint={proxy?.uploadEndpoints.content}
             />
           </FieldRow>
         </div>
@@ -815,8 +876,8 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
         <input ref={galleryInputRef} type="file" accept="image/*" multiple onChange={handleGallerySelect} className="hidden" />
       </Section>
 
-      {/* 회원 탈퇴 */}
-      <AccountWithdrawalSection />
+      {/* 회원 탈퇴 — 본인 프로필 편집일 때만 */}
+      {!proxy && <AccountWithdrawalSection />}
 
       {/* Save */}
       <div
@@ -831,7 +892,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
           )}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Link href={ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
+          <Link href={proxy?.cancelHref ?? ROUTES.MYPAGE} className="rounded border border-gray-300 px-6 py-3 text-sm font-bold text-gray-600 hover:border-primary hover:text-primary">취소</Link>
           <button
             type="button"
             onClick={handleSave}
@@ -843,7 +904,7 @@ export default function DirectoryForm({ profile }: DirectoryFormProps) {
               ? (avatarUpload.uploading || coverUpload.uploading || galleryUploading > 0 || pendingCount > 0
                 ? '사진 마무리 중…'
                 : '저장 중...')
-              : '저장하기'}
+              : proxy?.submitLabel ?? '저장하기'}
           </button>
         </div>
       </div>

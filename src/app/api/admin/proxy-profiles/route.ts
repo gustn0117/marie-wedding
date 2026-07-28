@@ -36,7 +36,18 @@ function readListing(body: Record<string, unknown>) {
     established_year: str(body.establishedYear, 10),
     profile_image: str(body.profileImage, 300),
     cover_image: str(body.coverImage, 300),
+    gallery: readGallery(body.gallery),
   };
+}
+
+/** 갤러리는 스토리지 경로 배열. 폼과 같은 12장 상한을 서버에서도 지킨다. */
+function readGallery(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const paths = value
+    .filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+    .map((v) => v.trim().slice(0, 300))
+    .slice(0, 12);
+  return paths.length > 0 ? paths : null;
 }
 
 export async function GET(request: Request) {

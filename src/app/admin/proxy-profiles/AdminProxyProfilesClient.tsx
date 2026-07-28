@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { toast } from '@/shared/components/Toast';
-import { BUSINESS_TYPES, REGIONS } from '@/shared/constants';
+import { BUSINESS_TYPES, REGIONS, ROUTES } from '@/shared/constants';
 
 interface ProxyProfile {
   id: string;
@@ -26,12 +27,6 @@ interface Candidate {
   business_type: string | null;
 }
 
-const EMPTY = {
-  companyName: '', contactName: '', businessType: '', region: '',
-  bio: '', address: '', website: '', companySize: '', establishedYear: '',
-  proxyContact: '', consentNote: '',
-};
-
 const label = (list: readonly { value: string; label: string }[], v: string | null) =>
   list.find((x) => x.value === v)?.label ?? null;
 
@@ -51,9 +46,6 @@ export default function AdminProxyProfilesClient() {
   const [queryInput, setQueryInput] = useState('');
   const [search, setSearch] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
-  const [form, setForm] = useState<typeof EMPTY | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [assignTarget, setAssignTarget] = useState<ProxyProfile | null>(null);
 
   const load = useCallback(async (q: string, deleted: boolean) => {
@@ -79,45 +71,6 @@ export default function AdminProxyProfilesClient() {
   }, [queryInput]);
   useEffect(() => { load(search, showDeleted); }, [search, showDeleted, load]);
 
-  const set = (k: keyof typeof EMPTY, v: string) => setForm((f) => (f ? { ...f, [k]: v } : f));
-
-  const openCreate = () => { setEditingId(null); setForm({ ...EMPTY }); };
-
-  const openEdit = async (p: ProxyProfile) => {
-    const res = await apiFetch(`/api/admin/proxy-profiles?id=${encodeURIComponent(p.id)}`, { credentials: 'include' }, 12000);
-    const b = await res.json().catch(() => ({}));
-    if (!res.ok) { toast(b.error || '불러오지 못했습니다.', 'error'); return; }
-    const f = b.profile;
-    setEditingId(p.id);
-    setForm({
-      companyName: f.company_name ?? '', contactName: f.contact_name ?? '',
-      businessType: (f.business_type ?? '').split(',')[0] ?? '', region: (f.region ?? '').split(',')[0] ?? '',
-      bio: f.bio ?? '', address: f.address ?? '', website: f.website ?? '',
-      companySize: f.company_size ?? '', establishedYear: f.established_year ?? '',
-      proxyContact: f.proxy_contact ?? '', consentNote: f.proxy_consent_note ?? '',
-    });
-  };
-
-  const submit = async () => {
-    if (!form) return;
-    setSaving(true);
-    try {
-      const res = await apiFetch('/api/admin/proxy-profiles', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-        body: JSON.stringify(editingId ? { action: 'update', id: editingId, ...form } : { action: 'create', ...form }),
-      }, 20000);
-      const b = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(b.error || '저장에 실패했습니다.');
-      toast(editingId ? '수정했습니다.' : '등록했습니다. 디렉토리에 바로 노출됩니다.', 'success');
-      setForm(null); setEditingId(null);
-      load(search, showDeleted);
-    } catch (e) {
-      toast(e instanceof Error ? e.message : '저장에 실패했습니다.', 'error');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const act = async (action: 'delete' | 'restore', p: ProxyProfile) => {
     if (action === 'delete' && !confirm(`'${p.company_name}' 대행 프로필을 삭제할까요? 디렉토리에서 사라집니다.`)) return;
     const res = await apiFetch('/api/admin/proxy-profiles', {
@@ -136,7 +89,7 @@ export default function AdminProxyProfilesClient() {
           <h1 className="text-xl font-bold text-ink">대행 등록 프로필</h1>
           <p className="mt-0.5 text-xs text-gray-500">업체 동의를 받아 대신 만든 디렉토리 등재 · 가입하면 그 계정으로 넘김</p>
         </div>
-        <button type="button" onClick={openCreate} className="btn-primary text-sm">＋ 대행 프로필 등록</button>
+        <Link href={`${ROUTES.ADMIN_PROXY_PROFILES}/new`} className="btn-primary shrink-0 text-sm">＋ 대행 프로필 등록</Link>
       </div>
 
       <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-800">
@@ -186,8 +139,8 @@ export default function AdminProxyProfilesClient() {
                 <>
                   <a href={`/directory/${p.id}`} target="_blank" rel="noreferrer"
                     className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">보기</a>
-                  <button type="button" onClick={() => openEdit(p)}
-                    className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">수정</button>
+                  <Link href={`${ROUTES.ADMIN_PROXY_PROFILES}/${p.id}/edit`}
+                    className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">수정</Link>
                   <button type="button" onClick={() => setAssignTarget(p)}
                     className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">업체에 넘기기</button>
                 </>
@@ -201,13 +154,6 @@ export default function AdminProxyProfilesClient() {
         ))}
       </div>
 
-      {form && (
-        <ProfileFormDialog
-          form={form} set={set} saving={saving} editing={!!editingId}
-          onClose={() => { setForm(null); setEditingId(null); }} onSubmit={submit}
-        />
-      )}
-
       {assignTarget && (
         <AssignProfileDialog
           proxy={assignTarget}
@@ -215,74 +161,6 @@ export default function AdminProxyProfilesClient() {
           onDone={() => { setAssignTarget(null); load(search, showDeleted); }}
         />
       )}
-    </div>
-  );
-}
-
-function ProfileFormDialog({
-  form, set, saving, editing, onClose, onSubmit,
-}: {
-  form: typeof EMPTY;
-  set: (k: keyof typeof EMPTY, v: string) => void;
-  saving: boolean; editing: boolean;
-  onClose: () => void; onSubmit: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4"
-      onMouseDown={(e) => { if (e.target === e.currentTarget && !saving) onClose(); }}>
-      <div className="my-6 w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
-        <h3 className="text-base font-bold text-ink">{editing ? '대행 프로필 수정' : '대행 프로필 등록'}</h3>
-        <p className="mt-1 text-xs text-gray-500">디렉토리에 등재될 내용입니다. 업체가 가입하면 이 내용이 그 계정으로 넘어갑니다.</p>
-
-        <div className="mt-4 space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="업체명 *"><input value={form.companyName} onChange={(e) => set('companyName', e.target.value)} className="input-field" placeholder="예) 강남 OO웨딩홀" /></Field>
-            <Field label="담당자명 *"><input value={form.contactName} onChange={(e) => set('contactName', e.target.value)} className="input-field" placeholder="예) 김실장" /></Field>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="업종 *">
-              <select value={form.businessType} onChange={(e) => set('businessType', e.target.value)} className="input-field">
-                <option value="">선택</option>
-                {BUSINESS_TYPES.map((b) => <option key={b.value} value={b.value}>{b.label}</option>)}
-              </select>
-            </Field>
-            <Field label="지역 *">
-              <select value={form.region} onChange={(e) => set('region', e.target.value)} className="input-field">
-                <option value="">선택</option>
-                {REGIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-              </select>
-            </Field>
-          </div>
-          <Field label="소개">
-            <textarea value={form.bio} onChange={(e) => set('bio', e.target.value)} rows={4} className="input-field resize-y"
-              placeholder="홀 규모, 예식 형태, 근무 분위기 등 구직자가 궁금해할 내용" />
-            <p className="mt-1 text-[11px] text-gray-400">여기 적은 내용은 검색엔진에도 공개됩니다. 전화번호 같은 연락처는 넣지 마세요.</p>
-          </Field>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="주소"><input value={form.address} onChange={(e) => set('address', e.target.value)} className="input-field" /></Field>
-            <Field label="홈페이지"><input value={form.website} onChange={(e) => set('website', e.target.value)} className="input-field" placeholder="https://" /></Field>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="규모"><input value={form.companySize} onChange={(e) => set('companySize', e.target.value)} className="input-field" placeholder="예) 직원 20명" /></Field>
-            <Field label="설립연도"><input value={form.establishedYear} onChange={(e) => set('establishedYear', e.target.value)} className="input-field" placeholder="예) 2015" /></Field>
-          </div>
-
-          <div className="border-t border-gray-200 pt-3">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="업체 연락처 * (관리자만 봄)"><input value={form.proxyContact} onChange={(e) => set('proxyContact', e.target.value)} className="input-field" placeholder="02-000-0000 / 김실장" /></Field>
-              <Field label="동의를 받은 경위 * (법적 근거)"><input value={form.consentNote} onChange={(e) => set('consentNote', e.target.value)} className="input-field" placeholder="2026-07-27 전화 통화, 김실장 동의" /></Field>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button type="button" onClick={onClose} disabled={saving}
-            className="rounded border border-gray-300 px-4 py-2 text-sm font-bold text-gray-600 hover:bg-gray-50 disabled:opacity-50">취소</button>
-          <button type="button" onClick={onSubmit} disabled={saving} className="btn-primary text-sm disabled:opacity-50">
-            {saving ? '저장 중…' : editing ? '수정 저장' : '등록'}
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
@@ -408,15 +286,6 @@ function AssignProfileDialog({
           </button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Field({ label: l, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="text-xs font-bold text-gray-500">{l}</label>
-      <div className="mt-1">{children}</div>
     </div>
   );
 }

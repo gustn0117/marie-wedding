@@ -20,6 +20,11 @@ const TARGETS = {
   'job-cover': { bucket: 'job-images', prefix: 'admin/job-covers' },
   'job-gallery': { bucket: 'job-images', prefix: 'admin/job-gallery' },
   'job-content': { bucket: 'job-images', prefix: 'admin/job-content' },
+  // 대행 등록 프로필 — 디렉토리 이미지는 전부 avatars 버킷을 쓴다.
+  'profile-avatar': { bucket: 'avatars', prefix: 'admin/profile-avatars' },
+  'profile-cover': { bucket: 'avatars', prefix: 'admin/profile-covers' },
+  'profile-gallery': { bucket: 'avatars', prefix: 'admin/profile-gallery' },
+  'profile-content': { bucket: 'avatars', prefix: 'admin/profile-content' },
 } as const;
 
 type Target = keyof typeof TARGETS;
