@@ -6,6 +6,7 @@ import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
 import HomeContent from '@/features/home/HomeContent';
 import HeroBanner from '@/features/home/HeroBanner';
+import LaunchPromotionPopup from '@/features/home/LaunchPromotionPopup';
 import JsonLd from '@/shared/components/JsonLd';
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, absoluteUrl } from '@/shared/seo';
 
@@ -149,6 +150,7 @@ export default async function HomePage() {
     <div className="min-h-screen flex flex-col bg-background">
       <JsonLd data={SITE_JSONLD} />
       <Header />
+      <LaunchPromotionPopup />
       <HeroBanner />
       <HomeContent
         posts={posts}
