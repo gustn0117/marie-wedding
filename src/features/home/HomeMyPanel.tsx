@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
 import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
@@ -20,7 +21,8 @@ async function loadProfile(profileId: string): Promise<Profile | null> {
   const sb = createServerQueryClient();
   const { data } = await sb
     .from('profiles')
-    .select('*')
+    // 컬럼 단위 권한이 걸려 있어 select('*') 는 거부된다(민감 컬럼 보호).
+    .select(PUBLIC_PROFILE_COLUMNS)
     .eq('id', profileId)
     .is('deleted_at', null)
     .maybeSingle();
