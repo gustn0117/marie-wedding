@@ -159,10 +159,34 @@ export default async function CompanyDetailPage({ params }: PageProps) {
   const isOwner = viewer.ok && viewer.profileId === profile.id;
   const isProxyListing = !!(profile as { proxy_created_by?: string | null }).proxy_created_by;
 
-  // 디렉토리 노출을 끈(is_directory_listed=false) 프로필은 본인 외에는 상세 접근 차단 —
+  // 디렉토리 노출을 끈(is_directory_listed=false) 프로필은 본인 외에 내용을 보여주지 않는다 —
   // 목록/홈은 이미 is_directory_listed=true 만 노출하므로 상세도 동일 조건을 강제해 '숨김'
   // 옵트아웃이 실제로 동작하게 한다(공고/커뮤니티 작성자 id 로 우회 접근 차단).
-  if (!profile.is_directory_listed && !isOwner) notFound();
+  // 404 대신 '비공개' 안내를 띄운다: 공고에서 업체명을 눌러 들어온 사용자에게 404 는
+  // 링크가 깨진 것처럼 보인다. 안내만 하고 프로필 내용은 아무것도 노출하지 않는다.
+  if (!profile.is_directory_listed && !isOwner) {
+    return (
+      <div className="max-w-[1000px] mx-auto">
+        <div className="bg-white border-y border-gray-200 px-6 py-16 text-center">
+          <svg className="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+          </svg>
+          <h1 className="text-lg font-bold text-gray-900">비공개 프로필입니다</h1>
+          <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+            이 회원이 아직 프로필을 공개하지 않았습니다.
+            <br />
+            프로필을 공개로 전환하면 소개·리뷰·채용 공고를 이곳에서 볼 수 있어요.
+          </p>
+          <Link
+            href={ROUTES.DIRECTORY}
+            className="mt-6 inline-block rounded border border-gray-300 px-5 py-2.5 text-sm font-bold text-gray-700 hover:border-primary hover:text-primary transition-colors"
+          >
+            인재·업체 프로필 보기
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const displayName = profile.company_name || profile.contact_name;
 
