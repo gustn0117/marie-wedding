@@ -10,7 +10,8 @@ export type SignupProvider = 'email' | 'kakao' | 'google' | 'naver';
 
 export interface Profile {
   id: string;
-  user_id: string;
+  /** 관리자가 대신 등록한 디렉토리 등재는 아직 주인이 없어 null 이다. */
+  user_id: string | null;
   account_type: AccountType | null;
   business_type: BusinessType | null;
   company_name: string | null;

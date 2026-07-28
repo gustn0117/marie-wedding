@@ -67,7 +67,9 @@ const getData = cache(async (id: string) => {
   // 1) profile 먼저 확인 (없으면 즉시 종료)
   const { data: profile } = await supabase
     .from('profiles')
-    .select(PUBLIC_PROFILE_COLUMNS)
+    // proxy_created_by 는 '관리자가 대신 만든 등재'인지 알려주는 표시용 플래그다.
+    // 주인이 없는 프로필에 쪽지 버튼을 띄우면 아무도 읽지 않는 곳으로 문의가 사라진다.
+    .select(`${PUBLIC_PROFILE_COLUMNS}, proxy_created_by`)
     .eq('id', id)
     .is('deleted_at', null)
     .single();
@@ -115,7 +117,7 @@ const getData = cache(async (id: string) => {
   const tagMap: Record<string, ReviewTag> = Object.fromEntries(tagRows.map((t) => [t.id, t]));
 
   return {
-    profile: profile as Profile,
+    profile: profile as unknown as Profile,
     jobs: (jobsRes.data ?? []) as unknown as Job[],
     reviews,
     tagMap,
@@ -155,6 +157,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
 
   const viewer = await getCurrentVerifiedProfile();
   const isOwner = viewer.ok && viewer.profileId === profile.id;
+  const isProxyListing = !!(profile as { proxy_created_by?: string | null }).proxy_created_by;
 
   // 디렉토리 노출을 끈(is_directory_listed=false) 프로필은 본인 외에는 상세 접근 차단 —
   // 목록/홈은 이미 is_directory_listed=true 만 노출하므로 상세도 동일 조건을 강제해 '숨김'
@@ -256,8 +259,16 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                 웹사이트
               </a>
             )}
-            {!isOwner && <StartMessageButton targetProfileId={profile.id} variant="secondary" />}
+            {!isOwner && !isProxyListing && <StartMessageButton targetProfileId={profile.id} variant="secondary" />}
           </div>
+
+        {/* 주인이 없는 등재 — 쪽지를 받을 사람이 없으므로 그 사실을 밝힌다. */}
+        {isProxyListing && (
+          <div className="mb-6 -mt-4 border border-gray-200 bg-gray-50 px-4 py-3 text-[12.5px] leading-relaxed text-gray-600">
+            이 프로필은 업체 동의를 받아 마리에가 대신 등록했습니다. 아직 업체 계정과 연결되지 않아
+            쪽지로는 답을 받을 수 없습니다. 문의는 <Link href={ROUTES.CONTACT} className="font-bold text-primary hover:underline">고객센터</Link>로 남겨주세요.
+          </div>
+        )}
 
         {/* Info Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0 border border-gray-100">
