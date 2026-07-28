@@ -107,6 +107,28 @@ export async function GET(request: Request) {
   if (!(await hasValidAdminSession())) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const url = new URL(request.url);
+  // 이관 대상 업체 후보 — 관리자가 목록에서 골라 넘길 때 쓴다.
+  // 프로필 ID 를 손으로 입력하면 오타 한 글자로 엉뚱한 업체에 공고가 넘어간다.
+  if (url.searchParams.get('candidates') === '1') {
+    const q = (url.searchParams.get('q') || '').replace(/[,()%_\\]/g, ' ').trim().slice(0, 60);
+    const supabase = createServiceClient();
+    let cq = supabase
+      .from('profiles')
+      .select('id, company_name, contact_name, region, business_type, created_at')
+      .eq('account_type', 'business')
+      .is('deleted_at', null)
+      .is('banned_at', null)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if (q) cq = cq.or(`company_name.ilike.%${q}%,contact_name.ilike.%${q}%`);
+    const { data, error } = await cq;
+    if (error) {
+      console.error('[api/admin/proxy-jobs] candidates failed:', error);
+      return NextResponse.json({ error: '업체 목록을 불러오지 못했습니다.' }, { status: 500 });
+    }
+    return NextResponse.json({ items: data ?? [] });
+  }
+
   // 단건 조회 — 수정 화면이 폼을 채울 때 쓴다.
   const one = url.searchParams.get('id');
   if (one) {

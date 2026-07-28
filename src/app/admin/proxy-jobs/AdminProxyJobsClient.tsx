@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { toast } from '@/shared/components/Toast';
+import AssignDialog from './AssignDialog';
 
 interface ProxyJob {
   id: string;
@@ -36,6 +37,8 @@ export default function AdminProxyJobsClient() {
   const [queryInput, setQueryInput] = useState('');
   const [search, setSearch] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
+  // 이관 대상 선택 다이얼로그 — 프로필 ID 를 손으로 입력하던 방식을 대체한다.
+  const [assignTarget, setAssignTarget] = useState<ProxyJob | null>(null);
 
   const load = useCallback(async (q = '', deleted = false) => {
     setLoading(true);
@@ -71,17 +74,6 @@ export default function AdminProxyJobsClient() {
     else toast(b.error || '재발급 실패', 'error');
   };
 
-  const assign = async (id: string) => {
-    const profileId = prompt('넘길 업체의 프로필 ID를 입력하세요.');
-    if (!profileId) return;
-    const res = await apiFetch('/api/admin/proxy-jobs', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
-      body: JSON.stringify({ action: 'assign', id, profileId: profileId.trim() }),
-    }, 12000);
-    const b = await res.json().catch(() => ({}));
-    if (res.ok) { toast('업체 계정으로 넘겼습니다.', 'success'); load(search, showDeleted); }
-    else toast(b.error || '이관 실패', 'error');
-  };
 
   const remove = async (j: ProxyJob) => {
     const warn = j.author_id
@@ -173,7 +165,7 @@ export default function AdminProxyJobsClient() {
                     <>
                       <button type="button" onClick={() => regenerate(j.id)}
                         className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">코드 재발급</button>
-                      <button type="button" onClick={() => assign(j.id)}
+                      <button type="button" onClick={() => setAssignTarget(j)}
                         className="rounded border border-gray-300 px-2 py-1 text-[11px] font-bold text-gray-600 hover:border-primary hover:text-primary">직접 이관</button>
                     </>
                   )}
@@ -194,6 +186,16 @@ export default function AdminProxyJobsClient() {
           </div>
         ))}
       </div>
+
+      {assignTarget && (
+        <AssignDialog
+          jobId={assignTarget.id}
+          jobTitle={assignTarget.title}
+          proxyCompanyName={assignTarget.proxy_company_name}
+          onClose={() => setAssignTarget(null)}
+          onDone={() => { setAssignTarget(null); load(search, showDeleted); }}
+        />
+      )}
 
     </div>
   );
