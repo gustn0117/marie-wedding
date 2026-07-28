@@ -2,8 +2,8 @@ import type { DirectoryFormValues } from '@/features/directory/components/Direct
 import type { Profile } from '@/types/database';
 import type { ProxyMeta } from './ProxyMetaPanel';
 
-/** 폼 값 → 관리자 API 본문. create/update 가 같은 모양을 쓴다. */
-export function toProxyPayload(values: DirectoryFormValues, meta: ProxyMeta) {
+/** 폼 값 → 관리자 API 등재 본문. 대행 등록·회원 프로필 수정이 같은 모양을 쓴다. */
+export function toListingPayload(values: DirectoryFormValues) {
   return {
     companyName: values.company_name ?? '',
     contactName: values.contact_name,
@@ -17,6 +17,13 @@ export function toProxyPayload(values: DirectoryFormValues, meta: ProxyMeta) {
     profileImage: values.profile_image ?? '',
     coverImage: values.cover_image ?? '',
     gallery: values.gallery ?? [],
+  };
+}
+
+/** 대행 API 본문 — 등재 내용에 대행 정보(연락처·동의 기록)를 더한다. */
+export function toProxyPayload(values: DirectoryFormValues, meta: ProxyMeta) {
+  return {
+    ...toListingPayload(values),
     proxyContact: meta.contact.trim(),
     consentNote: meta.consentNote.trim(),
   };

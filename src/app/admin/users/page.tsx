@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
+import { ROUTES } from '@/shared/constants';
 import { adminService } from '@/features/admin/services/admin-service';
 import { formatDate, getPrimaryBusinessTypeLabel, getRegionLabel } from '@/shared/utils/format';
 import type { Profile } from '@/types/database';
@@ -294,6 +296,12 @@ export default function AdminUsersPage() {
                           </button>
                         ) : (
                           <>
+                            <Link
+                              href={ROUTES.ADMIN_PROFILES_EDIT(user.id)}
+                              className="inline-block px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            >
+                              프로필
+                            </Link>
                             <button
                               onClick={() => handleToggleRole(user)}
                               disabled={actionLoading === user.id}

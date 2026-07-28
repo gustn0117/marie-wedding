@@ -193,6 +193,14 @@ export default function AdminJobsPage() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       {!job.deleted_at && (
+                        <Link
+                          href={ROUTES.ADMIN_JOBS_EDIT(job.id)}
+                          className="inline-block px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors mr-1"
+                        >
+                          수정
+                        </Link>
+                      )}
+                      {!job.deleted_at && (
                         <button
                           onClick={() => handleToggleFeatured(job)}
                           disabled={actionLoading === job.id}
