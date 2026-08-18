@@ -89,6 +89,7 @@ export const ROUTES = {
   COMMUNITY_EDIT: (id: string) => `/community/${id}/edit`,
   MYPAGE: '/mypage',
   MYPAGE_EDIT: '/mypage/edit',
+  MYPAGE_ACCOUNT_TYPE: '/mypage/account-type',
   MYPAGE_RESUMES: '/mypage/resumes',
   MYPAGE_PASSWORD: '/mypage/password',
   MYPAGE_NOTIFICATIONS: '/mypage/notifications',

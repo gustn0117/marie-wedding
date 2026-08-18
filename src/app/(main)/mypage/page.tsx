@@ -318,17 +318,33 @@ export default async function MyPage() {
       {/* Account — 계정 관리 (위험 액션 격리) */}
       <section className="rounded border border-gray-200 bg-white p-5 md:p-6">
         <h2 className="text-sm font-bold text-ink mb-3">계정</h2>
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-700">회원 탈퇴</p>
-            <p className="mt-0.5 text-xs text-gray-500">계정과 작성한 공고·게시글이 모두 비공개 처리됩니다.</p>
+        <div className="space-y-4">
+          {!isBusinessAcc && (
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-700">업체 회원으로 전환</p>
+                <p className="mt-0.5 text-xs text-gray-500">공고 등록·지원자 관리 등 업체 기능을 사용할 수 있습니다.</p>
+              </div>
+              <Link
+                href={ROUTES.MYPAGE_ACCOUNT_TYPE}
+                className="shrink-0 inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 bg-white text-[12.5px] font-semibold text-gray-600 hover:border-primary hover:text-primary transition-colors"
+              >
+                전환 안내
+              </Link>
+            </div>
+          )}
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-700">회원 탈퇴</p>
+              <p className="mt-0.5 text-xs text-gray-500">계정과 작성한 공고·게시글이 모두 비공개 처리됩니다.</p>
+            </div>
+            <Link
+              href="/mypage/withdraw"
+              className="shrink-0 inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 bg-white text-[12.5px] font-semibold text-gray-600 hover:border-state-urgent hover:text-state-urgent transition-colors"
+            >
+              탈퇴 진행
+            </Link>
           </div>
-          <Link
-            href="/mypage/withdraw"
-            className="shrink-0 inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 bg-white text-[12.5px] font-semibold text-gray-600 hover:border-state-urgent hover:text-state-urgent transition-colors"
-          >
-            탈퇴 진행
-          </Link>
         </div>
       </section>
     </div>

@@ -20,8 +20,20 @@ export default async function NewJobPage() {
       <div className="max-w-2xl mx-auto">
         <div className="card p-8 text-center space-y-4">
           <h2 className="text-lg font-bold text-gray-900">업체 회원 전용 기능입니다</h2>
-          <p className="text-sm text-gray-500">공고 등록은 업체 회원만 가능합니다.</p>
-          <Link href={ROUTES.JOBS} className="btn-primary text-sm px-6 py-2.5 inline-block">목록으로 돌아가기</Link>
+          <p className="text-sm text-gray-500 leading-relaxed">
+            공고 등록은 업체 회원만 가능합니다.
+            <br />
+            업체 회원으로 전환하면 바로 공고를 등록할 수 있어요.
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-2">
+            <Link
+              href={`${ROUTES.MYPAGE_ACCOUNT_TYPE}?next=${encodeURIComponent(ROUTES.JOBS_NEW)}`}
+              className="btn-primary text-sm px-6 py-2.5 inline-block"
+            >
+              업체 회원으로 전환하기
+            </Link>
+            <Link href={ROUTES.JOBS} className="btn-outline text-sm px-6 py-2.5 inline-block">목록으로 돌아가기</Link>
+          </div>
         </div>
       </div>
     );
