@@ -7,6 +7,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { checkBusinessProfileCompleteness } from '@/features/jobs/lib/business-profile-completeness';
 import { isUuid } from '@/shared/utils/uuid';
 import { sameNullableTimestamp } from '@/shared/utils/idempotency';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -236,6 +237,7 @@ export async function POST(request: Request) {
         { status: requestSignal.aborted ? 504 : 500 },
       );
     }
+    notifyIndexNow(`/jobs/${jobId}`);
     return NextResponse.json({ success: true, job: { id: jobId } });
   }
 
@@ -287,5 +289,6 @@ export async function POST(request: Request) {
       { status: requestSignal.aborted ? 504 : 500 },
     );
   }
+  notifyIndexNow(`/jobs/${id}`);
   return NextResponse.json({ success: true, job: { id } });
 }

@@ -7,15 +7,17 @@ import type { Post } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import LoadErrorState from '@/shared/components/LoadErrorState';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: '웨딩 업계 커뮤니티',
   description: '웨딩 업계 종사자들의 커뮤니티. 업계 뉴스, 실무 노하우, 취업·채용 팁, 후기와 자유게시판.',
-  alternates: { canonical: '/community' },
-  openGraph: { title: '웨딩 업계 커뮤니티 | Marié', description: '웨딩 업계 종사자들의 커뮤니티. 업계 뉴스·노하우·후기.', url: '/community' },
-};
+  path: '/community',
+  keywords: ['웨딩 업계 커뮤니티', '웨딩 종사자', '웨딩 실무', '웨딩 취업'],
+});
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;

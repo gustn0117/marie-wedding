@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -103,5 +104,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     );
   }
 
+  notifyIndexNow(`/jobs/${id}`); // 삭제도 알려야 검색 결과에서 빨리 빠진다
   return NextResponse.json({ success: true });
 }

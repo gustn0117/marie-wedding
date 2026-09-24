@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
 import { readJobFields } from '@/lib/admin/job-fields';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -159,6 +160,7 @@ export async function POST(request: Request) {
       console.error('[api/admin/proxy-jobs] update failed:', error);
       return NextResponse.json({ error: `수정에 실패했습니다: ${error.message}` }, { status: 500 });
     }
+    notifyIndexNow(`/jobs/${id}`);
     return NextResponse.json({ ok: true, id });
   }
 
@@ -181,6 +183,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '삭제에 실패했습니다.' }, { status: 500 });
     }
     if (!deleted) return NextResponse.json({ error: '대행 등록 공고를 찾을 수 없습니다.' }, { status: 404 });
+    notifyIndexNow(`/jobs/${id}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -197,6 +200,7 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (error) return NextResponse.json({ error: '복구에 실패했습니다.' }, { status: 500 });
     if (!restored) return NextResponse.json({ error: '대행 등록 공고를 찾을 수 없습니다.' }, { status: 404 });
+    notifyIndexNow(`/jobs/${id}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -295,6 +299,7 @@ export async function POST(request: Request) {
       console.error('[api/admin/proxy-jobs] create failed:', error);
       return NextResponse.json({ error: `등록에 실패했습니다: ${error.message}` }, { status: 500 });
     }
+    if (data?.id) notifyIndexNow(`/jobs/${data.id}`);
     return NextResponse.json({ ok: true, id: data?.id, claimCode });
   }
 

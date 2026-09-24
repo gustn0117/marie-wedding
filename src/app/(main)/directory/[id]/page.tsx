@@ -21,7 +21,7 @@ import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import GalleryLightbox from '@/shared/components/GalleryLightbox';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, toPlainText, normalizeExternalUrl } from '@/shared/seo';
+import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, normalizeExternalUrl } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,14 +138,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const title = biz ? `${name} · ${biz}` : name;
   const description = toPlainText(profile.bio, 150)
     || `${[region, biz].filter(Boolean).join(' · ')} — ${name} 웨딩 업체·인재 프로필`;
-  const canonical = `/directory/${profile.id}`;
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { type: 'profile', title, description, url: canonical },
-    twitter: { title, description },
-  };
+  // og 이미지는 같은 폴더의 opengraph-image.tsx 가 프로필별로 만든다 → image: null
+  return buildPageMetadata({ title, description, path: `/directory/${profile.id}`, type: 'profile', image: null });
 }
 
 export default async function CompanyDetailPage({ params }: PageProps) {

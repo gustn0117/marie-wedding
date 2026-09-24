@@ -1,7 +1,11 @@
-export const metadata = {
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
+
+export const metadata: Metadata = buildPageMetadata({
   title: '개인정보처리방침',
-  alternates: { canonical: '/privacy' },
-};
+  description: '마리에(Marié) 개인정보처리방침 — 수집하는 개인정보 항목과 이용 목적, 보관 기간, 이용자의 권리와 행사 방법을 안내합니다.',
+  path: '/privacy',
+});
 
 export default function PrivacyPage() {
   return (

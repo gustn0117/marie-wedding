@@ -8,15 +8,17 @@ import type { Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
 import LoadErrorState from '@/shared/components/LoadErrorState';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: '웨딩 인재·업체 프로필',
-  description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요. 예식장·스튜디오·드레스·헤어메이크업·플래너.',
-  alternates: { canonical: '/directory' },
-  openGraph: { title: '웨딩 인재·업체 프로필 | Marié', description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요.', url: '/directory' },
-};
+  description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요. 예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지 함께할 파트너를 한 곳에서.',
+  path: '/directory',
+  keywords: ['웨딩 업체', '웨딩 인재', '웨딩 프리랜서', '웨딩 업체 찾기', '웨딩 파트너'],
+});
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;

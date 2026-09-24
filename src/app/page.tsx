@@ -9,7 +9,7 @@ import HomeMission from '@/features/home/HomeMission';
 import HomeContent from '@/features/home/HomeContent';
 import HeroBanner from '@/features/home/HeroBanner';
 import JsonLd from '@/shared/components/JsonLd';
-import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, absoluteUrl } from '@/shared/seo';
+import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, organizationJsonLd } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,28 +23,20 @@ const SITE_JSONLD: Record<string, unknown>[] = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: `${SITE_NAME_KO} ${SITE_NAME}`,
-    alternateName: ['마리에', 'Marié', 'Marie', 'marie.co.kr'],
+    '@id': `${SITE_URL}/#website`,
+    name: OG_SITE_NAME,
+    alternateName: [SITE_NAME_KO, SITE_NAME, 'Marie', 'marie.co.kr'],
     url: SITE_URL,
+    description: SITE_DESCRIPTION,
     inLanguage: 'ko-KR',
+    publisher: { '@id': `${SITE_URL}/#organization` },
     potentialAction: {
       '@type': 'SearchAction',
       target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/search?q={search_term_string}` },
       'query-input': 'required name=search_term_string',
     },
   },
-  {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: `${SITE_NAME_KO} ${SITE_NAME}`,
-    alternateName: '마리에',
-    url: SITE_URL,
-    logo: absoluteUrl('/og-marie.png'),
-    image: absoluteUrl('/og-marie.png'),
-    description: SITE_DESCRIPTION,
-    email: 'admin@marie.co.kr',
-    areaServed: 'KR',
-  },
+  organizationJsonLd(),
 ];
 
 // 공개 홈('/'는 middleware public path)은 비로그인 방문자도 접근 가능하다.
@@ -140,7 +132,7 @@ export default async function HomePage() {
       <Header />
       <main className="flex-1">
         {/* 화면에 보이는 큰 제목은 슬라이드마다 바뀌므로, 문서 제목(h1)은 고정 문구로 둔다 */}
-        <h1 className="sr-only">마리에 — 웨딩 업계 전문 채용 플랫폼</h1>
+        <h1 className="sr-only">마리에 — 웨딩 업계 채용·구인구직 플랫폼</h1>
         <HomeHero />
         <HomeQuickLinks />
         <HomeMission />

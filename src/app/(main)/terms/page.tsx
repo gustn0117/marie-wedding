@@ -1,7 +1,11 @@
-export const metadata = {
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
+
+export const metadata: Metadata = buildPageMetadata({
   title: '이용약관',
-  alternates: { canonical: '/terms' },
-};
+  description: '마리에(Marié) 서비스 이용약관 — 회원 가입, 채용 공고 등록과 지원, 프로필·커뮤니티 이용에 관한 권리와 의무를 안내합니다.',
+  path: '/terms',
+});
 
 export default function TermsPage() {
   return (

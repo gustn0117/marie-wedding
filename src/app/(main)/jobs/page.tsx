@@ -6,16 +6,17 @@ import type { Job } from '@/types/database';
 import { REGION_DETAILS } from '@/shared/constants/regions';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: '웨딩 채용정보 · 웨딩홀·예약실 구인구직',
   description: '웨딩홀 채용, 예약실 구인구직부터 스튜디오·드레스·헤어메이크업·플래너까지 — 웨딩 업계 채용 공고를 지역·업종별로 확인하고 지원하세요.',
-  keywords: ['웨딩홀 채용', '예약실 채용', '예약실 구인구직', '웨딩 구인구직', '웨딩 채용'],
-  alternates: { canonical: '/jobs' },
-  openGraph: { title: '웨딩 채용정보 · 웨딩홀·예약실 구인구직 | Marié', description: '웨딩홀 채용·예약실 구인구직부터 플래너·헤어메이크업까지 웨딩 업계 채용을 한 곳에서.', url: '/jobs' },
-};
+  path: '/jobs',
+  keywords: ['웨딩 채용', '웨딩 구인구직', '웨딩홀 채용', '예약실 채용', '예약실 구인구직', '웨딩플래너 채용', '예식장 채용'],
+});
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;

@@ -1,9 +1,13 @@
 import SupportInquiryForm from '@/features/support/components/SupportInquiryForm';
+import type { Metadata } from 'next';
+import { buildPageMetadata, faqJsonLd } from '@/shared/seo';
+import JsonLd from '@/shared/components/JsonLd';
 
-export const metadata = {
-  title: '마리에 고객센터',
-  alternates: { canonical: '/contact' },
-};
+export const metadata: Metadata = buildPageMetadata({
+  title: '고객센터',
+  description: '마리에 이용 문의, 채용 공고·프로필 등록 문의, 광고·제휴 문의를 남겨주세요. 이메일과 문의하기로 접수하면 담당자가 확인 후 답변드립니다.',
+  path: '/contact',
+});
 
 /**
  * 연락처는 env 로 관리 — 변경 시 코드 수정 없이 배포.
@@ -11,9 +15,19 @@ export const metadata = {
 const CONTACT_EMAIL = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'admin@marie.co.kr';
 const CONTACT_HOURS = process.env.NEXT_PUBLIC_CONTACT_HOURS || '평일 10:00 ~ 18:00';
 
+// 화면의 '자주 묻는 질문'과 FAQPage 구조화 데이터가 같은 목록을 쓴다.
+const CONTACT_FAQ = [
+  { q: '회원가입은 어떻게 하나요?', a: '홈페이지 우측 상단의 "회원가입" 버튼을 클릭하여 이메일과 기본 정보를 입력하시면 됩니다.' },
+  { q: '공고 등록은 무료인가요?', a: '현재 모든 공고 등록은 무료로 제공되고 있습니다.' },
+  { q: '프로필 정보를 수정하고 싶어요.', a: '로그인 후 우측 상단 프로필 메뉴에서 "마이페이지"를 클릭하신 후 "프로필 수정"에서 변경하실 수 있습니다.' },
+  { q: '비밀번호를 잊어버렸어요.', a: '로그인 페이지에서 "비밀번호 찾기"를 통해 가입하신 이메일로 재설정 링크를 받으실 수 있습니다.' },
+  { q: '광고/제휴 문의는 어떻게 하나요?', a: `${CONTACT_EMAIL}으로 문의 내용을 보내주시거나 위 문의하기를 이용해주시면 담당자가 확인 후 연락드리겠습니다.` },
+];
+
 export default function ContactPage() {
   return (
     <div className="max-w-[900px] mx-auto space-y-4">
+      <JsonLd data={faqJsonLd(CONTACT_FAQ)} />
       <section className="saramin-section p-5">
         <p className="text-sm font-bold text-primary">고객센터 안내</p>
         <h1 className="text-2xl font-bold text-gray-900">마리에 고객센터</h1>
@@ -49,13 +63,7 @@ export default function ContactPage() {
       <div className="card p-6 md:p-8">
         <h2 className="text-lg font-bold text-text-primary mb-4">자주 묻는 질문</h2>
         <div className="space-y-4">
-          {[
-            { q: '회원가입은 어떻게 하나요?', a: '홈페이지 우측 상단의 "회원가입" 버튼을 클릭하여 이메일과 기본 정보를 입력하시면 됩니다.' },
-            { q: '공고 등록은 무료인가요?', a: '현재 모든 공고 등록은 무료로 제공되고 있습니다.' },
-            { q: '프로필 정보를 수정하고 싶어요.', a: '로그인 후 우측 상단 프로필 메뉴에서 "마이페이지"를 클릭하신 후 "프로필 수정"에서 변경하실 수 있습니다.' },
-            { q: '비밀번호를 잊어버렸어요.', a: '로그인 페이지에서 "비밀번호 찾기"를 통해 가입하신 이메일로 재설정 링크를 받으실 수 있습니다.' },
-            { q: '광고/제휴 문의는 어떻게 하나요?', a: `${CONTACT_EMAIL}으로 문의 내용을 보내주시거나 위 문의하기를 이용해주시면 담당자가 확인 후 연락드리겠습니다.` },
-          ].map((faq, idx) => (
+          {CONTACT_FAQ.map((faq, idx) => (
             <details key={idx} className="group">
               <summary className="flex items-center justify-between cursor-pointer py-3 border-b border-gray-100 text-sm font-medium text-text-primary hover:text-primary transition-colors">
                 {faq.q}

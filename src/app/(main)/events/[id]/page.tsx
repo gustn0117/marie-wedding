@@ -15,7 +15,7 @@ import RichTextView from '@/shared/components/RichTextView';
 import { ROUTES } from '@/shared/constants';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
+import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -88,15 +88,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!event) return { title: '행사·소식', robots: { index: false, follow: true } };
   const title = event.title;
   const description = toPlainText(event.content, 155) || `${SITE_NAME} 웨딩 행사·소식`;
-  const canonical = `/events/${event.id}`;
   const image = eventImageUrl(event);
-  return {
+  return buildPageMetadata({
     title,
     description,
-    alternates: { canonical },
-    openGraph: { type: 'article', title, description, url: canonical, ...(image ? { images: [image] } : {}) },
-    twitter: { title, description, ...(image ? { images: [image] } : {}) },
-  };
+    path: `/events/${event.id}`,
+    type: 'article',
+    ...(image ? { image } : {}),
+  });
 }
 
 function getStaffSearchKeyword(event: Event) {

@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -111,5 +112,6 @@ export async function POST(request: Request) {
     );
   }
 
+  notifyIndexNow(`/jobs/${id}`); // 마감·충원·재모집은 채용 구조화 데이터 노출이 바뀐다
   return NextResponse.json({ data });
 }

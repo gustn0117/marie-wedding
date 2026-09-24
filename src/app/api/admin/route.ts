@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import { isUuid } from '@/shared/utils/uuid';
 import { sameNullableTimestamp } from '@/shared/utils/idempotency';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 const ADMIN_REQUEST_TIMEOUT_MS = 12_000;
 
@@ -293,12 +294,14 @@ export async function POST(request: NextRequest) {
       case 'softDeleteJob': {
         const { error } = await supabase.from('jobs').update({ deleted_at: new Date().toISOString() }).eq('id', params.id);
         if (error) throw error;
+        if (typeof params.id === 'string') notifyIndexNow(`/jobs/${params.id}`);
         return NextResponse.json({ success: true });
       }
 
       case 'restoreJob': {
         const { error } = await supabase.from('jobs').update({ deleted_at: null }).eq('id', params.id);
         if (error) throw error;
+        if (typeof params.id === 'string') notifyIndexNow(`/jobs/${params.id}`);
         return NextResponse.json({ success: true });
       }
 

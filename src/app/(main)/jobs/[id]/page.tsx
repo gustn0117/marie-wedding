@@ -19,7 +19,7 @@ import RelatedJobs from '@/features/jobs/components/RelatedJobs';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
 import { buildJobPostingJsonLd } from '@/features/jobs/lib/jobJsonLd';
-import { toPlainText, breadcrumbJsonLd, SITE_NAME } from '@/shared/seo';
+import { toPlainText, breadcrumbJsonLd, buildPageMetadata, SITE_NAME_KO } from '@/shared/seo';
 import { getRegionLabel } from '@/shared/utils/format';
 
 export const dynamic = 'force-dynamic';
@@ -54,15 +54,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const facets = [region, biz, emp, job.salary_info].filter(Boolean).join(' · ');
   const body = toPlainText(job.description, 120);
   const description = [facets, body].filter(Boolean).join(' · ').slice(0, 160)
-    || `${SITE_NAME} 웨딩 업계 채용 공고`;
-  const canonical = `/jobs/${job.id}`;
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { type: 'article', title, description, url: canonical },
-    twitter: { title, description },
-  };
+    || `${SITE_NAME_KO} 웨딩 업계 채용 공고`;
+  // og 이미지는 같은 폴더의 opengraph-image.tsx 가 공고별로 만든다 → image: null
+  return buildPageMetadata({ title, description, path: `/jobs/${job.id}`, type: 'article', image: null });
 }
 
 export default async function JobDetailPage({ params }: PageProps) {

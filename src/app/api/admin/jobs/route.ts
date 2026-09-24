@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
 import { readJobFields } from '@/lib/admin/job-fields';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -66,5 +67,6 @@ export async function POST(request: Request) {
     console.error('[api/admin/jobs] update failed:', error);
     return NextResponse.json({ error: `수정에 실패했습니다: ${error.message}` }, { status: 500 });
   }
+  notifyIndexNow(`/jobs/${id}`);
   return NextResponse.json({ ok: true, id });
 }

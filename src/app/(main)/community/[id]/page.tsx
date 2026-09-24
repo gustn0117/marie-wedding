@@ -16,7 +16,7 @@ import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
+import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,14 +83,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { post } = base;
   const title = post.title;
   const description = toPlainText(post.content, 155) || `${SITE_NAME} 웨딩 업계 커뮤니티`;
-  const canonical = `/community/${post.id}`;
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { type: 'article', title, description, url: canonical },
-    twitter: { title, description },
-  };
+  return buildPageMetadata({ title, description, path: `/community/${post.id}`, type: 'article' });
 }
 
 export default async function PostDetailPage({ params }: PageProps) {

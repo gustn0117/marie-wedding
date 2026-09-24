@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -75,7 +76,7 @@ export async function POST(request: Request) {
 
   const service = createServiceClient(requestSignal);
   const [targetResult, meResult] = await Promise.all([
-    service.from('profiles').select('id, user_id, role, phone').eq('id', id).is('deleted_at', null).abortSignal(requestSignal).maybeSingle(),
+    service.from('profiles').select('id, user_id, role, phone, is_directory_listed').eq('id', id).is('deleted_at', null).abortSignal(requestSignal).maybeSingle(),
     service.from('profiles').select('id, role, banned_at').eq('user_id', user.id).is('deleted_at', null).abortSignal(requestSignal).maybeSingle(),
   ]);
   const tLookup = Date.now();
@@ -202,6 +203,9 @@ export async function POST(request: Request) {
     update_ms: tUpdate - tLookup,
     fields: Object.keys(payload).length,
   });
+  // 공개 프로필(수정 전이든 후든)만 검색엔진에 알린다 — 공개 전환·비공개 전환·공개 중 수정.
+  const nowListed = 'is_directory_listed' in payload ? payload.is_directory_listed === true : !!target.is_directory_listed;
+  if (target.is_directory_listed || nowListed) notifyIndexNow(`/directory/${id}`);
   // 호출부는 전체 row를 사용하지 않는다. id만 돌려 불필요한 post-update SELECT와
   // 민감한 프로필 컬럼의 과도한 직렬화를 없애되 기존 응답 shape는 유지한다.
   return NextResponse.json({ success: true, data: { id } });

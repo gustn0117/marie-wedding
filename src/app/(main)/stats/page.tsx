@@ -4,6 +4,8 @@ import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES, REGIONS, BUSINESS_TYPES } from '@/shared/constants';
 import StatsExportButton from '@/features/stats/components/StatsExportButton';
 import PageHeader from '@/shared/components/PageHeader';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
 
 // Docker 빌드에는 NEXT_PUBLIC_*만 주입하고 service role은 런타임에만 주입한다.
 // 빌드 중 통계 DB 조회가 실행되지 않도록 동적 렌더링을 명시한다. 통계 결과 자체는
@@ -12,11 +14,11 @@ export const dynamic = 'force-dynamic';
 
 const getStats = unstable_cache(loadStats, ['platform-stats'], { revalidate: 300 });
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: '플랫폼 통계',
-  description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 공공 통계.',
-  alternates: { canonical: '/stats' },
-};
+  description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 웨딩 업계 채용 공공 통계.',
+  path: '/stats',
+});
 
 async function loadStats() {
   const supabase = createServerQueryClient();

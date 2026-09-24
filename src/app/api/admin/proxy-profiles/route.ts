@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { hasValidAdminSession } from '@/lib/admin-session';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -144,6 +145,7 @@ export async function POST(request: Request) {
       console.error('[api/admin/proxy-profiles] create failed:', error);
       return NextResponse.json({ error: `등록에 실패했습니다: ${error.message}` }, { status: 500 });
     }
+    if (data?.id) notifyIndexNow(`/directory/${data.id}`);
     return NextResponse.json({ ok: true, id: data?.id });
   }
 
@@ -170,6 +172,7 @@ export async function POST(request: Request) {
     }
     const { error } = await supabase.from('profiles').update(patch).eq('id', id);
     if (error) return NextResponse.json({ error: '수정에 실패했습니다.' }, { status: 500 });
+    notifyIndexNow(`/directory/${id}`);
     return NextResponse.json({ ok: true });
   }
 
@@ -185,6 +188,7 @@ export async function POST(request: Request) {
       .maybeSingle();
     if (error) return NextResponse.json({ error: '처리에 실패했습니다.' }, { status: 500 });
     if (!row) return NextResponse.json({ error: '대행 등록 프로필을 찾을 수 없습니다.' }, { status: 404 });
+    notifyIndexNow(`/directory/${id}`);
     return NextResponse.json({ ok: true });
   }
 

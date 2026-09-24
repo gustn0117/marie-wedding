@@ -1,17 +1,16 @@
-'use client';
-
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
+import { LANDINGS } from '@/features/seo/landings';
 
+// 서버 컴포넌트(훅 없음) — 가이드 본문 데이터(LANDINGS)가 클라이언트 번들에 실리지 않는다.
 const SERVICE_LINKS = [
   { href: ROUTES.JOBS, label: '채용정보' },
   { href: ROUTES.DIRECTORY, label: '인재·업체 프로필' },
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
-  // 키워드 랜딩 — 검색 유입 대상 앵커 링크
-  { href: '/guide/wedding-hall-recruit', label: '웨딩홀 채용' },
-  { href: '/guide/wedding-jobs', label: '웨딩 구인구직' },
-  { href: '/guide/wedding-venue-recruit', label: '예식장 채용' },
 ] as const;
+
+// 키워드 랜딩(업종별 채용 가이드) — 전 페이지 공통 내부 링크로 검색엔진이 가이드를 찾게 한다.
+const GUIDE_LINKS = LANDINGS.map((l) => ({ href: `/guide/${l.slug}`, label: l.eyebrow }));
 
 export default function Footer() {
   return (
@@ -34,10 +33,20 @@ export default function Footer() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
             </svg>
           </a>
+          <Link href="/about" className="hover:text-primary transition-colors">서비스 소개</Link>
           <Link href="/terms" className="hover:text-primary transition-colors">이용약관</Link>
           <Link href="/privacy" className="text-gray-900 hover:text-primary transition-colors">개인정보처리방침</Link>
           <Link href="/contact" className="hover:text-primary transition-colors">고객센터</Link>
         </div>
+
+        <nav aria-label="업종별 채용 가이드" className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-gray-100 py-3 text-xs text-gray-500">
+          <span className="font-semibold text-gray-700">채용 가이드</span>
+          {GUIDE_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="py-1 hover:text-primary transition-colors">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
         <div className="grid gap-4 py-5 md:grid-cols-[1fr_auto] md:items-start">
           <div>

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import NavigationProgress from "@/shared/components/NavigationProgress";
 import { ToastProvider } from "@/shared/components/Toast";
 import PageViewTracker from "@/shared/components/PageViewTracker";
-import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_TAGLINE, SITE_DESCRIPTION } from "@/shared/seo";
+import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, DEFAULT_OG_IMAGE } from "@/shared/seo";
 import "./globals.css";
 
 /**
@@ -17,7 +17,8 @@ export const viewport: Viewport = {
   themeColor: '#051049',
 };
 
-const DEFAULT_TITLE = `${SITE_NAME} — ${SITE_TAGLINE}`;
+// 홈 제목 — 한글 브랜드(검색어) + 핵심 키워드(웨딩 채용·구인구직).
+const DEFAULT_TITLE = `${SITE_NAME_KO}(${SITE_NAME}) — 웨딩 업계 채용·구인구직 플랫폼`;
 
 // 검색엔진 등록용 소유확인 토큰(설정 시에만 주입). 구글 서치콘솔·네이버 서치어드바이저·빙.
 // 검증 토큰은 <head> 에 공개되는 비밀 아닌 값 → 기본값 하드코딩(env 로 덮어쓰기 가능).
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: DEFAULT_TITLE,
-    template: `%s | ${SITE_NAME}`,
+    template: `%s | ${SITE_NAME_KO}`,
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
@@ -66,18 +67,18 @@ export const metadata: Metadata = {
   // 카카오톡·페이스북 등 링크 미리보기 이미지. public/og-marie.png (1200×630) 사용.
   openGraph: {
     type: "website",
-    siteName: `${SITE_NAME_KO} ${SITE_NAME}`,
+    siteName: OG_SITE_NAME,
     title: DEFAULT_TITLE,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
     locale: "ko_KR",
-    images: [{ url: "/og-marie.png", width: 1200, height: 630, alt: `${SITE_NAME_KO} ${SITE_NAME}` }],
+    images: [{ url: DEFAULT_OG_IMAGE, width: 1200, height: 630, alt: OG_SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
     title: DEFAULT_TITLE,
     description: SITE_DESCRIPTION,
-    images: ["/og-marie.png"],
+    images: [DEFAULT_OG_IMAGE],
   },
   icons: {
     icon: [

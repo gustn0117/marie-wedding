@@ -50,6 +50,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/directory', undefined, 'daily', 0.8),
     entry('/community', undefined, 'daily', 0.7),
     entry('/events', undefined, 'daily', 0.6),
+    entry('/about', undefined, 'monthly', 0.5),
+    entry('/stats', undefined, 'weekly', 0.3),
     entry('/contact', undefined, 'monthly', 0.3),
     entry('/terms', undefined, 'yearly', 0.2),
     entry('/privacy', undefined, 'yearly', 0.2),

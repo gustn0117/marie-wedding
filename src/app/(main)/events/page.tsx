@@ -8,15 +8,17 @@ import type { Event } from '@/types/database';
 import PageHeader from '@/shared/components/PageHeader';
 import EmptyState from '@/shared/components/EmptyState';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
+import type { Metadata } from 'next';
+import { buildPageMetadata } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: '웨딩 행사·박람회',
-  description: '웨딩 박람회, 채용 행사, 쇼케이스 일정을 확인하고 관련 스태프·상담 공고를 찾아보세요.',
-  alternates: { canonical: '/events' },
-  openGraph: { title: '웨딩 행사·박람회 | Marié', description: '웨딩 박람회·채용 행사·쇼케이스 일정.', url: '/events' },
-};
+  description: '웨딩 박람회, 채용 행사, 쇼케이스 일정을 확인하고 관련 스태프·상담 공고를 찾아보세요. 웨딩 업계 행사 소식을 마리에에서 한 번에.',
+  path: '/events',
+  keywords: ['웨딩 박람회', '웨딩 행사', '웨딩 박람회 일정', '웨딩 업계 행사'],
+});
 
 interface PageProps {
   searchParams: Promise<Record<string, string | undefined>>;

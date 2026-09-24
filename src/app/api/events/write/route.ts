@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
+import { notifyIndexNow } from '@/lib/indexnow';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
         { status: requestSignal.aborted ? 504 : 500 },
       );
     }
+    if (data?.id) notifyIndexNow(`/events/${data.id}`);
     return NextResponse.json({ success: true, event: data });
   }
 
@@ -119,6 +121,7 @@ export async function POST(request: Request) {
         { status: requestSignal.aborted ? 504 : 500 },
       );
     }
+    notifyIndexNow(`/events/${id}`);
     return NextResponse.json({ success: true });
   }
 
@@ -148,5 +151,6 @@ export async function POST(request: Request) {
       { status: requestSignal.aborted ? 504 : 500 },
     );
   }
+  notifyIndexNow(`/events/${id}`);
   return NextResponse.json({ success: true, event: data });
 }
