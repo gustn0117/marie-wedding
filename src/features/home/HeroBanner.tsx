@@ -9,7 +9,7 @@ interface BannerRow {
 }
 
 /**
- * 메인 hero 위 배너.
+ * 메인 띠배너 — 소개 문구(HomeMission) 아래, 추천 캐러셀 위에 한 장 노출.
  * createServerQueryClient() 는 service_role 로 RLS 를 우회하므로
  * banners_public_select 정책(deleted_at IS NULL AND is_active AND 노출기간 내)이
  * 자동 적용되지 않는다. 따라서 동일 조건을 쿼리에서 직접 재현한다.

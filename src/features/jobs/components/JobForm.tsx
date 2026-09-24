@@ -106,7 +106,7 @@ function stripHtml(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기', uploadEndpoints, onCancel, stickyTopClass = 'top-[138px]' }: JobFormProps) {
+export default function JobForm({ initialData, onSubmit, submitLabel = '공고 등록하기', uploadEndpoints, onCancel, stickyTopClass = 'top-[calc(var(--header-h)+24px)]' }: JobFormProps) {
   const [formData, setFormDataRaw] = useState<JobFormData>({ ...EMPTY_FORM, ...initialData, postingType: 'hiring' });
   // 미저장 변경 추적 — 어떤 입력이든 바뀌면 dirty. beforeunload 경고 + 취소 가드에 사용.
   const [dirty, setDirty] = useState(false);

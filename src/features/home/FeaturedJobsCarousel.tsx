@@ -83,7 +83,7 @@ export default function FeaturedJobsCarousel({ jobs }: Props) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="max-w-[1280px] mx-auto px-5 py-8">
+      <div className="shell-wide py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>

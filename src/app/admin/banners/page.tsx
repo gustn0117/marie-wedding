@@ -64,7 +64,7 @@ export default function AdminBannersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">배너 관리</h1>
-          <p className="page-subtitle">메인페이지 hero 위 배너 등록·노출 관리 (PC / 모바일 분리).</p>
+          <p className="page-subtitle">메인페이지 띠배너(소개 문구 아래) 등록·노출 관리 (PC / 모바일 분리).</p>
         </div>
         <button type="button" onClick={() => setShowCreate(true)} className="btn-primary text-sm">+ 배너 등록</button>
       </div>

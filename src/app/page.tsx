@@ -1,9 +1,11 @@
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
-import { todayKstIso } from '@/shared/utils/kstDate';
-import type { Event, Job, Post, Profile } from '@/types/database';
+import type { Job, Post, Profile } from '@/types/database';
 import Header from '@/shared/components/Header';
 import Footer from '@/shared/components/Footer';
+import HomeHero from '@/features/home/HomeHero';
+import HomeQuickLinks from '@/features/home/HomeQuickLinks';
+import HomeMission from '@/features/home/HomeMission';
 import HomeContent from '@/features/home/HomeContent';
 import HeroBanner from '@/features/home/HeroBanner';
 import JsonLd from '@/shared/components/JsonLd';
@@ -55,12 +57,11 @@ const PUBLIC_PROFILE_COLS =
 
 async function getHomeData() {
   const supabase = createServerQueryClient();
-  const todayIso = todayKstIso();
 
   // 홈은 목록 6~4행만 보여주고 총개수(count)는 화면에 렌더하지 않는다. 과거 count:'exact'
   // 5회가 매 요청 활성행 전체를 카운트 스캔해 성장 시 공유 Postgres CPU를 잡아먹었다.
   // 사문화된 counts 라 카운트 자체를 제거 → 목록 쿼리는 인덱스에서 6행만 읽고 멈춘다.
-  const [postsRes, jobsRes, profilesRes, eventsRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
+  const [postsRes, jobsRes, profilesRes, featuredJobsRes, featuredProfilesRes] = await Promise.all([
     supabase
       .from('posts')
       .select(`*, author:profiles!author_id(${PUBLIC_PROFILE_COLS}), comments:comments!comments_post_id_fkey(count)`)
@@ -85,17 +86,6 @@ async function getHomeData() {
       .eq('is_directory_listed', true)
       .order('created_at', { ascending: false })
       .range(0, 5),
-    // 홈 '다가오는 행사' — end_date 가 오늘 이후이거나, end_date 가 없고 start_date 가 오늘 이후이거나,
-    // 둘 다 없는 상시 행사만 노출. 종료된 행사는 제외.
-    supabase
-      .from('events')
-      .select('*')
-      .is('deleted_at', null)
-      .or(`end_date.gte.${todayIso},and(end_date.is.null,start_date.gte.${todayIso}),and(start_date.is.null,end_date.is.null)`)
-      .order('is_pinned', { ascending: false })
-      .order('start_date', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: false })
-      .range(0, 3),
     // 인기 공고 — 관리자가 선정한 featured_at IS NOT NULL인 공고만
     supabase
       .from('jobs')
@@ -131,7 +121,6 @@ async function getHomeData() {
     featuredJobs: (featuredJobsRes.data ?? []) as unknown as Job[],
     featuredProfiles: (featuredProfilesRes.data ?? []) as Profile[],
     profiles: (profilesRes.data ?? []) as Profile[],
-    events: (eventsRes.data ?? []) as Event[],
   };
 }
 
@@ -143,21 +132,27 @@ async function getHomeData() {
 // 하던 문제가 있어 제거. 쿼리는 내부 kong 직결 + 인덱스라 매 요청 조회해도 빠르다.
 
 export default async function HomePage() {
-  const { posts, jobs, featuredJobs, featuredProfiles, profiles, events } = await getHomeData();
+  const { posts, jobs, featuredJobs, featuredProfiles, profiles } = await getHomeData();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <JsonLd data={SITE_JSONLD} />
       <Header />
-      <HeroBanner />
-      <HomeContent
-        posts={posts}
-        jobs={jobs}
-        featuredJobs={featuredJobs}
-        featuredProfiles={featuredProfiles}
-        profiles={profiles}
-        events={events}
-      />
+      <main className="flex-1">
+        {/* 화면에 보이는 큰 제목은 슬라이드마다 바뀌므로, 문서 제목(h1)은 고정 문구로 둔다 */}
+        <h1 className="sr-only">마리에 — 웨딩 업계 전문 채용 플랫폼</h1>
+        <HomeHero />
+        <HomeQuickLinks />
+        <HomeMission />
+        <HeroBanner />
+        <HomeContent
+          posts={posts}
+          jobs={jobs}
+          featuredJobs={featuredJobs}
+          featuredProfiles={featuredProfiles}
+          profiles={profiles}
+        />
+      </main>
       <Footer />
     </div>
   );

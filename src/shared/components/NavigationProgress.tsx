@@ -64,25 +64,13 @@ export default function NavigationProgress() {
       }
     };
 
-    // Also intercept router.push via history
-    const origPushState = history.pushState.bind(history);
-    const origReplaceState = history.replaceState.bind(history);
-
-    history.pushState = function (...args) {
-      start();
-      return origPushState(...args);
-    };
-
-    history.replaceState = function (...args) {
-      return origReplaceState(...args);
-    };
-
+    // history.pushState 는 가로채지 않는다 — Next 는 이동이 끝난 뒤 useInsertionEffect 안에서
+    // pushState 를 부르므로, 거기서 start() 하면 'useInsertionEffect must not schedule updates'
+    // 에러가 나고 진행바도 끝난 뒤에 한 번 깜빡일 뿐이었다.
     document.addEventListener('click', handleClick);
 
     return () => {
       document.removeEventListener('click', handleClick);
-      history.pushState = origPushState;
-      history.replaceState = origReplaceState;
       if (timerRef.current) clearInterval(timerRef.current);
       if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
