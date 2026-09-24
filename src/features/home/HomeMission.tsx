@@ -17,37 +17,20 @@ const CATEGORIES: { key: string; label: string; iconKey: string }[] = [
   { key: '',          label: '전체보기',   iconKey: 'all' },
 ];
 
-/** 메인 소개 문구 + 업종별 채용정보 바로가기 */
+/** 메인 소개 이미지 자리 + 업종별 채용정보 바로가기 */
 export default function HomeMission() {
   return (
     <section className="bg-white pb-12 pt-16 sm:pb-16 sm:pt-24">
       <div className="shell-wide">
-        <div className="flex flex-col items-center text-center">
-          {/* 컨테이너 비율을 이미지 실제 비율(240×405 ≒ 0.593)에 맞춘다.
-              어긋나면 object-contain 이 letterbox 를 만들어 반지가 박스보다 작게 보인다. */}
-          <div
-            className="hero-ring-float relative mb-6 h-[61px] w-[36px] sm:mb-8 sm:h-[81px] sm:w-[48px]"
-            aria-hidden="true"
-          >
-            <Image
-              src="/images/hero-ring-premium-silver.png"
-              alt=""
-              fill
-              draggable={false}
-              sizes="(min-width: 640px) 48px, 36px"
-              className="select-none object-contain"
-            />
-          </div>
-          <h2 className="break-keep text-[26px] font-bold leading-[1.3] tracking-[-0.03em] text-ink sm:text-[36px] lg:text-[44px]">
-            웨딩의 모든 순간은 사람이 만듭니다.
-          </h2>
-          <p className="mt-5 border-b-2 border-primary pb-0.5 text-[13px] font-bold tracking-[0.02em] text-primary sm:mt-6 sm:text-[14px]">
-            MISSION STATEMENT
-          </p>
-          <p className="mt-5 max-w-[640px] break-keep text-[15px] leading-[1.75] text-gray-600 sm:mt-6 sm:text-[17px]">
-            마리에는 예식장·드레스·스튜디오·메이크업·플래너까지, 웨딩 업계에서 일하는 사람과 업체를 가장 가까이 잇는 채용 플랫폼입니다.
-          </p>
-        </div>
+        <Image
+          src="/images/home-mission-hatch.svg"
+          alt=""
+          width={1080}
+          height={300}
+          draggable={false}
+          sizes="(min-width: 1152px) 1080px, calc(100vw - 32px)"
+          className="mx-auto h-48 w-full max-w-[1080px] select-none object-cover sm:h-64 lg:h-[300px]"
+        />
 
         <nav aria-label="업종별 채용정보" className="mx-auto mt-12 grid max-w-[1080px] grid-cols-5 gap-2 sm:mt-16 sm:gap-3 lg:grid-cols-10">
           {CATEGORIES.map((c) => (
