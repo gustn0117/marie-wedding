@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 import BusinessTypeIcon from '@/shared/components/icons/BusinessTypeIcon';
@@ -17,22 +16,12 @@ const CATEGORIES: { key: string; label: string; iconKey: string }[] = [
   { key: '',          label: '전체보기',   iconKey: 'all' },
 ];
 
-/** 메인 소개 이미지 자리 + 업종별 채용정보 바로가기 */
+/** 업종별 채용정보 바로가기 */
 export default function HomeMission() {
   return (
-    <section className="bg-white pb-12 pt-16 sm:pb-16 sm:pt-24">
+    <section className="bg-white pb-12 pt-8 sm:pb-16 sm:pt-12">
       <div className="shell-wide">
-        <Image
-          src="/images/home-mission-hatch.svg"
-          alt=""
-          width={1080}
-          height={300}
-          draggable={false}
-          sizes="(min-width: 1152px) 1080px, calc(100vw - 32px)"
-          className="mx-auto h-48 w-full max-w-[1080px] select-none object-cover sm:h-64 lg:h-[300px]"
-        />
-
-        <nav aria-label="업종별 채용정보" className="mx-auto mt-12 grid max-w-[1080px] grid-cols-5 gap-2 sm:mt-16 sm:gap-3 lg:grid-cols-10">
+        <nav aria-label="업종별 채용정보" className="mx-auto grid max-w-[1080px] grid-cols-5 gap-2 sm:gap-3 lg:grid-cols-10">
           {CATEGORIES.map((c) => (
             <Link
               key={c.label}

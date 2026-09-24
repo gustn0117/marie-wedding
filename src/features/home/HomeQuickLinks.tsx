@@ -8,8 +8,8 @@ interface QuickLink {
   desc: string;
   href: string;
   external?: boolean;
-  /** 정사각 썸네일 — public/ 기준 경로. 비워두면 빗금 플레이스홀더. 권장 208×208 이상 */
-  image?: string;
+  /** 정사각 썸네일 — public/ 기준 경로 */
+  image: string;
 }
 
 const QUICK_LINKS: QuickLink[] = [
@@ -17,17 +17,20 @@ const QUICK_LINKS: QuickLink[] = [
     title: '공고 등록',
     desc: '업체 회원은 무료로 채용공고를 올릴 수 있어요.',
     href: ROUTES.JOBS_NEW,
+    image: '/images/home/quick-job.webp',
   },
   {
     title: '프로필 등록',
     desc: '프로필을 등록하고 새로운 일을 만나보세요.',
     href: ROUTES.DIRECTORY_REGISTER,
+    image: '/images/home/quick-profile.webp',
   },
   {
     title: '웨딩 컨시어지',
     desc: '예식도우미가 필요할 때 바로 연결해 드려요.',
     href: PARTNER_URL,
     external: true,
+    image: '/images/home/quick-concierge.webp',
   },
 ];
 
@@ -50,11 +53,7 @@ function QuickLinkItem({ item }: { item: QuickLink }) {
   const body = (
     <>
       <span className="relative h-16 w-16 shrink-0 overflow-hidden md:h-14 md:w-14 lg:h-20 lg:w-20 xl:h-[104px] xl:w-[104px]">
-        {item.image ? (
-          <Image src={item.image} alt="" fill sizes="104px" className="object-cover" />
-        ) : (
-          <span aria-hidden className="hatch absolute inset-0" />
-        )}
+        <Image src={item.image} alt="" fill sizes="104px" className="object-cover" />
       </span>
       <span className="min-w-0">
         <span className="flex items-center gap-1 break-keep text-[16px] font-bold text-ink underline-offset-4 group-hover:underline lg:text-[17px] xl:text-[19px]">

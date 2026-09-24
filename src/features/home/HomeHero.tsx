@@ -12,12 +12,8 @@ interface HeroSlide {
   caption: string;
   title: string;
   cta: { label: string; href: string };
-  /**
-   * 배경 이미지 — public/ 기준 경로(예: '/images/home/hero-1.jpg'). 비워두면 빗금 플레이스홀더.
-   * 권장: 가로 1920 이상 × 세로 600 이상. 글자가 올라가는 왼쪽은 어둡고 단순하게,
-   * 모바일에서는 가운데 부분만 보이므로 주요 피사체는 가운데~오른쪽에.
-   */
-  image?: string;
+  /** public/ 기준 배경 이미지 경로 */
+  image: string;
 }
 
 const SLIDES: HeroSlide[] = [
@@ -26,18 +22,21 @@ const SLIDES: HeroSlide[] = [
     caption: '웨딩 업계 전문 채용',
     title: '웨딩 업계 일자리를 한 곳에서',
     cta: { label: '채용정보 보기', href: ROUTES.JOBS },
+    image: '/images/home/hero-jobs.webp',
   },
   {
     label: '인재·업체 프로필',
     caption: '함께할 파트너 찾기',
     title: '함께할 인재와 업체를 찾아보세요',
     cta: { label: '프로필 둘러보기', href: ROUTES.DIRECTORY },
+    image: '/images/home/hero-profiles.webp',
   },
   {
     label: '공고 등록',
     caption: '업체 회원 무료',
     title: '채용공고, 지금 무료로 올려보세요',
     cta: { label: '공고 등록하기', href: ROUTES.JOBS_NEW },
+    image: '/images/home/hero-post-job.webp',
   },
 ];
 
@@ -116,11 +115,7 @@ export default function HomeHero() {
           aria-hidden
           className={`absolute inset-0 -z-10 transition-opacity duration-700 ease-out ${i === index ? 'opacity-100' : 'opacity-0'}`}
         >
-          {s.image ? (
-            <Image src={s.image} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" />
-          ) : (
-            <div className="hatch-dark absolute inset-0" />
-          )}
+          <Image src={s.image} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" />
         </div>
       ))}
       {/* 글자 가독성 — 왼쪽을 어둡게 */}

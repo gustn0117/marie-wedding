@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="300" viewBox="0 0 1080 300">
-  <defs>
-    <pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-      <line x1="0" y1="0" x2="0" y2="9" stroke="#cdd2dc" stroke-width="1" />
-    </pattern>
-  </defs>
-  <rect width="1080" height="300" fill="#e9ecf1" />
-  <rect width="1080" height="300" fill="url(#hatch)" />
-</svg>
