@@ -46,7 +46,7 @@ const SWIPE_MIN_PX = 50;
 
 /**
  * 메인 상단 풀폭 배너 슬라이더.
- * - 6초 자동 넘김 · 일시정지 버튼 · 점 인디케이터 · 좌우 원형 버튼(lg+) · 모바일 스와이프
+ * - 6초 자동 넘김 · 일시정지 버튼 · 점 인디케이터 · 모바일 스와이프
  * - 마우스를 올리거나 키보드 포커스가 안에 있으면 멈춘다
  * - 움직임 줄이기 설정이면 자동 넘김 없이 시작
  */
@@ -202,34 +202,6 @@ export default function HomeHero() {
           })}
         </div>
       </div>
-
-      {/* 좌우 원형 버튼 — 모바일은 스와이프로 */}
-      {count > 1 && (
-        <div className="pointer-events-none absolute inset-0 hidden lg:block">
-          <div className="shell-wide flex h-full flex-col items-end justify-center gap-3 pb-16">
-            <button
-              type="button"
-              onClick={prev}
-              aria-label="이전 슬라이드"
-              className="pointer-events-auto inline-flex h-[68px] w-[68px] items-center justify-center rounded-full border border-white/80 text-white transition-colors hover:bg-white hover:text-ink"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={next}
-              aria-label="다음 슬라이드"
-              className="pointer-events-auto inline-flex h-[68px] w-[68px] items-center justify-center rounded-full border border-white/80 text-white transition-colors hover:bg-white hover:text-ink"
-            >
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" aria-hidden>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
