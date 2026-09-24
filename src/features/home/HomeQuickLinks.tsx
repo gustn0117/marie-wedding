@@ -17,20 +17,20 @@ const QUICK_LINKS: QuickLink[] = [
     title: '공고 등록',
     desc: '업체 회원은 무료로 채용공고를 올릴 수 있어요.',
     href: ROUTES.JOBS_NEW,
-    image: '/images/home/quick-job.webp',
+    image: '/images/home/quick-job.svg',
   },
   {
     title: '프로필 등록',
     desc: '프로필을 등록하고 새로운 일을 만나보세요.',
     href: ROUTES.DIRECTORY_REGISTER,
-    image: '/images/home/quick-profile.webp',
+    image: '/images/home/quick-profile.svg',
   },
   {
     title: '웨딩 컨시어지',
     desc: '예식도우미가 필요할 때 바로 연결해 드려요.',
     href: PARTNER_URL,
     external: true,
-    image: '/images/home/quick-concierge.webp',
+    image: '/images/home/quick-concierge.svg',
   },
 ];
 
