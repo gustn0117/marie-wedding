@@ -5,11 +5,19 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import { RECOMMENDED_LINKS, SITE_MENU, type SiteMenuLink, type SiteMenuSection } from '@/shared/constants/siteMenu';
+import { buildMenuSearchIndex, searchMenu, type MenuSearchEntry } from '@/shared/utils/menuSearch';
 import type { AuthProfile } from './Header';
 
 export const SITE_MENU_DRAWER_ID = 'site-menu-drawer';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const SEARCH_RESULTS_ID = 'site-menu-search-results';
+
+// 비로그인일 때 드로어 상단의 로그인·회원가입도 메뉴 검색에 걸리게 한다.
+const ACCOUNT_ENTRIES: MenuSearchEntry[] = [
+  { label: '로그인', path: ['계정'], href: ROUTES.LOGIN },
+  { label: '회원가입', path: ['계정'], href: ROUTES.SIGNUP },
+];
 
 function myPageSection(profile: AuthProfile): SiteMenuSection {
   const links: SiteMenuLink[] = [{ label: '마이페이지 홈', href: ROUTES.MYPAGE }];
@@ -31,7 +39,9 @@ function sectionMatches(section: SiteMenuSection, pathname: string) {
 
 /**
  * 전체 메뉴 드로어 — 헤더의 '메뉴·검색' 버튼으로 오른쪽에서 열린다.
- * 상단: 계정 · 닫기 · 검색 · 추천 / 하단: 좌측 대분류(스크롤 위치 따라 강조) + 우측 전체 하위 메뉴.
+ * 상단: 계정 · 닫기 · 메뉴 검색 · 추천 / 하단: 좌측 대분류(스크롤 위치 따라 강조) + 우측 전체 하위 메뉴.
+ * 검색창은 메뉴 검색 — 입력하면 하단이 일치하는 메뉴 목록으로 바뀐다. 메뉴에 없는 말(업체명 등)은
+ * 공고·프로필·글 검색(/search)으로 넘긴다.
  * body scroll lock, ESC, 배경 클릭, 포커스 가두기, 라우트 변경 시 자동 닫힘.
  * 닫혀 있어도 DOM 에 남겨 두고 visibility 로 숨긴다 — 여닫는 슬라이드 전환을 위해.
  */
@@ -65,6 +75,20 @@ export default function SiteMenuDrawer({
     const at = SITE_MENU.findIndex((s) => s.id === 'community') + 1;
     return [...SITE_MENU.slice(0, at), myPageSection(profile), ...SITE_MENU.slice(at)];
   }, [profile]);
+
+  const menuIndex = useMemo(
+    () => buildMenuSearchIndex(sections, profile ? [] : ACCOUNT_ENTRIES),
+    [sections, profile],
+  );
+  const trimmedQuery = query.trim();
+  const results = useMemo(() => searchMenu(menuIndex, trimmedQuery), [menuIndex, trimmedQuery]);
+  const resultsRef = useRef<HTMLDivElement>(null);
+
+  // 닫힐 때 검색어를 비운다 — 다음에 열면 전체 메뉴부터 보이게.
+  useEffect(() => {
+    if (!open) return;
+    return () => setQuery('');
+  }, [open]);
 
   // body scroll lock (iOS 호환) — 스크롤바가 사라지며 본문이 옆으로 밀리지 않게 폭만큼 채운다.
   useEffect(() => {
@@ -190,16 +214,41 @@ export default function SiteMenuDrawer({
     box.scrollTo({ top: el.offsetTop - parseFloat(getComputedStyle(box).paddingTop), behavior: reduce ? 'auto' : 'smooth' });
   };
 
+  const openEntry = (entry: MenuSearchEntry) => {
+    if (entry.external) window.open(entry.href, '_blank', 'noopener,noreferrer');
+    else router.push(entry.href);
+    onClose();
+  };
+
+  const searchContent = () => {
+    if (!trimmedQuery) return;
+    router.push(`/search?q=${encodeURIComponent(trimmedQuery)}`);
+    onClose();
+  };
+
+  // 엔터: 첫 번째 메뉴로 이동. 메뉴에 없는 말이면 공고·프로필·글 검색으로 넘긴다.
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
-    const q = query.trim();
-    if (!q) {
+    if (!trimmedQuery) {
       searchRef.current?.focus();
       return;
     }
-    router.push(`/search?q=${encodeURIComponent(q)}`);
-    setQuery('');
-    onClose();
+    if (results.length > 0) openEntry(results[0]);
+    else searchContent();
+  };
+
+  // ↓/↑ 로 검색창과 결과 사이를 오간다
+  const moveResultFocus = (dir: 1 | -1) => {
+    const items = Array.from(resultsRef.current?.querySelectorAll<HTMLElement>('[data-menu-result]') ?? []);
+    if (items.length === 0) return;
+    const at = items.indexOf(document.activeElement as HTMLElement);
+    if (at === -1) {
+      if (dir === 1) items[0].focus();
+      return;
+    }
+    const next = at + dir;
+    if (next < 0) searchRef.current?.focus();
+    else items[Math.min(next, items.length - 1)].focus();
   };
 
   const displayName = profile?.company_name || profile?.contact_name || '';
@@ -279,7 +328,7 @@ export default function SiteMenuDrawer({
 
           <div className="px-5 pb-7 pt-7 sm:px-8 sm:pb-9 sm:pt-10">
             <form role="search" onSubmit={handleSearch} className="flex items-center gap-3 border-b-2 border-white/80 pb-3 transition-colors focus-within:border-white">
-              <button type="submit" aria-label="검색" className="-m-1 shrink-0 p-1 text-white">
+              <button type="submit" aria-label="메뉴 검색" className="-m-1 shrink-0 p-1 text-white">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" aria-hidden>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                 </svg>
@@ -289,12 +338,38 @@ export default function SiteMenuDrawer({
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="검색어를 입력해 주세요"
-                aria-label="검색어"
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowDown' && trimmedQuery) {
+                    e.preventDefault();
+                    moveResultFocus(1);
+                  }
+                }}
+                placeholder="찾는 메뉴를 입력해 주세요"
+                aria-label="메뉴 검색"
+                aria-controls={trimmedQuery ? SEARCH_RESULTS_ID : undefined}
                 enterKeyHint="search"
+                autoComplete="off"
                 className="min-w-0 flex-1 bg-transparent text-[18px] font-medium text-white outline-none placeholder:text-white/70 focus-visible:outline-none sm:text-[21px] [&::-webkit-search-cancel-button]:hidden"
               />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    searchRef.current?.focus();
+                  }}
+                  aria-label="검색어 지우기"
+                  className="-my-2 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </form>
+            <p className="sr-only" aria-live="polite">
+              {trimmedQuery ? (results.length > 0 ? `메뉴 ${results.length}개` : '일치하는 메뉴가 없습니다') : ''}
+            </p>
             <div className="mt-5 flex items-start gap-3">
               <span className="shrink-0 pt-1.5 text-[13px] font-bold text-white/90">추천</span>
               <ul className="flex flex-wrap gap-2">
@@ -314,7 +389,17 @@ export default function SiteMenuDrawer({
           </div>
         </div>
 
-        {/* 하단 — 좌: 대분류 / 우: 하위 메뉴 전체 */}
+        {/* 하단 — 검색 중이면 메뉴 검색 결과, 아니면 좌: 대분류 / 우: 하위 메뉴 전체 */}
+        {trimmedQuery ? (
+          <MenuSearchResults
+            query={trimmedQuery}
+            results={results}
+            listRef={resultsRef}
+            onNavigate={onClose}
+            onSearchContent={searchContent}
+            onMoveFocus={moveResultFocus}
+          />
+        ) : (
         <div className="flex min-h-0 flex-1">
           <nav aria-label="메뉴 분류" className="w-[34%] shrink-0 overflow-y-auto bg-gray-50 px-4 py-5 sm:px-8 sm:py-7">
             <ul>
@@ -375,8 +460,120 @@ export default function SiteMenuDrawer({
             ))}
           </div>
         </div>
+        )}
       </div>
     </>
+  );
+}
+
+/** 검색어와 겹치는 부분을 강조한다(가장 긴 단어부터, 첫 일치 한 곳). */
+function HighlightMatch({ text, query }: { text: string; query: string }) {
+  const lower = text.toLowerCase();
+  const tokens = query.split(/\s+/).filter(Boolean).sort((a, b) => b.length - a.length);
+  for (const token of tokens) {
+    const at = lower.indexOf(token.toLowerCase());
+    if (at >= 0) {
+      return (
+        <>
+          {text.slice(0, at)}
+          <mark className="bg-transparent text-primary">{text.slice(at, at + token.length)}</mark>
+          {text.slice(at + token.length)}
+        </>
+      );
+    }
+  }
+  return <>{text}</>;
+}
+
+function MenuSearchResults({
+  query,
+  results,
+  listRef,
+  onNavigate,
+  onSearchContent,
+  onMoveFocus,
+}: {
+  query: string;
+  results: MenuSearchEntry[];
+  listRef: React.RefObject<HTMLDivElement>;
+  onNavigate: () => void;
+  onSearchContent: () => void;
+  onMoveFocus: (dir: 1 | -1) => void;
+}) {
+  const rowClass =
+    'flex min-h-[56px] w-full items-center justify-between gap-3 border-b border-gray-100 py-3 text-left transition-colors hover:text-primary focus-visible:text-primary';
+
+  return (
+    <div
+      ref={listRef}
+      id={SEARCH_RESULTS_ID}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          onMoveFocus(e.key === 'ArrowDown' ? 1 : -1);
+        }
+      }}
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-8 sm:py-7"
+    >
+      {results.length > 0 ? (
+        <>
+          <p className="pb-3 text-[13px] font-semibold text-gray-500">메뉴 {results.length}개</p>
+          <ul className="border-t border-gray-200">
+            {results.map((r) => {
+              const text = (
+                <span className="min-w-0">
+                  <span className="block break-keep text-[15px] font-semibold text-ink sm:text-[16px]">
+                    <HighlightMatch text={r.label} query={query} />
+                  </span>
+                  {r.path.length > 0 && (
+                    <span className="mt-0.5 block truncate text-[12px] text-gray-500 sm:text-[13px]">{r.path.join(' › ')}</span>
+                  )}
+                </span>
+              );
+              return (
+                <li key={`${r.label}|${r.href}`}>
+                  {r.external ? (
+                    <a data-menu-result href={r.href} target="_blank" rel="noopener noreferrer" onClick={onNavigate} className={rowClass}>
+                      {text}
+                      <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  ) : (
+                    <Link data-menu-result href={r.href} onClick={onNavigate} className={rowClass}>
+                      {text}
+                      <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      ) : (
+        <div className="py-10 text-center">
+          <p className="break-keep text-[15px] font-bold text-ink">‘{query}’에 맞는 메뉴가 없어요</p>
+          <p className="mt-1.5 break-keep text-[14px] text-gray-500">메뉴 이름으로 찾아보시거나, 아래에서 공고·프로필·글을 검색해 보세요.</p>
+        </div>
+      )}
+
+      {/* 메뉴가 아닌 내용(공고 제목·업체명 등)은 기존 통합 검색으로 */}
+      <button
+        data-menu-result
+        type="button"
+        onClick={onSearchContent}
+        className="mt-5 flex min-h-[48px] w-full items-center justify-between gap-3 rounded-lg bg-gray-50 px-4 text-left text-[14px] text-gray-600 transition-colors hover:bg-gray-100 hover:text-ink"
+      >
+        <span className="min-w-0 truncate">
+          공고·프로필·글에서 <strong className="font-bold text-ink">‘{query}’</strong> 찾기
+        </span>
+        <svg className="h-4 w-4 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+      </button>
+    </div>
   );
 }
 
