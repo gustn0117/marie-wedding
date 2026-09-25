@@ -307,7 +307,7 @@ export default function SiteMenuDrawer({
               </div>
             ) : (
               <div className="-ml-2 flex items-center text-[14px]">
-                <Link href={loginHref(pathname)} onClick={onClose} className="inline-flex h-11 items-center px-2 font-semibold hover:underline underline-offset-4">
+                <Link href={loginHref(pathname)} prefetch={false} onClick={onClose} className="inline-flex h-11 items-center px-2 font-semibold hover:underline underline-offset-4">
                   로그인
                 </Link>
                 <span aria-hidden className="h-3 w-px bg-white/30" />

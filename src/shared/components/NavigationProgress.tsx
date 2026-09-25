@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { isLoginModalClick } from '@/shared/utils/loginModal';
 
 export default function NavigationProgress() {
   const pathname = usePathname();
@@ -50,6 +51,8 @@ export default function NavigationProgress() {
   // Intercept link clicks to start progress bar
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
+      // 로그인 창이 가로챈 /login 클릭은 페이지 이동이 아니다 — 진행바가 끝나지 않고 걸려 있게 된다.
+      if (isLoginModalClick(e)) return;
       const target = e.target as HTMLElement;
       const anchor = target.closest('a');
       if (!anchor) return;

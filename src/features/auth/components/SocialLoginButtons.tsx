@@ -8,6 +8,8 @@ interface Props {
   /** 가입 화면이면 'signup', 로그인 화면이면 'login'. 카피만 다름. */
   mode?: 'login' | 'signup';
   onError?: (msg: string) => void;
+  /** 로그인 후 돌아갈 경로. 없으면 로그인 페이지의 ?redirect= 를 쓴다(로그인 창은 주소가 안 바뀌어 직접 넘김). */
+  next?: string;
 }
 
 /** 로그인 페이지의 redirect 파라미터를 안전한 내부 경로로만 허용(오픈리다이렉트 방지). */
@@ -29,11 +31,11 @@ function safeNext(value: string | null): string {
  * Suspense 경계 없이 useSearchParams 를 쓰면 빌드가 깨진다(missing-suspense-with-csr-bailout).
  * 반드시 아래 기본 export 의 Suspense 래퍼를 통해서만 렌더한다.
  */
-function SocialLoginButtonsInner({ mode = 'login', onError }: Props) {
+function SocialLoginButtonsInner({ mode = 'login', onError, next: nextProp }: Props) {
   const [loading, setLoading] = useState<string | null>(null);
   const searchParams = useSearchParams();
   // 로그인 화면이 ?redirect=... 로 원래 목적지를 전달한다. 소셜 로그인도 이를 존중한다.
-  const next = safeNext(searchParams.get('redirect'));
+  const next = safeNext(nextProp ?? searchParams.get('redirect'));
 
   const verb = mode === 'signup' ? '시작하기' : '로그인';
 

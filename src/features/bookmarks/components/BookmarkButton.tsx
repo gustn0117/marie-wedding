@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
+import { openLoginModal } from '@/shared/utils/loginModal';
 import { useRouter, usePathname } from 'next/navigation';
 import { bookmarkService } from '@/features/bookmarks/services/bookmark-service';
 import { useAuth } from '@/shared/hooks/useAuth';
-import { ROUTES } from '@/shared/constants';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
 import { friendlyError } from '@/shared/utils/errorMessages';
@@ -43,6 +43,8 @@ export default function BookmarkButton({ targetType, targetId, label = '저장',
 
   const handleClick = async () => {
     if (!profile) {
+      // PC는 보던 화면 위에 로그인 창을 띄운다 — 페이지를 떠나지 않으니 묻지 않는다.
+      if (openLoginModal(pathname)) return;
       if (confirm('저장하려면 로그인이 필요합니다. 로그인 페이지로 이동할까요?')) {
         router.push(loginHref(pathname));
       }

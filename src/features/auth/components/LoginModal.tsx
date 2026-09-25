@@ -1,21 +1,23 @@
 'use client';
 
 import { useCallback, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { LOGIN_DIALOG_TITLE_ID } from './LoginForm';
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 /**
- * 사이트 안에서 /login 으로 이동하면(@modal/(.)login 가로채기 라우트) 보던 화면 위에 뜨는 로그인 창.
- * md 이상: 가운데 창 + 어두운 배경 / md 미만: 전체 화면(로그인 페이지와 같은 모습).
- * 닫기(X·배경·ESC)는 뒤로가기 — 주소가 /login 에서 보던 페이지로 돌아간다.
- * 새로고침·직접 접속은 가로채지 않으므로 (auth)/login 페이지가 그대로 뜬다.
+ * 보던 화면 위에 뜨는 로그인 창의 틀(LoginModalHost 가 연다).
+ * 가운데 창 + 어두운 배경. 좁은 폭에서는 전체 화면으로 채운다.
+ * 닫기: X · 배경 클릭 · ESC. 스크롤 잠금·위치 복원, 포커스 가두기·복귀.
  */
-export default function LoginModal({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+export default function LoginModal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
-  const close = useCallback(() => router.back(), [router]);
+  // 호출부가 매 렌더 새 함수를 넘겨도 키보드·포커스 effect 가 다시 돌지 않게 ref 로 고정한다.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+  const close = useCallback(() => onCloseRef.current(), []);
 
   // body scroll lock (iOS 호환) — 스크롤바가 사라지며 본문이 옆으로 밀리지 않게 폭만큼 채운다.
   useEffect(() => {

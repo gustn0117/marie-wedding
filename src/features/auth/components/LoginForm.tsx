@@ -13,13 +13,15 @@ export const LOGIN_DIALOG_TITLE_ID = 'login-dialog-title';
 
 interface LoginFormProps {
   /**
-   * page: /login 페이지(직접 접속·새로고침) — 브랜드 머리글이 있는 카드.
-   * modal: 사이트 안에서 로그인을 눌렀을 때 보던 화면 위에 뜨는 로그인 창.
+   * page: /login 페이지 — 브랜드 머리글이 있는 카드.
+   * modal: PC에서 로그인을 눌렀을 때 보던 화면 위에 뜨는 로그인 창(LoginModalHost).
    */
   variant?: 'page' | 'modal';
+  /** 로그인 후 돌아갈 경로. 창은 주소가 바뀌지 않으므로 직접 넘긴다. 없으면 ?redirect= 를 쓴다. */
+  redirect?: string;
 }
 
-export default function LoginForm({ variant = 'page' }: LoginFormProps) {
+export default function LoginForm({ variant = 'page', redirect: redirectProp }: LoginFormProps) {
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: '',
@@ -73,8 +75,7 @@ export default function LoginForm({ variant = 'page' }: LoginFormProps) {
       // 로그인 창에서도 그 경로로 새로 불러와(전체 이동) 헤더 등 로그인 상태가 한 번에 반영된다.
       // open-redirect 방지: 브라우저와 동일한 URL 파서로 정규화 후 same-origin 만 허용
       // (백슬래시/스킴 우회 차단: new URL('/\\evil.com', origin) → https://evil.com)
-      const sp = new URLSearchParams(window.location.search);
-      const redirect = sp.get('redirect');
+      const redirect = redirectProp ?? new URLSearchParams(window.location.search).get('redirect');
       let safeRedirect: string = ROUTES.HOME;
       if (redirect) {
         try {
@@ -185,7 +186,7 @@ export default function LoginForm({ variant = 'page' }: LoginFormProps) {
         <span aria-hidden className="h-px flex-1 bg-gray-200" />
       </div>
 
-      <SocialLoginButtons mode="login" onError={setError} />
+      <SocialLoginButtons mode="login" onError={setError} next={redirectProp} />
 
       <p className="mt-7 flex items-center justify-center border-t border-gray-100 pt-5 text-sm text-gray-600">
         <Link href={ROUTES.FORGOT_PASSWORD} className="inline-flex h-11 items-center px-3 underline-offset-4 hover:text-ink hover:underline">

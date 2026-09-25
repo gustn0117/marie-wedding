@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
+import { openLoginModal } from '@/shared/utils/loginModal';
 import { useRouter, usePathname } from 'next/navigation';
 import { communityService } from '../services/community-service';
-import { ROUTES } from '@/shared/constants';
 import { withTimeout } from '@/shared/utils/withTimeout';
 
 interface LikeButtonProps {
@@ -24,6 +24,8 @@ export default function LikeButton({ postId, initialLiked, initialCount, canLike
 
   const handleClick = async () => {
     if (!canLike || !viewerProfileId) {
+      // PC는 보던 화면 위에 로그인 창을 띄운다 — 페이지를 떠나지 않으니 묻지 않는다.
+      if (openLoginModal(pathname)) return;
       if (confirm('좋아요를 누르려면 로그인이 필요합니다. 로그인 페이지로 이동할까요?')) {
         router.push(loginHref(pathname));
       }

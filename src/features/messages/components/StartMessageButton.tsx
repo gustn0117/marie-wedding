@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
+import { openLoginModal } from '@/shared/utils/loginModal';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/shared/hooks/useAuth';
 import { messageService } from '@/features/messages/services/messageService';
@@ -22,7 +23,10 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
   if (profile?.id === targetProfileId) return null;
 
   async function onClick() {
-    if (!profile) { window.location.href = loginHref(pathname); return; }
+    if (!profile) {
+      if (!openLoginModal(pathname)) window.location.href = loginHref(pathname);
+      return;
+    }
     setBusy(true);
     try {
       const conv = await withTimeout(messageService.startConversation(targetProfileId), 10000, '대화 시작 지연');

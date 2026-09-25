@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import NavigationProgress from "@/shared/components/NavigationProgress";
 import { ToastProvider } from "@/shared/components/Toast";
 import PageViewTracker from "@/shared/components/PageViewTracker";
+import LoginModalHost from "@/features/auth/components/LoginModalHost";
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, DEFAULT_OG_IMAGE } from "@/shared/seo";
 import "./globals.css";
 
@@ -102,11 +103,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  modal,
 }: Readonly<{
   children: React.ReactNode;
-  /** @modal 슬롯 — 사이트 안에서 /login 으로 이동할 때 뜨는 로그인 창(@modal/(.)login) */
-  modal: React.ReactNode;
 }>) {
   return (
     <html lang="ko">
@@ -120,7 +118,8 @@ export default function RootLayout({
         </Suspense>
         <ToastProvider>
           {children}
-          {modal}
+          {/* PC 로그인 창 — /login 링크를 가로채 보던 화면 위에 띄운다(휴대폰은 로그인 페이지) */}
+          <LoginModalHost />
         </ToastProvider>
       </body>
     </html>

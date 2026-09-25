@@ -175,8 +175,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             </>
           ) : (
             <div className="flex items-center text-[14px] text-gray-700">
-              {/* 로그인 후 보던 페이지로 돌아온다. 사이트 안 이동이면 보던 화면 위에 로그인 창으로 뜬다(@modal) */}
-              <Link href={loginHref(pathname)} className="inline-flex h-11 items-center px-2 transition-colors hover:text-ink">
+              {/* 로그인 후 보던 페이지로 돌아온다. PC는 LoginModalHost 가 가로채 보던 화면 위에 창으로 띄우므로
+                  모든 페이지에서 /login 을 미리받는(서버 요청) 건 낭비라 prefetch 를 끈다. */}
+              <Link href={loginHref(pathname)} prefetch={false} className="inline-flex h-11 items-center px-2 transition-colors hover:text-ink">
                 로그인
               </Link>
               <span aria-hidden className="hidden sm:block h-3 w-px bg-gray-300" />
