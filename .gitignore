@@ -45,3 +45,5 @@ next-env.d.ts
 # 배포 스크립트가 생성하는 활성 색 상태. 추적되면 git pull 이 되돌려
 # 스크립트가 활성 색을 오판하고 살아있는 컨테이너를 죽인다.
 nginx/upstream.inc
+# IndexNow 마지막 제출 커밋(webhook-deploy.sh 가 서버에서 쓴다)
+.indexnow-last

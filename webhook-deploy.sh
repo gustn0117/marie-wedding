@@ -183,3 +183,33 @@ fi
 
 log "done. now serving from web-$IDLE"
 
+# 11) 검색엔진 색인 요청(IndexNow) — 배포는 이미 끝났으므로 여기서 실패해도 무시한다.
+#     새 공고·프로필·글은 앱이 저장할 때 바로 알린다(src/lib/indexnow.ts). 여기서는
+#     페이지 코드(page·layout·가이드·SEO 설정)가 바뀐 배포 뒤에만 사이트맵 전체를 다시 낸다.
+#     같은 URL 을 배포마다 반복 제출하면 검색엔진이 스팸으로 볼 수 있어서다.
+#     .indexnow-last(gitignore) = 마지막으로 제출에 성공한 커밋. 없으면 제출한다.
+submit_indexnow() {
+  local state=".indexnow-last" head last
+  # 훅은 다른 사용자로 이 스크립트를 부를 수 있다 — git 의 소유자 검사(dubious ownership)에 막혀
+  # 조용히 건너뛰지 않게 이 저장소를 명시적으로 허용한다.
+  local git=(git -c "safe.directory=$PWD")
+  if ! head="$("${git[@]}" rev-parse HEAD 2>/dev/null)"; then
+    log "indexnow: git HEAD unreadable — skip"
+    return 0
+  fi
+  last="$(cat "$state" 2>/dev/null || true)"
+  if [ -n "$last" ] && "${git[@]}" diff --quiet "$last" "$head" -- \
+      ':(glob)src/app/**/page.tsx' ':(glob)src/app/**/layout.tsx' \
+      src/app/sitemap.ts src/features/seo src/shared/seo.ts 2>/dev/null; then
+    log "indexnow: no page changes since ${last:0:7} — skip"
+    return 0
+  fi
+  log "indexnow: submitting all sitemap URLs ..."
+  if timeout 120 docker run --rm -v "$PWD/scripts:/scripts:ro" node:20-alpine \
+      node /scripts/indexnow-submit.mjs 2>&1 | grep -E '제출 URL|✅|❌|실패' | sed 's/^/    /'; then
+    echo "$head" > "$state"
+  else
+    log "indexnow: submit failed (will retry on next deploy)"
+  fi
+}
+submit_indexnow || true
