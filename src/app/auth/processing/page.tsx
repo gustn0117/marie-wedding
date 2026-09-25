@@ -32,6 +32,8 @@ export default function AuthProcessingPage() {
           {stage === 2 && '응답이 늦어지고 있어요.'}
         </p>
         {stage === 2 && (
+          // 멈춘 로그인 처리에서 빠져나오는 길 — 로그인 창(@modal)이 아니라 페이지로 새로 불러와야 해서 <a> 로 둔다.
+          // eslint-disable-next-line @next/next/no-html-link-for-pages
           <a
             href="/login"
             className="mt-3 inline-block text-xs font-semibold text-primary underline underline-offset-4"

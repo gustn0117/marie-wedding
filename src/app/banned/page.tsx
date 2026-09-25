@@ -34,6 +34,8 @@ export default async function BannedPage() {
           제재일: {new Date(profile.banned_at).toLocaleString('ko-KR')}
         </p>
         <p className="text-xs text-gray-500">
+          {/* 제재 화면은 앱 이동 없이 전체 페이지로 넘긴다 */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           이의가 있으시면 <a href="/contact" className="underline">고객센터</a>로 문의 주세요.
         </p>
       </div>
