@@ -11,6 +11,7 @@ import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import SiteMenuDrawer, { SITE_MENU_DRAWER_ID } from './SiteMenuDrawer';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { apiFetch } from '@/shared/utils/apiFetch';
+import { loginHref } from '@/shared/utils/loginRedirect';
 
 interface HeaderClientProps {
   initialProfile: AuthProfile | null;
@@ -174,7 +175,8 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
             </>
           ) : (
             <div className="flex items-center text-[14px] text-gray-700">
-              <Link href={ROUTES.LOGIN} className="inline-flex h-11 items-center px-2 transition-colors hover:text-ink">
+              {/* 로그인 후 보던 페이지로 돌아온다. 사이트 안 이동이면 보던 화면 위에 로그인 창으로 뜬다(@modal) */}
+              <Link href={loginHref(pathname)} className="inline-flex h-11 items-center px-2 transition-colors hover:text-ink">
                 로그인
               </Link>
               <span aria-hidden className="hidden sm:block h-3 w-px bg-gray-300" />

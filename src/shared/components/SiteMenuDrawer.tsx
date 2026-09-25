@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
 import { RECOMMENDED_LINKS, SITE_MENU, type SiteMenuLink, type SiteMenuSection } from '@/shared/constants/siteMenu';
 import { buildMenuSearchIndex, searchMenu, type MenuSearchEntry } from '@/shared/utils/menuSearch';
+import { loginHref } from '@/shared/utils/loginRedirect';
 import type { AuthProfile } from './Header';
 
 export const SITE_MENU_DRAWER_ID = 'site-menu-drawer';
@@ -14,10 +15,12 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabi
 const SEARCH_RESULTS_ID = 'site-menu-search-results';
 
 // 비로그인일 때 드로어 상단의 로그인·회원가입도 메뉴 검색에 걸리게 한다.
-const ACCOUNT_ENTRIES: MenuSearchEntry[] = [
-  { label: '로그인', path: ['계정'], href: ROUTES.LOGIN },
-  { label: '회원가입', path: ['계정'], href: ROUTES.SIGNUP },
-];
+function accountEntries(pathname: string): MenuSearchEntry[] {
+  return [
+    { label: '로그인', path: ['계정'], href: loginHref(pathname) },
+    { label: '회원가입', path: ['계정'], href: ROUTES.SIGNUP },
+  ];
+}
 
 function myPageSection(profile: AuthProfile): SiteMenuSection {
   const links: SiteMenuLink[] = [{ label: '마이페이지 홈', href: ROUTES.MYPAGE }];
@@ -77,8 +80,8 @@ export default function SiteMenuDrawer({
   }, [profile]);
 
   const menuIndex = useMemo(
-    () => buildMenuSearchIndex(sections, profile ? [] : ACCOUNT_ENTRIES),
-    [sections, profile],
+    () => buildMenuSearchIndex(sections, profile ? [] : accountEntries(pathname)),
+    [sections, profile, pathname],
   );
   const trimmedQuery = query.trim();
   const results = useMemo(() => searchMenu(menuIndex, trimmedQuery), [menuIndex, trimmedQuery]);
@@ -304,7 +307,7 @@ export default function SiteMenuDrawer({
               </div>
             ) : (
               <div className="-ml-2 flex items-center text-[14px]">
-                <Link href={ROUTES.LOGIN} onClick={onClose} className="inline-flex h-11 items-center px-2 font-semibold hover:underline underline-offset-4">
+                <Link href={loginHref(pathname)} onClick={onClose} className="inline-flex h-11 items-center px-2 font-semibold hover:underline underline-offset-4">
                   로그인
                 </Link>
                 <span aria-hidden className="h-3 w-px bg-white/30" />

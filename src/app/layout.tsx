@@ -102,8 +102,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  /** @modal 슬롯 — 사이트 안에서 /login 으로 이동할 때 뜨는 로그인 창(@modal/(.)login) */
+  modal: React.ReactNode;
 }>) {
   return (
     <html lang="ko">
@@ -117,6 +120,7 @@ export default function RootLayout({
         </Suspense>
         <ToastProvider>
           {children}
+          {modal}
         </ToastProvider>
       </body>
     </html>
