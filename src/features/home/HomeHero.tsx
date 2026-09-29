@@ -32,7 +32,7 @@ const SLIDES: HeroSlide[] = [
     title: '하람 예식 컨시어지 관리 매니저 채용',
     titleLines: ['하람 예식 컨시어지', '관리 매니저 채용'],
     cta: { label: '공고 보기', href: ROUTES.JOBS_DETAIL('1abaf3ba-d448-4594-8deb-4e0e8fbf564b') },
-    image: '/images/home/hero-haram-concierge-bright.webp',
+    image: '/images/home/hero-haram-concierge-clear.webp',
     imageClassName: 'object-[75%_center] sm:object-[center_42%]',
     imageQuality: 95,
     sponsored: true,
