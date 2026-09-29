@@ -18,6 +18,8 @@ interface HeroSlide {
   image?: string;
   /** 좁은 화면에서 인물 등 핵심 피사체가 잘리지 않도록 이미지 초점을 조절한다. */
   imageClassName?: string;
+  /** 이미지별 Next 최적화 품질. 고해상도 광고 원본은 기본값보다 높게 유지한다. */
+  imageQuality?: number;
   /** 유료·제휴 광고 슬라이드 — 앞말 자리에 '광고' 표시를 붙여 광고임을 밝힌다(표시광고법). */
   sponsored?: boolean;
 }
@@ -31,7 +33,8 @@ const SLIDES: HeroSlide[] = [
     titleLines: ['하람 예식 컨시어지', '관리 매니저 채용'],
     cta: { label: '공고 보기', href: ROUTES.JOBS_DETAIL('1abaf3ba-d448-4594-8deb-4e0e8fbf564b') },
     image: '/images/home/hero-haram-concierge.webp',
-    imageClassName: 'object-[75%_center] sm:object-center',
+    imageClassName: 'object-[75%_center] sm:object-[center_42%]',
+    imageQuality: 95,
     sponsored: true,
   },
   {
@@ -132,6 +135,7 @@ export default function HomeHero() {
               fill
               priority={i === 0}
               sizes="100vw"
+              quality={s.imageQuality}
               className={`object-cover ${s.imageClassName ?? 'object-center'}`}
             />
           ) : (
