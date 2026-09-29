@@ -1,4 +1,4 @@
-import { LANDINGS } from '@/features/seo/landings';
+import { GUIDE_CATEGORIES, guidesIn } from '@/features/seo/landings';
 import { getOpenJobs } from '@/features/seo/openJobs';
 import { BUSINESS_TYPES } from '@/shared/constants';
 import { getBusinessTypeLabel, getEmploymentTypeLabel, getRegionLabel } from '@/shared/utils/format';
@@ -43,15 +43,17 @@ export async function GET() {
     '## 주요 페이지',
     `- [서비스 소개](${SITE_URL}/about): 마리에가 무엇이고 어떻게 이용하는지, 자주 묻는 질문`,
     `- [채용정보](${SITE_URL}/jobs): 웨딩 업계 채용 공고 목록(업종·지역·고용형태 필터)`,
-    `- [채용 가이드](${SITE_URL}/guide): 웨딩 업계 직무별 하는 일·역량·근무 형태·지원 방법 모음`,
+    `- [채용 가이드](${SITE_URL}/guide): 웨딩 업계 직무 소개, 알바·취업 준비, 업체 채용 실무, 예식 순서·웨딩 용어 가이드 모음`,
     `- [인재·업체 프로필](${SITE_URL}/directory): 웨딩 업체와 인재 프로필`,
     `- [커뮤니티](${SITE_URL}/community): 웨딩 업계 소식·실무 노하우·취업 팁`,
     `- [행사·박람회](${SITE_URL}/events): 웨딩 박람회·채용 행사 일정`,
     `- [고객센터](${SITE_URL}/contact): 이용 문의와 자주 묻는 질문`,
     '',
-    '## 업종별 채용 가이드',
-    ...LANDINGS.map((l) => `- [${mdText(l.title)}](${SITE_URL}/guide/${l.slug}): ${mdText(l.description)}`),
-    '',
+    ...GUIDE_CATEGORIES.flatMap((c) => [
+      `## 채용 가이드 — ${c.label}`,
+      ...guidesIn(c.id).map((l) => `- [${mdText(l.title)}](${SITE_URL}/guide/${l.slug}): ${mdText(l.description)}`),
+      '',
+    ]),
     '## 최근 모집 중인 채용 공고',
     ...(jobLines.length > 0 ? jobLines : ['- 현재 모집 중인 공고가 없습니다.']),
     '',

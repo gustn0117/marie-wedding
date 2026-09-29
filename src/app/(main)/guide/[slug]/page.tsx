@@ -1,13 +1,24 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { LANDINGS, formatGuideDate, getLanding, guideDateIso, type Landing, type LandingSection } from '@/features/seo/landings';
+import {
+  formatGuideDate,
+  getLanding,
+  guideDateIso,
+  relatedGuides,
+  splitGuideItem,
+  type Landing,
+  type LandingSection,
+} from '@/features/seo/landings';
 import { getOpenJobs } from '@/features/seo/openJobs';
 import {
   CareerPath,
   FaqList,
   GuideChecklist,
   GuideList,
+  GuideNote,
+  GuideTable,
+  GuideTerms,
   GuideTimeline,
   RoleList,
   TipColumns,
@@ -82,11 +93,38 @@ function articleJsonLd(landing: Landing): Record<string, unknown> {
             alternateName: landing.occupation.alternateNames,
             description: landing.lead,
             skills: landing.occupation.skills.join(', '),
-            responsibilities: landing.roles.map((r) => `${r.name}: ${r.desc}`).join(' '),
+            ...(landing.roles?.length
+              ? { responsibilities: landing.roles.map((r) => `${r.name}: ${r.desc}`).join(' ') }
+              : {}),
             occupationLocation: { '@type': 'Country', name: 'KR' },
           },
         }
       : {}),
+  };
+}
+
+/** 용어 풀이 섹션(itemStyle 'terms')이 있으면 DefinedTermSet — AI 검색이 '○○ 뜻'에 그대로 인용하기 좋다. */
+function termsJsonLd(landing: Landing): Record<string, unknown> | null {
+  const terms = landing.sections
+    .filter((s) => s.itemStyle === 'terms')
+    .flatMap((s) => s.items ?? [])
+    .map(splitGuideItem)
+    .filter((t): t is [string, string] => t[0] !== null);
+  if (terms.length === 0) return null;
+  const url = absoluteUrl(`/guide/${landing.slug}`);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    '@id': `${url}#terms`,
+    name: landing.h1,
+    url,
+    inLanguage: 'ko-KR',
+    hasDefinedTerm: terms.map(([name, description]) => ({
+      '@type': 'DefinedTerm',
+      name,
+      description,
+      inDefinedTermSet: `${url}#terms`,
+    })),
   };
 }
 
@@ -100,17 +138,23 @@ function jobsLabel(landing: Landing): string {
 
 function SectionBody({ section }: { section: LandingSection }) {
   const items = section.items ?? [];
+  const style = section.itemStyle ?? 'list';
   return (
-    <div className="mt-7 space-y-5">
+    <div className="mt-7 space-y-6">
       {section.body?.map((p) => (
         <p key={p} className={PARAGRAPH}>{p}</p>
       ))}
-      {items.length > 0 && section.itemStyle === 'steps' && <GuideTimeline items={items} />}
-      {items.length > 0 && section.itemStyle === 'check' && <GuideChecklist items={items} />}
-      {items.length > 0 && (section.itemStyle ?? 'list') === 'list' && <GuideList items={items} />}
+      {items.length > 0 && style === 'steps' && <GuideTimeline items={items} />}
+      {items.length > 0 && style === 'check' && <GuideChecklist items={items} />}
+      {items.length > 0 && style === 'terms' && <GuideTerms items={items} />}
+      {items.length > 0 && style === 'list' && <GuideList items={items} />}
+      {section.table && <GuideTable head={section.table.head} rows={section.table.rows} />}
+      {section.note && <GuideNote>{section.note}</GuideNote>}
     </div>
   );
 }
+
+const SUMMARY_COLS: Record<number, string> = { 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4' };
 
 export default async function GuidePage({ params }: PageProps) {
   const { slug } = await params;
@@ -121,22 +165,43 @@ export default async function GuidePage({ params }: PageProps) {
   const jobsHref = landing.businessTypes.length > 0
     ? `${ROUTES.JOBS}?businessType=${landing.businessTypes.join(',')}`
     : ROUTES.JOBS;
+  const forEmployer = landing.category === 'employer';
+  const roles = landing.roles ?? [];
+  const summary = landing.summary ?? [];
   const rolesHeading = landing.rolesHeading ?? '이런 자리가 있어요';
   const jobsHeading = `지금 모집 중인 ${jobsLabel(landing)} 공고`;
-  const otherGuides = LANDINGS.filter((l) => l.slug !== landing.slug);
+  const tipColumns = [
+    ...(landing.tips?.seeker?.length
+      ? [{ title: '구직자라면', items: landing.tips.seeker, action: { label: '이력서 등록하기', href: ROUTES.MYPAGE_RESUMES } }]
+      : []),
+    ...(landing.tips?.employer?.length
+      ? [{ title: '업체라면', items: landing.tips.employer, action: { label: '채용 공고 무료로 등록하기', href: ROUTES.JOBS_NEW } }]
+      : []),
+  ];
+  const tipsHeading = tipColumns.length > 1 ? '지원·채용 팁' : forEmployer ? '채용 담당자를 위한 팁' : '구직자를 위한 팁';
+  const moreGuides = relatedGuides(landing);
+  const terms = termsJsonLd(landing);
   const toc = [
-    { id: 'roles', label: rolesHeading },
+    ...(roles.length > 0 ? [{ id: 'roles', label: rolesHeading }] : []),
     ...landing.sections.map((s) => ({ id: s.id, label: s.heading })),
     ...(landing.career ? [{ id: 'career', label: '성장 경로' }] : []),
-    { id: 'tips', label: '지원·채용 팁' },
+    ...(tipColumns.length > 0 ? [{ id: 'tips', label: tipsHeading }] : []),
     { id: 'jobs', label: '모집 중인 공고' },
     { id: 'faq', label: '자주 묻는 질문' },
   ];
+  // 채용 담당자 가이드는 공고 등록을, 나머지는 공고 보기를 먼저 권한다.
+  const primaryCta = forEmployer
+    ? { href: ROUTES.JOBS_NEW, label: '채용 공고 무료 등록' }
+    : { href: jobsHref, label: '모집 중인 공고 보기' };
+  const secondaryCta = forEmployer
+    ? { href: ROUTES.DIRECTORY, label: '인재 프로필 보기' }
+    : { href: ROUTES.DIRECTORY, label: '인재·업체 프로필 보기' };
 
   return (
     <article className="pb-16">
       <JsonLd data={articleJsonLd(landing)} />
       <JsonLd data={faqJsonLd(landing.faq)} />
+      {terms && <JsonLd data={terms} />}
       <JsonLd
         data={breadcrumbJsonLd([
           { name: '홈', path: '/' },
@@ -155,16 +220,16 @@ export default async function GuidePage({ params }: PageProps) {
         <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
           <div className="flex flex-wrap gap-2">
             <Link
-              href={jobsHref}
+              href={primaryCta.href}
               className="inline-flex h-12 items-center rounded-lg bg-primary px-6 text-[15px] font-bold text-white transition-colors hover:bg-primary-dark"
             >
-              모집 중인 공고 보기
+              {primaryCta.label}
             </Link>
             <Link
-              href={ROUTES.DIRECTORY}
+              href={secondaryCta.href}
               className="inline-flex h-12 items-center rounded-lg border border-gray-300 px-6 text-[15px] font-bold text-gray-700 transition-colors hover:border-ink hover:text-ink"
             >
-              인재·업체 프로필 보기
+              {secondaryCta.label}
             </Link>
           </div>
           <p className="text-[13px] text-gray-500">
@@ -172,17 +237,19 @@ export default async function GuidePage({ params }: PageProps) {
           </p>
         </div>
 
-        <dl className="mt-14 grid border-t border-gray-200 lg:grid-cols-4 lg:border-b">
-          {landing.summary.map((f) => (
-            <div
-              key={f.label}
-              className="border-b border-gray-200 py-5 lg:border-b-0 lg:border-l lg:px-6 lg:py-7 lg:first:border-l-0 lg:first:pl-0"
-            >
-              <dt className="text-[13px] font-medium text-gray-500">{f.label}</dt>
-              <dd className="mt-2 break-keep text-[16px] font-semibold leading-[1.55] text-ink">{f.value}</dd>
-            </div>
-          ))}
-        </dl>
+        {summary.length > 0 && (
+          <dl className={`mt-14 grid border-t border-gray-200 lg:border-b ${SUMMARY_COLS[summary.length] ?? 'lg:grid-cols-4'}`}>
+            {summary.map((f) => (
+              <div
+                key={f.label}
+                className="border-b border-gray-200 py-5 lg:border-b-0 lg:border-l lg:px-6 lg:py-7 lg:first:border-l-0 lg:first:pl-0"
+              >
+                <dt className="text-[13px] font-medium text-gray-500">{f.label}</dt>
+                <dd className="mt-2 break-keep text-[16px] font-semibold leading-[1.55] text-ink">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
 
         {/* 휴대폰·태블릿 목차 — 한 줄 가로 스크롤 */}
         <nav aria-label="목차" className="mt-8 lg:hidden">
@@ -208,12 +275,14 @@ export default async function GuidePage({ params }: PageProps) {
         </aside>
 
         <div className="min-w-0">
-          <section id="roles" className={SECTION}>
-            <h2 className={H2}>{rolesHeading}</h2>
-            <div className="mt-7">
-              <RoleList roles={landing.roles} />
-            </div>
-          </section>
+          {roles.length > 0 && (
+            <section id="roles" className={SECTION}>
+              <h2 className={H2}>{rolesHeading}</h2>
+              <div className="mt-7">
+                <RoleList roles={roles} />
+              </div>
+            </section>
+          )}
 
           {landing.sections.map((sec) => (
             <section key={sec.id} id={sec.id} className={SECTION}>
@@ -231,17 +300,14 @@ export default async function GuidePage({ params }: PageProps) {
             </section>
           )}
 
-          <section id="tips" className={SECTION}>
-            <h2 className={H2}>지원·채용 팁</h2>
-            <div className="mt-8">
-              <TipColumns
-                columns={[
-                  { title: '구직자라면', items: landing.tips.seeker, action: { label: '이력서 등록하기', href: ROUTES.MYPAGE_RESUMES } },
-                  { title: '업체라면', items: landing.tips.employer, action: { label: '채용 공고 무료로 등록하기', href: ROUTES.JOBS_NEW } },
-                ]}
-              />
-            </div>
-          </section>
+          {tipColumns.length > 0 && (
+            <section id="tips" className={SECTION}>
+              <h2 className={H2}>{tipsHeading}</h2>
+              <div className="mt-8">
+                <TipColumns columns={tipColumns} />
+              </div>
+            </section>
+          )}
 
           <section id="jobs" className={SECTION}>
             <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
@@ -280,10 +346,10 @@ export default async function GuidePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* 다른 가이드 */}
+      {/* 함께 보면 좋은 가이드 */}
       <section aria-labelledby="more-guides" className="mt-14 border-t border-gray-200 pt-10 sm:mt-20 sm:pt-14">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
-          <h2 id="more-guides" className={H2}>다른 채용 가이드</h2>
+          <h2 id="more-guides" className={H2}>함께 보면 좋은 가이드</h2>
           <Link
             href="/guide"
             className="inline-flex min-h-[44px] items-center text-[15px] font-semibold text-gray-600 underline decoration-gray-300 underline-offset-4 hover:text-ink hover:decoration-ink"
@@ -292,7 +358,7 @@ export default async function GuidePage({ params }: PageProps) {
           </Link>
         </div>
         <ul className="mt-7 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-4">
-          {otherGuides.map((g) => (
+          {moreGuides.map((g) => (
             <li key={g.slug} className="border-t border-gray-200">
               <Link href={`/guide/${g.slug}`} className="group block py-5">
                 <p className="text-[16px] font-bold text-ink underline-offset-4 group-hover:underline">{g.eyebrow}</p>

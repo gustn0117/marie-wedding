@@ -51,7 +51,7 @@ const FAQ = [
 ];
 
 export default function AboutPage() {
-  const guides = LANDINGS.map((l) => ({ href: `/guide/${l.slug}`, label: l.eyebrow }));
+  const guides = LANDINGS.filter((l) => l.featured).map((l) => ({ href: `/guide/${l.slug}`, label: l.eyebrow }));
 
   return (
     <div className="mx-auto max-w-[860px] space-y-10 pb-16">

@@ -1,15 +1,9 @@
 import Link from 'next/link';
-import type { LandingRole } from '@/features/seo/landings';
+import { splitGuideItem as splitItem, type LandingRole } from '@/features/seo/landings';
 
 // 채용 가이드(/guide/[slug]) 화면 조각. 모두 서버 컴포넌트 — 본문이 HTML 에 그대로 실려 검색·AI 가 읽는다.
 // 디자인 원칙: 강조는 '일의 흐름'(GuideTimeline) 한 곳에만. 나머지는 상자 대신 가는 구분선과 글자 위계로 정리하고,
 // 번호는 실제 순서가 있는 내용(흐름·성장 경로)에만 쓴다.
-
-/** '제목 — 설명' 을 [제목, 설명] 으로. 구분자가 없으면 [null, 전체] */
-function splitItem(text: string): [string | null, string] {
-  const at = text.indexOf(' — ');
-  return at > 0 ? [text.slice(0, at), text.slice(at + 3)] : [null, text];
-}
 
 function CheckIcon() {
   return (
@@ -78,14 +72,80 @@ export function GuideChecklist({ items }: { items: string[] }) {
 /** 점 목록 */
 export function GuideList({ items }: { items: string[] }) {
   return (
-    <ul className="space-y-3">
-      {items.map((item) => (
-        <li key={item} className="flex items-start gap-3 text-[16px] leading-[1.7] text-gray-700">
-          <span aria-hidden className="mt-[11px] h-1 w-1 shrink-0 rounded-full bg-gray-400" />
-          <span className="break-keep">{item}</span>
-        </li>
-      ))}
+    <ul className="max-w-[48em] space-y-3">
+      {items.map((item) => {
+        const [title, desc] = splitItem(item);
+        return (
+          <li key={item} className="flex items-start gap-3 text-[16px] leading-[1.7] text-gray-700">
+            <span aria-hidden className="mt-[11px] h-1 w-1 shrink-0 rounded-full bg-gray-400" />
+            <span className="break-keep">
+              {title && <span className="font-bold text-ink">{title} </span>}
+              {desc}
+            </span>
+          </li>
+        );
+      })}
     </ul>
+  );
+}
+
+/** 용어 풀이 — 용어를 굵게, 뜻을 아래에. 두 단, 가는 윗선으로 구분 */
+export function GuideTerms({ items }: { items: string[] }) {
+  return (
+    <dl className="grid gap-x-12 sm:grid-cols-2">
+      {items.map((item) => {
+        const [term, desc] = splitItem(item);
+        return (
+          <div key={item} className="border-t border-gray-200 py-4">
+            <dt className="break-keep text-[17px] font-bold text-ink">{term ?? desc}</dt>
+            {term && <dd className="mt-1 break-keep text-[15px] leading-[1.7] text-gray-600">{desc}</dd>}
+          </div>
+        );
+      })}
+    </dl>
+  );
+}
+
+/** 비교표 — 좁은 화면에서는 표만 가로로 밀린다(페이지는 그대로). 첫 칸은 행 제목 */
+export function GuideTable({ head, rows }: { head: string[]; rows: string[][] }) {
+  return (
+    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <table className="w-full border-collapse text-left" style={{ minWidth: `${head.length * 10}rem` }}>
+        <thead>
+          <tr className="border-b-2 border-ink">
+            {head.map((h) => (
+              <th key={h} scope="col" className="break-keep py-3 pr-6 text-[14px] font-bold text-ink last:pr-0">
+                {h}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.join('|')} className="border-b border-gray-200 align-top">
+              {row.map((cell, i) =>
+                i === 0 ? (
+                  <th key={i} scope="row" className="break-keep py-4 pr-6 text-[15px] font-bold leading-[1.6] text-ink">
+                    {cell}
+                  </th>
+                ) : (
+                  <td key={i} className="break-keep py-4 pr-6 text-[15px] leading-[1.7] text-gray-600 last:pr-0">
+                    {cell}
+                  </td>
+                ),
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** 섹션 끝 참고 문구 — 예외나 더 확인할 곳 */
+export function GuideNote({ children }: { children: string }) {
+  return (
+    <p className="max-w-[48em] break-keep border-l-2 border-gray-300 pl-4 text-[14px] leading-[1.75] text-gray-500">{children}</p>
   );
 }
 
@@ -133,14 +193,14 @@ export function CareerPath({ steps, note }: { steps: string[]; note: string }) {
   );
 }
 
-/** 구직자·업체 팁 — 두 단, 대상이 다르다는 걸 네이비 윗줄로 구분 */
+/** 구직자·업체 팁 — 두 단(한쪽만 있으면 한 단), 대상이 다르다는 걸 네이비 윗줄로 구분 */
 export function TipColumns({
   columns,
 }: {
   columns: { title: string; items: string[]; action: { label: string; href: string } }[];
 }) {
   return (
-    <div className="grid gap-10 md:grid-cols-2 md:gap-12">
+    <div className={`grid gap-10 md:gap-12 ${columns.length > 1 ? 'md:grid-cols-2' : 'max-w-[48em]'}`}>
       {columns.map((col) => (
         <div key={col.title} className="border-t-2 border-primary pt-5">
           <h3 className="text-[18px] font-bold text-ink">{col.title}</h3>

@@ -9,8 +9,8 @@ const SERVICE_LINKS = [
   { href: ROUTES.COMMUNITY, label: '커뮤니티' },
 ] as const;
 
-// 키워드 랜딩(업종별 채용 가이드) — 전 페이지 공통 내부 링크로 검색엔진이 가이드를 찾게 한다.
-const GUIDE_LINKS = LANDINGS.map((l) => ({ href: `/guide/${l.slug}`, label: l.eyebrow }));
+// 대표 채용 가이드 — 전 페이지 공통 내부 링크로 검색엔진이 가이드를 찾게 한다(나머지는 '채용 가이드' 모음에서).
+const GUIDE_LINKS = LANDINGS.filter((l) => l.featured).map((l) => ({ href: `/guide/${l.slug}`, label: l.eyebrow }));
 
 export default function Footer() {
   return (
