@@ -734,9 +734,10 @@ export function getLanding(slug: string): Landing | undefined {
   return LANDINGS.find((l) => l.slug === slug);
 }
 
-/** 'YYYY-MM-DD' → 'YYYY.MM.DD' (화면 표기) */
+/** 'YYYY-MM-DD' → 'YYYY년 M월 D일' (화면 표기) */
 export function formatGuideDate(date: string): string {
-  return date.replace(/-/g, '.');
+  const [y, m, d] = date.split('-').map(Number);
+  return `${y}년 ${m}월 ${d}일`;
 }
 
 /** 구조화 데이터·OG 용 ISO 시각(KST 자정) */

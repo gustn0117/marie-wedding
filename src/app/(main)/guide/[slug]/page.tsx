@@ -1,9 +1,18 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { LANDINGS, formatGuideDate, getLanding, guideDateIso, type Landing } from '@/features/seo/landings';
+import { LANDINGS, formatGuideDate, getLanding, guideDateIso, type Landing, type LandingSection } from '@/features/seo/landings';
 import { getOpenJobs } from '@/features/seo/openJobs';
-import { ArrowIcon, GuideItems, RoleCard, TipCard } from '@/features/seo/components/GuideBlocks';
+import {
+  CareerPath,
+  FaqList,
+  GuideChecklist,
+  GuideList,
+  GuideTimeline,
+  RoleList,
+  TipColumns,
+} from '@/features/seo/components/GuideBlocks';
+import GuideToc from '@/features/seo/components/GuideToc';
 import { BUSINESS_TYPES, ROUTES } from '@/shared/constants';
 import JobCard from '@/features/jobs/components/JobCard';
 import JsonLd from '@/shared/components/JsonLd';
@@ -26,9 +35,10 @@ interface PageProps {
 }
 
 const LATEST_JOBS_LIMIT = 6;
-// 본문 섹션 — 넓은 화면에서 제목(왼쪽)·내용(오른쪽) 두 단
-const SECTION_GRID = 'grid gap-5 border-t border-gray-200 py-12 sm:py-14 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-16 xl:grid-cols-[360px_minmax(0,1fr)]';
-const H2 = 'break-keep text-[22px] font-bold leading-snug tracking-[-0.02em] text-ink sm:text-[26px]';
+const H2 = 'break-keep text-[24px] font-bold leading-[1.35] tracking-[-0.02em] text-ink sm:text-[28px]';
+// 본문 섹션 — 가는 윗선으로 구분, 넉넉한 간격
+const SECTION = 'border-t border-gray-200 py-10 first:border-t-0 first:pt-0 last:pb-0 sm:py-14';
+const PARAGRAPH = 'max-w-[44em] break-keep text-[17px] leading-[1.85] text-gray-600';
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -88,6 +98,20 @@ function jobsLabel(landing: Landing): string {
     .join('·');
 }
 
+function SectionBody({ section }: { section: LandingSection }) {
+  const items = section.items ?? [];
+  return (
+    <div className="mt-7 space-y-5">
+      {section.body?.map((p) => (
+        <p key={p} className={PARAGRAPH}>{p}</p>
+      ))}
+      {items.length > 0 && section.itemStyle === 'steps' && <GuideTimeline items={items} />}
+      {items.length > 0 && section.itemStyle === 'check' && <GuideChecklist items={items} />}
+      {items.length > 0 && (section.itemStyle ?? 'list') === 'list' && <GuideList items={items} />}
+    </div>
+  );
+}
+
 export default async function GuidePage({ params }: PageProps) {
   const { slug } = await params;
   const landing = getLanding(slug);
@@ -98,6 +122,7 @@ export default async function GuidePage({ params }: PageProps) {
     ? `${ROUTES.JOBS}?businessType=${landing.businessTypes.join(',')}`
     : ROUTES.JOBS;
   const rolesHeading = landing.rolesHeading ?? '이런 자리가 있어요';
+  const jobsHeading = `지금 모집 중인 ${jobsLabel(landing)} 공고`;
   const otherGuides = LANDINGS.filter((l) => l.slug !== landing.slug);
   const toc = [
     { id: 'roles', label: rolesHeading },
@@ -120,60 +145,54 @@ export default async function GuidePage({ params }: PageProps) {
         ])}
       />
 
-      {/* 머리 — 제목·정의문(왼쪽) + 한눈에 보기(오른쪽) */}
-      <header className="border-b border-gray-200 pb-10 sm:pb-12">
+      {/* 머리 — 제목·정의문, 한눈에 보기(가로 띠) */}
+      <header className="pt-2">
         <Breadcrumb items={[{ label: '홈', href: '/' }, { label: '채용 가이드', href: '/guide' }, { label: landing.eyebrow }]} />
-        <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-14 xl:grid-cols-[minmax(0,1fr)_460px]">
-          <div className="min-w-0">
-            <p className="inline-flex items-center rounded-full bg-primary-50 px-3 py-1 text-[13px] font-bold text-primary">
-              채용 가이드
-            </p>
-            <h1 className="mt-4 break-keep text-[30px] font-bold leading-[1.22] tracking-[-0.03em] text-ink sm:text-[40px] lg:text-[48px]">
-              {landing.h1}
-            </h1>
-            <p className="mt-5 max-w-[760px] break-keep text-[16px] leading-[1.8] text-gray-600 sm:text-[17px]">{landing.lead}</p>
-            <p className="mt-5 text-[13px] text-gray-500">
-              마리에 채용 가이드 · 최종 업데이트{' '}
-              <time dateTime={landing.updatedAt}>{formatGuideDate(landing.updatedAt)}</time>
-            </p>
-            <div className="mt-7 flex flex-wrap gap-2">
-              <Link
-                href={jobsHref}
-                className="inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-6 text-[15px] font-bold text-white transition-colors hover:bg-primary-dark"
-              >
-                모집 중인 공고 보기 <ArrowIcon />
-              </Link>
-              <Link
-                href={ROUTES.DIRECTORY}
-                className="inline-flex h-12 items-center rounded-lg border border-gray-300 px-6 text-[15px] font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary"
-              >
-                인재·업체 프로필
-              </Link>
-            </div>
+        <h1 className="mt-8 max-w-[18em] break-keep text-[32px] font-bold leading-[1.2] tracking-[-0.035em] text-ink sm:text-[44px] lg:text-[52px]">
+          {landing.h1}
+        </h1>
+        <p className="mt-6 max-w-[44em] break-keep text-[17px] leading-[1.85] text-gray-600 sm:text-[18px]">{landing.lead}</p>
+        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={jobsHref}
+              className="inline-flex h-12 items-center rounded-lg bg-primary px-6 text-[15px] font-bold text-white transition-colors hover:bg-primary-dark"
+            >
+              모집 중인 공고 보기
+            </Link>
+            <Link
+              href={ROUTES.DIRECTORY}
+              className="inline-flex h-12 items-center rounded-lg border border-gray-300 px-6 text-[15px] font-bold text-gray-700 transition-colors hover:border-ink hover:text-ink"
+            >
+              인재·업체 프로필 보기
+            </Link>
           </div>
-
-          <aside aria-labelledby="summary-title" className="self-start rounded-2xl border border-gray-200 bg-gray-50 p-6 sm:p-7">
-            <h2 id="summary-title" className="text-[15px] font-bold text-ink">한눈에 보기</h2>
-            <dl className="mt-2 divide-y divide-gray-200">
-              {landing.summary.map((f) => (
-                <div key={f.label} className="grid grid-cols-[84px_minmax(0,1fr)] gap-4 py-3.5 last:pb-0">
-                  <dt className="text-[13px] font-semibold text-gray-500">{f.label}</dt>
-                  <dd className="break-keep text-[14px] leading-relaxed text-ink sm:text-[15px]">{f.value}</dd>
-                </div>
-              ))}
-            </dl>
-          </aside>
+          <p className="text-[13px] text-gray-500">
+            최종 업데이트 <time dateTime={landing.updatedAt}>{formatGuideDate(landing.updatedAt)}</time>
+          </p>
         </div>
 
-        <nav aria-label="목차" className="mt-10">
-          <ol className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&::-webkit-scrollbar]:hidden">
-            {toc.map((t, i) => (
+        <dl className="mt-14 grid border-t border-gray-200 lg:grid-cols-4 lg:border-b">
+          {landing.summary.map((f) => (
+            <div
+              key={f.label}
+              className="border-b border-gray-200 py-5 lg:border-b-0 lg:border-l lg:px-6 lg:py-7 lg:first:border-l-0 lg:first:pl-0"
+            >
+              <dt className="text-[13px] font-medium text-gray-500">{f.label}</dt>
+              <dd className="mt-2 break-keep text-[16px] font-semibold leading-[1.55] text-ink">{f.value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* 휴대폰·태블릿 목차 — 한 줄 가로 스크롤 */}
+        <nav aria-label="목차" className="mt-8 lg:hidden">
+          <ol className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6 [&::-webkit-scrollbar]:hidden">
+            {toc.map((t) => (
               <li key={t.id}>
                 <a
                   href={`#${t.id}`}
-                  className="inline-flex min-h-[44px] items-center gap-2 whitespace-nowrap rounded-full border border-gray-200 bg-white px-4 text-[13px] font-medium text-gray-700 transition-colors hover:border-primary hover:text-primary sm:text-[14px]"
+                  className="inline-flex min-h-[44px] items-center whitespace-nowrap rounded-full border border-gray-200 px-4 text-[14px] text-gray-700 transition-colors hover:border-ink hover:text-ink"
                 >
-                  <span className="text-gray-400">{String(i + 1).padStart(2, '0')}</span>
                   {t.label}
                 </a>
               </li>
@@ -182,119 +201,102 @@ export default async function GuidePage({ params }: PageProps) {
         </nav>
       </header>
 
-      {/* 세부 직무 */}
-      <section id="roles" className="py-12 sm:py-14">
-        <h2 className={H2}>{rolesHeading}</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {landing.roles.map((role) => (
-            <RoleCard key={role.name} role={role} />
-          ))}
-        </div>
-      </section>
+      {/* 본문 — lg 이상: 왼쪽 목차(따라다님) + 넓은 본문 */}
+      <div className="mt-12 lg:mt-20 lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-12 xl:grid-cols-[220px_minmax(0,1fr)] xl:gap-16">
+        <aside className="hidden lg:block">
+          <GuideToc items={toc} />
+        </aside>
 
-      {/* 본문 — 흐름·역량·근무 형태 */}
-      {landing.sections.map((sec) => (
-        <section key={sec.id} id={sec.id} className={SECTION_GRID}>
-          <h2 className={H2}>{sec.heading}</h2>
-          <div className="min-w-0 space-y-4">
-            {sec.body?.map((p) => (
-              <p key={p} className="break-keep text-[16px] leading-[1.85] text-gray-700">{p}</p>
-            ))}
-            {sec.items && <GuideItems items={sec.items} variant={sec.itemStyle ?? 'list'} />}
-          </div>
-        </section>
-      ))}
-
-      {/* 성장 경로 */}
-      {landing.career && (
-        <section id="career" className={SECTION_GRID}>
-          <h2 className={H2}>성장 경로</h2>
-          <div className="min-w-0">
-            <ol className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
-              {landing.career.steps.map((step, i) => (
-                <li key={step} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="inline-flex min-h-[52px] items-center gap-2.5 rounded-xl border border-gray-200 bg-white px-5 text-[15px] font-semibold text-ink sm:text-[16px]">
-                    <span className="text-[13px] font-bold text-primary">{i + 1}</span>
-                    {step}
-                  </span>
-                  {i < landing.career!.steps.length - 1 && (
-                    <span aria-hidden className="pl-6 text-gray-300 sm:pl-0">
-                      <ArrowIcon className="h-4 w-4 rotate-90 sm:rotate-0" />
-                    </span>
-                  )}
-                </li>
-              ))}
-            </ol>
-            <p className="mt-5 break-keep text-[14px] leading-relaxed text-gray-500 sm:text-[15px]">{landing.career.note}</p>
-          </div>
-        </section>
-      )}
-
-      {/* 구직자·업체 팁 */}
-      <section id="tips" className={SECTION_GRID}>
-        <h2 className={H2}>지원·채용 팁</h2>
-        <div className="grid min-w-0 gap-4 md:grid-cols-2">
-          <TipCard title="구직자라면" items={landing.tips.seeker} action={{ label: '이력서 등록하기', href: ROUTES.MYPAGE_RESUMES }} />
-          <TipCard title="업체라면" items={landing.tips.employer} action={{ label: '채용 공고 무료 등록', href: ROUTES.JOBS_NEW }} />
-        </div>
-      </section>
-
-      {/* 최신 공고 — 가이드를 읽고 바로 지원으로 이어지게 */}
-      <section id="jobs" className="border-t border-gray-200 py-12 sm:py-14">
-        <div className="flex items-end justify-between gap-3">
-          <h2 className={H2}>지금 모집 중인 {jobsLabel(landing)} 공고</h2>
-          <Link href={jobsHref} className="inline-flex min-h-[44px] shrink-0 items-center gap-1 text-[14px] font-semibold text-gray-500 transition-colors hover:text-primary">
-            전체 보기 <ArrowIcon className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        {jobs.length > 0 ? (
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
-        ) : (
-          <div className="mt-6 rounded-2xl border border-dashed border-gray-300 px-6 py-12 text-center">
-            <p className="text-[16px] font-semibold text-gray-800">지금은 모집 중인 공고가 없어요</p>
-            <p className="mt-1.5 text-[14px] text-gray-500">새 공고가 올라오면 이곳과 채용정보에 바로 보입니다.</p>
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              <Link href={ROUTES.JOBS} className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-5 text-[14px] font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary">전체 채용정보</Link>
-              <Link href={ROUTES.JOBS_NEW} className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-5 text-[14px] font-bold text-gray-700 transition-colors hover:border-primary hover:text-primary">공고 등록하기</Link>
+        <div className="min-w-0">
+          <section id="roles" className={SECTION}>
+            <h2 className={H2}>{rolesHeading}</h2>
+            <div className="mt-7">
+              <RoleList roles={landing.roles} />
             </div>
-          </div>
-        )}
-      </section>
+          </section>
 
-      {/* 자주 묻는 질문 — 넓은 화면은 두 단 */}
-      <section id="faq" className="border-t border-gray-200 py-12 sm:py-14">
-        <h2 className={H2}>자주 묻는 질문</h2>
-        <dl className="mt-6 grid gap-x-14 lg:grid-cols-2">
-          {landing.faq.map((f) => (
-            <div key={f.q} className="border-t border-gray-200 py-6">
-              <dt className="flex gap-2 break-keep text-[16px] font-bold leading-snug text-ink sm:text-[17px]">
-                <span aria-hidden className="text-primary">Q.</span>
-                {f.q}
-              </dt>
-              <dd className="mt-2.5 break-keep pl-7 text-[15px] leading-relaxed text-gray-600">{f.a}</dd>
-            </div>
+          {landing.sections.map((sec) => (
+            <section key={sec.id} id={sec.id} className={SECTION}>
+              <h2 className={H2}>{sec.heading}</h2>
+              <SectionBody section={sec} />
+            </section>
           ))}
-        </dl>
-      </section>
+
+          {landing.career && (
+            <section id="career" className={SECTION}>
+              <h2 className={H2}>성장 경로</h2>
+              <div className="mt-7">
+                <CareerPath steps={landing.career.steps} note={landing.career.note} />
+              </div>
+            </section>
+          )}
+
+          <section id="tips" className={SECTION}>
+            <h2 className={H2}>지원·채용 팁</h2>
+            <div className="mt-8">
+              <TipColumns
+                columns={[
+                  { title: '구직자라면', items: landing.tips.seeker, action: { label: '이력서 등록하기', href: ROUTES.MYPAGE_RESUMES } },
+                  { title: '업체라면', items: landing.tips.employer, action: { label: '채용 공고 무료로 등록하기', href: ROUTES.JOBS_NEW } },
+                ]}
+              />
+            </div>
+          </section>
+
+          <section id="jobs" className={SECTION}>
+            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+              <h2 className={H2}>{jobsHeading}</h2>
+              <Link
+                href={jobsHref}
+                className="inline-flex min-h-[44px] items-center text-[15px] font-semibold text-gray-600 underline decoration-gray-300 underline-offset-4 hover:text-ink hover:decoration-ink"
+              >
+                전체 공고 보기
+              </Link>
+            </div>
+            {jobs.length > 0 ? (
+              <div className="mt-7 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {jobs.map((job) => (
+                  <JobCard key={job.id} job={job} />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-7 border-y border-gray-200 py-10">
+                <p className="text-[17px] font-semibold text-ink">지금은 모집 중인 공고가 없어요</p>
+                <p className="mt-1.5 text-[15px] text-gray-600">새 공고가 올라오면 이곳과 채용정보에 바로 보입니다. 사람을 찾고 있다면 공고를 먼저 올려 보세요.</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Link href={ROUTES.JOBS_NEW} className="inline-flex h-11 items-center rounded-lg bg-primary px-5 text-[14px] font-bold text-white transition-colors hover:bg-primary-dark">채용 공고 등록하기</Link>
+                  <Link href={ROUTES.JOBS} className="inline-flex h-11 items-center rounded-lg border border-gray-300 px-5 text-[14px] font-bold text-gray-700 transition-colors hover:border-ink hover:text-ink">전체 채용정보 보기</Link>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section id="faq" className={SECTION}>
+            <h2 className={H2}>자주 묻는 질문</h2>
+            <div className="mt-7">
+              <FaqList faq={landing.faq} />
+            </div>
+          </section>
+        </div>
+      </div>
 
       {/* 다른 가이드 */}
-      <section aria-labelledby="more-guides" className="border-t border-gray-200 py-12 sm:py-14">
-        <div className="flex items-end justify-between gap-3">
+      <section aria-labelledby="more-guides" className="mt-14 border-t border-gray-200 pt-10 sm:mt-20 sm:pt-14">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
           <h2 id="more-guides" className={H2}>다른 채용 가이드</h2>
-          <Link href="/guide" className="inline-flex min-h-[44px] shrink-0 items-center gap-1 text-[14px] font-semibold text-gray-500 transition-colors hover:text-primary">
-            전체 가이드 <ArrowIcon className="h-3.5 w-3.5" />
+          <Link
+            href="/guide"
+            className="inline-flex min-h-[44px] items-center text-[15px] font-semibold text-gray-600 underline decoration-gray-300 underline-offset-4 hover:text-ink hover:decoration-ink"
+          >
+            전체 가이드 보기
           </Link>
         </div>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className="mt-7 grid gap-x-10 sm:grid-cols-2 lg:grid-cols-4">
           {otherGuides.map((g) => (
-            <li key={g.slug}>
-              <Link href={`/guide/${g.slug}`} className="group flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 transition-colors hover:border-primary">
-                <p className="text-[16px] font-bold text-ink group-hover:text-primary">{g.eyebrow}</p>
-                <p className="mt-2 line-clamp-2 break-keep text-[14px] leading-relaxed text-gray-600">{g.lead}</p>
+            <li key={g.slug} className="border-t border-gray-200">
+              <Link href={`/guide/${g.slug}`} className="group block py-5">
+                <p className="text-[16px] font-bold text-ink underline-offset-4 group-hover:underline">{g.eyebrow}</p>
+                <p className="mt-1.5 line-clamp-2 break-keep text-[14px] leading-[1.65] text-gray-500">{g.lead}</p>
               </Link>
             </li>
           ))}
@@ -302,10 +304,10 @@ export default async function GuidePage({ params }: PageProps) {
       </section>
 
       {/* 시작 안내 */}
-      <section className="mt-4 rounded-2xl bg-primary px-6 py-10 text-white sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-14 lg:py-12">
+      <section className="mt-14 rounded-2xl bg-primary px-6 py-10 text-white sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-14 lg:py-14">
         <div>
-          <p className="text-[22px] font-bold sm:text-[26px]">지금 마리에에서 시작하세요</p>
-          <p className="mt-2 text-[15px] text-white/80">공고 등록·지원 모두 무료입니다.</p>
+          <h2 className="break-keep text-[24px] font-bold leading-[1.35] sm:text-[28px]">공고 등록과 지원은 모두 무료예요</h2>
+          <p className="mt-2 break-keep text-[15px] text-white/75">웨딩 업계 공고와 인재만 모여 있어 필요한 자리와 사람을 찾기 쉬워요.</p>
         </div>
         <div className="mt-6 flex flex-wrap gap-2 lg:mt-0 lg:shrink-0">
           <Link href={jobsHref} className="inline-flex h-12 items-center rounded-lg bg-white px-6 text-[15px] font-bold text-primary transition-colors hover:bg-gray-100">채용 공고 보기</Link>
