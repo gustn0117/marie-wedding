@@ -6,6 +6,9 @@ import { SITE_HOST, SITE_URL, absoluteUrl } from '@/shared/seo';
 // 네이버에는 직접 보내고, api.indexnow.org 로 보낸 건 빙 등 참여 엔진끼리 공유된다.
 // 전체 URL 일괄 제출: scripts/indexnow-submit.mjs
 export const INDEXNOW_KEY = '5c0a20999c8e8818226df11773c5c55d';
+// 키 파일 위치(루트). 요청 본문에는 keyLocation 을 넣지 않는다 — 루트면 검색엔진이 이 기본 위치를
+// 확인하고, 네이버는 keyLocation 을 함께 받으면 홈(https://marie.co.kr/)을 'Invalid urls'로 거부한다
+// (일괄 제출에선 전체 200 을 주면서 홈만 조용히 빠진다, 2026-09-29 확인).
 export const INDEXNOW_KEY_LOCATION = `${SITE_URL}/${INDEXNOW_KEY}.txt`;
 export const INDEXNOW_ENDPOINTS = [
   'https://searchadvisor.naver.com/indexnow',
@@ -37,7 +40,6 @@ export async function submitIndexNow(urlsOrPaths: string[]): Promise<IndexNowRes
     const body = JSON.stringify({
       host: SITE_HOST,
       key: INDEXNOW_KEY,
-      keyLocation: INDEXNOW_KEY_LOCATION,
       urlList: urls.slice(i, i + MAX_URLS_PER_REQUEST),
     });
     const batch = await Promise.all(

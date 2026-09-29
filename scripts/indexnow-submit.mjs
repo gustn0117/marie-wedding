@@ -58,7 +58,9 @@ async function main() {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
-        body: JSON.stringify({ host: HOST, key: KEY, keyLocation: KEY_LOCATION, urlList: urls }),
+        // keyLocation 은 보내지 않는다 — 키 파일이 루트라 생략 가능하고, 네이버는 keyLocation 과 함께 받으면
+        // 홈(https://marie.co.kr/)을 거부한다(일괄 제출에선 200 을 주면서 홈만 빠짐).
+        body: JSON.stringify({ host: HOST, key: KEY, urlList: urls }),
         signal: AbortSignal.timeout(20_000),
       });
       const text = (await res.text()).trim();
