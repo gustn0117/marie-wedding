@@ -11,20 +11,27 @@ interface HeroSlide {
   /** 구분선 뒤 설명 */
   caption: string;
   title: string;
+  /** 휴대폰에서 끊어 보일 제목 줄(sm 이상은 한 줄로 이어진다). 없으면 title 을 그대로 쓴다. */
+  titleLines?: string[];
   cta: { label: string; href: string };
   /** public/ 기준 배경 이미지 경로. 비워두면 어두운 빗금(이미지 자리). */
   image?: string;
+  /** 좁은 화면에서 인물 등 핵심 피사체가 잘리지 않도록 이미지 초점을 조절한다. */
+  imageClassName?: string;
   /** 유료·제휴 광고 슬라이드 — 앞말 자리에 '광고' 표시를 붙여 광고임을 밝힌다(표시광고법). */
   sponsored?: boolean;
 }
 
 const SLIDES: HeroSlide[] = [
   {
-    // 광고 — 하람 채용 공고. 광고 이미지를 받으면 image 경로만 채우면 빗금이 사진으로 바뀐다.
+    // 광고 — 하람 채용 공고. 모바일에서는 오른쪽 인물이 잘리지 않도록 초점을 조금 옮긴다.
     label: '광고',
     caption: '예식 도우미 · 계약직',
     title: '하람 예식 컨시어지 관리 매니저 채용',
+    titleLines: ['하람 예식 컨시어지', '관리 매니저 채용'],
     cta: { label: '공고 보기', href: ROUTES.JOBS_DETAIL('1abaf3ba-d448-4594-8deb-4e0e8fbf564b') },
+    image: '/images/home/hero-haram-concierge.webp',
+    imageClassName: 'object-[75%_center] sm:object-center',
     sponsored: true,
   },
   {
@@ -119,7 +126,14 @@ export default function HomeHero() {
           className={`absolute inset-0 -z-10 transition-opacity duration-700 ease-out ${i === index ? 'opacity-100' : 'opacity-0'}`}
         >
           {s.image ? (
-            <Image src={s.image} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" />
+            <Image
+              src={s.image}
+              alt=""
+              fill
+              priority={i === 0}
+              sizes="100vw"
+              className={`object-cover ${s.imageClassName ?? 'object-center'}`}
+            />
           ) : (
             <div className="hatch-dark absolute inset-0" />
           )}
@@ -167,7 +181,7 @@ export default function HomeHero() {
         </div>
 
         {/* 슬라이드 글 — 한 칸에 겹쳐 두어 슬라이드마다 줄 수가 달라도 높이가 튀지 않는다 */}
-        <div className="mt-auto grid lg:mt-[92px]">
+        <div className="mt-auto grid min-w-0 lg:mt-[92px]">
           {SLIDES.map((s, i) => {
             const active = i === index;
             return (
@@ -177,7 +191,7 @@ export default function HomeHero() {
                 aria-roledescription="slide"
                 aria-label={`${i + 1} / ${count}`}
                 aria-hidden={!active}
-                className={`[grid-area:1/1] transition-[opacity,transform,visibility] duration-500 ease-out ${
+                className={`min-w-0 max-w-full [grid-area:1/1] transition-[opacity,transform,visibility] duration-500 ease-out ${
                   active ? 'visible translate-y-0 opacity-100' : 'invisible translate-y-3 opacity-0'
                 }`}
               >
@@ -192,8 +206,23 @@ export default function HomeHero() {
                   <span aria-hidden className="h-3 w-px bg-white/60" />
                   <span className="text-white/85">{s.caption}</span>
                 </p>
-                <h2 className="mt-3 max-w-[900px] text-balance break-keep text-[30px] font-bold leading-[1.25] tracking-[-0.03em] sm:mt-4 sm:text-[42px] lg:text-[52px]">
-                  {s.title}
+                <h2
+                  className={`mt-3 w-[calc(100vw-32px)] max-w-[calc(100vw-32px)] text-balance break-keep text-[30px] font-bold leading-[1.25] tracking-[-0.03em] sm:mt-4 sm:w-auto sm:text-[42px] lg:text-[52px] ${
+                    s.sponsored ? 'sm:max-w-[720px]' : 'sm:max-w-[900px]'
+                  }`}
+                >
+                  {s.titleLines
+                    ? s.titleLines.map((line, li) =>
+                        li === 0 ? (
+                          <span key={line}>{line}</span>
+                        ) : (
+                          <span key={line}>
+                            {' '}
+                            <span className="block sm:inline">{line}</span>
+                          </span>
+                        ),
+                      )
+                    : s.title}
                 </h2>
                 <Link href={s.cta.href} className="group mt-7 inline-flex items-center gap-3 sm:mt-9">
                   <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink transition-transform group-hover:translate-x-0.5">
