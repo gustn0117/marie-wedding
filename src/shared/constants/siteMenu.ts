@@ -39,6 +39,7 @@ export const SITE_MENU: SiteMenuSection[] = [
         href: ROUTES.JOBS,
         children: BROWSABLE_TYPES.map((t) => ({ label: t.label, href: `${ROUTES.JOBS}?businessType=${t.value}` })),
       },
+      { label: '채용 가이드', href: '/guide' },
       { label: '공고 등록', href: ROUTES.JOBS_NEW },
     ],
   },

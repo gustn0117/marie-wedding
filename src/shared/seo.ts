@@ -31,6 +31,9 @@ interface PageMetadataInput {
   keywords?: string[];
   /** og/twitter 이미지. null 이면 지정하지 않는다(opengraph-image 파일을 쓰는 라우트). */
   image?: string | null;
+  /** type 'article' 의 작성·수정 시각(ISO) — og article:published_time / modified_time */
+  publishedTime?: string;
+  modifiedTime?: string;
 }
 
 /**
@@ -46,6 +49,8 @@ export function buildPageMetadata({
   type = 'website',
   keywords,
   image = DEFAULT_OG_IMAGE,
+  publishedTime,
+  modifiedTime,
 }: PageMetadataInput): Metadata {
   const fullTitle = `${title}${TITLE_SUFFIX}`;
   const images = !image
@@ -66,6 +71,8 @@ export function buildPageMetadata({
       description,
       url: path,
       ...(images ? { images } : {}),
+      ...(publishedTime ? { publishedTime } : {}),
+      ...(modifiedTime ? { modifiedTime } : {}),
     } as Metadata['openGraph'],
     twitter: {
       card: 'summary_large_image',

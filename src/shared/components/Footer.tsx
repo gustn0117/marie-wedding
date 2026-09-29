@@ -40,7 +40,7 @@ export default function Footer() {
         </div>
 
         <nav aria-label="업종별 채용 가이드" className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-gray-100 py-3 text-xs text-gray-500">
-          <span className="font-semibold text-gray-700">채용 가이드</span>
+          <Link href="/guide" className="py-1 font-semibold text-gray-700 hover:text-primary transition-colors">채용 가이드</Link>
           {GUIDE_LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="py-1 hover:text-primary transition-colors">
               {link.label}

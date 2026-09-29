@@ -55,8 +55,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry('/contact', undefined, 'monthly', 0.3),
     entry('/terms', undefined, 'yearly', 0.2),
     entry('/privacy', undefined, 'yearly', 0.2),
-    // 키워드 랜딩(가이드)
-    ...LANDINGS.map((l) => entry(`/guide/${l.slug}`, undefined, 'monthly', 0.7)),
+    // 채용 가이드 — 허브 + 업종별 가이드(내용 수정일을 lastmod 로)
+    entry('/guide', LANDINGS.map((l) => l.updatedAt).sort().at(-1), 'monthly', 0.7),
+    ...LANDINGS.map((l) => entry(`/guide/${l.slug}`, l.updatedAt, 'monthly', 0.7)),
   ];
 
   try {
