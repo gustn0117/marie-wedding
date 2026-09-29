@@ -32,7 +32,7 @@ const SLIDES: HeroSlide[] = [
     title: '하람 예식 컨시어지 관리 매니저 채용',
     titleLines: ['하람 예식 컨시어지', '관리 매니저 채용'],
     cta: { label: '공고 보기', href: ROUTES.JOBS_DETAIL('1abaf3ba-d448-4594-8deb-4e0e8fbf564b') },
-    image: '/images/home/hero-haram-concierge.webp',
+    image: '/images/home/hero-haram-concierge-bright.webp',
     imageClassName: 'object-[75%_center] sm:object-[center_42%]',
     imageQuality: 95,
     sponsored: true,
@@ -143,8 +143,10 @@ export default function HomeHero() {
           )}
         </div>
       ))}
-      {/* 글자 가독성 — 왼쪽을 어둡게 */}
-      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-black/50 via-black/15 to-transparent" />
+      {/* 글자 가독성 — 왼쪽을 어둡게. lg 미만은 글이 화면 폭 전체에 걸쳐 밝은 사진 위에 놓이므로
+          글이 놓이는 아래쪽부터 한 번 더 어둡게 깐다(흰 글씨 명암비 AA: 제목 3:1·작은 글씨 4.5:1). */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-r from-black/60 via-black/25 via-50% to-transparent" />
+      <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/50 via-50% to-transparent lg:hidden" />
 
       <div className="shell-wide flex h-[460px] flex-col pb-24 pt-8 sm:h-[520px] sm:pt-12 lg:h-[600px] lg:pb-32 lg:pt-[88px]">
         {/* 점 인디케이터 + 일시정지 */}
@@ -234,7 +236,7 @@ export default function HomeHero() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
                   </span>
-                  <span className="text-[15px] font-semibold text-white/90 transition-colors group-hover:text-white sm:text-[16px]">
+                  <span className="text-[15px] font-semibold text-white underline-offset-4 group-hover:underline sm:text-[16px]">
                     {s.cta.label}
                   </span>
                 </Link>
