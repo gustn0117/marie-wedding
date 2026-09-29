@@ -6,23 +6,26 @@ import Link from 'next/link';
 import { ROUTES } from '@/shared/constants';
 
 interface HeroSlide {
-  /** 굵게 보이는 앞말 */
+  /** 굵게 보이는 앞말 (광고 슬라이드는 '광고' 표시로 대신한다) */
   label: string;
   /** 구분선 뒤 설명 */
   caption: string;
   title: string;
   cta: { label: string; href: string };
-  /** public/ 기준 배경 이미지 경로 */
-  image: string;
+  /** public/ 기준 배경 이미지 경로. 비워두면 어두운 빗금(이미지 자리). */
+  image?: string;
+  /** 유료·제휴 광고 슬라이드 — 앞말 자리에 '광고' 표시를 붙여 광고임을 밝힌다(표시광고법). */
+  sponsored?: boolean;
 }
 
 const SLIDES: HeroSlide[] = [
   {
-    label: '채용정보',
-    caption: '웨딩 업계 전문 채용',
-    title: '웨딩 업계 일자리를 한 곳에서',
-    cta: { label: '채용정보 보기', href: ROUTES.JOBS },
-    image: '/images/home/hero-jobs.webp',
+    // 광고 — 하람 채용 공고. 광고 이미지를 받으면 image 경로만 채우면 빗금이 사진으로 바뀐다.
+    label: '광고',
+    caption: '예식 도우미 · 계약직',
+    title: '하람 예식 컨시어지 관리 매니저 채용',
+    cta: { label: '공고 보기', href: ROUTES.JOBS_DETAIL('1abaf3ba-d448-4594-8deb-4e0e8fbf564b') },
+    sponsored: true,
   },
   {
     label: '인재·업체 프로필',
@@ -115,7 +118,11 @@ export default function HomeHero() {
           aria-hidden
           className={`absolute inset-0 -z-10 transition-opacity duration-700 ease-out ${i === index ? 'opacity-100' : 'opacity-0'}`}
         >
-          <Image src={s.image} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" />
+          {s.image ? (
+            <Image src={s.image} alt="" fill priority={i === 0} sizes="100vw" className="object-cover" />
+          ) : (
+            <div className="hatch-dark absolute inset-0" />
+          )}
         </div>
       ))}
       {/* 글자 가독성 — 왼쪽을 어둡게 */}
@@ -129,7 +136,7 @@ export default function HomeHero() {
               key={s.title}
               type="button"
               onClick={() => setIndex(i)}
-              aria-label={`${i + 1}번째 슬라이드: ${s.label}`}
+              aria-label={`${i + 1}번째 슬라이드: ${s.sponsored ? '광고, ' : ''}${s.title}`}
               aria-current={i === index ? 'true' : undefined}
               className="group inline-flex h-8 w-7 items-center justify-center"
             >
@@ -175,7 +182,13 @@ export default function HomeHero() {
                 }`}
               >
                 <p className="flex items-center gap-2.5 text-[14px] sm:text-[16px]">
-                  <span className="font-bold">{s.label}</span>
+                  {s.sponsored ? (
+                    <span className="rounded-sm border border-white/80 px-1.5 text-[12px] font-bold leading-5 sm:text-[13px]">
+                      {s.label}
+                    </span>
+                  ) : (
+                    <span className="font-bold">{s.label}</span>
+                  )}
                   <span aria-hidden className="h-3 w-px bg-white/60" />
                   <span className="text-white/85">{s.caption}</span>
                 </p>

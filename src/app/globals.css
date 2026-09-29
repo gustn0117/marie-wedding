@@ -103,6 +103,12 @@
   .crumb-sep { @apply text-gray-300 select-none; }
   .crumb-current { @apply text-ink font-semibold; }
 
+  /* 빗금 자리 표시 — 흰 글씨가 올라가는 어두운 면(메인 배너에 이미지가 들어오기 전) */
+  .hatch-dark {
+    background-color: #1f242f;
+    background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 14px);
+  }
+
   /* === Workspace Rail — Toss 친화 명확한 위계 === */
   .rail {
     @apply hidden lg:flex flex-col gap-1 self-start sticky;
