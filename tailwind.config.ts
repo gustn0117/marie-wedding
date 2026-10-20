@@ -88,8 +88,8 @@ const config: Config = {
         'text-muted': '#9aa1b1',
       },
       fontFamily: {
-        serif: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        serif: ['"Pretendard Variable"', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['"Pretendard Variable"', 'Pretendard', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
       fontSize: {
         micro: ['11px', { lineHeight: '1.4', letterSpacing: '0.01em' }],

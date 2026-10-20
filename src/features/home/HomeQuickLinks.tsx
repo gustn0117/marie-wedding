@@ -64,7 +64,7 @@ function QuickLinkItem({ item }: { item: QuickLink }) {
             </svg>
           )}
         </span>
-        <span className="mt-1.5 line-clamp-2 break-keep text-[13px] leading-relaxed text-gray-500 xl:text-[15px]">
+        <span className="mt-1.5 line-clamp-2 break-keep text-[13px] leading-relaxed text-gray-600 xl:text-[15px]">
           {item.desc}
         </span>
       </span>

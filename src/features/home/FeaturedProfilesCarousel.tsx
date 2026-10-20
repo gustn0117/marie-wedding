@@ -140,7 +140,7 @@ function ProfileCard({ profile }: { profile: Profile }) {
       </div>
       <div className="mt-2.5">
         <p className="text-[13px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline">{name}</p>
-        <p className="text-[10.5px] text-gray-400 mt-1 flex items-center gap-1.5">
+        <p className="text-[10.5px] text-gray-500 mt-1 flex items-center gap-1.5">
           {biz && <span className="truncate">{biz}</span>}
           {biz && <span>·</span>}
           <span className="truncate">{getRegionLabel(profile.region)}</span>

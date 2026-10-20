@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // 메타데이터(title·description·canonical·og)를 모든 요청에서 <head> 에 넣는다.
+  // Next 15.2+ 는 동적 페이지 메타데이터를 일반 UA 에는 본문 끝으로 '스트리밍'하는데, 다음(Daumoa)·
+  // 카카오톡 미리보기(kakaotalk-scrap)처럼 JS 를 안 돌리고 <head> 만 읽는 수집기가 제목·미리보기를 놓친다.
+  // 이 설정은 메타데이터 위치만 바꾼다(본문 스트리밍·loading.tsx 는 그대로).
+  htmlLimitedBots: /.*/,
   images: {
     // 기본 이미지와 고해상도 메인 광고에 사용하는 품질 값을 명시한다.
     qualities: [75, 95],

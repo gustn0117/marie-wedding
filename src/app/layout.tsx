@@ -108,6 +108,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
+      <head>
+        {/* Pretendard 가변 글꼴 분할본 — 페이지에 쓰인 글자 묶음만 받는다(전체 글자판 대비 약 85~90% 가벼움).
+            CSS @import 대신 <link> 로 두어 앱 CSS 와 나란히 받는다. */}
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
+        />
+      </head>
       <body className="antialiased">
         <Suspense fallback={null}>
           <NavigationProgress />

@@ -74,7 +74,7 @@ export default function GuideIndexPage() {
                   className="inline-flex min-h-[44px] items-center gap-2 rounded-full border border-gray-200 px-4 text-[15px] font-semibold text-gray-700 transition-colors hover:border-ink hover:text-ink"
                 >
                   {g.label}
-                  <span className="text-[13px] font-medium text-gray-400">{g.guides.length}</span>
+                  <span className="text-[13px] font-medium text-gray-500">{g.guides.length}</span>
                 </a>
               </li>
             ))}

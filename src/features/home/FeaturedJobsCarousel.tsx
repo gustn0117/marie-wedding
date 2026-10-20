@@ -165,7 +165,7 @@ function FeaturedCard({ job }: { job: Job }) {
       <div className="mt-2.5">
         <p className="text-[13px] font-bold text-ink leading-snug line-clamp-2 group-hover:underline">{job.title}</p>
         <p className="text-[11px] text-gray-500 mt-1 truncate">{companyLabel}</p>
-        <p className="text-[10.5px] text-gray-400 mt-1 flex items-center gap-1.5 tabular-nums">
+        <p className="text-[10.5px] text-gray-500 mt-1 flex items-center gap-1.5 tabular-nums">
           {dDay && <span>{dDay}</span>}
           {dDay && <span>·</span>}
           <span className="truncate">{getBusinessTypeLabel(job.business_type)}</span>

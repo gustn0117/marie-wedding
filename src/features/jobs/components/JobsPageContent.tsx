@@ -525,6 +525,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       </div>
 
       {/* Results */}
+      {/* 제목 순서(h1 → h2 → h3)를 맞추는 숨은 제목 — 공고 카드 제목이 h3 이다. */}
+      <h2 className="sr-only">채용 공고 목록</h2>
       {/* 인라인 빈 상태 → 공용 EmptyState로 일관화 (C-1, C-10). */}
       {jobs.length === 0 ? (
         <EmptyState
