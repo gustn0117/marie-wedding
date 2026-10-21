@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Suspense } from "react";
 import NavigationProgress from "@/shared/components/NavigationProgress";
 import { ToastProvider } from "@/shared/components/Toast";
@@ -130,6 +131,16 @@ export default function RootLayout({
           {/* PC 로그인 창 — /login 링크를 가로채 보던 화면 위에 띄운다(휴대폰은 로그인 페이지) */}
           <LoginModalHost />
         </ToastProvider>
+        {/* 하람 마케팅 방문 추적 — 발급값 그대로. 첫 방문·경로 이동 페이지뷰와 heartbeat 는 수집기가
+            자동 처리하므로 별도 호출을 두지 않는다. 루트 레이아웃은 경로가 바뀌어도 다시 그려지지 않고
+            next/script 가 id 로 한 번만 넣는다. 수집 거부: localStorage haramAnalyticsOptOut="1" 또는 DNT. */}
+        <Script
+          id="haram-analytics"
+          src="https://haram-analytics.hsweb.pics/tracker.js"
+          data-site="DSeo6vsycEBJYvZbxj3aLsM0"
+          referrerPolicy="no-referrer"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
