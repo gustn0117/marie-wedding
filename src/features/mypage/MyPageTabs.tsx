@@ -14,6 +14,7 @@ import type { Application, ApplicationStatus, Job, Post } from '@/types/database
 import { APPLICATION_STATUS_LABELS } from '@/features/applications/services/application-service';
 import JobStatusMenu from '@/features/jobs/components/JobStatusMenu';
 import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
+import ApplicationSeenTracker from '@/features/applications/components/ApplicationSeenTracker';
 import { JOB_STATUS_LABELS } from '@/shared/constants';
 
 type AppFilter = 'all' | 'active' | 'completed' | ApplicationStatus;
@@ -258,8 +259,7 @@ function FilterableApplicationList({
             const cardHref = `/applications/${item.id}`;
             // 30일 창이 지나면 리뷰 제출이 거부되므로 링크도 숨긴다.
             const showReviewLink = reviewWindowOpen(item.hiring_completed_at, item.applicant_completed_at);
-            return (
-              <div key={item.id} className="platform-data-row relative px-4 py-3">
+            const cardBody = (
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     {/* 카드 전체 클릭 영역 — pseudo overlay로 안전하게. inner Link보다 낮은 z. */}
@@ -287,6 +287,15 @@ function FilterableApplicationList({
                     <p className="mt-1 text-xs text-gray-400">{formatRelativeTime(item.created_at)}</p>
                   </div>
                 </div>
+            );
+            // 받은 지원은 공고자 화면에 보이면 '목록 확인'으로 기록(관리자 지원 현황용)
+            return mode === 'received' ? (
+              <ApplicationSeenTracker key={item.id} applicationId={item.id} className="platform-data-row relative px-4 py-3">
+                {cardBody}
+              </ApplicationSeenTracker>
+            ) : (
+              <div key={item.id} className="platform-data-row relative px-4 py-3">
+                {cardBody}
               </div>
             );
           })}

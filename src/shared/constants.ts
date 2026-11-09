@@ -98,6 +98,7 @@ export const ROUTES = {
   ADMIN_PROFILES_EDIT: (id: string) => `/admin/profiles/${id}/edit`,
   ADMIN_JOBS: '/admin/jobs',
   ADMIN_JOBS_EDIT: (id: string) => `/admin/jobs/${id}/edit`,
+  ADMIN_APPLICATIONS: '/admin/applications',
   ADMIN_POSTS: '/admin/posts',
   ADMIN_NOTICE: '/admin/notice',
   ADMIN_COMMENTS: '/admin/comments',

@@ -25,6 +25,7 @@ import {
 import { isUuid } from '@/shared/utils/uuid';
 import { resolveResumePhotoUrl } from '@/features/resumes/lib/photo';
 import { reviewWindowOpen } from '@/features/applications/lib/reviewWindow';
+import ApplicationSeenTracker from '@/features/applications/components/ApplicationSeenTracker';
 
 interface JobApplicationBoxProps {
   jobId: string;
@@ -450,7 +451,8 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
         ) : (
           <div className="divide-y divide-gray-100">
             {filteredReceived.map((item) => (
-              <article key={item.id} className="py-4">
+              // 공고자 화면에 이 지원이 보이면 '목록 확인'으로 기록(관리자 지원 현황용)
+              <ApplicationSeenTracker key={item.id} applicationId={item.id} as="article" className="py-4">
                 <div className="flex items-start gap-3">
                   <ProfileAvatar
                     profileImage={item.applicant?.profile_image}
@@ -518,7 +520,7 @@ export default function JobApplicationBox({ jobId, authorId, isClosed = false }:
                     />
                   </div>
                 </div>
-              </article>
+              </ApplicationSeenTracker>
             ))}
           </div>
         )}

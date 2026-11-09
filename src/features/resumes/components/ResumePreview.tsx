@@ -10,6 +10,11 @@ interface ResumePreviewProps {
   resume: ResumeContent | SubmittedResumeSnapshot;
   className?: string;
   submittedAt?: string | null;
+  /**
+   * 사진·첨부 경로 → 열람 주소. 주면 이 표에 있는 주소만 쓴다(관리자 화면 — 일반 주소는 공고자·지원자 전용).
+   * 없으면 기본 주소(/api/resumes/photo·attachment)를 쓴다.
+   */
+  fileUrls?: Record<string, string>;
 }
 
 function fmtYm(value: string): string {
@@ -40,7 +45,7 @@ const ICON = {
   pin: 'M15 10.5a3 3 0 11-6 0 3 3 0 016 0z M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z',
 };
 
-export default function ResumePreview({ resume, className = '', submittedAt }: ResumePreviewProps) {
+export default function ResumePreview({ resume, className = '', submittedAt, fileUrls }: ResumePreviewProps) {
   if ('redacted' in resume && resume.redacted) {
     return (
       <div className={`rounded-lg border border-gray-200 bg-gray-50 p-10 text-center ${className}`}>
@@ -52,7 +57,10 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
 
   const data = resume as ResumeContent;
   const attachments = data.attachments ?? [];
-  const photoUrl = resolveResumePhotoUrl(data.photoPath);
+  const photoUrl = fileUrls
+    ? (data.photoPath ? fileUrls[data.photoPath] ?? null : null)
+    : resolveResumePhotoUrl(data.photoPath);
+  const attachmentUrl = (path: string) => (fileUrls ? fileUrls[path] ?? null : resolveResumeAttachmentUrl(path));
   const experiences = [...data.experiences].sort((a, b) => b.startDate.localeCompare(a.startDate));
   const educations = [...data.educations].sort((a, b) => b.startDate.localeCompare(a.startDate));
   const contacts: { icon: string; text: string }[] = [
@@ -195,7 +203,7 @@ export default function ResumePreview({ resume, className = '', submittedAt }: R
             {attachments.length > 0 && (
               <ul className="mb-2.5 space-y-1.5">
                 {attachments.map((item) => {
-                  const href = resolveResumeAttachmentUrl(item.path);
+                  const href = attachmentUrl(item.path);
                   if (!href) return null;
                   return (
                     <li key={item.id}>

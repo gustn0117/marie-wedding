@@ -95,7 +95,10 @@ export default function AdminDashboard() {
       {/* Conversion Funnel */}
       {funnel && (
         <section className="bg-white rounded border border-gray-200 p-5">
-          <h2 className="text-base font-bold text-gray-900 mb-1">전환 퍼널</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 mb-1">
+            <h2 className="text-base font-bold text-gray-900">전환 퍼널</h2>
+            <Link href={ROUTES.ADMIN_APPLICATIONS} className="text-sm text-primary hover:underline">지원 현황 보기</Link>
+          </div>
           <p className="text-xs text-gray-500 mb-4">지원 → 승인 → 진행 완료 → 리뷰 단계별 누적 수치 (% = 지원 대비)</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <FunnelStep label="지원" value={funnel.totalApplications} base={funnel.totalApplications} highlight />
