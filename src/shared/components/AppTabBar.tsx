@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/shared/constants';
@@ -19,9 +19,23 @@ const TABS = [
   { href: ROUTES.MYPAGE, label: '마이', icon: 'M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z' },
 ] as const;
 
+function isTabActive(href: string, pathname: string): boolean {
+  return href === ROUTES.HOME ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export default function AppTabBar() {
   const pathname = usePathname();
   const visible = isAppTabRoot(pathname);
+  const activeHref = TABS.find((tab) => isTabActive(tab.href, pathname))?.href ?? null;
+
+  // 처음 열 때는 가만히 두고, 탭을 옮겼을 때만 고른 탭 아이콘이 톡 튄다(globals.css .app-tab-pop)
+  const [poppedHref, setPoppedHref] = useState<string | null>(null);
+  const prevActiveRef = useRef(activeHref);
+  useEffect(() => {
+    if (prevActiveRef.current === activeHref) return;
+    prevActiveRef.current = activeHref;
+    setPoppedHref(activeHref);
+  }, [activeHref]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -39,17 +53,31 @@ export default function AppTabBar() {
     >
       <ul className="grid h-14 grid-cols-5">
         {TABS.map((tab) => {
-          const active = tab.href === ROUTES.HOME ? pathname === '/' : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+          const active = tab.href === activeHref;
           return (
             <li key={tab.href}>
               <Link
                 href={tab.href}
                 aria-current={active ? 'page' : undefined}
+                data-haptic="selection"
+                onClick={(e) => {
+                  // 지금 탭을 또 누르면 맨 위로(iOS 앱처럼). 이미 맨 위면 원래대로 이동해 검색 조건을 비운다.
+                  if (!active || window.scrollY < 8) return;
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`flex h-full flex-col items-center justify-center gap-1 text-[11px] leading-none ${
                   active ? 'font-bold text-primary' : 'font-medium text-gray-500'
                 }`}
               >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={active ? 1.9 : 1.5} stroke="currentColor" aria-hidden>
+                <svg
+                  className={`h-6 w-6 ${active && poppedHref === tab.href ? 'app-tab-pop' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={active ? 1.9 : 1.5}
+                  stroke="currentColor"
+                  aria-hidden
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d={tab.icon} />
                 </svg>
                 {tab.label}

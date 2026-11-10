@@ -58,6 +58,43 @@ export function printPage(): void {
   window.print();
 }
 
+export type AppHapticStyle =
+  | 'light'
+  | 'medium'
+  | 'heavy'
+  | 'soft'
+  | 'rigid'
+  | 'selection'
+  | 'success'
+  | 'warning'
+  | 'error';
+
+/**
+ * 앱 진동(햅틱, mobile/ios/App/App/LinkRouting.swift 의 MarieShell.haptic).
+ * 브라우저이거나 진동 기능이 없는 예전 앱(1.0 빌드 1)에서는 아무것도 하지 않는다.
+ */
+export function appHaptic(style: AppHapticStyle = 'light'): void {
+  const haptic = appPlugin('MarieShell')?.haptic;
+  if (typeof haptic !== 'function') return;
+  haptic({ style }).catch(() => undefined);
+}
+
+// 화면 이동 방향 — 앱 뒤로 버튼이 표시해 두면 AppTouchFeedback 이 새 화면을 반대쪽(왼쪽)에서 들인다.
+// 표시만 남고 화면이 안 바뀌는 경우(같은 주소로 돌아감)에 엉뚱한 이동이 쓰지 않도록 잠깐만 유효하다.
+let backNavigationMarkedAt = 0;
+const BACK_MARK_TTL_MS = 1500;
+
+export function markAppBackNavigation(): void {
+  backNavigationMarkedAt = Date.now();
+}
+
+/** 방금 앱 뒤로 버튼으로 이동했는지 — 한 번 읽으면 지운다. */
+export function takeAppBackNavigation(): boolean {
+  const marked = Date.now() - backNavigationMarkedAt < BACK_MARK_TTL_MS;
+  backNavigationMarkedAt = 0;
+  return marked;
+}
+
 export interface AppleAuthorization {
   identityToken: string;
   user: string;

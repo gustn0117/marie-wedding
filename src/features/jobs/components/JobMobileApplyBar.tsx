@@ -32,7 +32,7 @@ export default function JobMobileApplyBar({ label, disabled, blockReason }: Prop
   if (blockReason) {
     return (
       <div
-        className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden"
+        className="app-rise fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
       >
         <div
@@ -46,7 +46,11 @@ export default function JobMobileApplyBar({ label, disabled, blockReason }: Prop
   }
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden">
+    // 아래 홈 막대 자리를 비운다(앱·아이폰 사파리). app-rise: 앱에서는 아래에서 올라온다.
+    <div
+      className="app-rise fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white p-3 shadow-lg lg:hidden"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 0.75rem)' }}
+    >
       <a
         href="#apply"
         className={`block w-full text-center btn-primary py-3 ${disabled ? 'pointer-events-none opacity-50' : ''}`}

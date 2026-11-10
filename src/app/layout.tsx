@@ -5,6 +5,7 @@ import { ToastProvider } from "@/shared/components/Toast";
 import PageViewTracker from "@/shared/components/PageViewTracker";
 import LoginModalHost from "@/features/auth/components/LoginModalHost";
 import AppTabBar from "@/shared/components/AppTabBar";
+import AppTouchFeedback from "@/shared/components/AppTouchFeedback";
 import { APP_SHELL_DETECT_SCRIPT } from "@/shared/utils/appShell";
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, DEFAULT_OG_IMAGE } from "@/shared/seo";
 import "./globals.css";
@@ -148,6 +149,8 @@ export default function RootLayout({
           <LoginModalHost />
           {/* iOS 앱 아래 탭 — 앱의 첫 화면들에만 보인다 */}
           <AppTabBar />
+          {/* iOS 앱 누름 반응·진동·화면 이동 움직임 — 브라우저에선 아무것도 하지 않는다 */}
+          <AppTouchFeedback />
         </ToastProvider>
       </body>
     </html>

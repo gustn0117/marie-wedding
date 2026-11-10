@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { appHaptic } from '@/shared/utils/appShell';
 
 type ToastKind = 'info' | 'success' | 'error';
 
@@ -54,9 +55,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const duration = opts?.duration ?? 3500;
     setItems((prev) => [...prev, { id, kind, message, duration }]);
     if (duration > 0) setTimeout(() => remove(id), duration);
+    // 앱: 성공은 '톡톡', 실패는 '드르륵' 진동(브라우저에선 아무것도 안 함)
+    if (kind === 'success') appHaptic('success');
+    else if (kind === 'error') appHaptic('error');
   }, [remove]);
 
   const confirmFn = useCallback((message: string): Promise<boolean> => {
+    appHaptic('warning');
     return new Promise((resolve) => {
       setConfirmState({ message, resolve });
     });
@@ -90,7 +95,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           <div
             key={t.id}
             role="status"
-            className={`pointer-events-auto w-full max-w-sm overflow-hidden rounded border shadow-sm ${
+            className={`app-toast-in pointer-events-auto w-full max-w-sm overflow-hidden rounded border shadow-sm ${
               t.kind === 'success'
                 ? 'border-primary bg-primary text-white'
                 : t.kind === 'error'
@@ -117,8 +122,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       </div>
 
       {confirmState && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div role="dialog" aria-modal="true" className="w-full max-w-sm border border-gray-200 bg-white p-5 shadow-xl">
+        <div className="app-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div role="dialog" aria-modal="true" className="app-alert-in w-full max-w-sm border border-gray-200 bg-white p-5 shadow-xl">
             <p className="text-sm text-gray-900 whitespace-pre-wrap mb-5 leading-relaxed">{confirmState.message}</p>
             <div className="flex justify-end gap-2">
               <button

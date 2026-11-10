@@ -1,15 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { markAppBackNavigation } from '@/shared/utils/appShell';
 
 /**
  * 앱 전용 뒤로 버튼 — 브라우저에는 뒤로 버튼이 있지만 앱 화면에는 없어서 둔다(.app-only: 브라우저에선 숨김).
  * 앱을 바로 이 화면으로 열어 돌아갈 곳이 없으면 홈으로 간다.
+ * 돌아간 화면은 왼쪽에서 들어온다(AppTouchFeedback).
  */
 export default function AppBackButton({ className = '' }: { className?: string }) {
   const router = useRouter();
 
   const goBack = () => {
+    markAppBackNavigation();
     if (window.history.length > 1) router.back();
     else router.push('/');
   };

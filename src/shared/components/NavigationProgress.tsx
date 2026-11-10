@@ -82,9 +82,10 @@ export default function NavigationProgress() {
   if (!visible) return null;
 
   return (
+    // 앱에서는 띄우지 않는다(.app-hide) — 앱은 누른 링크가 눌린 채로 기다렸다가 새 화면이 밀려 들어온다(AppTouchFeedback).
     <div
       aria-hidden
-      className="fixed top-[var(--app-top)] left-0 right-0 z-toast h-[3px] pointer-events-none"
+      className="app-hide fixed top-[var(--app-top)] left-0 right-0 z-toast h-[3px] pointer-events-none"
     >
       <div
         className="h-full bg-primary transition-all duration-300 ease-out"

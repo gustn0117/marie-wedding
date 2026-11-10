@@ -610,6 +610,96 @@
     padding-top: calc(var(--app-top) + 48px);
   }
 
+  /* === 앱 누름·화면 이동 — src/shared/components/AppTouchFeedback.tsx 가 data-press·app-enter-* 를 단다.
+     크기는 transform 대신 scale 속성으로 줄여 요소가 원래 가진 transform(가운데 정렬 등)을 덮지 않는다. */
+  html[data-app] {
+    touch-action: manipulation; /* 두 번 톡 쳐서 확대는 끄고(누름이 바로 반응), 두 손가락 확대는 그대로 */
+  }
+  html[data-app] :is(a[href], button, [role="button"], [role="tab"], label, summary, [data-pressable]) {
+    -webkit-user-select: none;
+    user-select: none; /* 버튼을 꾹 눌러도 글자 선택 돋보기가 뜨지 않게 */
+  }
+  /* 위 규칙이 label 안 입력칸까지 막지 않게(iOS 웹킷은 상위의 user-select:none 이 입력을 막는 일이 있다) */
+  html[data-app] :is(input, textarea, select, [contenteditable="true"]) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  html[data-app] [data-press="down"] {
+    scale: var(--press-scale, 0.96);
+    transition: scale 0.11s cubic-bezier(0.3, 0, 0.5, 1), opacity 0.11s ease-out;
+    will-change: scale;
+  }
+  html[data-app] [data-press="down"][data-press-kind="fade"] {
+    scale: 1;
+    opacity: 0.55;
+  }
+  /* 떼면 살짝 넘쳤다가 제자리로 — 스프링 */
+  html[data-app] [data-press="up"] {
+    scale: 1;
+    transition: scale 0.45s cubic-bezier(0.3, 1.7, 0.5, 1), opacity 0.25s ease-out;
+  }
+  /* 새 화면 들어오기. backwards 라 끝나면 transform 이 남지 않는다(position:fixed 아래 막대가 제자리로). */
+  @keyframes app-enter-push {
+    from { opacity: 0; translate: 28px 0; }
+  }
+  @keyframes app-enter-back {
+    from { opacity: 0; translate: -28px 0; }
+  }
+  @keyframes app-enter-tab {
+    from { opacity: 0.35; }
+  }
+  html[data-app] .app-enter-push {
+    animation: app-enter-push 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  html[data-app] .app-enter-back {
+    animation: app-enter-back 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  html[data-app] .app-enter-tab {
+    animation: app-enter-tab 0.2s ease-out backwards;
+  }
+  /* 아래 탭: 고른 탭 아이콘이 톡 튄다 */
+  @keyframes app-tab-pop {
+    0% { scale: 0.8; }
+    55% { scale: 1.14; }
+    100% { scale: 1; }
+  }
+  html[data-app] .app-tab-pop {
+    animation: app-tab-pop 0.42s cubic-bezier(0.3, 0.9, 0.4, 1) backwards;
+  }
+  /* 아래 고정 막대가 아래에서 올라온다 */
+  @keyframes app-rise {
+    from { translate: 0 100%; }
+  }
+  html[data-app] .app-rise {
+    animation: app-rise 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  /* 알림(토스트)은 아래에서 통 튀어 오르고, 확인 창은 iOS 경고창처럼 살짝 커진 채로 나타난다 */
+  @keyframes app-toast-in {
+    from { opacity: 0; translate: 0 14px; scale: 0.95; }
+  }
+  html[data-app] .app-toast-in {
+    animation: app-toast-in 0.36s cubic-bezier(0.3, 1.4, 0.5, 1) backwards;
+  }
+  @keyframes app-alert-in {
+    from { opacity: 0; scale: 1.08; }
+  }
+  @keyframes app-fade-in {
+    from { opacity: 0; }
+  }
+  html[data-app] .app-alert-in {
+    animation: app-alert-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+  }
+  html[data-app] .app-fade-in {
+    animation: app-fade-in 0.2s ease-out backwards;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    /* 움직임 줄이기: 크기는 그대로 두고 옅어지기만 */
+    html[data-app] [data-press="down"] {
+      scale: 1;
+      opacity: 0.6;
+    }
+  }
+
   .sticky-sidebar {
     @apply lg:sticky lg:self-start lg:overflow-y-auto;
   }

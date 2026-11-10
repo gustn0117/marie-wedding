@@ -50,13 +50,56 @@ extension UIColor {
 /// - shouldOverrideLoad: 지금 웹뷰에서 화면을 옮기기 직전에 Capacitor 가 먼저 묻는 자리. 사이트 밖 웹 주소를
 ///   앱 안 브라우저로 돌린다. nil 을 돌려주면 Capacitor 가 평소대로 처리한다.
 /// - printPage: 웹뷰에서는 window.print() 가 아무 일도 하지 않아, 사이트가 대신 부르는 iOS 인쇄 창(‘PDF로 저장’ 포함).
+/// - haptic: 누름·성공·실패 진동(사이트 src/shared/utils/appShell.ts 의 appHaptic). 시스템 설정에서 진동을 끄면 울리지 않는다.
 @objc(MarieShellPlugin)
 public class MarieShellPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "MarieShellPlugin"
     public let jsName = "MarieShell"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "printPage", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "printPage", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "haptic", returnType: CAPPluginReturnPromise)
     ]
+
+    // 진동 장치를 미리 깨워 두면(prepare) 누른 순간과 진동 사이가 짧아진다. 메인 스레드에서만 만든다.
+    private var impactGenerators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
+    private lazy var selectionGenerator = UISelectionFeedbackGenerator()
+    private lazy var notificationGenerator = UINotificationFeedbackGenerator()
+
+    private func impactGenerator(_ style: UIImpactFeedbackGenerator.FeedbackStyle) -> UIImpactFeedbackGenerator {
+        if let generator = impactGenerators[style] { return generator }
+        let generator = UIImpactFeedbackGenerator(style: style)
+        impactGenerators[style] = generator
+        return generator
+    }
+
+    @objc func haptic(_ call: CAPPluginCall) {
+        let style = call.getString("style") ?? "light"
+        DispatchQueue.main.async {
+            switch style {
+            case "selection":
+                self.selectionGenerator.selectionChanged()
+                self.selectionGenerator.prepare()
+            case "success", "warning", "error":
+                let type: UINotificationFeedbackGenerator.FeedbackType =
+                    style == "success" ? .success : style == "warning" ? .warning : .error
+                self.notificationGenerator.notificationOccurred(type)
+                self.notificationGenerator.prepare()
+            default:
+                let impact: UIImpactFeedbackGenerator.FeedbackStyle
+                switch style {
+                case "medium": impact = .medium
+                case "heavy": impact = .heavy
+                case "soft": impact = .soft
+                case "rigid": impact = .rigid
+                default: impact = .light
+                }
+                let generator = self.impactGenerator(impact)
+                generator.impactOccurred()
+                generator.prepare()
+            }
+            call.resolve()
+        }
+    }
 
     @objc func printPage(_ call: CAPPluginCall) {
         DispatchQueue.main.async {
