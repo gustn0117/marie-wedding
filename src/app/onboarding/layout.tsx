@@ -13,7 +13,8 @@ export default function OnboardingLayout({ children }: { children: ReactNode }) 
   return (
     <>
       <meta name="referrer" content="no-referrer" />
-      <main className="min-h-screen bg-background">{children}</main>
+      {/* 앱에서는 상태 표시줄 자리를 비운다(.app-safe-top) */}
+      <main className="app-safe-top min-h-screen bg-background">{children}</main>
     </>
   );
 }

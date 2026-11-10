@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { loginHref } from '@/shared/utils/loginRedirect';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ROUTES } from '@/shared/constants';
 import ProfileAvatar from '@/shared/components/ProfileAvatar';
 import { formatRelativeTime } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
@@ -13,6 +12,9 @@ import { communityService } from '../services/community-service';
 import type { Comment } from '@/types/database';
 import { toast, toastConfirm } from '@/shared/components/Toast';
 import { createClient } from '@/lib/supabase/client';
+import ReportButton from '@/features/reports/components/ReportButton';
+import BlockUserButton from '@/features/blocks/components/BlockUserButton';
+import { useBlocks } from '@/features/blocks/blockStore';
 
 interface CommentSectionProps {
   postId: string;
@@ -39,6 +41,8 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
   const [adoptedId, setAdoptedId] = useState<string | null>(initialAdopted ?? null);
   const [adoptingId, setAdoptingId] = useState<string | null>(null);
   const isPostAuthor = profile?.id === postAuthorId;
+  // 차단한 사용자의 댓글은 목록에서 뺀다.
+  const { ids: blockedIds } = useBlocks();
 
   const adopt = useCallback(async (commentId: string | null) => {
     setAdoptingId(commentId ?? 'reset');
@@ -96,7 +100,14 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
       createIdRef.current = null;
     } catch (err) {
       console.error(err);
-      toast('댓글 작성에 실패했습니다.', 'error');
+      const message = err instanceof Error ? err.message : '';
+      // 금칙어에 걸린 댓글은 서버가 이유를 알려 준다 — 그대로 보여 주고, 같은 생성 ID 를 다시 쓰지 않는다.
+      if (message.includes('부적절한 표현')) {
+        createIdRef.current = null;
+        toast(message, 'error');
+      } else {
+        toast('댓글 작성에 실패했습니다.', 'error');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -118,8 +129,12 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     }
   };
 
-  // sort: adopted comment first
-  const sortedComments = [...comments].sort((a, b) => {
+  // 차단한 사용자의 댓글은 빼고, 채택된 댓글을 맨 위로
+  const visibleComments = blockedIds.size === 0
+    ? comments
+    : comments.filter((c) => !c.author_id || !blockedIds.has(c.author_id));
+  const hiddenCount = comments.length - visibleComments.length;
+  const sortedComments = [...visibleComments].sort((a, b) => {
     if (a.id === adoptedId) return -1;
     if (b.id === adoptedId) return 1;
     return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
@@ -129,7 +144,10 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
     <section className="bg-white border-y border-gray-200 overflow-hidden">
       <header className="px-6 md:px-8 py-4 border-b border-gray-100 flex items-center gap-2">
         <h3 className="text-base font-bold text-gray-900">댓글</h3>
-        <span className="text-sm font-bold text-primary">{comments.length}</span>
+        <span className="text-sm font-bold text-primary">{visibleComments.length}</span>
+        {hiddenCount > 0 && (
+          <span className="text-xs text-gray-400">· 차단한 사용자의 댓글 {hiddenCount}개 숨김</span>
+        )}
       </header>
 
       {/* Input (상단으로 이동) */}
@@ -212,7 +230,7 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
               다시 시도
             </button>
           </div>
-        ) : comments.length === 0 ? (
+        ) : visibleComments.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-sm text-gray-400">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</p>
           </div>
@@ -259,6 +277,17 @@ export default function CommentSection({ postId, postAuthorId, adoptedCommentId:
                           >
                             채택 해제
                           </button>
+                        )}
+                        {profile && comment.author_id && profile.id !== comment.author_id && (
+                          <>
+                            <ReportButton targetType="comment" targetId={comment.id} variant="text" />
+                            <BlockUserButton
+                              profileId={comment.author_id}
+                              name={comment.author?.company_name || comment.author?.contact_name || ''}
+                              profileImage={comment.author?.profile_image}
+                              variant="text"
+                            />
+                          </>
                         )}
                         {profile?.id === comment.author_id && (
                           <button

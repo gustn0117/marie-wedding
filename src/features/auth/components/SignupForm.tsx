@@ -7,6 +7,7 @@ import { apiFetch } from '@/shared/utils/apiFetch';
 import { validateEmail } from '@/shared/utils/validation';
 import { ROUTES, BUSINESS_TYPES, REGIONS } from '@/shared/constants';
 import SocialLoginButtons from '@/features/auth/components/SocialLoginButtons';
+import TermsConsent from '@/features/auth/components/TermsConsent';
 import type { SignupFormData } from '@/features/auth/types';
 
 const STEPS = {
@@ -37,6 +38,8 @@ export default function SignupForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(STEPS.SELECT_TYPE);
+  // [필수] 이용약관·개인정보처리방침 동의 — 마지막 단계에서 받는다
+  const [termsAgreed, setTermsAgreed] = useState(false);
 
   // 인증 방법: 현재 이메일만 사용(전화번호 인증 미도입). 휴대폰 OTP 코드는 유지하되 폼에선 숨김.
   const [verifyMethod] = useState<'email' | 'phone'>('email');
@@ -189,6 +192,7 @@ export default function SignupForm() {
     setError(null);
     if (!formData.accountType) { setError('회원 유형을 선택해주세요.'); setStep(STEPS.SELECT_TYPE); return; }
     if (!validateProfile()) return;
+    if (!termsAgreed) { setError('이용약관과 개인정보처리방침에 동의해주세요.'); return; }
 
     setLoading(true);
     try {
@@ -200,6 +204,7 @@ export default function SignupForm() {
         companyName: formData.companyName?.trim() || undefined,
         phone: formData.phone.replace(/[^0-9]/g, '') || undefined,
         verifyMethod,
+        termsAgreed,
       });
       // router.push는 client navigation이라 미들웨어를 통과하지 않아 marie_profile cookie가 set되지 않음.
       // 가입 직후엔 full reload로 헤더(profile/이름/로그아웃 메뉴)가 즉시 반영되도록 한다.
@@ -598,6 +603,8 @@ export default function SignupForm() {
                   <p className="text-xs text-gray-400 mt-2 text-center">지역을 1개 이상 선택해주세요</p>
                 )}
               </div>
+
+              <TermsConsent checked={termsAgreed} onChange={setTermsAgreed} />
 
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(STEPS.ACCOUNT)} className="btn-outline flex-1">이전</button>

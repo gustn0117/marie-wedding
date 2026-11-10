@@ -10,3 +10,5 @@ yarn-error.log*
 .DS_Store
 coverage
 *.tsbuildinfo
+# iOS 앱 껍데기(Capacitor·Xcode) — 사이트 이미지에 필요 없다
+mobile

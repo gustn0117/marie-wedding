@@ -93,6 +93,7 @@ export const ROUTES = {
   MYPAGE_RESUMES: '/mypage/resumes',
   MYPAGE_PASSWORD: '/mypage/password',
   MYPAGE_NOTIFICATIONS: '/mypage/notifications',
+  MYPAGE_BLOCKS: '/mypage/blocks',
   ADMIN: '/admin',
   ADMIN_USERS: '/admin/users',
   ADMIN_PROFILES_EDIT: (id: string) => `/admin/profiles/${id}/edit`,

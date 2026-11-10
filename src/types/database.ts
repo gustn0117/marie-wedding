@@ -6,7 +6,7 @@ export type ReviewTagCategory = 'positive' | 'attention';
 export type ReviewDirection = 'hiring_to_applicant' | 'applicant_to_hiring';
 export type JobStatus = 'open' | 'urgent' | 'closed' | 'filled' | 'hidden';
 
-export type SignupProvider = 'email' | 'kakao' | 'google' | 'naver';
+export type SignupProvider = 'email' | 'kakao' | 'google' | 'naver' | 'apple';
 
 export interface Profile {
   id: string;

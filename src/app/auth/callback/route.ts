@@ -5,14 +5,13 @@ import { SUPABASE_AUTH_COOKIE_NAME } from '@/lib/supabase/authCookie';
 import { cookies } from 'next/headers';
 import { createServiceClient } from '@/lib/supabase/service';
 import { resolveExternalOrigin } from '@/lib/proxy';
+import { completeSocialLogin, sanitizeReturnTo } from '@/lib/auth/completeSocialLogin';
 
 export const runtime = 'nodejs';
 
 /**
- * Supabase native OAuth (Kakao/Google/Apple) callback.
- *
- * 신규 사용자: profile row를 onboarded_at=null 상태로 생성하고 /onboarding으로 강제.
- * 기존 사용자: onboarded_at 여부에 따라 /onboarding 또는 next 경로로.
+ * Supabase native OAuth(카카오) callback. 세션을 만든 뒤의 처리(밴 확인·탈퇴 계정 초기화·
+ * 신규 프로필 생성·온보딩 분기)는 애플 앱 로그인과 같이 쓰는 completeSocialLogin 에 있다.
  *
  * 동일 이메일 충돌은 Supabase가 자체 처리 (exchangeCodeForSession 에러 → /login?error=conflict).
  */
@@ -76,120 +75,15 @@ export async function GET(request: Request) {
   }
 
   const serviceClient = createServiceClient(deadline);
-
-  // Header(SSR)가 redirect 직후 첫 페이지에서 즉시 사용자를 인지하도록
-  // marie_profile cookie를 redirect 응답에 함께 set한다.
-  // (이전: 미들웨어 의존 → race로 첫 SSR에 cookie 미적용 → '로그인' 버튼이 잠시 노출)
-  const setProfileCookieFromUserId = async (userId: string) => {
-    const { data: p } = await serviceClient
-      .from('profiles')
-      .select('id, contact_name, company_name, account_type, role, region, profile_image, is_directory_listed')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (!p) return;
-    cookieStore.set('marie_profile', JSON.stringify(p), {
-      path: '/',
-      httpOnly: false,
-      secure: true,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-    });
-  };
-
-  const { data: existingProfile } = await serviceClient
-    .from('profiles')
-    .select('id, onboarded_at, deleted_at, banned_at')
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  // 관리자 삭제(GoTrue ban)면 재로그인 거부 — deleted_at 여부와 무관하게 '무조건' 최우선 확인
-  // (purge 실패로 deleted_at 이 안 남아도 ban·banned_at 은 남으므로 여기서 잡는다).
-  // exchangeCodeForSession 이 이미 심은 세션 쿠키를 정리한다. 밴 확인 자체가 실패해도 안전측(거부).
-  if (existingProfile) {
-    const { data: au, error: auErr } = await serviceClient.auth.admin.getUserById(user.id);
-    const bu = (au?.user as { banned_until?: string } | undefined)?.banned_until;
-    const banned = !!bu && new Date(bu).getTime() > Date.now();
-    if (auErr || !au?.user || banned || existingProfile.banned_at) {
-      const expire = { httpOnly: true, secure: true, sameSite: 'lax' as const, path: '/', maxAge: 0 };
-      for (const c of cookieStore.getAll()) {
-        if (c.name.startsWith('sb-')) cookieStore.set(c.name, '', expire);
-      }
-      cookieStore.set('marie_profile', '', { ...expire, httpOnly: false });
-      return NextResponse.redirect(`${origin}/login?error=account_removed`);
-    }
+  const outcome = await completeSocialLogin({
+    user,
+    cookieStore,
+    serviceClient,
+    next,
+    logTag: 'auth/callback',
+  });
+  if (!outcome.ok) {
+    return NextResponse.redirect(`${origin}/login?error=${outcome.error}`);
   }
-
-  // 탈퇴한 프로필로 재로그인 시도 → 완전 초기화 후 새로 온보딩.
-  // reactivate_profile_clean RPC 가 bio/phone/gallery/verification_* 등 모든
-  // 사용자 컬럼을 NULL/default 로 리셋. (jobs/posts/comments 등 소유 콘텐츠는
-  // 이미 purge cascade 로 soft-delete 된 상태 — 복구하지 않음.)
-  if (existingProfile?.deleted_at) {
-    const { error: rpcErr } = await serviceClient.rpc('reactivate_profile_clean', {
-      p_profile_id: existingProfile.id,
-    });
-    if (rpcErr) {
-      // 부분 리셋(PII 잔존)으로 되살리지 않는다 — 초기화 실패 시 거부.
-      console.error('[auth/callback] reactivate_profile_clean failed:', rpcErr);
-      return NextResponse.redirect(`${origin}/login?error=reactivate_failed`);
-    }
-    await setProfileCookieFromUserId(user.id);
-    return NextResponse.redirect(
-      `${origin}/onboarding?next=${encodeURIComponent(next)}`
-    );
-  }
-
-  if (!existingProfile) {
-    const name =
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      user.user_metadata?.preferred_username ||
-      user.email?.split('@')[0] ||
-      '사용자';
-
-    const provider =
-      (user.app_metadata?.provider as string | undefined) ||
-      user.identities?.[0]?.provider ||
-      'email';
-
-    // /signup STEP 0에서 선택한 유형이 cookie로 전달됐으면 preset
-    const presetRaw = cookieStore.get('signup_account_type')?.value;
-    const presetAccountType =
-      presetRaw === 'business' || presetRaw === 'individual' ? presetRaw : null;
-    if (presetRaw) {
-      // 1회용 cookie 즉시 삭제
-      cookieStore.set('signup_account_type', '', { path: '/', maxAge: 0 });
-    }
-
-    await serviceClient.from('profiles').insert({
-      user_id: user.id,
-      contact_name: name,
-      account_type: presetAccountType,
-      region: null,
-      signup_provider: provider,
-      onboarded_at: null,
-    });
-
-    await setProfileCookieFromUserId(user.id);
-    return NextResponse.redirect(
-      `${origin}/onboarding?next=${encodeURIComponent(next)}`
-    );
-  }
-
-  await setProfileCookieFromUserId(user.id);
-
-  if (!existingProfile.onboarded_at) {
-    return NextResponse.redirect(
-      `${origin}/onboarding?next=${encodeURIComponent(next)}`
-    );
-  }
-
-  return NextResponse.redirect(`${origin}${next}`);
-}
-
-function sanitizeReturnTo(value: string | null): string | null {
-  if (!value) return null;
-  if (!value.startsWith('/')) return null;
-  if (value.startsWith('//')) return null;
-  if (value.includes('://')) return null;
-  return value;
+  return NextResponse.redirect(`${origin}${outcome.path}`);
 }

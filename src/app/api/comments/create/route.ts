@@ -113,5 +113,9 @@ export async function POST(request: Request) {
       { status: requestSignal.aborted ? 504 : 500 },
     );
   }
+  // 금칙어(moderation_keywords)에 걸리면 DB 트리거가 바로 숨긴다(deleted_at) — 조용히 사라지지 않게 알린다.
+  if (data?.deleted_at) {
+    return NextResponse.json({ error: '부적절한 표현이 들어 있어 등록되지 않았습니다. 표현을 바꿔 다시 작성해 주세요.', code: 'moderated' }, { status: 422 });
+  }
   return NextResponse.json({ data });
 }

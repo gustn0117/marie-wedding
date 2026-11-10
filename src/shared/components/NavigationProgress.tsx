@@ -84,7 +84,7 @@ export default function NavigationProgress() {
   return (
     <div
       aria-hidden
-      className="fixed top-0 left-0 right-0 z-toast h-[3px] pointer-events-none"
+      className="fixed top-[var(--app-top)] left-0 right-0 z-toast h-[3px] pointer-events-none"
     >
       <div
         className="h-full bg-primary transition-all duration-300 ease-out"

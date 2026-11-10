@@ -47,3 +47,16 @@ next-env.d.ts
 nginx/upstream.inc
 # IndexNow 마지막 제출 커밋(webhook-deploy.sh 가 서버에서 쓴다)
 .indexnow-last
+
+# iOS 앱(mobile/) — 의존성·빌드 산출물·서명 키는 올리지 않는다
+/mobile/node_modules/
+/mobile/keys/
+/mobile/build/
+/mobile/ios/App/App/public/
+/mobile/ios/App/App/capacitor.config.json
+/mobile/ios/App/App/config.xml
+/mobile/ios/DerivedData/
+*.p8
+*.mobileprovision
+*.ipa
+*.xcarchive

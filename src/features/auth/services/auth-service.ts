@@ -11,6 +11,8 @@ export const authService = {
     companyName?: string;
     phone?: string;
     verifyMethod?: 'email' | 'phone';
+    /** [필수] 이용약관·개인정보처리방침 동의 */
+    termsAgreed?: boolean;
   }) {
     // 가입 API와 직후 로그인을 하나의 취소 가능한 deadline 안에서 끝낸다.
     // UI만 먼저 timeout되고 백그라운드 가입이 계속되는 중복 가입 상태를 막는다.
@@ -29,6 +31,7 @@ export const authService = {
           companyName: metadata.companyName,
           phone: metadata.phone,
           verifyMethod: metadata.verifyMethod,
+          termsAgreed: metadata.termsAgreed === true,
         }),
         signal,
       }, 22_000);

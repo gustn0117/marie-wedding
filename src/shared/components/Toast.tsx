@@ -84,7 +84,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 px-3 pb-4 sm:items-end sm:right-4 sm:pb-6">
+      {/* 앱 아래 탭이 보이면 그 위로(--app-bottom, 브라우저에선 0) */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 px-3 pb-[calc(var(--app-bottom)+1rem)] sm:items-end sm:right-4 sm:pb-[calc(var(--app-bottom)+1.5rem)]">
         {items.map((t) => (
           <div
             key={t.id}

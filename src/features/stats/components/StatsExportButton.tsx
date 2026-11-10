@@ -45,11 +45,12 @@ export default function StatsExportButton({ stats, regionLabel, bizLabel }: { st
     URL.revokeObjectURL(url);
   }
 
+  // 앱 웹뷰는 파일 내려받기(blob)를 받지 못해 앱에서는 숨긴다(.app-hide).
   return (
     <button
       type="button"
       onClick={download}
-      className="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary"
+      className="app-hide inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:border-primary hover:text-primary"
     >
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>CSV 다운로드
     </button>

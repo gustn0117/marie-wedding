@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { setAppStatusBarText } from '@/shared/utils/appShell';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 
 interface JobImageGalleryProps {
@@ -13,6 +14,14 @@ interface JobImageGalleryProps {
  */
 export default function JobImageGallery({ images }: JobImageGalleryProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const viewerOpen = openIndex !== null;
+
+  // 앱: 검은 화면 위라 열려 있는 동안 상태 표시줄 글자를 흰색으로(브라우저에선 아무 일 없음)
+  useEffect(() => {
+    if (!viewerOpen) return;
+    setAppStatusBarText('light');
+    return () => setAppStatusBarText('dark');
+  }, [viewerOpen]);
   const urls = images.map((p) => resolveStorageUrl(p, 'job-images')).filter((u): u is string => !!u);
   if (urls.length === 0) return null;
 
@@ -65,7 +74,7 @@ export default function JobImageGallery({ images }: JobImageGalleryProps) {
             type="button"
             onClick={close}
             aria-label="닫기"
-            className="absolute right-4 top-4 rounded-full bg-white/15 px-3 py-1.5 text-sm font-bold text-white hover:bg-white/25"
+            className="absolute right-4 top-[calc(var(--app-top)+1rem)] rounded-full bg-white/15 px-3 py-1.5 text-sm font-bold text-white hover:bg-white/25"
           >
             닫기
           </button>

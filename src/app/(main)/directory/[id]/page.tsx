@@ -17,6 +17,8 @@ import RichTextView from '@/shared/components/RichTextView';
 import type { Review, ReviewTag } from '@/types/database';
 import ReviewList, { TagFrequency } from '@/features/reviews/components/ReviewList';
 import StartMessageButton from '@/features/messages/components/StartMessageButton';
+import ReportButton from '@/features/reports/components/ReportButton';
+import BlockUserButton from '@/features/blocks/components/BlockUserButton';
 import { resolveStorageUrl } from '@/shared/utils/storageUrl';
 import GalleryLightbox from '@/shared/components/GalleryLightbox';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
@@ -278,6 +280,12 @@ export default async function CompanyDetailPage({ params }: PageProps) {
               </a>
             )}
             {!isOwner && !isProxyListing && <StartMessageButton targetProfileId={profile.id} variant="secondary" />}
+            {!isOwner && !isProxyListing && (
+              <>
+                <ReportButton targetType="profile" targetId={profile.id} />
+                <BlockUserButton profileId={profile.id} name={displayName} profileImage={profile.profile_image} />
+              </>
+            )}
           </div>
 
         {/* 주인이 없는 등재 — 쪽지를 받을 사람이 없으므로 그 사실을 밝힌다. */}

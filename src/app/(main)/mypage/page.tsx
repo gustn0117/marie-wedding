@@ -335,6 +335,18 @@ export default async function MyPage() {
           )}
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-700">차단한 사용자</p>
+              <p className="mt-0.5 text-xs text-gray-500">차단한 사용자를 확인하고 차단을 해제할 수 있습니다.</p>
+            </div>
+            <Link
+              href={ROUTES.MYPAGE_BLOCKS}
+              className="shrink-0 inline-flex items-center justify-center h-9 px-3 rounded-lg border border-gray-200 bg-white text-[12.5px] font-semibold text-gray-600 hover:border-primary hover:text-primary transition-colors"
+            >
+              관리
+            </Link>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-sm font-semibold text-gray-700">회원 탈퇴</p>
               <p className="mt-0.5 text-xs text-gray-500">계정과 작성한 공고·게시글이 모두 비공개 처리됩니다.</p>
             </div>

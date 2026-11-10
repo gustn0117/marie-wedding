@@ -12,6 +12,8 @@ import SiteMenuDrawer, { SITE_MENU_DRAWER_ID } from './SiteMenuDrawer';
 import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { loginHref } from '@/shared/utils/loginRedirect';
+import { isAppTabRoot } from '@/shared/utils/appShell';
+import AppBackButton from './AppBackButton';
 
 interface HeaderClientProps {
   initialProfile: AuthProfile | null;
@@ -80,8 +82,12 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const initial = displayName.charAt(0) || '?';
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
-      <div className="shell-wide h-[var(--header-h)] flex items-center gap-3 lg:gap-6">
+    // 앱에서는 상태 표시줄 자리(--app-top)까지 덮는다 — 그 아래 한 줄이 실제 머리글(--header-row-h).
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 pt-[var(--app-top)]">
+      <div className="shell-wide h-[var(--header-row-h)] flex items-center gap-3 lg:gap-6">
+        {/* 앱의 탭 화면이 아닌 곳(상세·글쓰기 등)에서는 뒤로 버튼 — 브라우저에는 보이지 않는다 */}
+        {!isAppTabRoot(pathname) && <AppBackButton className="-ml-2 -mr-2" />}
+
         {/* 좌측: 로고 */}
         <Link href={ROUTES.HOME} aria-label="Marié 홈" className="flex shrink-0 flex-col justify-center text-ink">
           <span className="text-[24px] lg:text-[26px] font-bold leading-none tracking-tight">Marié</span>

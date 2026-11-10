@@ -14,7 +14,8 @@ const GUIDE_LINKS = LANDINGS.filter((l) => l.featured).map((l) => ({ href: `/gui
 
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-gray-200 bg-white text-gray-600">
+    // 앱(.app-hide)에서는 숨긴다 — 같은 링크(고객센터·약관·개인정보처리방침)는 전체 메뉴에 있다.
+    <footer className="app-hide mt-auto border-t border-gray-200 bg-white text-gray-600">
       <div className="max-w-[1440px] mx-auto px-3 sm:px-5 lg:px-6 xl:px-8 py-6">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 border-b border-gray-100 pb-4 text-sm font-semibold text-gray-700">
           {SERVICE_LINKS.map((link) => (

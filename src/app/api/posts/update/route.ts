@@ -99,6 +99,17 @@ export async function POST(request: Request) {
     );
   }
 
+  // 고친 내용이 금칙어에 걸리면 DB 트리거가 글을 숨긴다(deleted_at) — 알린다.
+  const { data: saved } = await service
+    .from('posts')
+    .select('deleted_at')
+    .eq('id', id)
+    .abortSignal(requestSignal)
+    .maybeSingle();
+  if (saved?.deleted_at) {
+    return NextResponse.json({ error: '부적절한 표현이 들어 있어 글이 숨겨졌습니다. 고객센터로 문의해 주세요.', code: 'moderated' }, { status: 422 });
+  }
+
   notifyIndexNow(`/community/${id}`);
   return NextResponse.json({ success: true, post: { id } });
 }

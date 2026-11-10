@@ -18,9 +18,11 @@ const REASONS = [
 interface ReportButtonProps {
   targetType: ReportTargetType;
   targetId: string;
+  /** 'button' = 테두리 버튼(기본), 'text' = 댓글 줄·쪽지 머리처럼 좁은 곳의 작은 글자 버튼 */
+  variant?: 'button' | 'text';
 }
 
-export default function ReportButton({ targetType, targetId }: ReportButtonProps) {
+export default function ReportButton({ targetType, targetId, variant = 'button' }: ReportButtonProps) {
   const { profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState<string>(REASONS[0]);
@@ -68,16 +70,26 @@ export default function ReportButton({ targetType, targetId }: ReportButtonProps
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-500 hover:border-red-200 hover:bg-state-urgent-bg hover:text-state-urgent transition-colors"
-      >
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM3.4 19.5h17.2c1.54 0 2.5-1.667 1.73-3L13.73 2.25c-.77-1.333-2.69-1.333-3.46 0L1.67 16.5c-.77 1.333.192 3 1.73 3z" />
-        </svg>
-        신고
-      </button>
+      {variant === 'text' ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-xs text-gray-400 transition-colors hover:text-state-urgent"
+        >
+          신고
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-500 hover:border-red-200 hover:bg-state-urgent-bg hover:text-state-urgent transition-colors"
+        >
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008zM3.4 19.5h17.2c1.54 0 2.5-1.667 1.73-3L13.73 2.25c-.77-1.333-2.69-1.333-3.46 0L1.67 16.5c-.77 1.333.192 3 1.73 3z" />
+          </svg>
+          신고
+        </button>
+      )}
 
       {open && (
         <div

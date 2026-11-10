@@ -106,6 +106,8 @@ export default function PostForm({ initialData, postId, profileId, onSubmitSucce
       }
     } catch (err) {
       console.error('[PostForm] submit failed:', err);
+      // 금칙어에 걸린 글은 이미 숨김 상태로 저장됐다 — 고쳐서 다시 올리면 새 글이 되도록 생성 ID 를 버린다.
+      if (err instanceof Error && err.message.includes('부적절한 표현')) createIdRef.current = null;
       const base = isEdit ? '수정에 실패했습니다.' : '게시글 작성에 실패했습니다.';
       setError(friendlyError(err, base));
       window.scrollTo({ top: 0, behavior: 'smooth' });

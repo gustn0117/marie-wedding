@@ -5,6 +5,9 @@ import { createServiceClient } from '@/lib/supabase/service';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// 어느 한쪽이 상대를 차단했으면 RPC 가 'blocked' 로 막는다(누가 차단했는지는 알리지 않는다).
+const BLOCKED_MESSAGE = '쪽지를 주고받을 수 없는 사용자입니다.';
+
 /**
  * 대화 시작(찾기/생성) — start_conversation RPC 를 서버(쿠키 세션)로 호출.
  * 클라이언트 직접 RPC 는 세션 토큰 준비 지연/누락 시 auth.uid() 가 NULL 이 되어
@@ -33,8 +36,10 @@ export async function POST(req: Request) {
         ? '로그인이 필요합니다.'
         : error.message.includes('cannot_message_self')
           ? '본인에게는 쪽지를 보낼 수 없습니다.'
-          : '대화 시작에 실패했습니다.';
-      return NextResponse.json({ error: msg }, { status: 400 });
+          : error.message.includes('blocked')
+            ? BLOCKED_MESSAGE
+            : '대화 시작에 실패했습니다.';
+      return NextResponse.json({ error: msg, ...(error.message.includes('blocked') ? { code: 'blocked' } : {}) }, { status: error.message.includes('blocked') ? 403 : 400 });
     }
     return NextResponse.json({ data });
   } catch (err) {

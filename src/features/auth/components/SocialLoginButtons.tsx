@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { authService } from '@/features/auth/services/auth-service';
+import { authorizeWithApple, canSignInWithApple } from '@/shared/utils/appShell';
 
 interface Props {
   /** 가입 화면이면 'signup', 로그인 화면이면 'login'. 카피만 다름. */
@@ -19,8 +20,10 @@ function safeNext(value: string | null): string {
 }
 
 /**
- * 2개 provider 소셜 로그인 버튼 (Naver / Kakao).
+ * 소셜 로그인 버튼 (Apple / Naver / Kakao).
  *
+ * - Apple: iOS 앱에서만 보인다(.app-only). 앱의 네이티브 애플 로그인 창 → /api/auth/apple 이 세션으로 바꾼다.
+ *   카카오·네이버를 쓰는 앱은 앱스토어 심사 기준(4.8)상 애플 로그인을 같은 크기 이상으로 함께 보여야 해 맨 위에 둔다.
  * - Kakao: Supabase native (signInWithOAuth)
  * - Naver: 자체 라우트로 redirect (/auth/naver/start)
  *
@@ -57,8 +60,60 @@ function SocialLoginButtonsInner({ mode = 'login', onError, next: nextProp }: Pr
     }
   };
 
+  const handleApple = async () => {
+    if (!canSignInWithApple()) {
+      onError?.('Apple 로그인을 쓰려면 앱을 최신 버전으로 업데이트해 주세요.');
+      return;
+    }
+    setLoading('apple');
+    try {
+      const nonce = randomNonce();
+      const credential = await authorizeWithApple(nonce);
+      const res = await fetch('/api/auth/apple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          identityToken: credential.identityToken,
+          nonce,
+          givenName: credential.givenName ?? null,
+          familyName: credential.familyName ?? null,
+          next,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { redirect?: string; error?: string };
+      if (!res.ok || !data.redirect) {
+        onError?.(
+          data.error === 'account_removed'
+            ? '이용할 수 없는 계정이에요. 고객센터로 문의해 주세요.'
+            : 'Apple 로그인에 실패했어요. 잠시 후 다시 시도해주세요.',
+        );
+        setLoading(null);
+        return;
+      }
+      // 서버가 세션 쿠키를 심었다 — 새로 읽어 머리글 등 서버 화면이 로그인 상태로 그려지게 한다.
+      window.location.href = data.redirect;
+    } catch (e) {
+      setLoading(null);
+      // 사용자가 애플 창을 닫은 것은 오류가 아니다.
+      if ((e as { code?: string } | null)?.code === 'CANCELED') return;
+      onError?.('Apple 로그인에 실패했어요. 잠시 후 다시 시도해주세요.');
+    }
+  };
+
   return (
     <div className="space-y-2">
+      <button
+        type="button"
+        onClick={handleApple}
+        disabled={!!loading}
+        className={APPLE_BUTTON_CLASS}
+        style={APPLE_BUTTON_FONT}
+      >
+        <AppleIcon />
+        <span>{loading === 'apple' ? 'Apple 연결 중…' : mode === 'signup' ? 'Apple로 계속하기' : 'Apple로 로그인'}</span>
+      </button>
+
       <a
         href={`/auth/naver/start?next=${encodeURIComponent(next)}`}
         className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#03C75A] text-white text-sm font-bold hover:opacity-90 transition-opacity"
@@ -86,6 +141,10 @@ function SocialLoginButtonsFallback({ mode = 'login' }: Pick<Props, 'mode'>) {
   const verb = mode === 'signup' ? '시작하기' : '로그인';
   return (
     <div className="space-y-2" aria-hidden>
+      <div className={`${APPLE_BUTTON_CLASS} opacity-70`} style={APPLE_BUTTON_FONT}>
+        <AppleIcon />
+        <span>{mode === 'signup' ? 'Apple로 계속하기' : 'Apple로 로그인'}</span>
+      </div>
       <div className="flex items-center justify-center gap-2 h-11 rounded-lg bg-[#03C75A] text-white text-sm font-bold opacity-70">
         <NaverIcon />
         <span>네이버로 {verb}</span>
@@ -103,6 +162,26 @@ export default function SocialLoginButtons(props: Props) {
     <Suspense fallback={<SocialLoginButtonsFallback mode={props.mode} />}>
       <SocialLoginButtonsInner {...props} />
     </Suspense>
+  );
+}
+
+// 애플 로그인 버튼 — 애플 안내(검은 바탕·흰 로고·시스템 글꼴)를 따른다. 앱에서만 보인다.
+const APPLE_BUTTON_CLASS =
+  'app-only w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-black text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50';
+const APPLE_BUTTON_FONT = { fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' } as const;
+
+/** 애플 로그인에 쓰는 일회용 임의 문자열(32바이트, 16진수) */
+function randomNonce(): string {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+function AppleIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden>
+      <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+    </svg>
   );
 }
 

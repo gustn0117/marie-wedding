@@ -9,13 +9,13 @@ import { withTimeout } from '@/shared/utils/withTimeout';
 import type { Profile } from '@/types/database';
 import type { User } from '@supabase/supabase-js';
 
-/** 소셜(카카오·네이버·구글) 로그인 계정인지 판별 — 비밀번호가 없어 변경 불가.
+/** 소셜(카카오·네이버·구글·애플) 로그인 계정인지 판별 — 비밀번호가 없어 변경 불가.
  *  1순위: profile.signup_provider (미들웨어가 쿠키에 넣어줘 네트워크 없이 즉시 사용).
  *  2순위(구계정 등 signup_provider 누락 시): 세션 user 의 provider 메타데이터.
  *  둘 다 애매하면 이메일 계정으로 간주(변경 허용). */
 function isSocialAccount(profile: Profile | null, user: User | null): boolean {
   const sp = profile?.signup_provider;
-  if (sp === 'kakao' || sp === 'google' || sp === 'naver') return true;
+  if (sp === 'kakao' || sp === 'google' || sp === 'naver' || sp === 'apple') return true;
   if (sp === 'email') return false;
 
   if (user) {
@@ -23,7 +23,7 @@ function isSocialAccount(profile: Profile | null, user: User | null): boolean {
     const am = (user.app_metadata ?? {}) as Record<string, unknown>;
     if (um.provider === 'naver') return true;
     const p = am.provider as string | undefined;
-    if (p === 'kakao' || p === 'google' || p === 'naver') return true;
+    if (p === 'kakao' || p === 'google' || p === 'naver' || p === 'apple') return true;
     const providers = (am.providers as string[] | undefined) ?? [];
     if (providers.length > 0 && !providers.includes('email')) return true;
   }

@@ -14,7 +14,7 @@ const VALID_ACCOUNT_TYPES: AccountType[] = ACCOUNT_TYPES.map((t) => t.value);
 
 export async function POST(request: Request) {
   const requestSignal = AbortSignal.any([request.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]);
-  let body: { accountType?: string; name?: string; phone?: string };
+  let body: { accountType?: string; name?: string; phone?: string; agreeTerms?: boolean };
   try {
     body = await request.json();
   } catch {
@@ -31,8 +31,13 @@ export async function POST(request: Request) {
   if (name.length < 2 || name.length > 40) {
     return NextResponse.json({ error: '이름 또는 회사명을 2자 이상 입력해주세요.' }, { status: 400 });
   }
-  if (!/^010\d{7,8}$/.test(phone)) {
+  // 휴대폰은 앱에서는 선택(지원·공고 등록 때 본인 인증을 따로 거친다). 적었으면 형식은 맞아야 한다.
+  if (phone && !/^010\d{7,8}$/.test(phone)) {
     return NextResponse.json({ error: '휴대폰 번호 형식을 확인해주세요.' }, { status: 400 });
+  }
+  // [필수] 이용약관(부적절한 콘텐츠 무관용 조항 포함)·개인정보처리방침 동의
+  if (body.agreeTerms !== true) {
+    return NextResponse.json({ error: '이용약관과 개인정보처리방침에 동의해주세요.' }, { status: 400 });
   }
 
   const cookieStore = await cookies();
@@ -86,14 +91,17 @@ export async function POST(request: Request) {
 
   const updates: Record<string, unknown> = {
     account_type: accountType,
-    phone,
+    onboarded_at: new Date().toISOString(),
+    terms_agreed_at: new Date().toISOString(),
+  };
+  if (phone) {
+    updates.phone = phone;
     // 온보딩의 전화번호는 OTP 인증을 거치지 않는다. service_role UPDATE 라 DB 트리거가
     // 인증상태를 대신 해제해주지 않으므로, 여기서 명시적으로 미인증으로 세팅해
     // 미인증 번호에 '인증 완료' 표시가 남는 것을 막는다(directory/update 와 동일 방침).
-    phone_verified: false,
-    phone_verified_at: null,
-    onboarded_at: new Date().toISOString(),
-  };
+    updates.phone_verified = false;
+    updates.phone_verified_at = null;
+  }
   if (accountType === 'business') {
     updates.company_name = name;
     updates.contact_name = name;

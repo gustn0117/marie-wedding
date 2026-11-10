@@ -26,6 +26,7 @@ import {
   type ResumeRecord,
 } from '@/features/resumes/types';
 import { BUSINESS_TYPES, REGIONS, EMPLOYMENT_TYPES } from '@/shared/constants';
+import { printPage } from '@/shared/utils/appShell';
 
 // 희망 조건 빠른 선택용 프리셋(도메인 상수 라벨). 공고의 업종/지역/고용형태와 값이 일치해 매칭에 유리.
 const DESIRED_ROLE_PRESETS = BUSINESS_TYPES.map((t) => t.label);
@@ -457,7 +458,7 @@ export default function ResumeManager({ initialResumes, userId }: ResumeManagerP
                 <ResumePreview resume={previewData} />
                 <div className="flex flex-wrap justify-end gap-2">
                   {nextHref && !dirty && submissionReady && <Link href={nextHref} className="btn-primary">지원 화면으로 돌아가기</Link>}
-                  <button type="button" onClick={() => window.print()} className="btn-outline">인쇄 / PDF 저장</button>
+                  <button type="button" onClick={printPage} className="btn-outline">인쇄 / PDF 저장</button>
                 </div>
               </fieldset>
             ) : (

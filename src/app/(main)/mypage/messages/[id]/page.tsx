@@ -76,6 +76,7 @@ export default async function MessageDetailPage({ params }: Props) {
             conversationId={id}
             myProfileId={profileId}
             partnerName={partnerName}
+            partnerId={partner && !partner.deleted_at ? partnerId : null}
             initialMessages={(msgs ?? []) as Message[]}
           />
         </section>

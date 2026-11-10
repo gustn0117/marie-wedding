@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AccountType } from '@/shared/constants';
 import { apiFetch } from '@/shared/utils/apiFetch';
+import { isAppShell } from '@/shared/utils/appShell';
+import TermsConsent from '@/features/auth/components/TermsConsent';
 
 interface Props {
   initialName: string;
@@ -15,7 +17,9 @@ interface Props {
  * 3필드 미니멀 온보딩.
  *  1. 계정 유형 카드 2개 (역할 중심 라벨)
  *  2. 이름 / 회사명
- *  3. 휴대폰 (형식 검증만 — SMS 인증은 just-in-time)
+ *  3. 휴대폰 (형식 검증만 — SMS 인증은 just-in-time). iOS 앱에서는 선택 — 가입에 꼭 필요하지 않은
+ *     개인정보를 요구하지 않는다는 앱스토어 심사 기준(5.1.1)에 맞춘다. 지원·공고 등록 때 본인 인증을 따로 거친다.
+ *  + [필수] 이용약관·개인정보처리방침 동의
  *
  * 지역·업종·사업자번호·SMS 인증은 모두 just-in-time 트리거로 미룬다.
  */
@@ -25,12 +29,17 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
   const [accountType, setAccountType] = useState<AccountType | ''>('');
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState('');
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [phoneOptional, setPhoneOptional] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, startSubmit] = useTransition();
 
-  const phoneOk = /^010-?\d{3,4}-?\d{4}$/.test(phone.trim());
+  // 앱 여부는 브라우저에서만 안다(<html data-app>) — 그려진 뒤 맞춘다.
+  useEffect(() => setPhoneOptional(isAppShell()), []);
+
+  const phoneOk = /^010-?\d{3,4}-?\d{4}$/.test(phone.trim()) || (phoneOptional && phone.trim() === '');
   const nameOk = name.trim().length >= 2;
-  const canSubmit = !!accountType && nameOk && phoneOk;
+  const canSubmit = !!accountType && nameOk && phoneOk && termsAgreed;
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +56,7 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
             accountType,
             name: name.trim(),
             phone: phone.trim().replace(/-/g, ''),
+            agreeTerms: termsAgreed,
           }),
           signal: ctrl.signal,
         }, 15000);
@@ -112,7 +122,8 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
 
           <div>
             <label className="block text-sm font-bold text-ink mb-1.5">
-              휴대폰 <span className="text-rose-500">*</span>
+              휴대폰{' '}
+              {phoneOptional ? <span className="text-xs font-medium text-gray-400">(선택)</span> : <span className="text-rose-500">*</span>}
             </label>
             <input
               type="tel"
@@ -130,6 +141,8 @@ export default function OnboardingForm({ initialName, next, userId }: Props) {
           </div>
         </>
       )}
+
+      {accountType && <TermsConsent checked={termsAgreed} onChange={setTermsAgreed} />}
 
       {error && (
         <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">

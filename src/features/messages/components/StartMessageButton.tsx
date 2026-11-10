@@ -31,8 +31,10 @@ export default function StartMessageButton({ targetProfileId, variant = 'primary
     try {
       const conv = await withTimeout(messageService.startConversation(targetProfileId), 10000, '대화 시작 지연');
       router.push(`/mypage/messages/${conv.id}`);
-    } catch {
-      toast('대화 시작에 실패했습니다.', 'error');
+    } catch (err) {
+      // 차단 관계면 서버가 이유를 알려 준다(누가 차단했는지는 밝히지 않는다).
+      const raw = err instanceof Error ? err.message : '';
+      toast(raw.includes('주고받을 수 없는') ? raw : '대화 시작에 실패했습니다.', 'error');
     } finally {
       setBusy(false);
     }

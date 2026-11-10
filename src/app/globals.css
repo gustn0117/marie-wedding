@@ -5,15 +5,38 @@
 @layer base {
   :root {
     /* Layout 토큰 — sticky offset, sidebar width 단일 출처.
-       --header-h 는 헤더 한 줄의 실제 높이와 같다(lg 부터 80px). sticky 요소는 이 값만 참조. */
-    --header-h: 64px;
+       --header-row-h 는 헤더 한 줄의 높이(lg 부터 80px), --header-h 는 헤더 전체 높이다.
+       앱에서는 헤더가 상태 표시줄 자리(--app-top)까지 덮어 그만큼 크다. sticky 요소는 --header-h 만 참조. */
+    --app-top: 0px;
+    --app-bottom: 0px;
+    --header-row-h: 64px;
+    --header-h: calc(var(--header-row-h) + var(--app-top));
     --sidebar-w: 240px;
     --sidebar-w-collapsed: 64px;
     --rail-w: 220px;
     --shell-pad-x: 16px;
   }
   @media (min-width: 640px) { :root { --shell-pad-x: 24px; } }
-  @media (min-width: 1024px) { :root { --shell-pad-x: 32px; --header-h: 80px; } }
+  @media (min-width: 1024px) { :root { --shell-pad-x: 32px; --header-row-h: 80px; } }
+
+  /* === 앱 화면 — iOS 앱(mobile/)이 띄울 때만. <html data-app> 은 <head> 감지 스크립트가 단다
+     (src/shared/utils/appShell.ts). 앱은 웹뷰를 화면 끝까지 그리므로 상태 표시줄(--app-top)과
+     아래 탭·홈 막대(--app-bottom) 자리를 사이트가 비운다. 브라우저에서는 두 값 모두 0 이다. */
+  html[data-app] {
+    --app-top: env(safe-area-inset-top, 0px);
+    -webkit-tap-highlight-color: transparent;
+  }
+  html[data-app][data-app-tabbar] {
+    --app-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  }
+  html[data-app] body {
+    padding-bottom: var(--app-bottom);
+  }
+  /* 링크·이미지를 길게 눌렀을 때 뜨는 브라우저 메뉴를 끈다(앱처럼). 글 선택·복사는 그대로. */
+  html[data-app] a,
+  html[data-app] img {
+    -webkit-touch-callout: none;
+  }
 
   body {
     @apply font-sans text-gray-800 antialiased;
@@ -571,6 +594,22 @@
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+  /* 앱에서만 보이는 것 / 앱에서는 숨기는 것 */
+  html:not([data-app]) .app-only {
+    display: none !important;
+  }
+  html[data-app] .app-hide {
+    display: none !important;
+  }
+  /* 머리글 없이 화면 맨 위부터 그리는 화면(로그인·온보딩 등) — 앱에서 상태 표시줄 자리를 비운다 */
+  html[data-app] .app-safe-top {
+    padding-top: var(--app-top);
+  }
+  /* 위에 앱 전용 뒤로 막대(AppTopBar, 48px)가 덮이는 화면 */
+  html[data-app] .app-under-topbar {
+    padding-top: calc(var(--app-top) + 48px);
+  }
+
   .sticky-sidebar {
     @apply lg:sticky lg:self-start lg:overflow-y-auto;
   }

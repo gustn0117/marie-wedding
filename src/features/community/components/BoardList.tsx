@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Pagination from '@/shared/components/Pagination';
 import PostRow from './PostRow';
+import { useBlocks } from '@/features/blocks/blockStore';
 import { POST_CATEGORIES, ROUTES } from '@/shared/constants';
 import type { Post } from '@/types/database';
 
@@ -21,9 +22,14 @@ function boardTitle(category: string | null, search: string | null): string {
   return POST_CATEGORIES.find((c) => c.value === category)?.label ?? '전체글';
 }
 
-export default function BoardList({ posts, totalCount }: BoardListProps) {
+export default function BoardList({ posts: allPosts, totalCount }: BoardListProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
+  // 차단한 사용자의 글은 목록에서 뺀다(공지는 그대로).
+  const { ids: blockedIds } = useBlocks();
+  const posts = blockedIds.size === 0
+    ? allPosts
+    : allPosts.filter((p) => p.is_notice || !p.author_id || !blockedIds.has(p.author_id));
 
   const page = parseInt(searchParams.get('page') ?? '1', 10);
   const category = searchParams.get('category');

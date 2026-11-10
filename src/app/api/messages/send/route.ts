@@ -34,6 +34,10 @@ export async function POST(req: Request) {
     });
     if (error) {
       console.error('[api/messages/send] rpc error:', error.message);
+      if (error.message.includes('blocked')) {
+        // 어느 한쪽이 상대를 차단했다(누가 차단했는지는 알리지 않는다).
+        return NextResponse.json({ error: '쪽지를 주고받을 수 없는 사용자입니다.', code: 'blocked' }, { status: 403 });
+      }
       const msg = error.message.includes('unauthorized') ? '로그인이 필요합니다.' : '메시지 전송에 실패했습니다.';
       return NextResponse.json({ error: msg }, { status: 400 });
     }

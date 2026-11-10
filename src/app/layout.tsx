@@ -4,6 +4,8 @@ import NavigationProgress from "@/shared/components/NavigationProgress";
 import { ToastProvider } from "@/shared/components/Toast";
 import PageViewTracker from "@/shared/components/PageViewTracker";
 import LoginModalHost from "@/features/auth/components/LoginModalHost";
+import AppTabBar from "@/shared/components/AppTabBar";
+import { APP_SHELL_DETECT_SCRIPT } from "@/shared/utils/appShell";
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, DEFAULT_OG_IMAGE } from "@/shared/seo";
 import "./globals.css";
 
@@ -107,8 +109,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
+    // suppressHydrationWarning: 앱 감지 스크립트가 하이드레이션 전에 <html data-app> 을 단다(이 요소 한 단계만 해당).
+    <html lang="ko" suppressHydrationWarning>
       <head>
+        {/* iOS 앱 감지 — 그리기 전에 <html data-app="ios"> 를 달아 앱 모양(상태 표시줄 자리·아래 탭 등)을 처음부터 맞춘다.
+            브라우저에서는 아무것도 하지 않는다. src/shared/utils/appShell.ts */}
+        <script dangerouslySetInnerHTML={{ __html: APP_SHELL_DETECT_SCRIPT }} />
         {/* Pretendard 가변 글꼴 분할본 — 페이지에 쓰인 글자 묶음만 받는다(전체 글자판 대비 약 85~90% 가벼움).
             CSS @import 대신 <link> 로 두어 앱 CSS 와 나란히 받는다. */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
@@ -140,6 +146,8 @@ export default function RootLayout({
           {children}
           {/* PC 로그인 창 — /login 링크를 가로채 보던 화면 위에 띄운다(휴대폰은 로그인 페이지) */}
           <LoginModalHost />
+          {/* iOS 앱 아래 탭 — 앱의 첫 화면들에만 보인다 */}
+          <AppTabBar />
         </ToastProvider>
       </body>
     </html>

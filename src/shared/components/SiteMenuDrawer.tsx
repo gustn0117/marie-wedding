@@ -7,6 +7,7 @@ import { ROUTES } from '@/shared/constants';
 import { RECOMMENDED_LINKS, SITE_MENU, type SiteMenuLink, type SiteMenuSection } from '@/shared/constants/siteMenu';
 import { buildMenuSearchIndex, searchMenu, type MenuSearchEntry } from '@/shared/utils/menuSearch';
 import { loginHref } from '@/shared/utils/loginRedirect';
+import { setAppStatusBarText } from '@/shared/utils/appShell';
 import type { AuthProfile } from './Header';
 
 export const SITE_MENU_DRAWER_ID = 'site-menu-drawer';
@@ -91,6 +92,13 @@ export default function SiteMenuDrawer({
   useEffect(() => {
     if (!open) return;
     return () => setQuery('');
+  }, [open]);
+
+  // 앱: 남색 머리 위라 열려 있는 동안 상태 표시줄 글자를 흰색으로(브라우저에선 아무 일 없음)
+  useEffect(() => {
+    if (!open) return;
+    setAppStatusBarText('light');
+    return () => setAppStatusBarText('dark');
   }, [open]);
 
   // body scroll lock (iOS 호환) — 스크롤바가 사라지며 본문이 옆으로 밀리지 않게 폭만큼 채운다.
@@ -276,12 +284,13 @@ export default function SiteMenuDrawer({
         role="dialog"
         aria-modal="true"
         aria-label="전체 메뉴"
-        className={`fixed inset-y-0 right-0 z-modal flex w-full flex-col bg-white shadow-2xl transition-[transform,visibility] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] sm:w-[560px] lg:w-[600px] ${
+        className={`fixed inset-y-0 right-0 z-modal flex w-full flex-col bg-white pb-[env(safe-area-inset-bottom)] shadow-2xl transition-[transform,visibility] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] sm:w-[560px] lg:w-[600px] ${
           open ? 'visible translate-x-0' : 'invisible translate-x-full'
         }`}
       >
         {/* 상단 — 계정 · 닫기 · 검색 · 추천 */}
-        <div className="shrink-0 bg-primary text-white [&_a:focus-visible]:outline-white [&_button:focus-visible]:outline-white">
+        {/* 앱에서는 상태 표시줄 자리(--app-top)까지 남색으로 덮는다 */}
+        <div className="shrink-0 bg-primary pt-[var(--app-top)] text-white [&_a:focus-visible]:outline-white [&_button:focus-visible]:outline-white">
           <div className="flex h-14 items-center justify-between gap-3 border-b border-white/10 pl-5 pr-2 sm:pl-8 sm:pr-4">
             {profile ? (
               <div className="flex min-w-0 items-center gap-2.5">

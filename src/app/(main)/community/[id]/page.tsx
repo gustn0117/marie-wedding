@@ -14,6 +14,8 @@ import CommentSection from '@/features/community/components/CommentSection';
 import LikeButton from '@/features/community/components/LikeButton';
 import BookmarkButton from '@/features/bookmarks/components/BookmarkButton';
 import ReportButton from '@/features/reports/components/ReportButton';
+import BlockUserButton from '@/features/blocks/components/BlockUserButton';
+import BlockedContent from '@/features/blocks/components/BlockedContent';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
 import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
@@ -179,9 +181,11 @@ export default async function PostDetailPage({ params }: PageProps) {
           </div>
         </header>
 
-        {/* Content */}
+        {/* Content — 차단한 사용자의 글이면 본문 대신 안내(공지는 해당 없음) */}
         <div className="p-6 md:p-8">
-          <RichTextView html={post.content} className="text-[15px] text-gray-700 leading-relaxed min-h-[200px]" />
+          <BlockedContent authorId={post.is_notice ? null : post.author_id} label="글">
+            <RichTextView html={post.content} className="text-[15px] text-gray-700 leading-relaxed min-h-[200px]" />
+          </BlockedContent>
         </div>
 
         {/* Like Button */}
@@ -196,6 +200,13 @@ export default async function PostDetailPage({ params }: PageProps) {
             />
             <BookmarkButton targetType="post" targetId={post.id} label="글 저장" />
             <ReportButton targetType="post" targetId={post.id} />
+            {!post.is_notice && post.author_id && (
+              <BlockUserButton
+                profileId={post.author_id}
+                name={post.author?.company_name || post.author?.contact_name || ''}
+                profileImage={post.author?.profile_image}
+              />
+            )}
           </div>
         </div>
 

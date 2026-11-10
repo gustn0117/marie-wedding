@@ -6,15 +6,23 @@ import { messageService } from '@/features/messages/services/messageService';
 import { broadcastNotificationsUpdated } from '@/features/notifications/services/notification-service';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { toast } from '@/shared/components/Toast';
+import ReportButton from '@/features/reports/components/ReportButton';
+import BlockUserButton from '@/features/blocks/components/BlockUserButton';
+import { useBlocks } from '@/features/blocks/blockStore';
 
 interface Props {
   conversationId: string;
   myProfileId: string;
   partnerName: string;
+  /** 상대 프로필 id — 신고·차단에 쓴다(탈퇴한 상대면 null) */
+  partnerId?: string | null;
   initialMessages: Message[];
 }
 
-export default function MessageThread({ conversationId, myProfileId, partnerName, initialMessages }: Props) {
+export default function MessageThread({ conversationId, myProfileId, partnerName, partnerId = null, initialMessages }: Props) {
+  // 내가 차단한 상대면 보내기를 막는다(상대가 나를 차단한 경우는 서버가 막고 알려 준다).
+  const { ids: blockedIds } = useBlocks();
+  const blockedByMe = !!partnerId && blockedIds.has(partnerId);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [body, setBody] = useState('');
   const [busy, setBusy] = useState(false);
@@ -41,7 +49,12 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
       setMessages((prev) => [...prev, msg]);
       setBody('');
     } catch (err) {
-      const msg = err instanceof Error && err.message.includes('초과') ? '전송이 너무 오래 걸려요. 다시 시도해주세요.' : '전송에 실패했습니다.';
+      const raw = err instanceof Error ? err.message : '';
+      const msg = raw.includes('초과')
+        ? '전송이 너무 오래 걸려요. 다시 시도해주세요.'
+        : raw.includes('주고받을 수 없는')
+          ? raw
+          : '전송에 실패했습니다.';
       toast(msg, 'error');
     } finally {
       setBusy(false);
@@ -50,9 +63,20 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
 
   return (
     <div className="flex flex-col h-[600px]">
-      <header className="px-4 py-3 border-b border-gray-200">
-        <p className="text-sm font-bold text-gray-900">{partnerName}</p>
+      <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200">
+        <p className="min-w-0 truncate text-sm font-bold text-gray-900">{partnerName}</p>
+        {partnerId && (
+          <div className="flex shrink-0 items-center gap-3">
+            <ReportButton targetType="profile" targetId={partnerId} variant="text" />
+            <BlockUserButton profileId={partnerId} name={partnerName} variant="text" />
+          </div>
+        )}
       </header>
+      {blockedByMe && (
+        <p className="border-b border-gray-200 bg-gray-50 px-4 py-2 text-xs text-gray-600">
+          차단한 사용자예요. 차단을 해제하기 전에는 쪽지를 주고받을 수 없어요.
+        </p>
+      )}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-50">
         {messages.length === 0 ? (
           <p className="text-center text-sm text-gray-400 py-10">아직 쪽지가 없습니다. 첫 쪽지를 보내보세요.</p>
@@ -80,12 +104,12 @@ export default function MessageThread({ conversationId, myProfileId, partnerName
           onChange={(e) => setBody(e.target.value)}
           placeholder="쪽지를 입력하세요…"
           maxLength={2000}
-          disabled={busy}
+          disabled={busy || blockedByMe}
           className="flex-1 border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={busy || !body.trim()}
+          disabled={busy || blockedByMe || !body.trim()}
           className="btn-primary px-5 disabled:opacity-50"
         >
           {busy ? '전송 중…' : '보내기'}

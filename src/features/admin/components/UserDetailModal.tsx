@@ -273,7 +273,7 @@ function Badge({ tone, children }: { tone: 'gray' | 'primary' | 'red' | 'green' 
 
 function providerLabel(p: string | null | undefined): string {
   if (!p) return '미상';
-  return p === 'email' ? '이메일' : p === 'kakao' ? '카카오' : p === 'naver' ? '네이버' : p === 'apple' ? 'Apple' : p;
+  return p === 'email' ? '이메일' : p === 'kakao' ? '카카오' : p === 'naver' ? '네이버' : p === 'apple' ? '애플' : p;
 }
 
 function stripHtml(html: string): string {

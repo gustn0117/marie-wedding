@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { setAppStatusBarText } from '@/shared/utils/appShell';
 
 interface Props {
   images: string[];
@@ -21,6 +22,14 @@ export default function GalleryLightbox({
   gridClassName = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2',
 }: Props) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const lightboxOpen = openIdx !== null;
+
+  // 앱: 검은 화면 위라 열려 있는 동안 상태 표시줄 글자를 흰색으로(브라우저에선 아무 일 없음)
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    setAppStatusBarText('light');
+    return () => setAppStatusBarText('dark');
+  }, [lightboxOpen]);
 
   const close = useCallback(() => setOpenIdx(null), []);
   const prev = useCallback(() => {
@@ -87,7 +96,7 @@ export default function GalleryLightbox({
           <button
             type="button"
             onClick={close}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+            className="absolute top-[calc(var(--app-top)+1rem)] right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
             aria-label="닫기"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" aria-hidden>
@@ -97,7 +106,7 @@ export default function GalleryLightbox({
 
           {/* 인덱스 표시 */}
           {images.length > 1 && (
-            <div className="absolute top-4 left-4 text-white text-sm font-bold tabular-nums bg-white/10 px-3 py-1.5 rounded-full">
+            <div className="absolute top-[calc(var(--app-top)+1rem)] left-4 text-white text-sm font-bold tabular-nums bg-white/10 px-3 py-1.5 rounded-full">
               {openIdx + 1} / {images.length}
             </div>
           )}

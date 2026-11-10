@@ -168,10 +168,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, password, accountType, contactName, regions, businessTypes, companyName, phone, verifyMethod } = body;
+    const { email, password, accountType, contactName, regions, businessTypes, companyName, phone, verifyMethod, termsAgreed } = body;
 
     if (!email || !password || !contactName || !regions?.length) {
       return NextResponse.json({ error: '필수 항목을 모두 입력해주세요.' }, { status: 400 });
+    }
+    // [필수] 이용약관(부적절한 콘텐츠 무관용 조항 포함)·개인정보처리방침 동의
+    if (termsAgreed !== true) {
+      return NextResponse.json({ error: '이용약관과 개인정보처리방침에 동의해주세요.' }, { status: 400 });
     }
 
     // 서버측 길이 상한 (schema.sql 이 TEXT 라 DB 제약 없음 — 과대 문자열 저장 방지)
@@ -277,6 +281,7 @@ export async function POST(request: NextRequest) {
       region: Array.isArray(regions) ? regions.join(',') : regions,
       signup_provider: 'email',
       onboarded_at: new Date().toISOString(),
+      terms_agreed_at: new Date().toISOString(),
     };
 
     // 휴대폰: 휴대폰 인증을 통과했으면 verified 로, 아니면 입력값만(선택) 저장.
