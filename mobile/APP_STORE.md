@@ -116,5 +116,7 @@ The app has no in-app purchases or paid digital content. Job postings are free.
 ## 애플 개발자 사이트에서 한 번 더 할 일
 
 - **Sign in with Apple 이메일 중계**: Certificates, Identifiers & Profiles > Services > Sign in with Apple for Email Communication 에
-  발신 도메인 `marie.co.kr` 과 발신 주소 `noreply@marie.co.kr` 를 등록한다. 안 하면 ‘이메일 가리기’로 가입한 회원에게 보내는
-  알림 메일(@privaterelay.appleid.com)이 반송된다.
+  발신 도메인 `marie.co.kr` 과 발신 주소 `admin@marie.co.kr` 를 등록한다.
+  - 사이트의 모든 메일(새 지원자 알림·인증 코드·비밀번호 재설정)은 `admin@marie.co.kr` 로 나간다(서버 `MAIL_FROM`).
+  - 애플은 SPF 를 확인하는데, `marie.co.kr` 에는 이미 걸려 있다.
+  - 등록하지 않으면 ‘이메일 가리기’로 가입한 회원에게 보내는 메일(@privaterelay.appleid.com)이 반송된다.
