@@ -17,5 +17,6 @@ export default function EventsRail() {
     { href: `${ROUTES.EVENTS}?type=notice`, label: '업계소식', active: currentType === 'notice' },
   ];
 
-  return <ChipNav items={items} />;
+  // 앱에서는 목록 화면에서만 종류 탭을 보인다 — 행사 상세 위에 붙으면 웹 메뉴처럼 보인다.
+  return <ChipNav items={items} className={isList ? '' : 'app-hide'} />;
 }

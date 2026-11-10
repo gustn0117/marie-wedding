@@ -605,9 +605,9 @@
   html[data-app] .app-safe-top {
     padding-top: var(--app-top);
   }
-  /* 위에 앱 전용 뒤로 막대(AppTopBar, 48px)가 덮이는 화면 */
+  /* 위에 앱 전용 뒤로 막대(AppTopBar)가 덮이는 화면 */
   html[data-app] .app-under-topbar {
-    padding-top: calc(var(--app-top) + 48px);
+    padding-top: calc(var(--app-top) + var(--header-row-h));
   }
 
   /* === 앱 누름·화면 이동 — src/shared/components/AppTouchFeedback.tsx 가 data-press·app-enter-* 를 단다.
@@ -688,6 +688,7 @@
   }
   html[data-app] .app-alert-in {
     animation: app-alert-in 0.24s cubic-bezier(0.2, 0.9, 0.3, 1) backwards;
+    border-radius: 16px; /* 확인 창도 iOS 경고창처럼 둥글게 */
   }
   html[data-app] .app-fade-in {
     animation: app-fade-in 0.2s ease-out backwards;
@@ -698,6 +699,176 @@
       scale: 1;
       opacity: 0.6;
     }
+  }
+
+  /* === 앱 화면 틀 — '웹을 휴대폰으로 보는 것' 같지 않게. 모두 html[data-app](또는 앱에서만 그리는 요소)에만 걸려
+     브라우저 화면은 그대로다. 위 막대 AppNavBar · 아래 선택 창 AppSheet · 검색칸 AppSearchField ·
+     필터 칩 AppSelectChip · 당겨서 새로고침 AppPullToRefresh · '마이' 메뉴 AppMyMenu. */
+  html[data-app] {
+    --header-row-h: 52px;
+  }
+  html[data-app] body {
+    background-color: #ffffff;
+  }
+  /* 위 막대·아래 탭: 뒤가 비치는 흐린 바탕(iOS). 위 막대 아래 선은 내리기 시작할 때만 생긴다 */
+  html[data-app] .site-header,
+  html[data-app] .app-topbar,
+  html[data-app] .app-tabbar {
+    background-color: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  html[data-app] .site-header {
+    border-bottom-color: transparent;
+    transition: border-color 0.2s ease-out;
+  }
+  html[data-app] .site-header[data-scrolled] {
+    border-bottom-color: rgba(19, 22, 29, 0.1);
+  }
+  html[data-app] .app-tabbar {
+    border-top-color: rgba(19, 22, 29, 0.08);
+  }
+  /* 본문 위 여백은 좁게, 업종 탭(.app-tabs)은 위 막대에 바로 붙인다 */
+  html[data-app] .site-main {
+    padding-top: 12px;
+  }
+  html[data-app] .app-tabs {
+    margin-top: -12px;
+    margin-bottom: 0;
+  }
+  /* 웹 머리 칸이 숨어 맨 위가 된 칸 — 부모의 space-y 간격을 지운다 */
+  html[data-app] .app-first {
+    margin-top: 0 !important;
+  }
+  /* 웹 페이지 머리의 작은 위 글씨(eyebrow)는 앱에서 뺀다 */
+  html[data-app] .page-eyebrow {
+    display: none;
+  }
+  /* 화면 끝까지 꽉 차게 — 좌우 테두리·둥근 모서리·그림자를 걷고 위아래 가는 선만 남긴다 */
+  html[data-app] .app-bleed {
+    margin-left: calc(var(--shell-pad-x) * -1);
+    margin-right: calc(var(--shell-pad-x) * -1);
+    border-left-width: 0;
+    border-right-width: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  /* 테두리 상자를 바탕 그대로(로그인 카드 등) — 좌우 안쪽 여백도 걷어 본문 폭을 쓴다 */
+  html[data-app] .app-plain {
+    border-color: transparent;
+    background-color: transparent;
+    box-shadow: none;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  /* 보기 방식(리스트·그리드) 전환 — 필터 칩과 같은 둥근 알약 */
+  html[data-app] .app-segment {
+    border-color: #e5e8ee;
+    border-radius: 9999px;
+  }
+  html[data-app] .app-segment > button {
+    padding: 8px 12px;
+  }
+  html[data-app] .platform-toolbar {
+    border-width: 0;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 4px 0;
+  }
+  /* 구역을 나누는 회색 띠(앱에서만 그리는 요소) */
+  .app-band {
+    height: 8px;
+    margin-left: calc(var(--shell-pad-x) * -1);
+    margin-right: calc(var(--shell-pad-x) * -1);
+    background-color: #f3f4f7;
+  }
+  /* 가로로 넘기는 필터 칩 줄 — 화면 끝까지 넘기되 첫 칩은 본문 글자와 줄을 맞춘다 */
+  .app-chip-row {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-left: calc(var(--shell-pad-x) * -1);
+    margin-right: calc(var(--shell-pad-x) * -1);
+    padding: 8px var(--shell-pad-x) 12px;
+    scrollbar-width: none;
+  }
+  .app-chip-row::-webkit-scrollbar {
+    display: none;
+  }
+  .app-chip {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 4px;
+    height: 36px;
+    padding: 0 12px 0 14px;
+    border: 1px solid #e5e8ee;
+    border-radius: 9999px;
+    background-color: #ffffff;
+    color: #1f242f;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .app-chip[data-on="true"] {
+    border-color: #051049;
+    background-color: #051049;
+    color: #ffffff;
+  }
+  /* 앱 검색칸 — 웹킷 기본 지우기 버튼·돋보기 장식은 끈다(직접 그린 것을 쓴다) */
+  .app-search-input::-webkit-search-cancel-button,
+  .app-search-input::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  /* 아래 선택 창 안의 작은 글씨·줄은 손가락 크기에 맞게 키운다. 창 안의 목록은 창이 스크롤하므로 높이 제한을 넓힌다 */
+  .app-sheet-body .text-small {
+    font-size: 15px;
+  }
+  .app-sheet-body .app-sheet-list {
+    max-height: 46vh;
+  }
+  .app-sheet-body button.text-small,
+  .app-sheet-body label.text-small {
+    min-height: 44px;
+  }
+  @keyframes app-sheet-up {
+    from { translate: 0 100%; }
+  }
+  @keyframes app-sheet-down {
+    to { translate: 0 100%; }
+  }
+  @keyframes app-sheet-fade-out {
+    to { opacity: 0; }
+  }
+  .app-sheet-up {
+    animation: app-sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .app-sheet-down {
+    animation: app-sheet-down 0.22s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+  .app-sheet-fade-out {
+    animation: app-sheet-fade-out 0.22s ease-in forwards;
+  }
+  /* 당겨서 새로고침 도는 표시 — 위 막대 바로 아래, 본문이 내려오며 생긴 틈 가운데 */
+  html[data-app] .app-ptr {
+    position: fixed;
+    top: var(--header-h);
+    left: 50%;
+    z-index: 45;
+    width: 28px;
+    height: 28px;
+    margin-left: -14px;
+    color: #6b7384;
+    opacity: 0;
+    pointer-events: none;
+  }
+  html[data-app] .app-ptr.is-spinning .app-ptr-ticks {
+    animation: app-ptr-spin 0.8s steps(8) infinite;
+  }
+  @keyframes app-ptr-spin {
+    to { rotate: 360deg; }
   }
 
   .sticky-sidebar {

@@ -19,5 +19,6 @@ export default function JobsRail() {
     })),
   ];
 
-  return <ChipNav items={items} />;
+  // 앱에서는 목록 화면에서만 업종 탭을 보인다 — 공고 상세·등록 화면 위에 붙으면 웹 메뉴처럼 보인다.
+  return <ChipNav items={items} className={isList ? '' : 'app-hide'} />;
 }

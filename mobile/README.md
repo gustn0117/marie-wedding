@@ -17,10 +17,19 @@
 | 앱에서만 | 어디서 |
 | --- | --- |
 | 상태 표시줄·홈 막대 자리 비우기(`--app-top`, `--app-bottom`) | `globals.css`, 머리글 `HeaderClient` |
+| 위 막대 — 탭 화면은 화면 이름·검색·만들기(+)·알림, 그 밖은 뒤로 버튼과 (내리면 떠오르는) 본문 제목. 웹 머리글 한 줄은 숨김 | `AppNavBar` |
 | 아래 탭(홈·채용정보·인재·업체·커뮤니티·마이) — 첫 화면들에서만 | `AppTabBar` |
-| 탭 화면이 아닌 곳의 뒤로 버튼, 로그인·가입 화면 위 막대 | `AppBackButton`, `AppTopBar` |
-| 바닥글 숨김(같은 링크는 전체 메뉴에) | `.app-hide` |
+| 로그인·가입 화면 위 막대 | `AppTopBar` |
+| 바닥글·전체 메뉴 서랍·경로 표시·페이지 머리 숨김 — 고객센터·약관 등은 '마이' 탭 메뉴와 로그인 화면 아래 링크로 | `.app-hide`, `AppMyMenu` |
+| 둥근 검색칸, 가로 필터 칩(하나 고르는 필터는 iOS 선택 메뉴), 지역·업종은 아래 선택 창 | `AppSearchField`, `AppSelectChip`, `AppSheet`(`AdaptivePanel`) |
+| 상자 테두리 걷고 화면 끝까지, 구역은 회색 띠 | `.app-bleed`, `.app-plain`, `.app-band` |
+| 탭 화면 당겨서 새로고침 — 앱은 스크롤 끝 튕김이 꺼져 있어(Capacitor 기본) 손동작을 사이트가 직접 그린다 | `AppPullToRefresh` |
+| 누름 반응·진동·화면 이동 움직임 | `AppTouchFeedback`, `MarieShell.haptic` |
+| 화면 확대 막기(`maximum-scale=1`) | `appShell.ts` 감지 스크립트 |
 | 애플 로그인 버튼(맨 위) | `SocialLoginButtons` → `/api/auth/apple` |
+
+**웹 화면은 그대로여야 한다.** 앱 전용 칸(`.app-only`)을 `space-y-*` 목록 안에 넣을 때는 웹 칸 **뒤에** 둔다.
+앞에 두면 숨겨져 있어도 형제로 세어져 웹 칸 위에 간격이 하나 더 생긴다(앱에서 맨 위가 되는 칸은 `.app-first` 로 간격을 지운다).
 
 ## 앱만 하는 일 (네이티브, `ios/App/App/`)
 
@@ -30,7 +39,8 @@
   (서버 `/home/server/supabase/docker/docker-compose.yml`, 웹 리디렉트 방식이 아니라 SECRET 은 필요 없다).
 - `LinkRouting.swift` — 사이트 밖 링크는 앱 안 브라우저(SFSafariViewController)로, 새 창(`target="_blank"`)으로 여는
   사이트 주소(이력서 첨부 등 로그인이 필요한 것)는 같은 로그인 상태로 앱 안 보기 창에서 연다. `window.print()` 대신 iOS 인쇄 창.
-- `MainViewController.swift` — 위 플러그인 등록, 화면 왼쪽 끝에서 밀면 뒤로 가기.
+- `MainViewController.swift` — 위 플러그인 등록, 화면 왼쪽 끝에서 밀면 뒤로 가기, 입력칸을 누를 때 키보드 위에 뜨는
+  '‹ › 완료' 막대 끄기(빌드 3부터, Capacitor 키보드 플러그인과 같은 방법).
 
 사이트는 Capacitor 라이브러리를 싣지 않고 앱이 심는 `window.Capacitor.Plugins` 를 바로 부른다(`appShell.ts`).
 

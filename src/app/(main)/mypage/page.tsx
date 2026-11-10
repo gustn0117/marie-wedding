@@ -19,6 +19,7 @@ import PendingReviewsSection from '@/features/mypage/components/PendingReviewsSe
 import RecentJobsSection from '@/features/jobs/components/RecentJobsSection';
 import BookmarkedJobsSection from '@/features/mypage/components/BookmarkedJobsSection';
 import PageHeader from '@/shared/components/PageHeader';
+import AppMyMenu from '@/features/mypage/components/AppMyMenu';
 import { SELF_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 
 export const dynamic = 'force-dynamic';
@@ -126,13 +127,18 @@ export default async function MyPage() {
             </>
           )
         }
+        className="app-hide"
       />
 
       {/* 대행 등록 공고 가져오기 — 업체 회원에게만 노출 */}
-      {isBusinessAcc && <ClaimJobBox />}
+      {isBusinessAcc && (
+        <div className="app-first">
+          <ClaimJobBox />
+        </div>
+      )}
 
-      {/* Profile Card */}
-      <div className="surface p-5 sm:p-6">
+      {/* Profile Card — 앱에서는 화면 끝까지. 앱에서 첫 칸이면 위 막대 바로 아래에 붙인다(.app-first) */}
+      <div className={`app-bleed surface p-5 sm:p-6 ${isBusinessAcc ? '' : 'app-first'}`}>
         <div className="flex items-start gap-4">
           <div className="w-16 h-16 rounded bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-200">
             {imageUrl ? (
@@ -223,6 +229,9 @@ export default async function MyPage() {
         {/* Quick actions는 좌측 rail로 대체됨 → 본문 노이즈 제거. */}
       </div>
 
+      {/* 앱: 프로필 바로 아래 '나의 활동' 바로가기(이력서·스크랩·쪽지·알림 등) */}
+      <AppMyMenu section="activity" accountType={isBusinessAcc ? 'business' : 'individual'} />
+
       {/* Onboarding */}
       <OnboardingChecklist
         profile={profile}
@@ -304,19 +313,28 @@ export default async function MyPage() {
       {/* Pending Reviews — 작성 대기 중인 리뷰 (본인 처리 항목) */}
       <PendingReviewsSection profileId={profile.id} />
 
-      {/* ────────── 탐색·추천 (아래쪽) ────────── */}
+      {/* ────────── 탐색·추천 (아래쪽) ──────────
+          앱에서는 숨긴다 — 공고 탐색은 홈·채용정보 탭이, 스크랩은 '나의 활동' 메뉴가 맡는다. */}
+      <div className="app-hide space-y-4">
+        {/* Bookmarked Jobs — 스크랩한 공고 */}
+        <BookmarkedJobsSection profileId={profile.id} />
 
-      {/* Bookmarked Jobs — 스크랩한 공고 */}
-      <BookmarkedJobsSection profileId={profile.id} />
+        {/* Recommended Jobs — 맞춤 공고 */}
+        <RecommendedJobs profile={profile} />
 
-      {/* Recommended Jobs — 맞춤 공고 */}
-      <RecommendedJobs profile={profile} />
+        {/* Recent Jobs — 최근 등록된 공고 */}
+        <RecentJobsSection />
+      </div>
 
-      {/* Recent Jobs — 최근 등록된 공고 */}
-      <RecentJobsSection />
+      {/* 앱: 계정·고객지원(고객센터·약관 등)·로그아웃 — 웹의 아래 '계정' 칸과 전체 메뉴를 대신한다 */}
+      <AppMyMenu
+        section="settings"
+        accountType={isBusinessAcc ? 'business' : 'individual'}
+        isAdmin={viewer.role === 'admin'}
+      />
 
       {/* Account — 계정 관리 (위험 액션 격리) */}
-      <section className="rounded border border-gray-200 bg-white p-5 md:p-6">
+      <section className="app-hide rounded border border-gray-200 bg-white p-5 md:p-6">
         <h2 className="text-sm font-bold text-ink mb-3">계정</h2>
         <div className="space-y-4">
           {!isBusinessAcc && (

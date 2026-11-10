@@ -43,14 +43,15 @@ export default function BoardList({ posts: allPosts, totalCount }: BoardListProp
   };
 
   return (
-    <div className="border border-gray-200 bg-white">
+    // 앱에서는 화면 끝까지(.app-bleed), 글쓰기는 위 막대의 + 로
+    <div className="app-bleed border border-gray-200 bg-white">
       {/* 게시판 머리 — 지금 어디를 보고 있는지 + 글 수 */}
       <div className="flex items-center justify-between gap-3 border-b border-gray-200 px-3 py-3 sm:px-4">
         <h2 className="flex items-baseline gap-2 text-[15px] font-bold text-ink">
           {boardTitle(category, search)}
           <span className="text-[12.5px] font-normal text-gray-400 tabular-nums">{totalCount.toLocaleString()}개</span>
         </h2>
-        <Link href={ROUTES.COMMUNITY_NEW} className="shrink-0 text-[13px] font-bold text-primary hover:underline lg:hidden">
+        <Link href={ROUTES.COMMUNITY_NEW} className="app-hide shrink-0 text-[13px] font-bold text-primary hover:underline lg:hidden">
           글쓰기
         </Link>
       </div>

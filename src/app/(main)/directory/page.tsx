@@ -7,6 +7,7 @@ import CompanyList from '@/features/directory/components/CompanyList';
 import type { Profile } from '@/types/database';
 import { normalizeSearchTerm } from '@/shared/utils/searchQuery';
 import PageHeader from '@/shared/components/PageHeader';
+import AppSearchField from '@/shared/components/AppSearchField';
 import LoadErrorState from '@/shared/components/LoadErrorState';
 import type { Metadata } from 'next';
 import { buildPageMetadata } from '@/shared/seo';
@@ -102,7 +103,16 @@ export default async function DirectoryPage({ searchParams }: PageProps) {
         actions={
           <Link href={ROUTES.DIRECTORY_REGISTER} className="btn-primary text-sm">+ 프로필 등록</Link>
         }
+        className="app-hide"
       />
+
+      {/* 앱: 이름 검색칸 + 회색 띠. 화면 이름·프로필 등록은 위 막대에 있다. */}
+      <div className="app-only app-first pt-3">
+        <Suspense fallback={null}>
+          <AppSearchField placeholder="업체·이름 검색" />
+        </Suspense>
+        <div className="app-band mt-3" aria-hidden />
+      </div>
 
       {error ? (
         <LoadErrorState message="프로필을 불러오지 못했습니다." />

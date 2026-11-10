@@ -22,7 +22,7 @@ export default function JobDetailHero({ job }: Props) {
     : null;
 
   return (
-    <section className="bg-white border-y border-gray-200 overflow-hidden">
+    <section className="app-bleed bg-white border-y border-gray-200 overflow-hidden">
       {(() => {
         const src = resolveStorageUrl(job.image, 'job-images');
         return src ? (

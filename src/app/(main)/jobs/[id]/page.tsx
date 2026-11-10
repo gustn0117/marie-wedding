@@ -100,8 +100,8 @@ export default async function JobDetailPage({ params }: PageProps) {
       />
       <JobViewTracker jobId={job.id} />
 
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm">
+      {/* Breadcrumb — 앱에서는 숨김(위 막대 뒤로 버튼) */}
+      <nav className="app-hide flex items-center gap-2 text-sm">
         <Link href={ROUTES.JOBS} className="text-gray-500 hover:text-primary transition-colors">
           채용
         </Link>
@@ -127,7 +127,8 @@ export default async function JobDetailPage({ params }: PageProps) {
           <JobDetailHero job={job} />
 
           {/* Description */}
-          <section className="rounded-xl bg-white border border-gray-200 p-6 md:p-8">
+          {/* 앱에서는 화면 끝까지(.app-bleed) */}
+          <section className="app-bleed rounded-xl bg-white border border-gray-200 p-6 md:p-8">
             <h2 className="text-lg font-bold text-gray-900 mb-5 pb-3 border-b border-gray-200">상세 내용</h2>
             <JobDescriptionView html={job.description} />
           </section>

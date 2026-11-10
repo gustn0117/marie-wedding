@@ -116,8 +116,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
     <main className="mx-auto max-w-3xl space-y-4">
       {/* 공고자가 지원서를 열었음을 기록(관리자 지원 현황용) — 지원자 본인 열람은 기록하지 않는다 */}
       {isHiring && <RecordApplicationOpen applicationId={application.id} />}
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm">
+      {/* Breadcrumb — 앱에서는 숨김(위 막대 뒤로 버튼) */}
+      <nav className="app-hide flex items-center gap-2 text-sm">
         <Link href={ROUTES.MYPAGE} className="text-gray-500 hover:text-primary transition-colors">
           마이페이지
         </Link>

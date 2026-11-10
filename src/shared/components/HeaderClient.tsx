@@ -9,11 +9,9 @@ import type { AuthProfile } from './Header';
 import NotificationBell from '@/features/notifications/components/NotificationBell';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import SiteMenuDrawer, { SITE_MENU_DRAWER_ID } from './SiteMenuDrawer';
-import { clearMarieProfileCookie } from '@/shared/utils/cookieHelpers';
-import { apiFetch } from '@/shared/utils/apiFetch';
 import { loginHref } from '@/shared/utils/loginRedirect';
-import { isAppTabRoot } from '@/shared/utils/appShell';
-import AppBackButton from './AppBackButton';
+import { signOutAndGoHome } from '@/shared/utils/signOut';
+import AppNavBar from './AppNavBar';
 
 interface HeaderClientProps {
   initialProfile: AuthProfile | null;
@@ -51,31 +49,10 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
   const isAuthenticated = !!profile;
 
   const signOut = useCallback(async () => {
-    // 클라이언트 측 즉시 정리 (UI 반응 보장)
-    clearMarieProfileCookie();
+    // 머리글은 즉시 비로그인 모양으로 바꾸고, 세션 정리·홈 이동은 공용 로그아웃이 한다(앱 '마이' 탭과 같은 동작)
     setProfile(null);
     setProfileMenuOpen(false);
-
-    // localStorage / sessionStorage의 supabase 세션 토큰 모두 제거
-    try {
-      Object.keys(localStorage).forEach((k) => {
-        if (k.startsWith('sb-')) localStorage.removeItem(k);
-      });
-      Object.keys(sessionStorage).forEach((k) => {
-        if (k.startsWith('sb-')) sessionStorage.removeItem(k);
-      });
-    } catch {}
-
-    // 서버 라우트가 세션 revoke + httpOnly 쿠키(sb-*, marie_profile) 만료를 모두 처리한다.
-    // 이것만 기다리고(보통 ~100ms) 즉시 이동 — 클라 supabase.auth.signOut()(GoTrue revoke)은
-    // 서버가 이미 수행하므로 생략. (이전엔 이 2초 대기 때문에 헤더 변경 후 ~1초 지연 발생)
-    try {
-      await apiFetch('/api/auth/signout', { method: 'POST', credentials: 'include' }, 2000);
-    } catch {
-      // 무시 — full reload 로 미들웨어가 다시 처리
-    }
-
-    window.location.href = '/';
+    await signOutAndGoHome();
   }, []);
 
   const displayName = profile?.company_name || profile?.contact_name || '';
@@ -83,11 +60,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
 
   return (
     // 앱에서는 상태 표시줄 자리(--app-top)까지 덮는다 — 그 아래 한 줄이 실제 머리글(--header-row-h).
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 pt-[var(--app-top)]">
-      <div className="shell-wide h-[var(--header-row-h)] flex items-center gap-3 lg:gap-6">
-        {/* 앱의 탭 화면이 아닌 곳(상세·글쓰기 등)에서는 뒤로 버튼 — 브라우저에는 보이지 않는다 */}
-        {!isAppTabRoot(pathname) && <AppBackButton className="-ml-2 -mr-2" />}
-
+    // 웹 머리글 한 줄은 앱에서 숨기고(.app-hide) 앱 위 막대(AppNavBar)를 대신 보인다.
+    <header className="site-header sticky top-0 z-50 bg-white border-b border-gray-100 pt-[var(--app-top)]">
+      <div className="app-hide shell-wide h-[var(--header-row-h)] flex items-center gap-3 lg:gap-6">
         {/* 좌측: 로고 */}
         <Link href={ROUTES.HOME} aria-label="Marié 홈" className="flex shrink-0 flex-col justify-center text-ink">
           <span className="text-[24px] lg:text-[26px] font-bold leading-none tracking-tight">Marié</span>
@@ -197,6 +172,9 @@ export default function HeaderClient({ initialProfile }: HeaderClientProps) {
           <MenuButton open={menuOpen} onClick={openMenu} className="lg:hidden" />
         </div>
       </div>
+
+      {/* 앱 위 막대 — 탭 화면 이름·검색·알림, 그 밖의 화면은 뒤로 버튼과 제목. 브라우저에서는 숨김 */}
+      <AppNavBar isAuthenticated={isAuthenticated} />
 
       <SiteMenuDrawer open={menuOpen} onClose={closeMenu} profile={profile} onSignOut={signOut} />
     </header>

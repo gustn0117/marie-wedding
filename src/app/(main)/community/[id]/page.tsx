@@ -122,8 +122,8 @@ export default async function PostDetailPage({ params }: PageProps) {
           { name: post.title, path: `/community/${post.id}` },
         ])}
       />
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm">
+      {/* Breadcrumb — 앱에서는 숨김(위 막대 뒤로 버튼) */}
+      <nav className="app-hide flex items-center gap-2 text-sm">
         <Link href={ROUTES.COMMUNITY} className="text-gray-500 hover:text-primary transition-colors">커뮤니티</Link>
         {post.is_notice && (
           <>

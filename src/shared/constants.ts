@@ -84,6 +84,7 @@ export const ROUTES = {
   EVENTS_DETAIL: (id: string) => `/events/${id}`,
   COMMUNITY: '/community',
   CONTACT: '/contact',
+  SEARCH: '/search',
   COMMUNITY_NEW: '/community/new',
   COMMUNITY_DETAIL: (id: string) => `/community/${id}`,
   COMMUNITY_EDIT: (id: string) => `/community/${id}/edit`,

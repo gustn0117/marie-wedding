@@ -121,9 +121,11 @@ export async function authorizeWithApple(nonce: string): Promise<AppleAuthorizat
 /**
  * <head> 맨 앞에 그대로 넣는 감지 스크립트. 그리기 전에 돌아야 앱 모양이 처음부터 맞게 나온다.
  * data-app-tabbar 는 첫 화면이 탭 화면인지 — 이후 화면 이동은 AppTabBar 가 고친다.
+ * 앱에서는 화면 확대도 막는다(maximum-scale=1). 두 손가락 확대는 앱(Capacitor)이 이미 막지만,
+ * 글자가 작은 입력칸을 누르면 사파리처럼 화면이 확 커지는 것은 이것으로만 막힌다. 브라우저는 그대로 확대된다.
  */
 export const APP_SHELL_DETECT_SCRIPT = `(function(){try{if(navigator.userAgent.indexOf(${JSON.stringify(
   APP_USER_AGENT_MARK,
 )})===-1)return;var d=document.documentElement;d.setAttribute('data-app','ios');var p=location.pathname.replace(/\\/+$/,'')||'/';if(${JSON.stringify(
   APP_TAB_ROOTS,
-)}.indexOf(p)!==-1)d.setAttribute('data-app-tabbar','');}catch(e){}})();`;
+)}.indexOf(p)!==-1)d.setAttribute('data-app-tabbar','');var z=function(){var m=document.querySelector('meta[name="viewport"]');if(m&&!/maximum-scale/.test(m.content))m.setAttribute('content',m.content+', maximum-scale=1');};z();document.addEventListener('DOMContentLoaded',z);}catch(e){}})();`;

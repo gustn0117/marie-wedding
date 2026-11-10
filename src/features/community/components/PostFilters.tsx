@@ -2,10 +2,18 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useCallback } from 'react';
+import AppSearchField from '@/shared/components/AppSearchField';
+import AppSelectChip from '@/shared/components/AppSelectChip';
+
 const SORT_OPTIONS = [
   { value: 'latest', label: '최신순' },
   { value: 'popular', label: '인기순' },
 ] as const;
+// 앱 정렬 칩 — 빈 값이 기본(최신순)
+const APP_SORT_OPTIONS = [
+  { value: '', label: '최신순' },
+  { value: 'popular', label: '인기순' },
+];
 
 export default function PostFilters() {
   const router = useRouter();
@@ -39,7 +47,9 @@ export default function PostFilters() {
   };
 
   return (
-    <div className="platform-filter-dock">
+    <>
+    {/* 웹 칸을 먼저 둔다 — 부모의 space-y 간격이 웹에서 예전과 똑같이 걸리게(앱 칸은 웹에서 숨김) */}
+    <div className="app-hide platform-filter-dock">
       {/* Search + Sort */}
       <div className="flex items-center gap-3 p-3 flex-wrap bg-white">
         <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2 min-w-[200px]">
@@ -95,5 +105,20 @@ export default function PostFilters() {
         </div>
       </div>
     </div>
+    {/* 앱: 둥근 검색칸 + 정렬 칩(iOS 선택 메뉴), 그 아래 회색 띠. 웹 칸이 숨어 맨 위가 되므로 간격을 지운다(.app-first) */}
+    <div className="app-only app-first">
+      <div className="flex items-center gap-2">
+        <AppSearchField placeholder="게시글 검색" className="min-w-0 flex-1" />
+        <AppSelectChip
+          label="최신순"
+          ariaLabel="정렬"
+          value={activeSort === 'popular' ? 'popular' : ''}
+          options={APP_SORT_OPTIONS}
+          onChange={(v) => updateParams({ sort: v })}
+        />
+      </div>
+      <div className="app-band mt-3" aria-hidden />
+    </div>
+    </>
   );
 }

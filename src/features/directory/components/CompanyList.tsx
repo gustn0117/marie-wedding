@@ -44,11 +44,11 @@ export default function CompanyList({ initialProfiles, initialCount }: CompanyLi
         <p className="text-sm font-semibold text-gray-600" aria-live="polite">
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>개 프로필
         </p>
-        <span className="trust-pill">인재·업체 프로필</span>
+        <span className="trust-pill app-hide">인재·업체 프로필</span>
       </div>
 
-      {/* 모바일 1열 compact row */}
-      <div className="sm:hidden flex flex-col divide-y divide-gray-100 border border-gray-200 rounded bg-white">
+      {/* 모바일 1열 compact row — 앱에서는 화면 끝까지(.app-bleed) */}
+      <div className="app-bleed sm:hidden flex flex-col divide-y divide-gray-100 border border-gray-200 rounded bg-white">
         {profiles.map((profile) => (
           <CompanyMobileRow key={profile.id} profile={profile} />
         ))}

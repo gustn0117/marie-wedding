@@ -31,6 +31,8 @@ export function useOutsideClick<T extends HTMLElement>(
       const node = ref.current;
       if (!node) return;
       const target = e.target as Node | null;
+      // 앱의 아래 선택 창(AppSheet)은 <body> 로 옮겨 그려져 DOM 상 '바깥'이지만 같은 패널이다 — 닫지 않는다.
+      if (target instanceof Element && target.closest('[data-app-sheet]')) return;
       if (target && !node.contains(target)) {
         onCloseRef.current();
       }

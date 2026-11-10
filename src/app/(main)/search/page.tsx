@@ -1,4 +1,7 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
+import AppSearchField from '@/shared/components/AppSearchField';
+import { RECOMMENDED_LINKS } from '@/shared/constants/siteMenu';
 import { PUBLIC_JOB_COLUMNS } from '@/shared/constants/jobSelect';
 import { createServerQueryClient } from '@/lib/supabase/server-query';
 import { ROUTES } from '@/shared/constants';
@@ -86,10 +89,24 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   if (!q) {
     return (
-      <div className="saramin-section mx-auto max-w-[760px] py-16 text-center">
-        <h1 className="text-h2 font-bold text-gray-900 mb-1">검색</h1>
-        <p className="text-small text-gray-500">검색어를 입력해주세요.</p>
-      </div>
+      <>
+        {/* 앱: 열자마자 검색칸에 키보드가 올라오고, 아래에 업종별 바로가기 */}
+        <AppSearchTop autoFocus />
+        <div className="app-only mt-6">
+          <p className="text-[13px] font-semibold text-gray-500">업종별 공고 보기</p>
+          <div className="mt-2.5 flex flex-wrap gap-2">
+            {RECOMMENDED_LINKS.map((link) => (
+              <Link key={link.href} href={link.href} className="app-chip">
+                {link.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="app-hide saramin-section mx-auto max-w-[760px] py-16 text-center">
+          <h1 className="text-h2 font-bold text-gray-900 mb-1">검색</h1>
+          <p className="text-small text-gray-500">검색어를 입력해주세요.</p>
+        </div>
+      </>
     );
   }
 
@@ -98,7 +115,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      <div className="saramin-section p-5 flex items-start justify-between gap-3">
+      <div className="app-hide saramin-section p-5 flex items-start justify-between gap-3">
         <div>
           <h1 className="text-h2 font-bold text-gray-900">
             &ldquo;{q}&rdquo; 검색 결과
@@ -107,8 +124,17 @@ export default async function SearchPage({ searchParams }: PageProps) {
         </div>
       </div>
 
+      {/* 앱: 검색칸(검색어가 들어 있음) + 건수 — 웹의 '검색 결과' 머리 칸 대신.
+          웹 칸 뒤에 두어 웹 간격은 예전 그대로, 앱에서는 맨 위가 되므로 간격을 지운다(.app-first) */}
+      <div className="app-only app-first">
+        <AppSearchTop />
+        <p className="mt-3 text-[14px] text-gray-500">
+          총 <span className="font-bold text-ink tabular-nums">{totalCount}</span>건
+        </p>
+      </div>
+
       {totalCount === 0 && (
-        <div className="text-center py-12 bg-white rounded border border-gray-200">
+        <div className="app-plain text-center py-12 bg-white rounded border border-gray-200">
           <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
@@ -175,9 +201,18 @@ export default async function SearchPage({ searchParams }: PageProps) {
   );
 }
 
+/** 앱 검색칸 — 통합 검색은 ?q= 를 쓴다 */
+function AppSearchTop({ autoFocus = false }: { autoFocus?: boolean }) {
+  return (
+    <Suspense fallback={null}>
+      <AppSearchField paramKey="q" basePath={ROUTES.SEARCH} placeholder="공고·업체·글 검색" autoFocus={autoFocus} />
+    </Suspense>
+  );
+}
+
 function Section({ title, count, moreHref, children }: { title: string; count: number; moreHref: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded border border-gray-200 overflow-hidden">
+    <div className="app-bleed bg-white rounded border border-gray-200 overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <h2 className="text-body-lg font-bold text-gray-900">
           {title} <span className="text-primary text-small font-normal ml-1">{count}</span>

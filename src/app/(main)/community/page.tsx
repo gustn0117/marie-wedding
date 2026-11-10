@@ -95,8 +95,9 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-4">
-      {/* 카페 머리 — 이름과 활동량. 커뮤니티는 '사람이 있다'가 먼저 읽혀야 한다. */}
-      <header className="border border-gray-200 bg-white px-4 py-4 sm:px-5 sm:py-5">
+      {/* 카페 머리 — 이름과 활동량. 커뮤니티는 '사람이 있다'가 먼저 읽혀야 한다.
+          앱에서는 위 막대가 화면 이름을 보이고, 글 수는 게시판 칩에 있어 숨긴다. */}
+      <header className="app-hide border border-gray-200 bg-white px-4 py-4 sm:px-5 sm:py-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-[20px] font-bold text-ink sm:text-[24px]">웨딩 업계 커뮤니티</h1>
@@ -119,7 +120,8 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         </div>
       </header>
 
-      <div className="grid gap-4 lg:grid-cols-[188px_minmax(0,1fr)] lg:items-start">
+      {/* .app-first: 앱에서는 머리 칸이 숨어 이 칸이 맨 위 — 위 막대 바로 아래에 붙인다 */}
+      <div className="app-first grid gap-4 lg:grid-cols-[188px_minmax(0,1fr)] lg:items-start">
         <Suspense fallback={null}>
           <BoardNav counts={boards.counts} totalAll={boards.totalAll} todayAll={boards.todayAll} />
         </Suspense>

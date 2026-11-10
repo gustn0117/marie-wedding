@@ -13,7 +13,8 @@ export interface BreadcrumbItem {
 export default function Breadcrumb({ items, separator }: { items: BreadcrumbItem[]; separator?: ReactNode }) {
   const sep = separator ?? <span className="crumb-sep">/</span>;
   return (
-    <nav aria-label="페이지 위치" className="crumb">
+    // 앱에는 '지금 위치' 길 안내가 없다(위 막대의 뒤로 버튼으로 돌아간다) — .app-hide
+    <nav aria-label="페이지 위치" className="crumb app-hide">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
         return (

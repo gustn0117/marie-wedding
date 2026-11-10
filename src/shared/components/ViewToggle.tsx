@@ -9,8 +9,9 @@ interface ViewToggleProps {
 
 export default function ViewToggle({ value, onChange }: ViewToggleProps) {
   return (
+    // .app-segment — 앱에서는 둥근 알약 모양(globals.css '앱 화면 틀')
     <div
-      className="inline-flex border border-gray-300 rounded-sm overflow-hidden"
+      className="app-segment inline-flex border border-gray-300 rounded-sm overflow-hidden"
       role="group"
       aria-label="보기 방식"
     >

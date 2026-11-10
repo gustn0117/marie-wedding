@@ -49,7 +49,8 @@ export default function AppTabBar() {
   return (
     <nav
       aria-label="앱 메뉴"
-      className="app-only fixed inset-x-0 bottom-0 z-sidebar border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)]"
+      // .app-tabbar — 위 막대와 같은 반투명 흐림 바탕(globals.css '앱 화면 틀')
+      className="app-only app-tabbar fixed inset-x-0 bottom-0 z-sidebar border-t border-gray-200 bg-white pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="grid h-14 grid-cols-5">
         {TABS.map((tab) => {

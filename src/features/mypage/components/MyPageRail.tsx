@@ -111,8 +111,9 @@ export default function MyPageRail({ initialAccountType = null }: MyPageRailProp
         })}
       </aside>
 
-      {/* 모바일 가로 스크롤 칩 — 회원 유형별로 적합한 항목만 */}
-      <nav aria-label="마이페이지 메뉴 (모바일)" className="lg:hidden -mx-4 sm:-mx-6 mb-4 px-4 sm:px-6 overflow-x-auto">
+      {/* 모바일 가로 스크롤 칩 — 회원 유형별로 적합한 항목만.
+          앱에서는 숨긴다: '마이' 탭의 메뉴 목록(AppMyMenu)이 같은 곳으로 가고, 하위 화면은 뒤로 버튼으로 돌아온다. */}
+      <nav aria-label="마이페이지 메뉴 (모바일)" className="app-hide lg:hidden -mx-4 sm:-mx-6 mb-4 px-4 sm:px-6 overflow-x-auto">
         <div className="flex gap-1.5 pb-1 whitespace-nowrap">
           {mobileChips.map((c) => {
             const isActive = pathname === c.href || pathname.startsWith(c.href);

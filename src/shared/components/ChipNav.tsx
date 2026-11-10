@@ -13,11 +13,19 @@ export interface ChipItem {
  * 가로 nav — Linear/Stripe 스타일 underline 탭.
  * 둥근 칩 대신 텍스트 + 활성 시 하단 굵은 underline.
  */
-export default function ChipNav({ items, trailing }: { items: ChipItem[]; trailing?: ReactNode }) {
+export default function ChipNav({
+  items,
+  trailing,
+  className = '',
+}: {
+  items: ChipItem[];
+  trailing?: ReactNode;
+  className?: string;
+}) {
   return (
     <nav
       aria-label="카테고리"
-      className="mb-5 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 overflow-x-auto overflow-y-hidden border-b border-gray-200 scrollbar-none"
+      className={`app-tabs mb-5 -mx-4 sm:-mx-6 lg:mx-0 px-4 sm:px-6 lg:px-0 overflow-x-auto overflow-y-hidden border-b border-gray-200 scrollbar-none ${className}`}
       style={{ touchAction: 'pan-x', WebkitOverflowScrolling: 'touch' }}
     >
       <div className="flex items-center gap-1 whitespace-nowrap lg:justify-center">

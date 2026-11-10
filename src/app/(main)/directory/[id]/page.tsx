@@ -196,8 +196,8 @@ export default async function CompanyDetailPage({ params }: PageProps) {
           { name: displayName || '프로필', path: `/directory/${profile.id}` },
         ])}
       />
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500">
+      {/* Breadcrumb — 앱에서는 숨김(위 막대 뒤로 버튼) */}
+      <nav className="app-hide flex items-center gap-2 text-sm text-gray-500">
         <Link href={ROUTES.DIRECTORY} className="hover:text-primary transition-colors">업체 디렉토리</Link>
         <svg className="w-4 h-4 text-gray-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />

@@ -6,6 +6,7 @@ import { formatRelativeTime } from '@/shared/utils/format';
 import { withTimeout } from '@/shared/utils/withTimeout';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { ROUTES } from '@/shared/constants';
+import { isAppShell } from '@/shared/utils/appShell';
 import { notificationService, NOTIFICATIONS_UPDATED_EVENT } from '@/features/notifications/services/notification-service';
 
 interface Notification {
@@ -57,7 +58,11 @@ function toneForType(type: string): string {
   return TYPE_TONES.system;
 }
 
-export default function NotificationBell() {
+/**
+ * 알림 종 — 웹 머리글은 눌러서 펼치는 목록(dropdown), 앱 위 막대는 알림 화면으로 가는 링크(link).
+ * 두 종이 다 붙어 있어도(안 보이는 쪽은 CSS 로 숨김) 안 읽은 수는 보이는 쪽만 묻는다.
+ */
+export default function NotificationBell({ variant = 'dropdown' }: { variant?: 'dropdown' | 'link' } = {}) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -92,6 +97,8 @@ export default function NotificationBell() {
   // 폴링 1회 = 공유 GoTrue getUser() 검증 + DB 조회라, 열어만 둔 수많은 배경 탭이
   // 접속자 수에 비례해 상시 인증 부하를 만들던 것을 없앤다. 탭 복귀 시 즉시 1회 갱신.
   useEffect(() => {
+    // 웹에선 펼침 종만, 앱에선 링크 종만 묻는다(안 보이는 종이 같은 조회를 또 하지 않게)
+    if ((variant === 'link') !== isAppShell()) return;
     let timer: ReturnType<typeof setInterval> | null = null;
     const start = () => { if (timer === null) timer = setInterval(() => loadData(), 60_000); };
     const stop = () => { if (timer !== null) { clearInterval(timer); timer = null; } };
@@ -102,7 +109,7 @@ export default function NotificationBell() {
     if (document.visibilityState === 'visible') { loadData(); start(); }
     document.addEventListener('visibilitychange', onVisibility);
     return () => { stop(); document.removeEventListener('visibilitychange', onVisibility); };
-  }, [loadData]);
+  }, [loadData, variant]);
 
   // 열 때 fresh load (스피너 표시)
   useEffect(() => {
@@ -111,10 +118,11 @@ export default function NotificationBell() {
 
   // 알림 페이지·쪽지 상세 등에서 읽음 처리되면 즉시 재조회해 배지 지연(최대 60초)을 없앤다.
   useEffect(() => {
+    if ((variant === 'link') !== isAppShell()) return;
     const onUpdated = () => loadData();
     window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
     return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, onUpdated);
-  }, [loadData]);
+  }, [loadData, variant]);
 
   // outside click + esc
   useEffect(() => {
@@ -157,6 +165,25 @@ export default function NotificationBell() {
       }
     }
   };
+
+  if (variant === 'link') {
+    return (
+      <Link
+        href={ROUTES.MYPAGE_NOTIFICATIONS}
+        aria-label={`알림 ${unreadCount > 0 ? `${unreadCount}개 새로 도착` : '없음'}`}
+        className="relative inline-flex h-11 w-11 items-center justify-center text-ink"
+      >
+        <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.7} stroke="currentColor" aria-hidden>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+        </svg>
+        {unreadCount > 0 && (
+          <span className="absolute right-1.5 top-1.5 inline-flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-state-urgent px-1 text-[10px] font-bold tabular-nums text-white">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </Link>
+    );
+  }
 
   return (
     <div ref={wrapperRef} className="relative">

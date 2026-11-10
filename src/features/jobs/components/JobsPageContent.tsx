@@ -18,8 +18,31 @@ import JobCard from './JobCard';
 import { useOutsideClick } from '@/shared/hooks/useOutsideClick';
 import EmptyState from '@/shared/components/EmptyState';
 import PageHeader from '@/shared/components/PageHeader';
+import AppSearchField from '@/shared/components/AppSearchField';
+import AppSelectChip from '@/shared/components/AppSelectChip';
+import { AdaptivePanel } from '@/shared/components/AppSheet';
 
 const PAGE_SIZE = 20;
+
+// 급여·경력 필터 — 웹 칩(펼침 목록)과 앱 칩(iOS 선택 메뉴)이 같은 값을 쓴다
+const SALARY_OPTIONS = [
+  { value: '', label: '급여 무관' },
+  { value: '200', label: '월 200만원~' },
+  { value: '250', label: '월 250만원~' },
+  { value: '300', label: '월 300만원~' },
+  { value: '400', label: '월 400만원~' },
+];
+const EXPERIENCE_OPTIONS = [
+  { value: '', label: '경력 무관' },
+  { value: '0', label: '신입 가능' },
+  { value: '1', label: '1년 이하' },
+  { value: '3', label: '3년 이하' },
+  { value: '5', label: '5년 이하' },
+];
+const APP_SORT_OPTIONS = [
+  { value: '', label: '최신 등록순' },
+  { value: 'deadline', label: '마감 임박순' },
+];
 
 interface JobsPageContentProps {
   initialJobs?: Job[];
@@ -176,6 +199,31 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   const pageTitle = '채용정보';
   const selectedFilterCount = activeFilters.length + (search.trim() ? 1 : 0);
 
+  // 앱 필터 칩 — 지역·업종은 아래 선택 창(AdaptivePanel), 나머지는 iOS 선택 메뉴(AppSelectChip)
+  const salaryMin = searchParams.get('salaryMin') ?? '';
+  const expMax = searchParams.get('expMax') ?? '';
+  const openRegionPanel = () => {
+    closeAllDropdowns();
+    setRegionDropdownOpen(true);
+    setBrowsingRegion(selectedRegion);
+  };
+  const openBusinessTypePanel = () => {
+    closeAllDropdowns();
+    setBusinessTypeDropdownOpen(true);
+  };
+  const appRegionLabel = selectedRegion
+    ? selectedSubRegions.length > 0
+      ? `${getRegionLabel(selectedRegion)} ${selectedSubRegions.length}곳`
+      : getRegionLabel(selectedRegion)
+    : '지역';
+  const appBusinessTypeLabel =
+    selectedBusinessTypes.length === 0
+      ? '업종'
+      : selectedBusinessTypes.length === 1
+        ? getBusinessTypeLabel(selectedBusinessTypes[0])
+        : `업종 ${selectedBusinessTypes.length}개`;
+  const hasAnyFilter = activeFilters.length > 0 || completedOnly || !!searchParam || !!salaryMin || !!expMax;
+
   return (
     <div className="space-y-4">
       <PageHeader
@@ -185,10 +233,48 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         actions={
           <Link href={ROUTES.JOBS_NEW} className="btn-primary text-sm">+ 공고 등록</Link>
         }
+        className="app-hide"
       />
 
-      {/* Filter Section */}
-      <div className="surface overflow-hidden" ref={filterDockRef}>
+      {/* 앱: 검색칸 + 가로로 넘기는 필터 칩. 화면 이름·공고 등록은 위 막대에 있다. */}
+      <div className="app-only app-first space-y-1 pt-3">
+        <AppSearchField placeholder="공고 제목 검색" />
+        <div className="app-chip-row">
+          <button type="button" data-on={!!selectedRegion} onClick={openRegionPanel} className="app-chip">
+            {appRegionLabel}
+            <ChipChevron />
+          </button>
+          <button type="button" data-on={selectedBusinessTypes.length > 0} onClick={openBusinessTypePanel} className="app-chip">
+            {appBusinessTypeLabel}
+            <ChipChevron />
+          </button>
+          <AppSelectChip
+            label="고용형태"
+            value={selectedEmploymentType}
+            options={EMPLOYMENT_TYPES}
+            onChange={(v) => updateParams({ employmentType: v })}
+          />
+          <AppSelectChip label="급여" value={salaryMin} options={SALARY_OPTIONS} onChange={(v) => updateParams({ salaryMin: v })} />
+          <AppSelectChip label="경력" value={expMax} options={EXPERIENCE_OPTIONS} onChange={(v) => updateParams({ expMax: v })} />
+          <button
+            type="button"
+            aria-pressed={completedOnly}
+            data-on={completedOnly}
+            onClick={() => updateParams({ completed: completedOnly ? '' : '1' })}
+            className="app-chip"
+          >
+            진행 이력 있음
+          </button>
+          {hasAnyFilter && (
+            <button type="button" onClick={handleResetAll} className="h-9 shrink-0 px-2 text-[14px] font-semibold text-gray-500">
+              초기화
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Filter Section — 앱에서는 위 검색칸·칩이 대신한다(펼침 패널은 아래 선택 창으로 뜬다) */}
+      <div className="app-hide surface overflow-hidden" ref={filterDockRef}>
         {/* Filter Controls Bar */}
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100 bg-white">
           {/* Region Dropdown */}
@@ -335,11 +421,15 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           </div>
         </div>
 
-        {/* Region Dropdown Panel */}
-        {regionDropdownOpen && (
-          <div className="border-b border-gray-200 bg-white">
+        {/* Region Dropdown Panel — 앱에서는 아래 선택 창 */}
+        <AdaptivePanel
+          open={regionDropdownOpen}
+          title="지역"
+          onClose={closeAllDropdowns}
+          className="border-b border-gray-200 bg-white"
+        >
             <div className="flex flex-col sm:flex-row">
-              <div className="w-full sm:w-[200px] border-b sm:border-b-0 sm:border-r border-gray-200 max-h-[220px] sm:max-h-[360px] overflow-y-auto">
+              <div className="app-sheet-list w-full sm:w-[200px] border-b sm:border-b-0 sm:border-r border-gray-200 max-h-[220px] sm:max-h-[360px] overflow-y-auto">
                 <button
                   onClick={() => handleRegionConfirm('')}
                   className={`w-full text-left px-4 py-2 text-small hover:bg-gray-50 transition-colors ${
@@ -408,12 +498,16 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
                 </div>
               )}
             </div>
-          </div>
-        )}
+        </AdaptivePanel>
 
-        {/* Business Type Dropdown Panel */}
-        {businessTypeDropdownOpen && (
-          <div className="border-b border-gray-200 bg-white px-4 py-3">
+        {/* Business Type Dropdown Panel — 앱에서는 아래 선택 창 */}
+        <AdaptivePanel
+          open={businessTypeDropdownOpen}
+          title="업종"
+          onClose={closeAllDropdowns}
+          className="border-b border-gray-200 bg-white"
+        >
+          <div className="px-4 py-3">
             <div className="flex flex-wrap gap-1.5">
               <button
                 onClick={() => updateParams({ businessType: '' })}
@@ -448,7 +542,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
               })}
             </div>
           </div>
-        )}
+        </AdaptivePanel>
 
         {/* Employment Type Dropdown Panel */}
         {employmentTypeDropdownOpen && (
@@ -482,8 +576,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
         )}
       </div>
 
-      {/* Trust + salary + experience filter toggles */}
-      <div className="platform-panel-soft flex items-center gap-2 px-4 py-3 flex-wrap">
+      {/* Trust + salary + experience filter toggles — 앱에서는 위 칩 줄이 대신한다 */}
+      <div className="app-hide platform-panel-soft flex items-center gap-2 px-4 py-3 flex-wrap">
         <button
           type="button"
           onClick={() => updateParams({ completed: completedOnly ? '' : '1' })}
@@ -511,7 +605,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
       </div>
 
       {/* Results Info + Sort + View Toggle */}
-      <div className="platform-toolbar">
+      <div className="app-hide platform-toolbar">
         <p className="text-sm font-semibold text-gray-600" aria-live="polite">
           검색 결과 <span className="font-bold text-primary">{totalCount.toLocaleString()}</span>건
         </p>
@@ -521,6 +615,26 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
             onChange={(v) => updateParams({ sort: v === 'recent' ? '' : v })}
           />
           <ViewToggle value={viewMode} onChange={setViewMode} />
+        </div>
+      </div>
+
+      {/* 앱: 회색 띠로 필터와 목록을 나누고, 건수·정렬·보기 방식을 한 줄에 */}
+      <div className="app-only app-first">
+        <div className="app-band" aria-hidden />
+        <div className="flex items-center justify-between gap-3 pt-3">
+          <p className="text-[14px] text-gray-500" aria-live="polite">
+            공고 <span className="font-bold text-ink tabular-nums">{totalCount.toLocaleString()}</span>건
+          </p>
+          <div className="flex items-center gap-2">
+            <AppSelectChip
+              label="최신 등록순"
+              ariaLabel="정렬"
+              value={searchParams.get('sort') === 'deadline' ? 'deadline' : ''}
+              options={APP_SORT_OPTIONS}
+              onChange={(v) => updateParams({ sort: v })}
+            />
+            <ViewToggle value={viewMode} onChange={setViewMode} />
+          </div>
         </div>
       </div>
 
@@ -536,7 +650,7 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
           actionHref={ROUTES.JOBS_NEW}
         />
       ) : viewMode === 'list' ? (
-        <div className="platform-data-table">
+        <div className="platform-data-table app-bleed">
           {jobs.map((job, idx) => (
             <JobListRow key={job.id} job={job} index={idx + 1} />
           ))}
@@ -592,6 +706,15 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
   );
 }
 
+/** 앱 필터 칩의 아래 꺾쇠(누르면 선택 창이 열린다는 표시) */
+function ChipChevron() {
+  return (
+    <svg className="h-3.5 w-3.5 opacity-60" fill="none" viewBox="0 0 24 24" strokeWidth={2.4} stroke="currentColor" aria-hidden>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+    </svg>
+  );
+}
+
 const SORT_OPTIONS = [
   { v: 'recent', label: '최신 등록순' },
   { v: 'deadline', label: '마감 임박순' },
@@ -640,13 +763,7 @@ function SortDropdown({ value, onChange }: { value: string; onChange: (v: string
 }
 
 function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const options = [
-    { v: '', label: '급여 무관' },
-    { v: '200', label: '월 200만원~' },
-    { v: '250', label: '월 250만원~' },
-    { v: '300', label: '월 300만원~' },
-    { v: '400', label: '월 400만원~' },
-  ];
+  const options = SALARY_OPTIONS.map((o) => ({ v: o.value, label: o.label }));
   const active = options.find((o) => o.v === value) ?? options[0];
   return (
     <details className="relative">
@@ -674,13 +791,7 @@ function SalaryFilterChip({ value, onChange }: { value: string; onChange: (v: st
 }
 
 function ExperienceFilterChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const options = [
-    { v: '', label: '경력 무관' },
-    { v: '0', label: '신입 가능' },
-    { v: '1', label: '1년 이하' },
-    { v: '3', label: '3년 이하' },
-    { v: '5', label: '5년 이하' },
-  ];
+  const options = EXPERIENCE_OPTIONS.map((o) => ({ v: o.value, label: o.label }));
   const active = options.find((o) => o.v === value) ?? options[0];
   return (
     <details className="relative">
