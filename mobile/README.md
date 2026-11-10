@@ -61,22 +61,42 @@ cd ios/App && xcodebuild -project App.xcodeproj -scheme App -sdk iphonesimulator
 
 **시험이 끝나면 꼭 `npx cap sync ios` 를 다시 돌려 운영 주소로 되돌린다.**
 
-## 스토어에 올리기
+## 스토어·TestFlight 에 올리기
 
-1. 운영 주소로 되돌렸는지 확인: `grep '"url"' ios/App/App/capacitor.config.json` → `https://marie.co.kr`
-2. 올릴 때마다 빌드 번호(`CURRENT_PROJECT_VERSION`)를 1씩 올린다. 앱 버전(`MARKETING_VERSION`)은 기능이 바뀔 때.
-3. 묶고 올리기 (Xcode 에 로그인한 계정으로 서명·업로드):
+팀에 등록된 기기가 없어서 Xcode 자동 서명으로는 아카이브가 안 된다. 자동 서명은 개발용 프로필이 필요한데, 기기가 없으면
+그 프로필을 못 만들기 때문이다("Your team has no devices…"). 그래서 **아카이브부터 배포 인증서와 App Store 프로필로 수동 서명**한다.
+프로젝트 파일은 자동 서명 그대로 두고, 명령줄에서만 바꾼다(시뮬레이터 빌드는 영향 없음).
+
+- 배포 인증서 `Apple Distribution: HYUNSU SIM (U4HRK9DX9S)`: 이 Mac 키체인에 있다. 2027-11-10 만료.
+- 프로필 `Marie App Store`: App Store 용이고 애플 로그인 권한이 들어 있다. 2027-11-10 만료.
+  - 없거나 만료되면 다시 만든다. 개발자 사이트 Profiles > + > App Store Connect 에서 번들 `kr.co.marie.app` 과 위 인증서를 고르거나,
+    App Store Connect API 를 쓴다. 만든 파일은 `~/Library/Developer/Xcode/UserData/Provisioning Profiles/` 에 넣는다.
+  - 인증서를 새로 발급하면 프로필도 다시 만들어야 한다.
+
+1. 운영 주소로 되돌렸는지 확인한다: `grep '"url"' ios/App/App/capacitor.config.json` → `https://marie.co.kr`
+2. 올릴 때마다 빌드 번호(`CURRENT_PROJECT_VERSION`)를 1씩 올린다. 같은 번호는 다시 못 올린다. 앱 버전(`MARKETING_VERSION`)은 기능이 바뀔 때 올린다.
+3. 묶는다:
 
 ```sh
 cd ios/App
-xcodebuild -project App.xcodeproj -scheme App -configuration Release \
+xcodebuild archive -project App.xcodeproj -scheme App -configuration Release \
   -destination 'generic/platform=iOS' -archivePath build/Marie.xcarchive \
-  -allowProvisioningUpdates archive
-xcodebuild -exportArchive -archivePath build/Marie.xcarchive \
-  -exportOptionsPlist ExportOptions.plist -exportPath build/export -allowProvisioningUpdates
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Apple Distribution" \
+  PROVISIONING_PROFILE_SPECIFIER="Marie App Store" DEVELOPMENT_TEAM=U4HRK9DX9S
 ```
 
-`ExportOptions.plist` 의 `destination` 이 `upload` 이면 App Store Connect 로 바로 올라간다(앱 레코드가 먼저 있어야 한다).
-Xcode 에서는 Product > Archive → Distribute App 으로 같은 일을 한다.
+4. 올린다. App Store Connect 에 앱 레코드가 먼저 있어야 하며, 앱 레코드는 API 로 만들 수 없고 웹에서만 만든다.
+
+```sh
+xcodebuild -exportArchive -archivePath build/Marie.xcarchive \
+  -exportOptionsPlist ExportOptions.plist -exportPath build/export
+```
+
+   - Xcode 에 로그인한 계정으로 올라간다.
+   - App Store Connect API 키로 올리려면 `-authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_<키ID>.p8 -authenticationKeyID <키ID> -authenticationKeyIssuerID <발급자ID>` 를 붙인다.
+   - 올리지 않고 IPA 만 만들려면 `ExportOptions.plist` 의 `destination` 을 `export` 로 바꾼 사본을 쓴다.
+5. 애플이 처리를 마치면(5~30분) App Store Connect > TestFlight 에 빌드가 뜬다.
+   - 내부 테스트 그룹 「마리에 내부 테스트」는 새 빌드를 자동으로 받는다.
+   - 아이폰의 TestFlight 앱에서 설치한다.
 
 스토어 문안·심사 메모·개인정보 응답은 [APP_STORE.md](APP_STORE.md).
