@@ -5,6 +5,7 @@ import { toast } from '@/shared/components/Toast';
 import { apiFetch } from '@/shared/utils/apiFetch';
 import { friendlyError } from '@/shared/utils/errorMessages';
 import { ROUTES } from '@/shared/constants';
+import { useIsAppShell } from '@/shared/hooks/useIsAppShell';
 
 const CONFIRM_PHRASE = '회원탈퇴 동의';
 
@@ -22,8 +23,12 @@ export default function AccountWithdrawalSection() {
   const [open, setOpen] = useState(false);
   const [phrase, setPhrase] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  const isApp = useIsAppShell();
 
-  const canSubmit = phrase.trim() === CONFIRM_PHRASE;
+  // 앱에서는 한글 문구를 직접 치는 대신 동의 체크로 확인한다 — 한글 자판이 없는 사람(App Store 심사관 등)도
+  // 탈퇴를 끝까지 할 수 있어야 한다(심사 지침 5.1.1(v)). 웹은 문구 입력 그대로.
+  const canSubmit = isApp ? agreed : phrase.trim() === CONFIRM_PHRASE;
 
   const handleWithdraw = async () => {
     if (!canSubmit) return;
@@ -73,25 +78,37 @@ export default function AccountWithdrawalSection() {
             <li>탈퇴 후 동일 이메일로 다시 가입하려면 운영팀 문의가 필요할 수 있습니다.</li>
           </ul>
 
-          <div>
-            <label htmlFor="withdraw-confirm" className="block text-[12px] font-semibold text-ink mb-1">
-              계속하려면 아래 입력란에 <span className="font-bold text-rose-600">{CONFIRM_PHRASE}</span> 라고 입력해주세요.
+          {isApp ? (
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[13px] leading-relaxed text-gray-700">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="h-4 w-4 shrink-0 accent-primary"
+              />
+              <span>위 안내를 확인했고 회원 탈퇴에 동의합니다.</span>
             </label>
-            <input
-              id="withdraw-confirm"
-              type="text"
-              value={phrase}
-              onChange={(e) => setPhrase(e.target.value)}
-              placeholder={CONFIRM_PHRASE}
-              className="w-full h-10 px-3 rounded border border-gray-300 text-sm focus:outline-none focus:border-rose-400"
-              autoComplete="off"
-            />
-          </div>
+          ) : (
+            <div>
+              <label htmlFor="withdraw-confirm" className="block text-[12px] font-semibold text-ink mb-1">
+                계속하려면 아래 입력란에 <span className="font-bold text-rose-600">{CONFIRM_PHRASE}</span> 라고 입력해주세요.
+              </label>
+              <input
+                id="withdraw-confirm"
+                type="text"
+                value={phrase}
+                onChange={(e) => setPhrase(e.target.value)}
+                placeholder={CONFIRM_PHRASE}
+                className="w-full h-10 px-3 rounded border border-gray-300 text-sm focus:outline-none focus:border-rose-400"
+                autoComplete="off"
+              />
+            </div>
+          )}
 
           <div className="flex items-center justify-end gap-2">
             <button
               type="button"
-              onClick={() => { setOpen(false); setPhrase(''); }}
+              onClick={() => { setOpen(false); setPhrase(''); setAgreed(false); }}
               disabled={submitting}
               className="px-4 h-9 rounded-lg border border-gray-300 bg-white text-[12.5px] font-semibold text-gray-700 hover:border-gray-400"
             >

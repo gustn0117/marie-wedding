@@ -9,7 +9,7 @@ export const metadata = {
 export default function WithdrawPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-4">
-      <nav className="flex items-center gap-2 text-sm">
+      <nav className="app-hide flex items-center gap-2 text-sm">
         <Link href={ROUTES.MYPAGE} className="text-gray-500 hover:text-primary transition-colors">
           마이페이지
         </Link>
