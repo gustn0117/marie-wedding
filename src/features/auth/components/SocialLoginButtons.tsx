@@ -3,7 +3,12 @@
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { authService } from '@/features/auth/services/auth-service';
-import { authorizeWithApple, canSignInWithApple } from '@/shared/utils/appShell';
+import {
+  authorizeWithApple,
+  authorizeWithKakaoTalk,
+  canSignInWithApple,
+  canSignInWithKakaoTalk,
+} from '@/shared/utils/appShell';
 
 interface Props {
   /** 가입 화면이면 'signup', 로그인 화면이면 'login'. 카피만 다름. */
@@ -24,7 +29,8 @@ function safeNext(value: string | null): string {
  *
  * - Apple: iOS 앱에서만 보인다(.app-only). 앱의 네이티브 애플 로그인 창 → /api/auth/apple 이 세션으로 바꾼다.
  *   카카오·네이버를 쓰는 앱은 앱스토어 심사 기준(4.8)상 애플 로그인을 같은 크기 이상으로 함께 보여야 해 맨 위에 둔다.
- * - Kakao: Supabase native (signInWithOAuth)
+ * - Kakao: 앱(1.0 빌드 4부터)은 카카오톡 앱으로 바로 로그인(KakaoLogin 플러그인 → /api/auth/kakao).
+ *   웹, 카카오톡이 없는 폰, 카카오톡 로그인이 실패했을 때는 Supabase native (signInWithOAuth) — 카카오 계정 화면.
  * - Naver: 자체 라우트로 redirect (/auth/naver/start)
  *
  * 한 컴포넌트로 로그인·회원가입 페이지 양쪽에 재사용.
@@ -44,6 +50,21 @@ function SocialLoginButtonsInner({ mode = 'login', onError, next: nextProp }: Pr
 
   const handleKakao = async () => {
     setLoading('kakao');
+    // 앱은 카카오톡 앱으로 먼저 — 카카오톡에 로그인돼 있으면 아이디·비밀번호를 다시 넣지 않는다.
+    // 카카오톡이 없거나 잘 안 되면 아래 웹 로그인(카카오 계정 화면)으로 이어 간다.
+    if (canSignInWithKakaoTalk()) {
+      const talk = await signInWithKakaoTalk(next);
+      if (talk === 'redirected') return;
+      if (talk === 'canceled') {
+        setLoading(null);
+        return;
+      }
+      if (talk === 'account_removed') {
+        onError?.('이용할 수 없는 계정이에요. 고객센터로 문의해 주세요.');
+        setLoading(null);
+        return;
+      }
+    }
     // 8초 후에도 redirect 안 일어났으면 OAuth가 hang한 것으로 간주 — 버튼 잠금 해제
     const safety = setTimeout(() => {
       setLoading((prev) => (prev === 'kakao' ? null : prev));
@@ -170,7 +191,45 @@ const APPLE_BUTTON_CLASS =
   'app-only w-full flex items-center justify-center gap-2 h-11 rounded-lg bg-black text-white text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50';
 const APPLE_BUTTON_FONT = { fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif' } as const;
 
-/** 애플 로그인에 쓰는 일회용 임의 문자열(32바이트, 16진수) */
+type KakaoTalkOutcome = 'redirected' | 'canceled' | 'account_removed' | 'fallback';
+
+/**
+ * 앱에서 카카오톡 앱으로 로그인한다. 카카오톡이 준 ID 토큰을 /api/auth/kakao 가 세션으로 바꾼다.
+ * 'fallback' 이면 부르는 쪽이 웹 로그인으로 이어 간다 — 카카오톡이 없거나, 카카오·인증 서버 설정 문제로
+ * 토큰이 통하지 않을 때도 로그인은 되게 한다(실패는 서버 로그 [auth/kakao] 에 남는다).
+ */
+async function signInWithKakaoTalk(next: string): Promise<KakaoTalkOutcome> {
+  const nonce = randomNonce();
+  let idToken: string;
+  try {
+    idToken = (await authorizeWithKakaoTalk(nonce)).idToken;
+  } catch (e) {
+    // 카카오톡에서 취소했거나 아무것도 안 하고 돌아온 것은 오류가 아니다.
+    return (e as { code?: string } | null)?.code === 'CANCELED' ? 'canceled' : 'fallback';
+  }
+  if (typeof idToken !== 'string' || !idToken) return 'fallback';
+
+  try {
+    const res = await fetch('/api/auth/kakao', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ idToken, nonce, next }),
+    });
+    const data = (await res.json().catch(() => ({}))) as { redirect?: string; error?: string };
+    if (res.ok && data.redirect) {
+      // 서버가 세션 쿠키를 심었다 — 새로 읽어 머리글 등 서버 화면이 로그인 상태로 그려지게 한다.
+      window.location.href = data.redirect;
+      return 'redirected';
+    }
+    if (data.error === 'account_removed') return 'account_removed';
+  } catch {
+    // 연결 오류 — 웹 로그인으로 이어 간다.
+  }
+  return 'fallback';
+}
+
+/** 애플·카카오톡 로그인에 쓰는 일회용 임의 문자열(32바이트, 16진수) */
 function randomNonce(): string {
   const bytes = new Uint8Array(32);
   crypto.getRandomValues(bytes);

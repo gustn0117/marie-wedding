@@ -27,6 +27,7 @@
 | 누름 반응·진동·화면 이동 움직임 | `AppTouchFeedback`, `MarieShell.haptic` |
 | 화면 확대 막기(`maximum-scale=1`) | `appShell.ts` 감지 스크립트 |
 | 애플 로그인 버튼(맨 위) | `SocialLoginButtons` → `/api/auth/apple` |
+| 카카오 버튼 → 카카오톡 앱으로 로그인(빌드 4부터). 카카오톡이 없거나 실패하면 카카오 웹 로그인 | `SocialLoginButtons` → `/api/auth/kakao` |
 
 **웹 화면은 그대로여야 한다.** 앱 전용 칸(`.app-only`)을 `space-y-*` 목록 안에 넣을 때는 웹 칸 **뒤에** 둔다.
 앞에 두면 숨겨져 있어도 형제로 세어져 웹 칸 위에 간격이 하나 더 생긴다(앱에서 맨 위가 되는 칸은 `.app-first` 로 간격을 지운다).
@@ -37,6 +38,17 @@
   사이트가 `/api/auth/apple` 로 넘기면 GoTrue `signInWithIdToken` 이 세션을 만든다.
   GoTrue 설정: `GOTRUE_EXTERNAL_APPLE_ENABLED=true`, `GOTRUE_EXTERNAL_APPLE_CLIENT_ID=kr.co.marie.app`
   (서버 `/home/server/supabase/docker/docker-compose.yml`, 웹 리디렉트 방식이 아니라 SECRET 은 필요 없다).
+- `KakaoLoginPlugin.swift` — 카카오톡 앱으로 로그인(빌드 4부터). 웹 카카오 로그인은 웹뷰 안에서 열려 휴대폰의 카카오톡
+  로그인 상태를 못 써 아이디·비밀번호를 다시 넣어야 했다. 카카오 SDK(`kakao-ios-sdk` 2.30.0, Swift 패키지 —
+  KakaoSDKCommon·Auth·User)로 카카오톡을 열고, 받은 ID 토큰을 사이트가 `/api/auth/kakao` 로 넘기면 GoTrue 가 세션을 만든다.
+  nonce 는 애플 로그인과 같은 방식. 카카오 토큰은 받자마자 만료·삭제한다(사이트 세션만 쓴다).
+  - 앱 설정: 빌드 설정 `KAKAO_NATIVE_APP_KEY`(카카오 네이티브 앱 키) → Info.plist 의 `KakaoNativeAppKey` 와
+    돌아오는 주소 `kakao<키>://oauth`(URL 스킴). `LSApplicationQueriesSchemes` 에 `kakaokompassauth`.
+    키가 비어 있으면 플러그인이 꺼져(`UNAVAILABLE`) 사이트가 웹 로그인을 쓴다.
+  - 돌아온 주소는 `SceneDelegate` 가 SDK 에 넘기고, SDK 준비는 `AppDelegate`.
+  - 카카오톡에서 아무것도 안 하고 돌아오면 SDK 가 답하지 않으므로, 앱이 다시 켜진 뒤 1.5초 안에 결과 주소가 없으면 취소로 끝낸다.
+  - 카카오 콘솔(iOS 플랫폼에 번들 ID, OpenID Connect 켜기)과 GoTrue `GOTRUE_EXTERNAL_KAKAO_CLIENT_ID=<REST API 키>,<네이티브 앱 키>`
+    (순서 지킴 — 웹 로그인은 첫 값)는 [docs/auth-social-login.md](../docs/auth-social-login.md).
 - `LinkRouting.swift` — 사이트 밖 링크는 앱 안 브라우저(SFSafariViewController)로, 새 창(`target="_blank"`)으로 여는
   사이트 주소(이력서 첨부 등 로그인이 필요한 것)는 같은 로그인 상태로 앱 안 보기 창에서 연다. `window.print()` 대신 iOS 인쇄 창.
 - `MainViewController.swift` — 위 플러그인 등록, 화면 왼쪽 끝에서 밀면 뒤로 가기, 입력칸을 누를 때 키보드 위에 뜨는

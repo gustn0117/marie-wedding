@@ -21,7 +21,7 @@ export function sanitizeReturnTo(value: string | null | undefined): string | nul
 
 /**
  * 소셜 로그인으로 세션을 만든 뒤의 공통 마무리 — 카카오(OAuth 콜백 /auth/callback)와
- * 애플(앱 네이티브 /api/auth/apple)이 같이 쓴다.
+ * 앱 네이티브 로그인(애플 /api/auth/apple, 카카오톡 /api/auth/kakao — nativeIdTokenLogin)이 같이 쓴다.
  *
  * - 관리자 삭제(GoTrue ban)된 계정이면 방금 심은 세션 쿠키를 지우고 거부
  * - 탈퇴한 프로필이면 완전 초기화(reactivate_profile_clean) 후 새로 온보딩

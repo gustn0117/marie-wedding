@@ -35,6 +35,18 @@ Kakao/Google은 코드/.env에 client_id/secret 둘 필요 없음. Supabase 콘�
 3. Supabase: Kakao 활성화 → REST API 키 입력
 4. Redirect URL을 카카오 콘솔에 등록: `<NEXT_PUBLIC_APP_URL>/auth/callback`
 
+### Kakao — iOS 앱의 '카카오톡으로 로그인'
+웹 로그인은 앱 화면(웹뷰) 안에서 열려 휴대폰의 카카오톡 로그인 상태를 못 쓴다(아이디·비밀번호를 다시 넣어야 한다).
+그래서 앱(1.0 빌드 4부터)은 카카오 SDK 로 카카오톡 앱을 열어 확인만 받고, 받은 ID 토큰을 `/api/auth/kakao` 가
+`signInWithIdToken({ provider: 'kakao' })` 으로 세션으로 바꾼다. 같은 카카오 회원번호라 웹 카카오 로그인과 같은 계정이다.
+카카오톡이 없거나 실패하면 사이트가 위의 웹 로그인으로 이어 간다. 코드·앱 설정은 `mobile/README.md`.
+
+1. 카카오 콘솔 > 앱 키: **네이티브 앱 키**를 앱 빌드 설정 `KAKAO_NATIVE_APP_KEY` 에 넣는다.
+2. 카카오 콘솔 > 플랫폼 > iOS: 번들 ID `kr.co.marie.app` 등록.
+3. 카카오 콘솔 > 카카오 로그인 > OpenID Connect: **사용 ON**. 꺼져 있으면 ID 토큰이 안 나와 웹 로그인으로 넘어간다.
+4. GoTrue: `GOTRUE_EXTERNAL_KAKAO_CLIENT_ID=<REST API 키>,<네이티브 앱 키>` — **순서를 지킨다**(웹 로그인은 첫 값을 쓰고,
+   ID 토큰의 대상 aud 는 네이티브 앱 키다). 바꾼 뒤 auth 컨테이너를 다시 띄운다(모든 프로젝트 인증이 몇 초 멈춘다).
+
 ### Google
 1. https://console.cloud.google.com 에서 OAuth client 생성
 2. 승인된 리디렉션 URI에 `<NEXT_PUBLIC_APP_URL>/auth/callback` 추가

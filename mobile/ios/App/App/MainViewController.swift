@@ -4,7 +4,7 @@ import Capacitor
 import ObjectiveC
 
 /// 앱 첫 화면. Capacitor 웹뷰에 사이트(https://marie.co.kr)를 띄우고, 앱에서만 쓰는 기능을 붙인다.
-/// - 애플 로그인(AppleSignInPlugin)
+/// - 애플 로그인(AppleSignInPlugin), 카카오톡 앱으로 로그인(KakaoLoginPlugin)
 /// - 사이트 밖 링크는 앱 안 브라우저로, 새 창 링크는 앱 안 보기 창으로(LinkRouting.swift)
 /// - 화면 왼쪽 끝에서 밀면 이전 화면으로(사파리와 같은 몸짓)
 /// - 입력칸을 누를 때 키보드 위에 뜨는 '‹ › 완료' 막대를 끈다(웹 양식처럼 보이지 않게)
@@ -15,6 +15,7 @@ class MainViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         // 웹뷰가 첫 화면을 읽기 전에 등록해야 사이트의 window.Capacitor.Plugins 에 실린다.
         bridge?.registerPluginInstance(AppleSignInPlugin())
+        bridge?.registerPluginInstance(KakaoLoginPlugin())
         bridge?.registerPluginInstance(MarieShellPlugin())
 
         FormAccessoryBar.hide()

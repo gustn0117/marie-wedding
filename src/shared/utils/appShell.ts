@@ -118,6 +118,23 @@ export async function authorizeWithApple(nonce: string): Promise<AppleAuthorizat
   return (await authorize({ nonce })) as AppleAuthorization;
 }
 
+/** 카카오톡 앱으로 로그인할 수 있는 앱인지 — 카카오 로그인 플러그인이 실린 앱(1.0 빌드 4부터)에서만. */
+export function canSignInWithKakaoTalk(): boolean {
+  return typeof appPlugin('KakaoLogin')?.login === 'function';
+}
+
+/**
+ * 카카오톡 앱을 열어 로그인하고 카카오 ID 토큰을 받는다(mobile/ios/App/App/KakaoLoginPlugin.swift).
+ * 거절 code — CANCELED: 취소했거나 카카오톡에서 그냥 돌아옴, TALK_UNAVAILABLE: 카카오톡이 없음,
+ * UNAVAILABLE: 앱에 카카오 키가 없음, NO_ID_TOKEN: 카카오 개발자 콘솔의 OpenID Connect 가 꺼짐, FAILED: 그 밖.
+ * nonce 는 원래 값을 넘긴다 — 앱이 SHA-256 으로 바꿔 카카오에 보내고, 서버는 원래 값으로 토큰을 확인한다.
+ */
+export async function authorizeWithKakaoTalk(nonce: string): Promise<{ idToken: string }> {
+  const login = appPlugin('KakaoLogin')?.login;
+  if (!login) throw Object.assign(new Error('카카오톡 로그인을 쓸 수 없습니다.'), { code: 'UNAVAILABLE' });
+  return (await login({ nonce })) as { idToken: string };
+}
+
 /**
  * <head> 맨 앞에 그대로 넣는 감지 스크립트. 그리기 전에 돌아야 앱 모양이 처음부터 맞게 나온다.
  * data-app-tabbar 는 첫 화면이 탭 화면인지 — 이후 화면 이동은 AppTabBar 가 고친다.

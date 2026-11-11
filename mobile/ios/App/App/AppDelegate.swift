@@ -7,7 +7,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // 카카오톡 로그인용 카카오 SDK(Info.plist 의 KakaoNativeAppKey 가 있을 때만).
+        KakaoLoginPlugin.configure()
         return true
     }
 

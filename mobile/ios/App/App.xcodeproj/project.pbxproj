@@ -19,6 +19,10 @@
 		AA10000000000000000000B1 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A1 /* MainViewController.swift */; };
 		AA10000000000000000000B2 /* AppleSignInPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A2 /* AppleSignInPlugin.swift */; };
 		AA10000000000000000000B3 /* LinkRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A3 /* LinkRouting.swift */; };
+		AA10000000000000000000B5 /* KakaoLoginPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA10000000000000000000A5 /* KakaoLoginPlugin.swift */; };
+		AA10000000000000000000E1 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AA10000000000000000000C1 /* KakaoSDKCommon */; };
+		AA10000000000000000000E2 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = AA10000000000000000000C2 /* KakaoSDKAuth */; };
+		AA10000000000000000000E3 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = AA10000000000000000000C3 /* KakaoSDKUser */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +41,7 @@
 		AA10000000000000000000A2 /* AppleSignInPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignInPlugin.swift; sourceTree = "<group>"; };
 		AA10000000000000000000A3 /* LinkRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkRouting.swift; sourceTree = "<group>"; };
 		AA10000000000000000000A4 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		AA10000000000000000000A5 /* KakaoLoginPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KakaoLoginPlugin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +50,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D22ABE92AF431CB00220026 /* CapApp-SPM in Frameworks */,
+				AA10000000000000000000E1 /* KakaoSDKCommon in Frameworks */,
+				AA10000000000000000000E2 /* KakaoSDKAuth in Frameworks */,
+				AA10000000000000000000E3 /* KakaoSDKUser in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +83,7 @@
 				AA10000000000000000000A1 /* MainViewController.swift */,
 				AA10000000000000000000A2 /* AppleSignInPlugin.swift */,
 				AA10000000000000000000A3 /* LinkRouting.swift */,
+				AA10000000000000000000A5 /* KakaoLoginPlugin.swift */,
 				AA10000000000000000000A4 /* App.entitlements */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
@@ -106,6 +115,9 @@
 			name = App;
 			packageProductDependencies = (
 				4D22ABE82AF431CB00220026 /* CapApp-SPM */,
+				AA10000000000000000000C1 /* KakaoSDKCommon */,
+				AA10000000000000000000C2 /* KakaoSDKAuth */,
+				AA10000000000000000000C3 /* KakaoSDKUser */,
 			);
 			productName = App;
 			productReference = 504EC3041FED79650016851F /* App.app */;
@@ -140,6 +152,7 @@
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
 				D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */,
+				AA10000000000000000000C0 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 			);
 			productRefGroup = 504EC3051FED79650016851F /* Products */;
 			projectDirPath = "";
@@ -176,6 +189,7 @@
 				AA10000000000000000000B1 /* MainViewController.swift in Sources */,
 				AA10000000000000000000B2 /* AppleSignInPlugin.swift in Sources */,
 				AA10000000000000000000B3 /* LinkRouting.swift in Sources */,
+				AA10000000000000000000B5 /* KakaoLoginPlugin.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,7 +331,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = U4HRK9DX9S;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -341,7 +355,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = U4HRK9DX9S;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -388,11 +402,37 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		AA10000000000000000000C0 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 2.30.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		4D22ABE82AF431CB00220026 /* CapApp-SPM */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = D4C12C0A2AAA248700AAC8A2 /* XCLocalSwiftPackageReference "CapApp-SPM" */;
 			productName = "CapApp-SPM";
+		};
+		AA10000000000000000000C1 /* KakaoSDKCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA10000000000000000000C0 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKCommon;
+		};
+		AA10000000000000000000C2 /* KakaoSDKAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA10000000000000000000C0 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKAuth;
+		};
+		AA10000000000000000000C3 /* KakaoSDKUser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA10000000000000000000C0 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKUser;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

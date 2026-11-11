@@ -15,6 +15,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        // 카카오톡 로그인에서 돌아온 주소(kakao{앱 키}://oauth)는 카카오 SDK 가 받는다(KakaoLoginPlugin).
+        if let url = URLContexts.first?.url, KakaoLoginPlugin.handleOpenURL(url) { return }
         SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
     }
 
