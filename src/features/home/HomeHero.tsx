@@ -1,19 +1,8 @@
 import type { CSSProperties } from 'react';
 import { getImageProps } from 'next/image';
 import Link from 'next/link';
-import localFont from 'next/font/local';
 import { ROUTES } from '@/shared/constants';
 import styles from './HomeHero.module.css';
-
-// 'Merry Christmas' 금박 글씨 — Cormorant Garamond Italic(OFL, fonts/OFL.txt).
-// 기본 영문 글자만 남긴 가변 분할본(18KB)이라 메인에서만 받는다. 글꼴이 오기 전에는 비슷한 크기의 기본 세리프로 보인다.
-const foilFont = localFont({
-  src: './fonts/cormorant-garamond-italic-latin.woff2',
-  weight: '300 700',
-  style: 'italic',
-  display: 'swap',
-  fallback: ['Georgia', 'Times New Roman', 'serif'],
-});
 
 /** 떠오르는 순서(ms) */
 const rise = (delay: number) => ({ '--rise-delay': `${delay}ms` }) as CSSProperties;
@@ -42,9 +31,8 @@ const {
  *
  * 배치: 글자와 버튼은 배경 중앙의 빈 루비색 자리에 정렬하고, 위 장식 띠 아래부터 바로가기 칸(HomeQuickLinks 가
  * -mt-12 / sm:-mt-16 으로 겹쳐 올라옴) 위까지의 한가운데에 온다 — 위 여백은 장식 띠 높이, 아래 여백은 겹치는 높이.
- * 영문 인사말은 가는 금박 세리프, 채용 안내는 작은 앞말, '마리에와 함께'는 가장 굵은 제목으로 구분한다.
- * 효과는 영문 인사말에 모은다: 금박 위로 빛이 스치고 작은 별이 반짝인다.
- * 나머지 글자는 처음 한 번 차례로 떠오른다. 움직임 줄이기 설정이면 모두 멈춘 채 보인다(HomeHero.module.css).
+ * 채용 안내는 작은 앞말, '마리에와 함께'는 가장 굵은 제목으로 구분한다.
+ * 글자는 처음 한 번 차례로 떠오른다. 움직임 줄이기 설정이면 처음부터 보인다(HomeHero.module.css).
  */
 export default function HomeHero() {
   return (
@@ -66,20 +54,7 @@ export default function HomeHero() {
 
       <div className="shell-wide flex min-h-[600px] items-center justify-center pb-12 pt-[100px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[660px] lg:pt-[106px]">
         <div className={`${styles.content} w-full min-w-0 max-w-[880px] text-center`}>
-          <p
-            lang="en"
-            className={`${styles.rise} ${styles.greeting} ${foilFont.className}`}
-            style={rise(0)}
-          >
-            <span className={styles.foilLine}>
-              <span className={styles.foil}>Merry Christmas</span>
-              <Sparkle className={`${styles.sparkle} ${styles.sparkleA}`} />
-              <Sparkle className={`${styles.sparkle} ${styles.sparkleB}`} />
-              <Sparkle className={`${styles.sparkle} ${styles.sparkleC}`} />
-            </span>
-          </p>
-
-          <div aria-hidden="true" className={`${styles.rise} ${styles.divider}`} style={rise(90)}>
+          <div aria-hidden="true" className={`${styles.rise} ${styles.divider}`} style={rise(0)}>
             <span />
             <Sparkle className={styles.dividerStar} />
             <span />
@@ -89,10 +64,10 @@ export default function HomeHero() {
             id="home-hero-title"
             className={styles.title}
           >
-            <span className={`${styles.rise} ${styles.titleLead}`} style={rise(170)}>
+            <span className={`${styles.rise} ${styles.titleLead}`} style={rise(80)}>
               올 연말, 웨딩업계 채용은
             </span>{' '}
-            <span className={`${styles.rise} ${styles.headline}`} style={rise(270)}>
+            <span className={`${styles.rise} ${styles.headline}`} style={rise(180)}>
               <span className={styles.brand}>마리에</span>
               <span className={styles.companion}>와 함께</span>
             </span>
@@ -100,7 +75,7 @@ export default function HomeHero() {
 
           <p
             className={`${styles.rise} ${styles.description}`}
-            style={rise(380)}
+            style={rise(280)}
           >
             <span className={styles.descriptionLead}>좋은 인재와 새로운 기회가 만나는 곳.</span>{' '}
             <span className={styles.descriptionDetail}>따뜻한 연말, 마리에에서 함께할 인연을 찾아보세요.</span>
@@ -108,7 +83,7 @@ export default function HomeHero() {
 
           <div
             className={`${styles.rise} ${styles.actions}`}
-            style={rise(480)}
+            style={rise(380)}
           >
             <Link
               href={ROUTES.JOBS}
