@@ -1,0 +1,30 @@
+{
+  "site": "https://marie.co.kr",
+  "date": "2026-11-23",
+  "jobs": [
+    {
+      "id": "702d773b-07cb-474c-917b-1208b5f047b6",
+      "title": "웨딩스냅 헬퍼선생님 모십니다",
+      "author_id": "da4bdc84-4cf6-4081-8257-7230dc295b90",
+      "image": null,
+      "images": null,
+      "updated_at": "2026-09-28T02:34:15.911962+00:00"
+    },
+    {
+      "id": "4aa1c6ed-954a-47f2-9d7e-e7d4630aec81",
+      "title": "천안 웨딩스튜디오 웨딩촬영 포토그래퍼 모집합니다 ",
+      "author_id": "e1d47cba-0179-4804-84df-80ba633a0633",
+      "image": null,
+      "images": null,
+      "updated_at": "2026-11-23T06:24:56.253845+00:00"
+    },
+    {
+      "id": "ac8ad718-b983-4692-8ff5-3c987620482c",
+      "title": "웨딩헤어 메이크업 가능하신분 모집합니다 ",
+      "author_id": "e1d47cba-0179-4804-84df-80ba633a0633",
+      "image": null,
+      "images": null,
+      "updated_at": "2026-11-23T06:24:57.085295+00:00"
+    }
+  ]
+}

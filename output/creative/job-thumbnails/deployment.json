@@ -1,0 +1,81 @@
+{
+  "site": "https://marie.co.kr",
+  "date": "2026-11-23",
+  "method": "Built-in image_gen; Sharp WebP export; Supabase Storage and exact job image references",
+  "dimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "assets": [
+    {
+      "name": "mariz-studio",
+      "file": "public/images/job-thumbnails/mariz-studio.webp",
+      "source": "output/creative/job-thumbnails/source/mariz-studio.png",
+      "bucket": "job-images",
+      "storagePath": "thumbnails/mariz-studio-20261123-b6ffa5844a4b.webp",
+      "publicUrl": "https://api.hsweb.pics/storage/v1/object/public/job-images/thumbnails/mariz-studio-20261123-b6ffa5844a4b.webp",
+      "bytes": 31158,
+      "sha256": "b6ffa5844a4b7809f5b11ca562c4a3f1b94d29150afccafa77d7a423b1922659"
+    },
+    {
+      "name": "ondia-lounge",
+      "file": "public/images/job-thumbnails/ondia-lounge.webp",
+      "source": "output/creative/job-thumbnails/source/ondia-lounge.png",
+      "bucket": "job-images",
+      "storagePath": "thumbnails/ondia-lounge-20261123-c556217dfe59.webp",
+      "publicUrl": "https://api.hsweb.pics/storage/v1/object/public/job-images/thumbnails/ondia-lounge-20261123-c556217dfe59.webp",
+      "bytes": 32338,
+      "sha256": "c556217dfe5972f43cf2431672feb3a58a14d499803ebb364036fed0b586a59e"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "702d773b-07cb-474c-917b-1208b5f047b6",
+      "title": "웨딩스냅 헬퍼선생님 모십니다",
+      "image": "thumbnails/mariz-studio-20261123-b6ffa5844a4b.webp",
+      "previousImage": null
+    },
+    {
+      "id": "4aa1c6ed-954a-47f2-9d7e-e7d4630aec81",
+      "title": "천안 웨딩스튜디오 웨딩촬영 포토그래퍼 모집합니다 ",
+      "image": "thumbnails/ondia-lounge-20261123-c556217dfe59.webp",
+      "previousImage": null
+    },
+    {
+      "id": "ac8ad718-b983-4692-8ff5-3c987620482c",
+      "title": "웨딩헤어 메이크업 가능하신분 모집합니다 ",
+      "image": "thumbnails/ondia-lounge-20261123-c556217dfe59.webp",
+      "previousImage": null
+    }
+  ],
+  "verification": {
+    "databaseRows": 3,
+    "publicAssets": 2,
+    "livePages": [
+      {
+        "route": "/",
+        "status": 200,
+        "thumbnailImages": 3
+      },
+      {
+        "route": "/jobs/702d773b-07cb-474c-917b-1208b5f047b6",
+        "status": 200,
+        "thumbnailImages": 1
+      },
+      {
+        "route": "/jobs/4aa1c6ed-954a-47f2-9d7e-e7d4630aec81",
+        "status": 200,
+        "thumbnailImages": 1
+      },
+      {
+        "route": "/jobs/ac8ad718-b983-4692-8ff5-3c987620482c",
+        "status": 200,
+        "thumbnailImages": 1
+      }
+    ],
+    "nonImageFieldsUnchanged": true,
+    "visualInspection": "Both generated images visually inspected for Korean and English text accuracy and clean centered logo composition.",
+    "browserScreenshot": "Unavailable: browser access host was unavailable; production rendered HTML and exact public image bytes were verified instead."
+  },
+  "promptsFile": "output/creative/job-thumbnails/prompts.json"
+}

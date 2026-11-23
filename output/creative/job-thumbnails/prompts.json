@@ -1,0 +1,32 @@
+{
+  "tool": "Built-in image_gen",
+  "generationCalls": 2,
+  "exports": "1024 × 1024 WebP, Sharp quality 92; original generated PNGs preserved in source/",
+  "prompts": {
+    "mariz-studio": [
+      "Use case: logo-brand.",
+      "Asset type: finished square website job-card thumbnail for a premium Korean wedding photography studio, 1024x1024.",
+      "Primary request: Create one refined, finished logo-like thumbnail for the brand 마리즈스튜디오.",
+      "Scene/backdrop: perfectly flat warm ivory solid background #F6F2EB, edge to edge.",
+      "Subject and design: a distinctive refined custom M monogram, its restrained interlacing and gentle arch suggesting photographic composition. Beneath it, an elegant high-contrast serif wordmark MARIZ, with small widely tracked STUDIO below. Add the exact tiny Korean brand name 마리즈스튜디오 below only if it can be rendered exactly and legibly.",
+      "Composition: centered emblem and typography as a balanced vertical identity lockup, occupying approximately 55–65 percent of the canvas width, ample breathing room and generous negative space. The monogram is the primary focal point. Impeccable kerning, balanced line weights, careful editorial proportions.",
+      "Style/medium: premium flat vector-like brand artwork, timeless wedding editorial identity, understated sophistication.",
+      "Color palette: deep warm charcoal/taupe ink on warm ivory.",
+      "Text (verbatim): MARIZ, STUDIO, optional 마리즈스튜디오. Spell MARIZ as M A R I Z, do not alter.",
+      "Constraints: actual finished polished artwork, crisp flat graphic, one square image.",
+      "Avoid: generic camera icon, photography, people, mockup, paper texture, shadows, gradients, embossing, 3D, frame, border, watermark, decorative florals, job advertising copy, extra text."
+    ],
+    "ondia-lounge": [
+      "Use case: logo-brand",
+      "Asset type: finished premium square job-listing brand thumbnail, 1024 by 1024 pixels.",
+      "Primary request: Create a polished logo-like brand artwork for a Korean wedding photography studio and bridal beauty lounge, brand 온디아라운지.",
+      "Scene/backdrop: perfectly flat solid muted pale sage background #E9EFEB.",
+      "Subject: A single refined circular O monogram with a subtle overlapping arch or ring, elegantly suggesting both a camera lens and wedding rings. Beneath the emblem, elegant modern serif wordmark ONDIA; below that, small widely tracked uppercase LOUNGE. A very small clean Korean line 온디아라운지 beneath the English wordmark.",
+      "Style/medium: sophisticated restrained graphic brand design, crisp clean linework, flat ink only, timeless editorial luxury, refined optical spacing.",
+      "Composition/framing: square 1024x1024; center the entire emblem-and-wordmark composition; artwork occupying approximately 55–65 percent of canvas width with generous negative space, excellent legibility as a small thumbnail.",
+      "Color palette: pale sage background #E9EFEB and deep forest green #314C43 ink only.",
+      "Text (verbatim): ONDIA; LOUNGE; 온디아라운지. Korean characters must be exact: 온 디 아 라 운 지, joined as 온디아라운지.",
+      "Constraints: Finished polished graphic artwork. One emblem only. No role text or recruitment advertisement copy. No frames, flowers, photography, mockup, paper, texture, shadows, gradients, 3D, lighting effects, decorative borders, or watermark."
+    ]
+  }
+}
