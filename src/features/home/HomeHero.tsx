@@ -18,25 +18,29 @@ const foilFont = localFont({
 /** 떠오르는 순서(ms) */
 const rise = (delay: number) => ({ '--rise-delay': `${delay}ms` }) as CSSProperties;
 
-// 배경 사진 — 화면 높이에 맞춰 덮으므로 실제로 그려지는 폭은 화면보다 넓다(넓은 화면 약 1980px, 휴대폰 약 640px).
-// 휴대폰은 원본(2172×724)의 22% 조각만 보여 통째로 받으면 작게 받은 사진을 늘려 흐려지고, 크게 받으면 무겁다.
-// 그래서 휴대폰엔 보이는 자리만 원본 해상도로 잘라 둔 사진(-mobile, 724×724)을 쓴다.
+// 배경: PC용 3840×1600(고품질 리샘플링)과 모바일 전용 1024×1536.
+// PC는 높이 660px을 덮을 때 최소 1584px 폭으로 그려지므로, Retina에서도 작은 이미지를 늘리지 않게 크기를 알린다.
+// 모바일은 세로로 제작한 별도 사진을 받아 양옆 장식과 중앙 여백을 함께 보존한다.
 const heroImage = { alt: '', fill: true, quality: 95, fetchPriority: 'high', loading: 'eager' } as const;
 const {
   props: { srcSet: wideSrcSet, ...wideImgProps },
 } = getImageProps({
   ...heroImage,
-  src: '/images/home/hero-christmas.webp',
-  sizes: '(max-width: 1980px) 1981px, 100vw',
+  src: '/images/home/hero-christmas-centered-4k.webp',
+  sizes: '(max-width: 1584px) 1584px, 100vw',
 });
 const {
   props: { srcSet: mobileSrcSet },
-} = getImageProps({ ...heroImage, src: '/images/home/hero-christmas-mobile.webp', sizes: '660px' });
+} = getImageProps({
+  ...heroImage,
+  src: '/images/home/hero-christmas-centered-mobile.webp',
+  sizes: '(max-width: 400px) 400px, 100vw',
+});
 
 /**
  * 메인 크리스마스 캠페인 — 자동 전환 없이 한 장만 노출한다.
  *
- * 배치: 글자는 배경의 빈 루비색 자리(왼쪽 절반)에 두고, 위 장식 띠 아래부터 바로가기 칸(HomeQuickLinks 가
+ * 배치: 글자와 버튼은 배경 중앙의 빈 루비색 자리에 정렬하고, 위 장식 띠 아래부터 바로가기 칸(HomeQuickLinks 가
  * -mt-12 / sm:-mt-16 으로 겹쳐 올라옴) 위까지의 한가운데에 온다 — 위 여백은 장식 띠 높이, 아래 여백은 겹치는 높이.
  * 글자 크기는 금박 글씨 → 제목 → 설명 → 버튼 순으로 한 단계씩 줄어든다.
  * 효과는 한 곳에 모은다: 청첩장 금박 같은 'Merry Christmas' 위로 빛이 스치고 작은 별이 반짝인다.
@@ -49,19 +53,19 @@ export default function HomeHero() {
       className="relative isolate overflow-hidden bg-[#7a0a14] text-white"
     >
       <picture>
-        <source media="(max-width: 639px)" srcSet={mobileSrcSet} sizes="660px" />
+        <source media="(max-width: 639px)" srcSet={mobileSrcSet} sizes="(max-width: 400px) 400px, 100vw" />
         {/* next/image 가 만든 주소·크기 그대로(getImageProps) — 화면 폭에 따라 사진을 바꾸려고 <picture> 로 감쌌다. */}
         {/* eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text */}
         <img
           {...wideImgProps}
           srcSet={wideSrcSet}
-          className="-z-20 object-cover object-[62%_center] sm:object-[40%_center]"
+          className="-z-20 object-cover object-center"
         />
       </picture>
       <div aria-hidden="true" className={`absolute inset-0 -z-10 ${styles.scrim}`} />
 
-      <div className="shell-wide flex min-h-[600px] items-center pb-12 pt-[100px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[660px] lg:pt-[106px]">
-        <div className="w-full max-w-[640px]">
+      <div className="shell-wide flex min-h-[600px] items-center justify-center pb-12 pt-[100px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[660px] lg:pt-[106px]">
+        <div className="w-full min-w-0 max-w-[880px] text-center">
           <p
             lang="en"
             className={`${styles.rise} ${foilFont.className} text-[46px] font-semibold leading-none tracking-[-0.005em] sm:text-[58px] lg:text-[70px] xl:text-[76px]`}
@@ -92,7 +96,7 @@ export default function HomeHero() {
           </h2>
 
           <p
-            className={`${styles.rise} mt-5 max-w-[34rem] break-keep text-[15.5px] leading-[1.75] text-[#fff3ea]/[0.88] [text-wrap:pretty] sm:text-[17px] lg:mt-6 lg:text-[18px]`}
+            className={`${styles.rise} mx-auto mt-5 max-w-[34rem] break-keep text-[15.5px] leading-[1.75] text-[#fff3ea]/[0.88] [text-wrap:pretty] sm:text-[17px] lg:mt-6 lg:text-[18px]`}
             style={rise(380)}
           >
             좋은 인재와 새로운 기회가 만나는 곳.
@@ -101,7 +105,7 @@ export default function HomeHero() {
           </p>
 
           <div
-            className={`${styles.rise} mt-7 flex flex-wrap items-center gap-2.5 sm:gap-3 lg:mt-9`}
+            className={`${styles.rise} mt-7 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 lg:mt-9`}
             style={rise(480)}
           >
             <Link
