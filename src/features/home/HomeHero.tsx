@@ -42,8 +42,8 @@ const {
  *
  * 배치: 글자와 버튼은 배경 중앙의 빈 루비색 자리에 정렬하고, 위 장식 띠 아래부터 바로가기 칸(HomeQuickLinks 가
  * -mt-12 / sm:-mt-16 으로 겹쳐 올라옴) 위까지의 한가운데에 온다 — 위 여백은 장식 띠 높이, 아래 여백은 겹치는 높이.
- * 글자 크기는 금박 글씨 → 제목 → 설명 → 버튼 순으로 한 단계씩 줄어든다.
- * 효과는 한 곳에 모은다: 청첩장 금박 같은 'Merry Christmas' 위로 빛이 스치고 작은 별이 반짝인다.
+ * 영문 인사말은 가는 금박 세리프, 채용 안내는 작은 앞말, '마리에와 함께'는 가장 굵은 제목으로 구분한다.
+ * 효과는 영문 인사말에 모은다: 금박 위로 빛이 스치고 작은 별이 반짝인다.
  * 나머지 글자는 처음 한 번 차례로 떠오른다. 움직임 줄이기 설정이면 모두 멈춘 채 보인다(HomeHero.module.css).
  */
 export default function HomeHero() {
@@ -65,10 +65,10 @@ export default function HomeHero() {
       <div aria-hidden="true" className={`absolute inset-0 -z-10 ${styles.scrim}`} />
 
       <div className="shell-wide flex min-h-[600px] items-center justify-center pb-12 pt-[100px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[660px] lg:pt-[106px]">
-        <div className="w-full min-w-0 max-w-[880px] text-center">
+        <div className={`${styles.content} w-full min-w-0 max-w-[880px] text-center`}>
           <p
             lang="en"
-            className={`${styles.rise} ${foilFont.className} text-[46px] font-semibold leading-none tracking-[-0.005em] sm:text-[58px] lg:text-[70px] xl:text-[76px]`}
+            className={`${styles.rise} ${styles.greeting} ${foilFont.className}`}
             style={rise(0)}
           >
             <span className={styles.foilLine}>
@@ -79,44 +79,46 @@ export default function HomeHero() {
             </span>
           </p>
 
+          <div aria-hidden="true" className={`${styles.rise} ${styles.divider}`} style={rise(90)}>
+            <span />
+            <Sparkle className={styles.dividerStar} />
+            <span />
+          </div>
+
           <h2
             id="home-hero-title"
-            className="mt-3 break-keep text-[31px] font-bold leading-[1.25] tracking-[-0.025em] text-[#fff8f1] [text-shadow:0_2px_22px_rgba(52,0,6,0.4)] sm:mt-4 sm:text-[42px] lg:text-[50px] xl:text-[54px]"
+            className={styles.title}
           >
-            {/* 넓은 화면은 두 줄(올 연말, 웨딩업계 채용은 / 마리에와 함께), 좁은 화면은 뜻 단위 세 줄 */}
-            <span className={`${styles.rise} block lg:inline-block`} style={rise(110)}>
-              올 연말,
+            <span className={`${styles.rise} ${styles.titleLead}`} style={rise(170)}>
+              올 연말, 웨딩업계 채용은
             </span>{' '}
-            <span className={`${styles.rise} block lg:inline-block`} style={rise(190)}>
-              웨딩업계 채용은
-            </span>{' '}
-            <span className={`${styles.rise} block`} style={rise(270)}>
-              마리에와 함께
+            <span className={`${styles.rise} ${styles.headline}`} style={rise(270)}>
+              <span className={styles.brand}>마리에</span>
+              <span className={styles.companion}>와 함께</span>
             </span>
           </h2>
 
           <p
-            className={`${styles.rise} mx-auto mt-5 max-w-[34rem] break-keep text-[15.5px] leading-[1.75] text-[#fff3ea]/[0.88] [text-wrap:pretty] sm:text-[17px] lg:mt-6 lg:text-[18px]`}
+            className={`${styles.rise} ${styles.description}`}
             style={rise(380)}
           >
-            좋은 인재와 새로운 기회가 만나는 곳.
-            <br />
-            따뜻한 연말, 마리에에서 함께할 인연을 찾아보세요.
+            <span className={styles.descriptionLead}>좋은 인재와 새로운 기회가 만나는 곳.</span>{' '}
+            <span className={styles.descriptionDetail}>따뜻한 연말, 마리에에서 함께할 인연을 찾아보세요.</span>
           </p>
 
           <div
-            className={`${styles.rise} mt-7 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 lg:mt-9`}
+            className={`${styles.rise} ${styles.actions}`}
             style={rise(480)}
           >
             <Link
               href={ROUTES.JOBS}
-              className="inline-flex min-h-12 items-center justify-center rounded-md bg-[#fff8f1] px-6 text-[15px] font-bold text-[#7a0a14] shadow-[0_12px_32px_-14px_rgba(40,0,6,0.7)] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe3b0] lg:min-h-[52px] lg:px-7 lg:text-[16px]"
+              className={`${styles.button} ${styles.buttonPrimary}`}
             >
               채용공고 둘러보기
             </Link>
             <Link
               href={ROUTES.JOBS_NEW}
-              className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#f3d9a4]/70 px-6 text-[15px] font-semibold text-[#fff8f1] transition-colors hover:border-[#f3d9a4] hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe3b0] lg:min-h-[52px] lg:px-7 lg:text-[16px]"
+              className={`${styles.button} ${styles.buttonSecondary}`}
             >
               무료 공고 등록
             </Link>

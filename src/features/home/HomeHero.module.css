@@ -1,7 +1,181 @@
 /*
- * 메인 크리스마스 히어로(HomeHero.tsx) — 글자 뒤 그늘, 금박 글씨, 반짝임, 처음 떠오르기.
+ * 메인 크리스마스 히어로(HomeHero.tsx) — 중앙 타이포그래피, 금박 글씨, 반짝임, 처음 떠오르기.
  * 캠페인이 끝나면 HomeHero 와 함께 이 파일도 바꾼다.
  */
+
+.content {
+  text-shadow: 0 2px 22px rgba(52, 0, 6, 0.3);
+}
+
+/* 가는 영문 인사말과 굵은 한글 제목을 대비시켜 채용 문구가 먼저 읽히게 한다. */
+.greeting {
+  font-size: clamp(2.875rem, 12vw, 4rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1rem auto 1.25rem;
+  color: #f2d08a;
+}
+
+.divider > span {
+  width: 2.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(242, 208, 138, 0.7));
+}
+
+.divider > span:last-child {
+  transform: rotate(180deg);
+}
+
+.dividerStar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.title {
+  word-break: keep-all;
+}
+
+.titleLead {
+  display: block;
+  color: #fff0df;
+  font-size: clamp(1.125rem, 4.9vw, 1.375rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+}
+
+.headline {
+  display: block;
+  margin-top: 0.375rem;
+  font-size: clamp(2.75rem, 11.5vw, 4rem);
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -0.055em;
+}
+
+.brand {
+  display: inline-block;
+  color: #f8dba1;
+  filter: drop-shadow(0 2px 0 rgba(88, 29, 0, 0.5)) drop-shadow(0 6px 20px rgba(255, 202, 119, 0.18));
+}
+
+.companion {
+  color: #fff8f1;
+  font-size: 0.84em;
+  font-weight: 550;
+  letter-spacing: -0.055em;
+}
+
+.description {
+  max-width: 34rem;
+  margin: 1.25rem auto 0;
+  word-break: keep-all;
+  text-wrap: pretty;
+  letter-spacing: -0.015em;
+}
+
+.descriptionLead {
+  display: block;
+  color: #fff3e7;
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.7;
+}
+
+.descriptionDetail {
+  display: block;
+  margin-top: 0.25rem;
+  color: rgba(255, 237, 218, 0.84);
+  font-size: 0.875rem;
+  line-height: 1.8;
+}
+
+/* 두 링크는 좁은 휴대폰에서도 같은 폭으로 중앙에 놓고, 글자 확대 시 높이가 늘어나게 한다. */
+.actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.625rem;
+  width: 100%;
+  max-width: 23rem;
+  margin: 1.625rem auto 0;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 3.125rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+  word-break: keep-all;
+  text-shadow: none;
+  transition: background-color 150ms, border-color 150ms;
+}
+
+.button:focus-visible {
+  outline: 2px solid #ffe3b0;
+  outline-offset: 4px;
+}
+
+.buttonPrimary {
+  border-color: #fff2da;
+  background-color: #fff6e7;
+  color: #790a14;
+  box-shadow: 0 10px 26px -14px rgba(30, 0, 4, 0.7), inset 0 1px 0 #fffdf8;
+}
+
+.buttonPrimary:hover {
+  border-color: #fffdf8;
+  background-color: #fffdf8;
+}
+
+.buttonSecondary {
+  border-color: rgba(243, 217, 164, 0.7);
+  background-color: rgba(77, 0, 10, 0.12);
+  color: #fff8f1;
+}
+
+.buttonSecondary:hover {
+  border-color: #f3d9a4;
+  background-color: rgba(255, 248, 241, 0.1);
+}
+
+@media (min-width: 640px) {
+  .greeting { font-size: 4.25rem; }
+  .divider { margin-top: 1.125rem; margin-bottom: 1.375rem; }
+  .divider > span { width: 3.5rem; }
+  .titleLead { font-size: 1.5rem; }
+  .headline { font-size: 4rem; }
+  .descriptionLead { font-size: 1.0625rem; }
+  .descriptionDetail { font-size: 0.9375rem; }
+  .actions { gap: 0.75rem; margin-top: 1.875rem; }
+  .button { min-height: 3.25rem; font-size: 0.9375rem; }
+}
+
+@media (min-width: 1024px) {
+  .greeting { font-size: 5rem; }
+  .divider { margin-top: 1.25rem; margin-bottom: 1.5rem; }
+  .titleLead { font-size: 1.625rem; }
+  .headline { font-size: 4.5rem; }
+  .description { margin-top: 1.5rem; }
+  .descriptionLead { font-size: 1.125rem; }
+  .descriptionDetail { font-size: 1rem; }
+  .actions { max-width: 25rem; margin-top: 2rem; }
+}
 
 /* 글자 뒤 그늘 — 사진은 밝게 두고 글자가 놓이는 자리만 깊은 루비색으로 가라앉힌다. */
 .scrim {
@@ -42,6 +216,7 @@
 .foilLine {
   position: relative;
   display: inline-block;
+  max-width: 100%;
 }
 
 /*
@@ -60,16 +235,23 @@
   background-size: 300% 100%, 100% 100%;
   background-repeat: no-repeat;
   background-position: 120% 0, 0 0;
+  text-shadow: none;
   filter: drop-shadow(0 1px 0 rgba(92, 40, 0, 0.55)) drop-shadow(0 0 18px rgba(255, 196, 110, 0.3));
   animation: foilGlint 7s ease-in-out 1.2s infinite;
 }
 
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .brand,
   .foil {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
+  }
+
+  .brand {
+    background-image: linear-gradient(180deg, #fff8e7 6%, #f9dda5 38%, #e9ba70 72%, #fff0cf 100%);
+    text-shadow: none;
   }
 }
 
@@ -94,7 +276,7 @@
 
 .sparkleA {
   top: -0.12em;
-  right: -0.5em;
+  right: -0.35em;
   width: 0.3em;
   height: 0.3em;
   animation-delay: 1.6s;
@@ -102,7 +284,7 @@
 
 .sparkleB {
   top: 0.42em;
-  right: -0.78em;
+  right: -0.5em;
   width: 0.15em;
   height: 0.15em;
   animation-delay: 2.4s;
@@ -142,13 +324,29 @@
 
 /* 고대비 모드 — 오려 칠한 금박은 안 보일 수 있어 일반 글자로 */
 @media (forced-colors: active) {
+  .brand,
   .foil {
     background: none;
     color: CanvasText;
     -webkit-text-fill-color: CanvasText;
     filter: none;
   }
-  .sparkle {
+  .sparkle,
+  .divider {
     display: none;
+  }
+
+  .titleLead,
+  .companion,
+  .descriptionLead,
+  .descriptionDetail {
+    color: CanvasText;
+  }
+
+  .buttonPrimary,
+  .buttonSecondary {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
   }
 }
