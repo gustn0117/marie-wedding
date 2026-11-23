@@ -1,0 +1,155 @@
+/*
+ * 메인 크리스마스 히어로(HomeHero.tsx) — 글자 뒤 그늘, 금박 글씨, 반짝임, 처음 떠오르기.
+ * 캠페인이 끝나면 HomeHero 와 함께 이 파일도 바꾼다.
+ */
+
+/* 글자 뒤 그늘 — 사진은 밝게 두고 글자가 놓이는 자리만 깊은 루비색으로 가라앉힌다. */
+.scrim {
+  /* 휴대폰·태블릿: 글자가 화면 너비 대부분을 쓰므로 왼쪽부터 넓게, 아래쪽(바로가기 칸 쪽)도 함께. */
+  background:
+    linear-gradient(90deg, rgba(58, 0, 9, 0.58) 0%, rgba(58, 0, 9, 0.3) 62%, rgba(58, 0, 9, 0.06) 100%),
+    linear-gradient(180deg, rgba(58, 0, 9, 0) 35%, rgba(58, 0, 9, 0.34) 100%);
+}
+
+@media (min-width: 1024px) {
+  .scrim {
+    /* 넓은 화면: 글자 둘레만 둥글게 — 오른쪽 캔디·트리는 원래 밝기 그대로. */
+    background:
+      radial-gradient(ellipse 50% 80% at 23% 54%, rgba(58, 0, 9, 0.5) 0%, rgba(58, 0, 9, 0.24) 50%, rgba(58, 0, 9, 0) 80%),
+      linear-gradient(90deg, rgba(58, 0, 9, 0.26) 0%, rgba(58, 0, 9, 0) 52%);
+  }
+}
+
+/* 처음 한 번, 위에서 아래로 차례로 떠오른다(--rise-delay 로 순서). */
+.rise {
+  animation: heroRise 0.9s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation-delay: var(--rise-delay, 0ms);
+}
+
+@keyframes heroRise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    filter: blur(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+/* 'Merry Christmas' 줄 — 반짝임 별의 기준 자리 */
+.foilLine {
+  position: relative;
+  display: inline-block;
+}
+
+/*
+ * 청첩장 금박 — 밝은 띠와 어두운 띠가 위아래로 번갈아 금속처럼 보이고, 그 위로 빛 한 줄기가 7초마다 스친다.
+ * 글자 모양대로 배경을 오려 칠하므로(background-clip: text) 그림자는 text-shadow 대신 filter 로 준다.
+ */
+.foil {
+  display: inline-block;
+  /* 기울어진 글자 끝(마지막 s 의 꼬리 등)이 칠하는 영역 밖으로 나가 잘리지 않게 칸을 넓혀 두고 자리는 그대로 */
+  padding: 0.08em 0.2em 0.14em 0.08em;
+  margin: -0.08em -0.2em -0.14em -0.08em;
+  color: #f2d08a;
+  background-image:
+    linear-gradient(100deg, transparent 0%, transparent 39%, rgba(255, 252, 242, 0.95) 50%, transparent 61%, transparent 100%),
+    linear-gradient(180deg, #fff6da 0%, #f6d993 24%, #d4a04b 50%, #f5d68f 70%, #b47b2b 100%);
+  background-size: 300% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 120% 0, 0 0;
+  filter: drop-shadow(0 1px 0 rgba(92, 40, 0, 0.55)) drop-shadow(0 0 18px rgba(255, 196, 110, 0.3));
+  animation: foilGlint 7s ease-in-out 1.2s infinite;
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .foil {
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes foilGlint {
+  0% {
+    background-position: 120% 0, 0 0;
+  }
+  24%,
+  100% {
+    background-position: -20% 0, 0 0;
+  }
+}
+
+/* 금박 둘레의 작은 별 — 배경의 꼬마전구처럼 천천히 반짝인다. 크기·자리는 글씨 크기(em)에 맞춘다. */
+.sparkle {
+  position: absolute;
+  color: #fff3d1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 0.1em rgba(255, 214, 150, 0.95));
+  animation: twinkle 3.2s ease-in-out infinite;
+}
+
+.sparkleA {
+  top: -0.12em;
+  right: -0.5em;
+  width: 0.3em;
+  height: 0.3em;
+  animation-delay: 1.6s;
+}
+
+.sparkleB {
+  top: 0.42em;
+  right: -0.78em;
+  width: 0.15em;
+  height: 0.15em;
+  animation-delay: 2.4s;
+}
+
+.sparkleC {
+  top: -0.2em;
+  left: -0.12em;
+  width: 0.17em;
+  height: 0.17em;
+  animation-delay: 3s;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.55) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(30deg);
+  }
+}
+
+/* 움직임 줄이기 설정 — 떠오르기·빛·반짝임 없이 처음부터 다 보인다. */
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .foil,
+  .sparkle {
+    animation: none;
+  }
+  .sparkle {
+    opacity: 0.85;
+  }
+}
+
+/* 고대비 모드 — 오려 칠한 금박은 안 보일 수 있어 일반 글자로 */
+@media (forced-colors: active) {
+  .foil {
+    background: none;
+    color: CanvasText;
+    -webkit-text-fill-color: CanvasText;
+    filter: none;
+  }
+  .sparkle {
+    display: none;
+  }
+}
