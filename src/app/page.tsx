@@ -131,7 +131,7 @@ export default async function HomePage() {
       <JsonLd data={SITE_JSONLD} />
       <Header />
       <main className="flex-1">
-        {/* 화면에 보이는 큰 제목은 슬라이드마다 바뀌므로, 문서 제목(h1)은 고정 문구로 둔다 */}
+        {/* 시즌 캠페인과 별개로 서비스의 문서 제목은 고정한다. */}
         <h1 className="sr-only">마리에 — 웨딩 업계 채용·구인구직 플랫폼</h1>
         <HomeHero />
         <HomeQuickLinks />
