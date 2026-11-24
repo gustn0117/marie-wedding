@@ -43,9 +43,11 @@ const preview = {
  *
  * 배치: 글자와 버튼은 배경 중앙의 빈 루비색 자리에 정렬하고, 위 장식 띠 아래부터 바로가기 칸(HomeQuickLinks 가
  * -mt-12 / sm:-mt-16 으로 겹쳐 올라옴) 위까지의 한가운데에 온다 — 위 여백은 장식 띠 높이, 아래 여백은 겹치는 높이.
- * 채용 안내는 작은 앞말, '마리에와 함께'는 가장 굵은 제목으로 구분한다.
- * 글자는 처음 한 번 차례로 떠오르고, 다 떠오르면 금박 '마리에' 위로 빛이 한 번 스친다.
- * 움직임 줄이기 설정이면 처음부터 멈춘 채 보인다(HomeHero.module.css).
+ * 비율: 1584px 넘는 화면은 히어로 높이를 PC 사진 비율(2.4:1)대로 늘려 사진이 잘리지 않게 하고,
+ * 글자·버튼도 같은 배율로 키워(HomeHero.module.css 의 .content 글자 크기 기준 em) 어느 폭에서나 같은 구도로 보인다.
+ * 색: 금색은 앞말 '올 연말, 웨딩업계 채용은'에만, 제목 '마리에와 함께'와 나머지는 흰색 계열.
+ * 글자는 처음 한 번 차례로 떠오르고, 다 떠오르면 금빛 앞말 위로 빛이 한 번 스친다.
+ * 움직임 줄이기 설정이면 처음부터 멈춘 채 보인다.
  */
 export default function HomeHero() {
   return (
@@ -67,10 +69,11 @@ export default function HomeHero() {
       </picture>
       <div aria-hidden="true" className={`absolute inset-0 -z-10 ${styles.scrim}`} />
 
-      {/* 위 여백 = 사진의 아치 높이: 휴대폰 사진은 약 65px, PC 사진은 그려진 높이의 16%라 1584px 넘는 화면에서는
-          폭에 따라 커진다(6.67vw = 16% ÷ 2.4 비율). 아래 여백 = 바로가기 칸이 겹쳐 올라오는 높이. */}
-      <div className="shell-wide flex min-h-[600px] items-center justify-center pb-12 pt-[68px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[660px] lg:pt-[max(106px,6.67vw)]">
-        <div className={`${styles.content} w-full min-w-0 max-w-[880px] text-center`}>
+      {/* 높이: 1584px 넘는 화면은 폭 ÷ 2.4(= 41.667vw) — PC 사진 비율 그대로라 위아래가 잘리지 않는다.
+          위 여백 = 사진의 아치 높이: 휴대폰 사진은 약 65px, PC 사진은 그려진 높이의 16%(1584px 넘으면 6.67vw).
+          아래 여백 = 바로가기 칸이 겹쳐 올라오는 높이. */}
+      <div className="shell-wide flex min-h-[600px] items-center justify-center pb-12 pt-[68px] sm:min-h-[640px] sm:pb-16 sm:pt-24 lg:min-h-[max(660px,41.667vw)] lg:pt-[max(106px,6.67vw)]">
+        <div className={`${styles.content} w-full min-w-0 text-center`}>
           <div aria-hidden="true" className={`${styles.rise} ${styles.divider}`} style={rise(0)}>
             <span />
             <Sparkle className={styles.dividerStar} />
@@ -82,11 +85,10 @@ export default function HomeHero() {
             className={styles.title}
           >
             <span className={`${styles.rise} ${styles.titleLead}`} style={rise(80)}>
-              올 연말, 웨딩업계 채용은
+              <span className={styles.gold}>올 연말, 웨딩업계 채용은</span>
             </span>{' '}
             <span className={`${styles.rise} ${styles.headline}`} style={rise(180)}>
-              <span className={styles.brand}>마리에</span>
-              <span className={styles.companion}>와 함께</span>
+              마리에와 함께
             </span>
           </h2>
 
