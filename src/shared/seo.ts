@@ -13,7 +13,7 @@ export const SITE_NAME_KO = '마리에';
 export const SITE_TAGLINE = '웨딩업계 전문 채용 플랫폼';
 // 홈·조직 설명 — 검색 결과 설명 줄에 그대로 나가므로 핵심 검색어('웨딩업계 채용')로 시작한다.
 export const SITE_DESCRIPTION =
-  '웨딩업계 채용 공고와 인재·업체 프로필을 한곳에서. 예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지, 마리에에서 웨딩 일자리와 함께 일할 사람을 찾아보세요. 공고 등록과 지원은 무료입니다.';
+  '웨딩업계 채용 공고와 인재·업체 프로필을 한곳에서. 예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식도우미까지, 마리에에서 웨딩 일자리와 함께 일할 사람을 찾아보세요. 공고 등록과 지원은 무료입니다.';
 export const CONTACT_EMAIL_DEFAULT = 'admin@marie.co.kr';
 
 // og:site_name — 한글 브랜드 + 영문 표기.
@@ -99,7 +99,7 @@ export function organizationJsonLd(): Record<string, unknown> {
     slogan: SITE_TAGLINE,
     email: CONTACT_EMAIL_DEFAULT,
     areaServed: { '@type': 'Country', name: 'KR' },
-    knowsAbout: ['웨딩업계 채용', '웨딩 채용', '웨딩 구인구직','예식장', '드레스샵', '웨딩 스튜디오', '웨딩 헤어메이크업', '웨딩플래너', '예식 도우미'],
+    knowsAbout: ['웨딩업계 채용', '웨딩 채용', '웨딩 구인구직','예식장', '드레스샵', '웨딩 스튜디오', '웨딩 헤어메이크업', '웨딩플래너', '예식도우미'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',

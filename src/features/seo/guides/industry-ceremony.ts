@@ -604,7 +604,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
     summary: [
       { label: '어떤 곳', value: '예식 전 신부가 머물며 하객을 맞는 공간' },
       { label: '이용 시간', value: '예식장이 정한 시간 안에서, 계약 때 확인' },
-      { label: '일하는 사람', value: '드레스 헬퍼·스냅 작가·진행 담당·예식 도우미' },
+      { label: '일하는 사람', value: '드레스 헬퍼·스냅 작가·진행 담당·예식도우미' },
       { label: '지킬 매너', value: '신부 컨디션이 먼저, 사진 게시는 허락받고' },
     ],
     rolesHeading: '신부대기실에서 일하는 사람들',
@@ -612,7 +612,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
       { name: '드레스 헬퍼', desc: '드레스와 베일, 매무새를 정돈하고 신부가 움직일 때 곁에서 돕습니다.', href: '/guide/dress-helper' },
       { name: '스냅 작가', desc: '대기실에서 신부와 하객의 자연스러운 모습을 촬영합니다.', href: '/guide/wedding-snap-photographer' },
       { name: '예식장 진행 담당', desc: '입장 시간과 리허설을 안내하고 대기실 이용 시간을 챙깁니다.', href: '/guide/wedding-hall-ceremony-team' },
-      { name: '예식 도우미', desc: '하객 동선을 안내하고 신부에게 필요한 물품을 가져다줍니다.', href: '/guide/wedding-helper-jobs' },
+      { name: '예식도우미', desc: '하객 동선을 안내하고 신부에게 필요한 물품을 가져다줍니다.', href: '/guide/wedding-helper-jobs' },
     ],
     sections: [
       {
@@ -680,7 +680,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
       seeker: [
         '신부대기실에서 일할 때는 신부보다 눈에 띄지 않는 단정한 차림으로 조용히 움직이세요.',
         '하객이 몰릴 때 신부 곁을 지키면서도 사진에 걸리지 않게 비켜서는 요령을 익혀 두세요.',
-        '예식 도우미나 헬퍼 자리를 찾는다면 채용정보에서 업종과 지역을 골라 보세요.',
+        '예식도우미나 헬퍼 자리를 찾는다면 채용정보에서 업종과 지역을 골라 보세요.',
       ],
       employer: [
         '대기실 담당 스태프에게 입실 시간, 입장 준비 신호, 비품 위치를 적은 안내를 주세요.',
@@ -716,7 +716,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
     ],
     related: ['wedding-day-timeline', 'dress-helper', 'wedding-snap-photographer', 'wedding-helper-roles-compared'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-glossary',

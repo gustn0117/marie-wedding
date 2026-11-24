@@ -9,7 +9,7 @@ import { OG_SITE_NAME, absoluteUrl, breadcrumbJsonLd, buildPageMetadata } from '
 // 채용 가이드 모음 — 모든 가이드를 분류별로 모아 내부 링크 허브 역할을 한다.
 const TITLE = '웨딩업계 채용 가이드 — 직무·알바 준비·채용 실무·웨딩 용어';
 const DESCRIPTION =
-  '예식장·웨딩플래너·드레스샵·스튜디오·헤어메이크업·예식 도우미 같은 웨딩업계 직무 소개부터 알바 복장·보건증·이력서·면접 준비, 업체의 채용 실무, 예식 순서와 웨딩 용어까지 정리한 마리에 채용 가이드 모음입니다.';
+  '예식장·웨딩플래너·드레스샵·스튜디오·헤어메이크업·예식도우미 같은 웨딩업계 직무 소개부터 알바 복장·보건증·이력서·면접 준비, 업체의 채용 실무, 예식 순서와 웨딩 용어까지 정리한 마리에 채용 가이드 모음입니다.';
 
 export const metadata: Metadata = buildPageMetadata({
   title: TITLE,
@@ -55,7 +55,7 @@ export default function GuideIndexPage() {
           웨딩업계 채용 가이드
         </h1>
         <p className="mt-6 max-w-[44em] break-keep text-[17px] leading-[1.85] text-gray-600 sm:text-[18px]">
-          웨딩업계는 예식장, 웨딩플래너, 드레스샵, 스튜디오, 헤어메이크업, 예식 도우미처럼 여러 직군이 함께 한 번의 예식을 만듭니다.
+          웨딩업계는 예식장, 웨딩플래너, 드레스샵, 스튜디오, 헤어메이크업, 예식도우미처럼 여러 직군이 함께 한 번의 예식을 만듭니다.
           직무 소개부터 일을 시작하기 전 준비, 업체의 채용 실무, 현장에서 쓰는 웨딩 용어까지 분류별로 정리했습니다.
         </p>
         {LAST_UPDATED && (
