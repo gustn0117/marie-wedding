@@ -84,7 +84,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!base) return { title: '커뮤니티 글', robots: { index: false, follow: true } };
   const { post } = base;
   const title = post.title;
-  const description = toPlainText(post.content, 155) || `${SITE_NAME} 웨딩 업계 커뮤니티`;
+  const description = toPlainText(post.content, 155) || `${SITE_NAME} 웨딩업계 커뮤니티`;
   return buildPageMetadata({ title, description, path: `/community/${post.id}`, type: 'article' });
 }
 

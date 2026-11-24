@@ -52,7 +52,7 @@ export default function Footer() {
         <div className="grid gap-4 py-5 md:grid-cols-[1fr_auto] md:items-start">
           <div>
             <p className="max-w-3xl text-xs leading-relaxed text-gray-500">
-              마리에는 웨딩 업계 종사자와 업체를 위한 구인구직, 프로필 탐색, 커뮤니티 플랫폼입니다.
+              마리에는 웨딩업계 종사자와 업체를 위한 구인구직, 프로필 탐색, 커뮤니티 플랫폼입니다.
               서비스 이용 문의는 고객센터를 통해 접수해주세요.
             </p>
           </div>

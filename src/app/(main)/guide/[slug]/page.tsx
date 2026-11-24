@@ -373,7 +373,7 @@ export default async function GuidePage({ params }: PageProps) {
       <section className="mt-14 rounded-2xl bg-primary px-6 py-10 text-white sm:px-10 lg:flex lg:items-center lg:justify-between lg:gap-10 lg:px-14 lg:py-14">
         <div>
           <h2 className="break-keep text-[24px] font-bold leading-[1.35] sm:text-[28px]">공고 등록과 지원은 모두 무료예요</h2>
-          <p className="mt-2 break-keep text-[15px] text-white/75">웨딩 업계 공고와 인재만 모여 있어 필요한 자리와 사람을 찾기 쉬워요.</p>
+          <p className="mt-2 break-keep text-[15px] text-white/75">웨딩업계 공고와 인재만 모여 있어 필요한 자리와 사람을 찾기 쉬워요.</p>
         </div>
         <div className="mt-6 flex flex-wrap gap-2 lg:mt-0 lg:shrink-0">
           <Link href={jobsHref} className="inline-flex h-12 items-center rounded-lg bg-white px-6 text-[15px] font-bold text-primary transition-colors hover:bg-gray-100">채용 공고 보기</Link>

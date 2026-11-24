@@ -64,7 +64,7 @@ export const JOB_VENUE_GUIDES: Landing[] = [
         itemStyle: 'list',
         items: [
           '좋은 점 — 주말에 몰아서 일할 수 있어 평일 수업이나 본업과 함께 하기 좋습니다.',
-          '좋은 점 — 경험 무관으로 뽑는 자리가 있어 웨딩 업계를 처음 겪어 보기에 알맞습니다.',
+          '좋은 점 — 경험 무관으로 뽑는 자리가 있어 웨딩업계를 처음 겪어 보기에 알맞습니다.',
           '좋은 점 — 연회팀, 진행팀, 드레스 헬퍼가 일하는 모습을 가까이서 보며 진로를 가늠할 수 있습니다.',
           '힘든 점 — 대부분 선 채로 일하고, 서빙은 무거운 식기와 쟁반을 계속 나릅니다.',
           '힘든 점 — 회차가 빠르게 돌아가 성수기에는 쉬는 틈이 짧을 수 있습니다.',
@@ -148,7 +148,7 @@ export const JOB_VENUE_GUIDES: Landing[] = [
     },
     related: ['wedding-banquet-server', 'wedding-helper-jobs', 'wedding-hall-part-time-outfit', 'health-certificate', 'wedding-part-time-first-day'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-banquet-server',
@@ -381,7 +381,7 @@ export const JOB_VENUE_GUIDES: Landing[] = [
         id: 'experience-fit',
         heading: '호텔·외식 경력이 살아나는 지점',
         body: [
-          '웨딩 연회는 정해진 시간 안에 많은 하객을 고르게 대접해야 한다는 점에서 호텔 연회와 닮았습니다. 서비스 경력 전반을 웨딩 업계로 옮기는 방법은 이직 가이드에 따로 정리했고, 여기서는 연회팀 안에서 어떤 경력이 어디에 쓰이는지만 짚습니다.',
+          '웨딩 연회는 정해진 시간 안에 많은 하객을 고르게 대접해야 한다는 점에서 호텔 연회와 닮았습니다. 서비스 경력 전반을 웨딩업계로 옮기는 방법은 이직 가이드에 따로 정리했고, 여기서는 연회팀 안에서 어떤 경력이 어디에 쓰이는지만 짚습니다.',
         ],
         table: {
           head: ['이전 경력', '살아나는 지점', '어울리는 자리'],
@@ -444,7 +444,7 @@ export const JOB_VENUE_GUIDES: Landing[] = [
     },
     related: ['wedding-banquet-server', 'wedding-venue-recruit', 'wedding-hall-ceremony-team', 'wedding-career-change'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-hall-ceremony-team',

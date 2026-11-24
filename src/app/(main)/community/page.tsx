@@ -13,10 +13,10 @@ import { buildPageMetadata } from '@/shared/seo';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = buildPageMetadata({
-  title: '웨딩 업계 커뮤니티',
-  description: '웨딩 업계 종사자들의 커뮤니티. 업계 뉴스, 실무 노하우, 취업·채용 팁, 후기와 자유게시판.',
+  title: '웨딩업계 커뮤니티',
+  description: '웨딩업계 종사자들의 커뮤니티. 업계 뉴스, 실무 노하우, 취업·채용 팁, 후기와 자유게시판.',
   path: '/community',
-  keywords: ['웨딩 업계 커뮤니티', '웨딩 종사자', '웨딩 실무', '웨딩 취업'],
+  keywords: ['웨딩업계 커뮤니티', '웨딩 종사자', '웨딩 실무', '웨딩 취업'],
 });
 
 interface PageProps {
@@ -100,7 +100,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       <header className="app-hide border border-gray-200 bg-white px-4 py-4 sm:px-5 sm:py-5">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-[20px] font-bold text-ink sm:text-[24px]">웨딩 업계 커뮤니티</h1>
+            <h1 className="text-[20px] font-bold text-ink sm:text-[24px]">웨딩업계 커뮤니티</h1>
             <p className="mt-1 text-[13px] text-gray-500">
               예식장·드레스·스튜디오·메이크업·플래너, 현장에서 일하는 사람들이 묻고 답하는 곳입니다.
             </p>

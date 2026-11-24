@@ -16,7 +16,7 @@ const getStats = unstable_cache(loadStats, ['platform-stats'], { revalidate: 300
 
 export const metadata: Metadata = buildPageMetadata({
   title: '플랫폼 통계',
-  description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 웨딩 업계 채용 공공 통계.',
+  description: '마리에 플랫폼의 누적 업체 수, 등록 공고 수, 지역별 활성 업체 등 웨딩업계 채용 공공 통계.',
   path: '/stats',
 });
 

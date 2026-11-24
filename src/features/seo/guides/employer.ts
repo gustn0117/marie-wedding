@@ -346,7 +346,7 @@ export const EMPLOYER_GUIDES: Landing[] = [
         id: 'by-role',
         heading: '직무별 질문 예시',
         body: [
-          '같은 웨딩 업계라도 직무마다 현장에서 부딪히는 장면이 다릅니다. 실제로 일어날 법한 상황을 주고 “어떻게 하겠어요?”라고 물으면, 경력이 짧은 지원자의 태도와 판단도 함께 볼 수 있습니다.',
+          '같은 웨딩업계라도 직무마다 현장에서 부딪히는 장면이 다릅니다. 실제로 일어날 법한 상황을 주고 “어떻게 하겠어요?”라고 물으면, 경력이 짧은 지원자의 태도와 판단도 함께 볼 수 있습니다.',
         ],
         table: {
           head: ['직무', '질문 예시', '보고 싶은 것'],
@@ -443,7 +443,7 @@ export const EMPLOYER_GUIDES: Landing[] = [
     ],
     related: ['wedding-job-post-writing', 'wedding-staff-onboarding', 'wedding-interview', 'wedding-portfolio'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-staff-onboarding',
@@ -623,7 +623,7 @@ export const EMPLOYER_GUIDES: Landing[] = [
           '인력이 더 드는 예식 — 코스 연회나 폐백이 겹치는 날을 따로 표시합니다.',
           '휴무가 겹치는 날 — 핵심 직원의 휴가·휴무가 바쁜 날과 겹치지 않는지 봅니다.',
         ],
-        note: '업계 전체의 성수기 흐름과 업체 구조는 ‘웨딩 업계 구조’ 가이드에서 다룹니다.',
+        note: '업계 전체의 성수기 흐름과 업체 구조는 ‘웨딩업계 구조’ 가이드에서 다룹니다.',
       },
       {
         id: 'annual-plan',
@@ -736,7 +736,7 @@ export const EMPLOYER_GUIDES: Landing[] = [
     ],
     related: ['hiring-wedding-day-staff', 'wedding-staff-onboarding', 'wedding-industry-structure', 'wedding-job-post-writing', 'working-with-wedding-freelancers'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'working-with-wedding-freelancers',

@@ -91,10 +91,10 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${xmlEscape(`${SITE_NAME_KO} ${SITE_NAME} — 웨딩 업계 채용·소식`)}</title>
+    <title>${xmlEscape(`${SITE_NAME_KO} ${SITE_NAME} — 웨딩업계 채용·소식`)}</title>
     <link>${SITE_URL}</link>
     <atom:link href="${SITE_URL}/rss.xml" rel="self" type="application/rss+xml" />
-    <description>${xmlEscape('웨딩 업계 최신 채용 공고와 채용 가이드, 커뮤니티 글, 행사·박람회 소식')}</description>
+    <description>${xmlEscape('웨딩업계 최신 채용 공고와 채용 가이드, 커뮤니티 글, 행사·박람회 소식')}</description>
     <language>ko</language>
     <lastBuildDate>${lastBuild}</lastBuildDate>
 ${itemsXml}

@@ -51,12 +51,12 @@ export const GUIDE_CATEGORIES: { id: GuideCategory; label: string; lead: string 
   {
     id: 'job',
     label: '직무 가이드',
-    lead: '웨딩 업계 직무별로 하는 일과 필요한 역량, 근무 형태와 시작하는 방법을 정리했습니다.',
+    lead: '웨딩업계 직무별로 하는 일과 필요한 역량, 근무 형태와 시작하는 방법을 정리했습니다.',
   },
   {
     id: 'prep',
     label: '취업·알바 준비',
-    lead: '복장과 준비물, 보건증, 이력서와 면접, 포트폴리오까지 웨딩 업계에서 일을 시작하기 전에 챙길 것을 정리했습니다.',
+    lead: '복장과 준비물, 보건증, 이력서와 면접, 포트폴리오까지 웨딩업계에서 일을 시작하기 전에 챙길 것을 정리했습니다.',
   },
   {
     id: 'employer',
@@ -65,8 +65,8 @@ export const GUIDE_CATEGORIES: { id: GuideCategory; label: string; lead: string 
   },
   {
     id: 'industry',
-    label: '웨딩 업계 이해',
-    lead: '예식 순서와 웨딩 용어, 스드메와 웨딩홀 계약 구조처럼 웨딩 업계에서 일하려면 알아 두어야 할 기본 지식을 정리했습니다.',
+    label: '웨딩업계 이해',
+    lead: '예식 순서와 웨딩 용어, 스드메와 웨딩홀 계약 구조처럼 웨딩업계에서 일하려면 알아 두어야 할 기본 지식을 정리했습니다.',
   },
 ];
 

@@ -529,7 +529,7 @@ export const JOB_HELPER_GUIDES: Landing[] = [
         id: 'names',
         heading: '같은 일, 다른 이름',
         body: [
-          '웨딩 업계에서는 한 가지 일을 업체마다 다른 이름으로 부르고, 한 이름이 여러 일을 가리키기도 합니다. 예를 들어 ‘헬퍼’는 대개 드레스 헬퍼를 뜻하지만 한복을 맡는 사람에게도 붙고, ‘이모님’은 헬퍼와 수모를 가리지 않고 친근하게 부르는 말로 쓰입니다.',
+          '웨딩업계에서는 한 가지 일을 업체마다 다른 이름으로 부르고, 한 이름이 여러 일을 가리키기도 합니다. 예를 들어 ‘헬퍼’는 대개 드레스 헬퍼를 뜻하지만 한복을 맡는 사람에게도 붙고, ‘이모님’은 헬퍼와 수모를 가리지 않고 친근하게 부르는 말로 쓰입니다.',
         ],
         itemStyle: 'terms',
         items: [
@@ -630,6 +630,6 @@ export const JOB_HELPER_GUIDES: Landing[] = [
     // 여러 직무를 비교하는 글이라 Occupation 구조화 데이터는 두지 않는다(한 직업의 별칭처럼 읽히면 본문과 어긋남).
     related: ['dress-helper', 'wedding-helper-jobs', 'hanbok-helper', 'pyebaek-sumo', 'bridal-room'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
 ];

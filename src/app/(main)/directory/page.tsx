@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = buildPageMetadata({
   title: '웨딩 인재·업체 프로필',
-  description: '웨딩 업계 인재와 업체 프로필을 업종·지역별로 찾아보세요. 예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지 함께할 파트너를 한 곳에서.',
+  description: '웨딩업계 인재와 업체 프로필을 업종·지역별로 찾아보세요. 예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지 함께할 파트너를 한 곳에서.',
   path: '/directory',
   keywords: ['웨딩 업체', '웨딩 인재', '웨딩 프리랜서', '웨딩 업체 찾기', '웨딩 파트너'],
 });

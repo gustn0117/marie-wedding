@@ -8,6 +8,7 @@ import HomeQuickLinks from '@/features/home/HomeQuickLinks';
 import HomeMission from '@/features/home/HomeMission';
 import HomeContent from '@/features/home/HomeContent';
 import HeroBanner from '@/features/home/HeroBanner';
+import HomeIntro from '@/features/home/HomeIntro';
 import JsonLd from '@/shared/components/JsonLd';
 import { SITE_URL, SITE_NAME, SITE_NAME_KO, SITE_DESCRIPTION, OG_SITE_NAME, organizationJsonLd } from '@/shared/seo';
 
@@ -132,7 +133,7 @@ export default async function HomePage() {
       <Header />
       <main className="flex-1">
         {/* 시즌 캠페인과 별개로 서비스의 문서 제목은 고정한다. */}
-        <h1 className="sr-only">마리에 — 웨딩 업계 채용·구인구직 플랫폼</h1>
+        <h1 className="sr-only">웨딩업계 채용·구인구직 플랫폼, 마리에</h1>
         <HomeHero />
         <HomeQuickLinks />
         <HomeMission />
@@ -144,6 +145,7 @@ export default async function HomePage() {
           featuredProfiles={featuredProfiles}
           profiles={profiles}
         />
+        <HomeIntro />
       </main>
       <Footer />
     </div>

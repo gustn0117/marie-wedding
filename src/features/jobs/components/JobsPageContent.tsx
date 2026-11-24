@@ -196,7 +196,8 @@ export default function JobsPageContent({ initialJobs, initialCount }: JobsPageC
 
 
   const browsingRegionDetails = browsingRegion ? REGION_DETAILS[browsingRegion] : null;
-  const pageTitle = '채용정보';
+  // 화면 제목에도 검색어('웨딩업계 채용')를 담는다. 앱에서는 이 머리글을 숨기고 위 막대 이름을 쓴다.
+  const pageTitle = '웨딩업계 채용정보';
   const selectedFilterCount = activeFilters.length + (search.trim() ? 1 : 0);
 
   // 앱 필터 칩 — 지역·업종은 아래 선택 창(AdaptivePanel), 나머지는 iOS 선택 메뉴(AppSelectChip)

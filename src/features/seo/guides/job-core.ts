@@ -18,7 +18,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     summary: [
       { label: '주요 업무', value: '예식 상담·홀 투어·견적 안내와 계약, 계약 고객 관리' },
       { label: '근무 형태', value: '정규직·계약직 중심, 주말 근무가 많고 평일 휴무가 흔함' },
-      { label: '우대 경험', value: '상담·영업·서비스 경력, 웨딩 업계 경험' },
+      { label: '우대 경험', value: '상담·영업·서비스 경력, 웨딩업계 경험' },
       { label: '이런 분께', value: '사람을 만나 설명하고 설득하는 일을 좋아하는 분' },
     ],
     roles: [
@@ -86,28 +86,28 @@ export const JOB_CORE_GUIDES: Landing[] = [
     },
     related: ['wedding-hall-contract-terms', 'wedding-venue-recruit', 'wedding-planner-recruit', 'wedding-fair-staff'],
     publishedAt: '2026-07-25',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-jobs',
     category: 'job',
     featured: true,
     businessTypes: [],
-    keywords: ['웨딩 구인구직', '웨딩 채용', '웨딩 업계 취업', '웨딩 일자리', '웨딩 알바'],
-    title: '웨딩 구인구직 — 웨딩 업계 직무·취업 가이드',
+    keywords: ['웨딩 구인구직', '웨딩 채용', '웨딩업계 취업', '웨딩 일자리', '웨딩 알바'],
+    title: '웨딩 구인구직 — 웨딩업계 직무·취업 가이드',
     description:
-      '예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지, 웨딩 업계 직무별 하는 일과 근무 형태, 처음 시작하는 방법을 정리했습니다. 지금 모집 중인 웨딩 채용 공고도 함께 확인하세요.',
+      '예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미까지, 웨딩업계 직무별 하는 일과 근무 형태, 처음 시작하는 방법을 정리했습니다. 지금 모집 중인 웨딩 채용 공고도 함께 확인하세요.',
     eyebrow: '웨딩 구인구직',
-    h1: '웨딩 구인구직 — 웨딩 업계 취업 가이드',
+    h1: '웨딩 구인구직 — 웨딩업계 취업 가이드',
     lead:
-      '웨딩 업계는 예식장, 드레스샵, 스튜디오, 헤어메이크업, 웨딩플래너, 예식 도우미처럼 여러 전문 직군이 함께 한 번의 예식을 만드는 산업입니다. 직군마다 하는 일과 근무 형태가 달라, 나에게 맞는 자리를 고르는 것이 웨딩 구인구직의 첫걸음입니다.',
+      '웨딩업계는 예식장, 드레스샵, 스튜디오, 헤어메이크업, 웨딩플래너, 예식 도우미처럼 여러 전문 직군이 함께 한 번의 예식을 만드는 산업입니다. 직군마다 하는 일과 근무 형태가 달라, 나에게 맞는 자리를 고르는 것이 웨딩 구인구직의 첫걸음입니다.',
     summary: [
       { label: '대표 직군', value: '예식장·드레스샵·스튜디오·헤어메이크업·웨딩플래너·예식 도우미' },
       { label: '근무 특징', value: '예식이 몰리는 주말 근무가 많고, 봄·가을 성수기가 뚜렷함' },
       { label: '고용 형태', value: '정규직·계약직과 예식 일정에 맞춘 단기 알바가 함께 있음' },
       { label: '이런 분께', value: '누군가의 특별한 날을 함께 만드는 일에 보람을 느끼는 분' },
     ],
-    rolesHeading: '웨딩 업계 직군 한눈에 보기',
+    rolesHeading: '웨딩업계 직군 한눈에 보기',
     roles: [
       { name: '예식장(웨딩홀)', desc: '예약 상담부터 연회·예식 진행까지 여러 부서가 함께 일합니다.', href: '/guide/wedding-venue-recruit' },
       { name: '웨딩플래너', desc: '결혼 준비 전 과정을 신랑·신부와 함께 설계하고 챙깁니다.', href: '/guide/wedding-planner-recruit' },
@@ -122,7 +122,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     sections: [
       {
         id: 'flow',
-        heading: '결혼 준비 흐름으로 보는 웨딩 업계',
+        heading: '결혼 준비 흐름으로 보는 웨딩업계',
         itemStyle: 'steps',
         items: [
           '예식장 예약 — 웨딩홀 예약실에서 날짜와 예식 상품을 정합니다.',
@@ -133,7 +133,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
       },
       {
         id: 'start',
-        heading: '처음 웨딩 업계에 들어가려면',
+        heading: '처음 웨딩업계에 들어가려면',
         itemStyle: 'check',
         items: [
           '예식 도우미·스태프처럼 경력 무관 자리로 현장을 먼저 경험해 보세요.',
@@ -153,7 +153,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     tips: {
       seeker: [
         '희망 직무·지역·고용형태를 이력서에 적어 두면 맞는 공고를 고르기 쉽습니다.',
-        '웨딩 업계는 주말 근무가 많으니 가능한 요일을 먼저 정리하세요.',
+        '웨딩업계는 주말 근무가 많으니 가능한 요일을 먼저 정리하세요.',
         '직무를 바꾸고 싶다면 비슷한 역량이 필요한 직군(예약실 상담 → 웨딩플래너 등)부터 살펴보세요.',
       ],
       employer: [
@@ -171,7 +171,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     ],
     related: ['wedding-industry-structure', 'wedding-hall-part-time', 'wedding-career-change', 'wedding-resume'],
     publishedAt: '2026-07-25',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'wedding-venue-recruit',
@@ -276,7 +276,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     summary: [
       { label: '주요 업무', value: '결혼 준비 상담, 업체 추천·계약, 일정·예산 관리' },
       { label: '소속 형태', value: '웨딩 컨설팅(플래닝) 업체 소속 또는 프리랜서' },
-      { label: '우대 경험', value: '상담·서비스 경력, 웨딩 업계 경험' },
+      { label: '우대 경험', value: '상담·서비스 경력, 웨딩업계 경험' },
       { label: '이런 분께', value: '여러 일을 동시에 챙기고 조율하는 것이 체질인 분' },
     ],
     roles: [
@@ -348,7 +348,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     },
     related: ['wedding-planner-certificate', 'sdm-meaning', 'wedding-fair-staff', 'honeymoon-planner'],
     publishedAt: '2026-09-25',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'dress-shop-recruit',
@@ -625,7 +625,7 @@ export const JOB_CORE_GUIDES: Landing[] = [
     eyebrow: '예식 도우미 알바',
     h1: '예식 도우미 알바 · 웨딩 도우미 구인구직',
     lead:
-      '예식 도우미(웨딩 컨시어지)는 예식 당일 현장에서 신랑·신부와 혼주를 돕고, 예식이 순서대로 진행되도록 챙기는 일입니다. 예식 일정에 맞춰 일하는 단기 알바 형태가 많아 웨딩 업계를 처음 경험하기 좋은 자리입니다.',
+      '예식 도우미(웨딩 컨시어지)는 예식 당일 현장에서 신랑·신부와 혼주를 돕고, 예식이 순서대로 진행되도록 챙기는 일입니다. 예식 일정에 맞춰 일하는 단기 알바 형태가 많아 웨딩업계를 처음 경험하기 좋은 자리입니다.',
     summary: [
       { label: '주요 업무', value: '신부 대기실 보조, 하객 안내, 예식 진행 보조' },
       { label: '근무 시간', value: '예식이 몰리는 주말 낮 시간대 중심' },
@@ -699,6 +699,6 @@ export const JOB_CORE_GUIDES: Landing[] = [
     },
     related: ['wedding-helper-roles-compared', 'wedding-hall-part-time', 'wedding-hall-part-time-outfit', 'wedding-part-time-first-day'],
     publishedAt: '2026-09-25',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
 ];

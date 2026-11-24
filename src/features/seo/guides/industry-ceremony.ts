@@ -734,7 +734,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
       { label: '다루는 분야', value: '예식장·계약, 스드메·촬영, 드레스, 예식 순서' },
       { label: '전통·플라워', value: '폐백·수모·함·이바지와 부케·부토니에 등' },
       { label: '읽는 법', value: '용어마다 한 문장 뜻, 자세한 내용은 관련 가이드' },
-      { label: '이런 분께', value: '웨딩 업계 신입과 결혼을 준비하는 예비부부' },
+      { label: '이런 분께', value: '웨딩업계 신입과 결혼을 준비하는 예비부부' },
     ],
     sections: [
       {
@@ -856,7 +856,7 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
       seeker: [
         '면접 전에 지원하는 업종의 용어를 소리 내어 설명해 보면 현장을 얼마나 아는지 보여 줄 수 있습니다.',
         '현장에서 처음 듣는 말은 흘려듣지 말고 메모해 두었다가 선배에게 확인하세요.',
-        '웨딩 업계 일을 찾는다면 채용정보에서 업종·지역·고용형태를 골라 맞는 공고만 볼 수 있습니다.',
+        '웨딩업계 일을 찾는다면 채용정보에서 업종·지역·고용형태를 골라 맞는 공고만 볼 수 있습니다.',
       ],
       employer: [
         '신입 교육 자료에 우리 업체에서 쓰는 용어와 뜻을 따로 정리해 주세요.',
@@ -892,6 +892,6 @@ export const INDUSTRY_CEREMONY_GUIDES: Landing[] = [
     ],
     related: ['sdm-meaning', 'wedding-hall-contract-terms', 'wedding-ceremony-order', 'pyebaek-guide', 'wedding-dress-types'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
 ];

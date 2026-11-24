@@ -426,7 +426,7 @@ export const JOB_MORE_GUIDES: Landing[] = [
         id: 'reality',
         heading: '해 보면 알게 되는 것',
         body: [
-          '박람회 알바의 좋은 점은 웨딩 업계의 여러 분야를 한자리에서 볼 수 있다는 것입니다. 예식장부터 신혼여행까지 결혼 준비가 어떤 순서로 이어지는지, 업체마다 무엇을 내세우는지 가까이서 익힐 수 있어 웨딩 업계 진로를 고민하는 사람에게 좋은 탐색이 됩니다.',
+          '박람회 알바의 좋은 점은 웨딩업계의 여러 분야를 한자리에서 볼 수 있다는 것입니다. 예식장부터 신혼여행까지 결혼 준비가 어떤 순서로 이어지는지, 업체마다 무엇을 내세우는지 가까이서 익힐 수 있어 웨딩업계 진로를 고민하는 사람에게 좋은 탐색이 됩니다.',
           '힘든 점은 주로 체력과 목 관리입니다. 하루 종일 서서 같은 안내를 되풀이하고, 방문객이 몰리는 시간대에는 쉴 틈이 줄어듭니다. 식사와 휴식을 어떻게 교대하는지, 설치·철수가 근무 시간에 들어가는지는 업체마다 달라 미리 확인하는 것이 좋습니다.',
         ],
       },
@@ -489,7 +489,7 @@ export const JOB_MORE_GUIDES: Landing[] = [
     },
     related: ['wedding-planner-recruit', 'weekend-wedding-jobs', 'wedding-industry-structure', 'wedding-hall-recruit', 'honeymoon-planner'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'groom-suit-shop',
@@ -639,7 +639,7 @@ export const JOB_MORE_GUIDES: Landing[] = [
       },
       {
         q: '예복샵 채용 공고는 어디서 찾나요?',
-        a: '예복샵 채용은 매장 직접 모집이나 패션·웨딩 채용 공고로 올라옵니다. 마리에에 희망 직무와 지역을 넣은 이력서를 등록해 두면 웨딩 업계 공고를 보고 바로 지원할 수 있습니다.',
+        a: '예복샵 채용은 매장 직접 모집이나 패션·웨딩 채용 공고로 올라옵니다. 마리에에 희망 직무와 지역을 넣은 이력서를 등록해 두면 웨딩업계 공고를 보고 바로 지원할 수 있습니다.',
       },
     ],
     occupation: {
@@ -649,7 +649,7 @@ export const JOB_MORE_GUIDES: Landing[] = [
     },
     related: ['dress-shop-recruit', 'wedding-dress-designer', 'dress-tour-fitting', 'wedding-glossary', 'wedding-industry-structure'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
   {
     slug: 'honeymoon-planner',
@@ -971,7 +971,7 @@ export const JOB_MORE_GUIDES: Landing[] = [
       },
       {
         q: '청첩장 업체 채용 공고는 어디서 찾나요?',
-        a: '청첩장 업체의 디자이너 공고는 디자인 채용 공고와 웨딩 채용 공고에 함께 올라옵니다. 마리에 채용정보에서 업종을 디자이너로 고르면 웨딩 업계 디자인 공고를 모아 볼 수 있습니다.',
+        a: '청첩장 업체의 디자이너 공고는 디자인 채용 공고와 웨딩 채용 공고에 함께 올라옵니다. 마리에 채용정보에서 업종을 디자이너로 고르면 웨딩업계 디자인 공고를 모아 볼 수 있습니다.',
       },
     ],
     occupation: {
@@ -981,6 +981,6 @@ export const JOB_MORE_GUIDES: Landing[] = [
     },
     related: ['wedding-album-designer', 'wedding-portfolio', 'wedding-industry-structure', 'wedding-career-change'],
     publishedAt: '2026-09-29',
-    updatedAt: '2026-09-29',
+    updatedAt: '2026-11-24',
   },
 ];
