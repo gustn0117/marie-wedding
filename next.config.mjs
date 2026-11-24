@@ -7,8 +7,9 @@ const nextConfig = {
   // 이 설정은 메타데이터 위치만 바꾼다(본문 스트리밍·loading.tsx 는 그대로).
   htmlLimitedBots: /.*/,
   images: {
-    // 기본 이미지와 고해상도 메인 광고에 사용하는 품질 값을 명시한다.
-    qualities: [75, 95],
+    // 기본 이미지(75)와 메인 히어로 배경(80) 품질만 허용한다.
+    // 히어로는 95와 화면 비교에서 차이가 없는데 용량이 절반 남짓이라 80을 쓴다(src/features/home/HomeHero.tsx).
+    qualities: [75, 80],
   },
   experimental: {
     // Client Router Cache: dynamic 페이지의 기본 30s stale-time 을 0 으로 낮춰

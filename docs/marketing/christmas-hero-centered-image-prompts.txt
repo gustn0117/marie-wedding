@@ -1,12 +1,17 @@
 Mode: built-in image_gen, reference-based editing.
 Reference: previous Christmas hero; desktop result used as the mobile reference.
 
-Desktop asset: public/images/home/hero-christmas-centered-4k.webp
+Serving (2026-11-24): HomeHero.tsx imports both files, so next/image serves them from a content-hashed
+/_next/static/media URL (optimized variants are sent as immutable, a new file gets a new URL). Served at
+quality 80: side-by-side Retina/phone zoom crops showed no visible difference from 95 at about half the bytes.
+To swap the background, replace the files in src/features/home/images/ (keep or update the import names).
+
+Desktop asset: src/features/home/images/hero-christmas-centered-4k.webp
 Native generated source: 1942 x 809. The tool did not return the requested native 4K size.
 Delivered asset: 3840 x 1600, Lanczos3 resampling, WebP quality 96.
 The delivered 4K dimensions are a resampled size, not native generated 4K detail.
 
-Mobile asset: public/images/home/hero-christmas-centered-mobile.webp
+Mobile asset: src/features/home/images/hero-christmas-centered-mobile.webp
 Native generated and delivered size: 1024 x 1536, WebP quality 96, no enlargement.
 
 Desktop final prompt:

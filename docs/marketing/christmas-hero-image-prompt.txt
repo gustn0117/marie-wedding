@@ -1,6 +1,6 @@
 Mode: built-in image_gen (reference-based generation)
 Reference: Christmas display photograph supplied by the user in chat.
-Asset: public/images/home/hero-christmas.webp
+Asset: public/images/home/hero-christmas.webp (replaced by the centered hero on 2026-11-23 and removed on 2026-11-24; still in git history)
 Delivery: original generated PNG optimized to WebP, 2172 x 724, quality 88.
 
 Final prompt:

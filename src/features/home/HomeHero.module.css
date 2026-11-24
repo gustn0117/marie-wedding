@@ -3,8 +3,25 @@
  * 캠페인이 끝나면 HomeHero 와 함께 이 파일도 바꾼다.
  */
 
+/* 사진이 오기 전: 루비색 바탕 위에 몇 픽셀짜리 미리보기(HomeHero.tsx 의 --hero-preview-*)를 부드럽게 늘려 깐다. */
+.hero {
+  background-color: #7a0a14;
+  background-image: var(--hero-preview-mobile, none);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+@media (min-width: 640px) {
+  .hero {
+    background-image: var(--hero-preview-wide, none);
+    background-position: center top;
+  }
+}
+
+/* 가까운 그림자는 밝은 장식 위에서도 글자 테두리를 세우고, 넓은 그림자는 글자 둘레를 가라앉힌다. */
 .content {
-  text-shadow: 0 2px 22px rgba(52, 0, 6, 0.3);
+  text-shadow: 0 1px 2px rgba(48, 0, 8, 0.35), 0 2px 22px rgba(52, 0, 6, 0.3);
 }
 
 .divider {
@@ -53,21 +70,30 @@
   letter-spacing: -0.055em;
 }
 
+/*
+ * 금박 '마리에' — 윗면 반사광, 금, 짙은 호박색 띠, 아랫면 되비침이 위아래로 이어져 금속처럼 보인다.
+ * 글자 모양대로 배경을 오려 칠하므로(background-clip: text) 그림자는 text-shadow 대신 filter 로 준다:
+ * 1px 짙은 그림자가 아랫변을 세우고, 넓은 금빛 번짐이 루비 바탕에서 글자를 띄운다.
+ */
 .brand {
   display: inline-block;
-  color: #f8dba1;
-  filter: drop-shadow(0 2px 0 rgba(88, 29, 0, 0.5)) drop-shadow(0 6px 20px rgba(255, 202, 119, 0.18));
+  /* 칠하는 칸을 글자 양옆으로 조금 넓혀, 좁힌 자간에 끝 획이 칸 밖으로 나가도 금박이 잘리지 않게 한다(자리는 그대로). */
+  padding: 0 0.06em;
+  margin: 0 -0.06em;
+  color: #f3cf86;
+  filter: drop-shadow(0 1px 0 rgba(84, 24, 0, 0.6)) drop-shadow(0 8px 22px rgba(255, 196, 110, 0.2));
 }
 
 .companion {
   color: #fff8f1;
   font-size: 0.84em;
-  font-weight: 550;
-  letter-spacing: -0.055em;
+  font-weight: 600;
+  letter-spacing: -0.05em;
 }
 
 .description {
-  max-width: 34rem;
+  /* 휴대폰: 아래쪽 양옆에 지팡이 사탕이 올라와 있어, 긴 둘째 문장을 가운데 빈자리 안에서 두 줄로 나눈다. */
+  max-width: 16.5rem;
   margin: 1.25rem auto 0;
   word-break: keep-all;
   text-wrap: pretty;
@@ -85,9 +111,10 @@
 .descriptionDetail {
   display: block;
   margin-top: 0.25rem;
-  color: rgba(255, 237, 218, 0.84);
+  color: rgba(255, 237, 218, 0.86);
   font-size: 0.875rem;
-  line-height: 1.8;
+  line-height: 1.7;
+  text-wrap: balance;
 }
 
 /* 두 링크는 좁은 휴대폰에서도 같은 폭으로 중앙에 놓고, 글자 확대 시 높이가 늘어나게 한다. */
@@ -134,15 +161,18 @@
   background-color: #fffdf8;
 }
 
+/* 휴대폰에서는 버튼 뒤로 지팡이 사탕 줄무늬가 지나가므로, 뒤를 흐리고 루비색을 깔아 글자가 또렷하게 한다. */
 .buttonSecondary {
   border-color: rgba(243, 217, 164, 0.7);
-  background-color: rgba(77, 0, 10, 0.12);
+  background-color: rgba(74, 0, 11, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   color: #fff8f1;
 }
 
 .buttonSecondary:hover {
   border-color: #f3d9a4;
-  background-color: rgba(255, 248, 241, 0.1);
+  background-color: rgba(120, 18, 32, 0.5);
 }
 
 @media (min-width: 640px) {
@@ -150,8 +180,9 @@
   .divider > span { width: 3.5rem; }
   .titleLead { font-size: 1.5rem; }
   .headline { font-size: 4rem; }
+  .description { max-width: 34rem; }
   .descriptionLead { font-size: 1.0625rem; }
-  .descriptionDetail { font-size: 0.9375rem; }
+  .descriptionDetail { font-size: 0.9375rem; line-height: 1.8; }
   .actions { gap: 0.75rem; margin-top: 1.875rem; }
   .button { min-height: 3.25rem; font-size: 0.9375rem; }
 }
@@ -182,9 +213,14 @@
   }
 }
 
-/* 처음 한 번, 위에서 아래로 차례로 떠오른다(--rise-delay 로 순서). */
+/*
+ * 처음 한 번, 위에서 아래로 차례로 떠오른다(--rise-delay 로 순서).
+ * 채움은 backwards 만 — 기다리는 동안만 첫 모습(투명)을 붙들고, 끝나면 애니메이션 값을 남기지 않는다.
+ * both 로 두면 끝난 뒤에도 filter: blur(0px)·transform 이 남아 요소가 계속 따로 그려지고,
+ * 그 안의 뒤 흐림(backdrop-filter)이 사진을 못 본다. 끝 모습은 원래 스타일과 같아서 튀지 않는다.
+ */
 .rise {
-  animation: heroRise 0.9s cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  animation: heroRise 0.9s cubic-bezier(0.2, 0.75, 0.25, 1) backwards;
   animation-delay: var(--rise-delay, 0ms);
 }
 
@@ -194,30 +230,37 @@
     transform: translate3d(0, 18px, 0);
     filter: blur(5px);
   }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
 }
 
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .brand {
+    /* 위 층: 한 번 스치는 빛(처음엔 글자 왼쪽 밖에 숨어 있다) / 아래 층: 금박 */
+    background-image:
+      linear-gradient(105deg, transparent 41%, rgba(255, 252, 240, 0.92) 50%, transparent 59%),
+      linear-gradient(180deg, #fffaf0 0%, #fdf0cf 16%, #f5d490 36%, #e2ab57 54%, #c4883a 63%, #dfae5f 76%, #fae3ae 90%, #fff3d3 100%);
+    background-position: 100% 0, 0 0;
+    background-repeat: no-repeat;
+    background-size: 250% 100%, 100% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-  }
-
-  .brand {
-    background-image: linear-gradient(180deg, #fff8e7 6%, #f9dda5 38%, #e9ba70 72%, #fff0cf 100%);
     text-shadow: none;
+    /* 제목이 다 떠오른 뒤(0.18s + 0.9s) 한 번만 왼쪽에서 오른쪽으로 스친다. 끝나면 빛은 다시 왼쪽 밖(원래 자리)에 숨는다. */
+    animation: brandGlint 1.5s cubic-bezier(0.45, 0, 0.2, 1) 1.2s;
   }
 }
 
-/* 움직임 줄이기 설정 — 처음부터 다 보인다. */
+@keyframes brandGlint {
+  to {
+    background-position: 0% 0, 0 0;
+  }
+}
+
+/* 움직임 줄이기 설정 — 떠오르기·빛 없이 처음부터 다 보인다. */
 @media (prefers-reduced-motion: reduce) {
-  .rise {
+  .rise,
+  .brand {
     animation: none;
   }
 }
