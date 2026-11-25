@@ -22,7 +22,7 @@ export const OG_SITE_NAME = `${SITE_NAME_KO} ${SITE_NAME}`;
 export const TITLE_SUFFIX = ` | ${SITE_NAME_KO}`;
 // 링크 미리보기(카카오톡·페이스북·X) 기본 이미지. 원본은 scripts/og/marie-og.html.
 // 그림을 바꾸면 ?v= 를 올린다 — 카카오톡 등은 이미지를 주소별로 저장해 두어 주소가 같으면 옛 그림을 계속 보여 준다.
-export const DEFAULT_OG_IMAGE = '/og-marie.png?v=4';
+export const DEFAULT_OG_IMAGE = '/og-marie.png?v=5';
 
 interface PageMetadataInput {
   /** 페이지 고유 제목. 루트 템플릿이 ' | 마리에' 를 붙인다. */

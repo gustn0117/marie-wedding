@@ -1,38 +1,67 @@
 <!doctype html>
 <!--
   링크 미리보기(카카오톡·페이스북·X 등) 기본 이미지 public/og-marie.png(1200×630)의 원본.
-  흰 바탕에 검은 글자 두 줄만 둔다 — 로고·색·장식은 넣지 않는다(사용자 요청, 2026-11-25).
+  흰 바탕·검은 글자 두 줄('웨딩업계 구인구직 플랫폼' / 'Marie'), 로고 없음. 가장자리에만 옅은 겹친 원
+  (반지·레이스) 패턴을 깔고 가운데로 갈수록 지워 글자 뒤는 비운다(사용자 요청, 2026-11-25).
 
   고친 뒤 레포 루트에서 다시 그린다(처음 한 번은 npx playwright install chromium):
     npx playwright screenshot --viewport-size "1200, 630" --wait-for-selector "body[data-ready]" "file://$PWD/scripts/og/marie-og.html" public/og-marie.png
   그리고 src/shared/seo.ts DEFAULT_OG_IMAGE 끝의 ?v= 숫자를 올린다. 카카오톡 등은 이미지를 주소별로
   저장해 두기 때문에 주소가 바뀌어야 새 그림을 다시 가져간다.
 
-  글꼴은 사이트와 같은 Pretendard 다. 카카오톡·네이버 일부 화면은 가운데를 정사각형으로 잘라
-  보여 주므로 글자는 가운데에 모은다.
+  글꼴: Marie 는 Instrument Serif(구글 폰트, OFL), 한글은 사이트와 같은 Pretendard.
+  카카오톡·네이버 일부 화면은 가운데를 정사각형으로 잘라 보여 주므로 글자는 가운데에 모은다.
 -->
 <html lang="ko">
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&display=block">
 <style>
   html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
   body {
+    position: relative;
+    box-sizing: border-box;
+    padding-top: 14px; /* 글자 묶음이 위로 떠 보여 7px 내린다 */
     background: #fff;
     color: #000;
-    font-family: "Pretendard Variable", Pretendard, sans-serif;
     -webkit-font-smoothing: antialiased;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
   }
-  .line { margin: 0; font-size: 40px; font-weight: 400; letter-spacing: -0.01em; }
-  /* 자간을 좁힌 만큼 글자가 오른쪽으로 쏠려(약 5px) 왼쪽으로 당겨 눈으로 보는 가운데를 맞춘다 */
-  .word { margin: 18px 0 0; font-size: 176px; font-weight: 600; line-height: 1; letter-spacing: -0.035em; transform: translateX(-5px); }
+  /* 겹친 원 패턴 — 가장자리에서 가운데로 갈수록 지운다 */
+  .pattern {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Cg fill='none' stroke='%23000' stroke-opacity='0.1' stroke-width='1.4'%3E%3Ccircle cx='0' cy='0' r='32'/%3E%3Ccircle cx='64' cy='0' r='32'/%3E%3Ccircle cx='0' cy='64' r='32'/%3E%3Ccircle cx='64' cy='64' r='32'/%3E%3Ccircle cx='32' cy='32' r='32'/%3E%3C/g%3E%3C/svg%3E");
+    background-position: center;
+    -webkit-mask-image: radial-gradient(ellipse 58% 66% at 50% 50%, transparent 40%, #000 100%);
+    mask-image: radial-gradient(ellipse 58% 66% at 50% 50%, transparent 40%, #000 100%);
+  }
+  .line {
+    position: relative;
+    margin: 0;
+    font-family: "Pretendard Variable", Pretendard, sans-serif;
+    font-size: 34px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    padding-left: 0.08em; /* 자간이 마지막 글자 뒤에도 붙어 왼쪽으로 쏠리는 것을 맞춘다 */
+  }
+  .word {
+    position: relative;
+    margin: 6px 0 0;
+    font-family: "Instrument Serif", serif;
+    font-size: 232px;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
 </style>
 </head>
 <body>
+  <div class="pattern"></div>
   <p class="line">웨딩업계 구인구직 플랫폼</p>
   <p class="word">Marie</p>
   <script>
