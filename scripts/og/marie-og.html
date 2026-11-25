@@ -1,14 +1,15 @@
 <!doctype html>
 <!--
   링크 미리보기(카카오톡·페이스북·X 등) 기본 이미지 public/og-marie.png(1200×630)의 원본.
+  흰 바탕에 검은 글자 두 줄만 둔다 — 로고·색·장식은 넣지 않는다(사용자 요청, 2026-11-25).
 
   고친 뒤 레포 루트에서 다시 그린다(처음 한 번은 npx playwright install chromium):
     npx playwright screenshot --viewport-size "1200, 630" --wait-for-selector "body[data-ready]" "file://$PWD/scripts/og/marie-og.html" public/og-marie.png
   그리고 src/shared/seo.ts DEFAULT_OG_IMAGE 끝의 ?v= 숫자를 올린다. 카카오톡 등은 이미지를 주소별로
   저장해 두기 때문에 주소가 바뀌어야 새 그림을 다시 가져간다.
 
-  로고 마크는 src/shared/components/Logo.tsx 와 같은 모양이고, 글꼴은 사이트와 같은 Pretendard 다.
-  카카오톡·네이버 일부 화면은 가운데를 정사각형으로 잘라 보여 주므로 내용은 가운데에 모은다.
+  글꼴은 사이트와 같은 Pretendard 다. 카카오톡·네이버 일부 화면은 가운데를 정사각형으로 잘라
+  보여 주므로 글자는 가운데에 모은다.
 -->
 <html lang="ko">
 <head>
@@ -17,7 +18,8 @@
 <style>
   html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
   body {
-    background: #051049; /* primary */
+    background: #fff;
+    color: #000;
     font-family: "Pretendard Variable", Pretendard, sans-serif;
     -webkit-font-smoothing: antialiased;
     display: flex;
@@ -25,25 +27,14 @@
     align-items: center;
     justify-content: center;
   }
-  /* 기울인 é 가 오른쪽으로 튀어나온 만큼(약 5px) 왼쪽으로 당겨 눈으로 보는 가운데를 맞춘다 */
-  .lockup { display: flex; align-items: center; gap: 32px; transform: translateX(-5px); }
-  .mark { display: block; flex: none; width: 112px; height: 112px; }
-  .word { color: #fff; font-size: 124px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; }
-  .word i { font-weight: 600; } /* Logo.tsx 처럼 é 만 기울인다 */
-  .line { margin: 46px 0 0; color: #b8c5e3; /* primary-200 */ font-size: 40px; font-weight: 500; letter-spacing: -0.01em; }
+  .line { margin: 0; font-size: 40px; font-weight: 400; letter-spacing: -0.01em; }
+  /* 자간을 좁힌 만큼 글자가 오른쪽으로 쏠려(약 5px) 왼쪽으로 당겨 눈으로 보는 가운데를 맞춘다 */
+  .word { margin: 18px 0 0; font-size: 176px; font-weight: 600; line-height: 1; letter-spacing: -0.035em; transform: translateX(-5px); }
 </style>
 </head>
 <body>
-  <div class="lockup">
-    <svg class="mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <rect width="32" height="32" rx="7" fill="#FFFFFF"/>
-      <path d="M8 22.4V10.2L16 18l8-7.8v12.2" stroke="#051049" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M16 18v4.4" stroke="#F2C879" stroke-width="2.7" stroke-linecap="round"/>
-      <circle cx="23.2" cy="7.8" r="1.7" fill="#F2C879"/>
-    </svg>
-    <span class="word">Mari<i>é</i></span>
-  </div>
-  <p class="line">웨딩업계 전문 채용 플랫폼</p>
+  <p class="line">웨딩업계 구인구직 플랫폼</p>
+  <p class="word">Marié</p>
   <script>
     // 글꼴이 다 내려온 뒤에 찍도록 표시한다(--wait-for-selector).
     document.fonts.ready.then(function () { document.body.setAttribute('data-ready', ''); });
