@@ -18,7 +18,7 @@ import BlockUserButton from '@/features/blocks/components/BlockUserButton';
 import BlockedContent from '@/features/blocks/components/BlockedContent';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
+import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,7 +55,7 @@ function buildPostJsonLd(post: Post, commentCount: number): Record<string, unkno
       dateModified: post.updated_at || post.created_at,
       ...(description ? { description } : {}),
       author: { '@type': 'Organization', name: SITE_NAME, url: SITE_URL },
-      publisher: { '@type': 'Organization', name: SITE_NAME, logo: { '@type': 'ImageObject', url: absoluteUrl('/og-marie.png') } },
+      publisher: { '@type': 'Organization', name: SITE_NAME, logo: { '@type': 'ImageObject', url: absoluteUrl(DEFAULT_OG_IMAGE) } },
       mainEntityOfPage: url,
       url,
     };

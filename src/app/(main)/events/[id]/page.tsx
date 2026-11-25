@@ -15,7 +15,7 @@ import RichTextView from '@/shared/components/RichTextView';
 import { ROUTES } from '@/shared/constants';
 import { PUBLIC_PROFILE_COLUMNS } from '@/shared/constants/profileSelect';
 import JsonLd from '@/shared/components/JsonLd';
-import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, SITE_NAME, SITE_URL } from '@/shared/seo';
+import { absoluteUrl, breadcrumbJsonLd, buildPageMetadata, toPlainText, DEFAULT_OG_IMAGE, SITE_NAME, SITE_URL } from '@/shared/seo';
 
 export const dynamic = 'force-dynamic';
 
@@ -75,7 +75,7 @@ function buildEventJsonLd(event: Event): Record<string, unknown> {
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME,
-      logo: { '@type': 'ImageObject', url: absoluteUrl('/og-marie.png') },
+      logo: { '@type': 'ImageObject', url: absoluteUrl(DEFAULT_OG_IMAGE) },
     },
     mainEntityOfPage: url,
     url,

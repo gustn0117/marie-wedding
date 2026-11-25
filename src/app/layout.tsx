@@ -70,7 +70,7 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
-  // 카카오톡·페이스북 등 링크 미리보기 이미지. public/og-marie.png (1200×630) 사용.
+  // 카카오톡·페이스북 등 링크 미리보기 이미지 — DEFAULT_OG_IMAGE(public/og-marie.png 1200×630, 원본 scripts/og/marie-og.html).
   openGraph: {
     type: "website",
     siteName: OG_SITE_NAME,
