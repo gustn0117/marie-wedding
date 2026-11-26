@@ -1,0 +1,13 @@
+{
+  "tool": "Built-in image_gen",
+  "generationCalls": 1,
+  "date": "2026-11-26",
+  "jobId": "b5844e07-a7f7-446d-bf6b-53368faa17e5",
+  "company": "그레이스앤코",
+  "references": [
+    "public/images/job-thumbnails/mariz-studio.webp",
+    "public/images/job-thumbnails/ondia-lounge.webp"
+  ],
+  "prompt": "Use case: logo-brand.\nAsset type: one finished premium square job-listing brand thumbnail for a Korean wedding directing company; 1024 by 1024 pixels.\nPrimary request: Create one polished logo-like thumbnail for the company 그레이스앤코, English display name GRACE & CO, matching the restrained wedding editorial visual style of the two reference thumbnails.\nInput images: Images 1 and 2 are STYLE REFERENCES ONLY: match their generous negative space, large refined monogram above an elegant serif company wordmark and a small Korean name, quiet pastel solid backdrop and single dark ink color. Do not copy their M or O symbols or their words.\nScene/backdrop: perfectly flat solid muted pale lavender-gray background #EEEAF1, edge to edge.\nSubject and design: one distinctive elegant capital G monogram in a refined high-contrast serif, with one restrained thin C-shaped interlacing arc suggesting a wedding ceremony arch. A single clean sophisticated emblem. Below it a beautifully kerned modern serif wordmark GRACE & CO on one line, and below that a small highly legible Korean line 그레이스앤코.\nComposition/framing: centered vertical identity lockup. Emblem about 36 percent of the canvas width, centered in the upper-middle; company wordmark about 70 percent of the canvas width, in the lower-middle; Korean line about 38 percent width beneath. Entire lockup within the central 74 percent width and 67 percent height, with generous whitespace, balanced optical spacing and enough breathing room at every edge. Clear when displayed as a small website thumbnail.\nStyle/medium: finished crisp flat vector-like brand artwork; timeless premium wedding editorial identity; sophisticated restrained linework.\nColor palette: pale lavender-gray #EEEAF1 background with deep plum-charcoal #4C4353 ink only.\nText (verbatim): GRACE & CO; 그레이스앤코. English exact spelling G R A C E [space] & [space] C O. Korean exact characters 그 레 이 스 앤 코 joined as 그레이스앤코.\nConstraints: finished artwork, one square image, no recruitment or role text. Preserve the visual family of the references while using a new G monogram and the new company name.\nAvoid: the words MARIZ, STUDIO, ONDIA or LOUNGE; extra words; photography; people; floral arrangements; mockups; paper texture; noise; gradients; shadows; embossing; 3D; lighting effects; frame; border; watermark.",
+  "exports": "1024 × 1024 WebP, Sharp quality 92; original generated PNG preserved in source/"
+}

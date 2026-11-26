@@ -1,0 +1,60 @@
+{
+  "site": "https://marie.co.kr",
+  "date": "2026-11-26",
+  "method": "Built-in image_gen; Sharp WebP export; Supabase Storage and exact job image reference",
+  "state": "verified",
+  "dimensions": {
+    "width": 1024,
+    "height": 1024
+  },
+  "asset": {
+    "name": "grace-and-co",
+    "company": "그레이스앤코",
+    "file": "public/images/job-thumbnails/grace-and-co.webp",
+    "source": "output/creative/job-thumbnails/source/grace-and-co.png",
+    "bucket": "job-images",
+    "storagePath": "thumbnails/grace-and-co-20261126-a61e972cec05.webp",
+    "publicUrl": "https://api.hsweb.pics/storage/v1/object/public/job-images/thumbnails/grace-and-co-20261126-a61e972cec05.webp",
+    "bytes": 29038,
+    "sha256": "a61e972cec05ccb9e6a98dd1ca8243854b7cab10baaca0c9e967c89709b6c37a"
+  },
+  "job": {
+    "id": "b5844e07-a7f7-446d-bf6b-53368faa17e5",
+    "title": "[경력직] 야외 웨딩 디렉터 채용",
+    "previousImage": null,
+    "image": "thumbnails/grace-and-co-20261126-a61e972cec05.webp",
+    "updated_at": "2026-11-26T02:33:28.450084+00:00"
+  },
+  "promptsFile": "output/creative/job-thumbnails/prompts-grace-and-co-20261126.json",
+  "verification": {
+    "databaseRows": 1,
+    "publicAssetStatus": 200,
+    "publicAssetExactBytes": true,
+    "changedFields": [
+      "updated_at",
+      "image"
+    ],
+    "nonImageFieldsUnchanged": true,
+    "visualInspection": "English GRACE & CO and Korean 그레이스앤코 verified; centered G monogram, lavender-gray background; all content fits the central 4:3 card crop.",
+    "livePages": [
+      {
+        "route": "/",
+        "status": 200,
+        "thumbnailReferences": 3,
+        "hasCompany": true
+      },
+      {
+        "route": "/jobs",
+        "status": 200,
+        "thumbnailReferences": 1,
+        "hasCompany": true
+      },
+      {
+        "route": "/jobs/b5844e07-a7f7-446d-bf6b-53368faa17e5",
+        "status": 200,
+        "thumbnailReferences": 5,
+        "hasCompany": true
+      }
+    ]
+  }
+}
