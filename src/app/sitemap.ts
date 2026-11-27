@@ -33,6 +33,18 @@ async function fetchAll(
   return rows.slice(0, limit);
 }
 
+/** 여러 행 묶음 중 가장 최근에 바뀐(없으면 만든) 시각. 하나도 없으면 null. */
+function latestOf(...groups: Row[][]): string | null {
+  let best = Number.NEGATIVE_INFINITY;
+  for (const rows of groups) {
+    for (const r of rows) {
+      const t = Date.parse(r.updated_at ?? r.created_at ?? '');
+      if (!Number.isNaN(t) && t > best) best = t;
+    }
+  }
+  return Number.isFinite(best) ? new Date(best).toISOString() : null;
+}
+
 function entry(path: string, lastmod?: string | null, changeFrequency?: MetadataRoute.Sitemap[number]['changeFrequency'], priority?: number): MetadataRoute.Sitemap[number] {
   const d = lastmod ? new Date(lastmod) : undefined;
   return {
@@ -94,6 +106,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       ? await fetchAll('events', (q) => (q as any).is('deleted_at', null), remaining)
       : [];
     dyn.push(...events.map((r) => entry(`/events/${r.id}`, r.updated_at ?? r.created_at, 'weekly', 0.5)));
+
+    // 홈·목록은 그 안에 보이는 글이 마지막으로 바뀐 시각을 lastmod 로 둔다. 전에는 lastmod 가 없어
+    // 새 공고가 올라와 홈·공고 목록이 바뀌어도 검색엔진이 바뀐 줄 알 수 없었다.
+    const touch = (path: string, ...groups: Row[][]) => {
+      const iso = latestOf(...groups);
+      const e = staticEntries.find((x) => x.url === `${SITE_URL}${path}`);
+      if (e && iso) e.lastModified = new Date(iso);
+    };
+    touch('/jobs', jobs);
+    touch('/directory', profiles);
+    touch('/community', posts);
+    touch('/events', events);
+    touch('/', jobs, profiles, posts); // 홈은 최근 공고·프로필·커뮤니티 글을 보여 준다
 
     return [...staticEntries, ...dyn];
   } catch {
